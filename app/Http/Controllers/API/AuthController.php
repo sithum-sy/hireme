@@ -17,13 +17,13 @@ class AuthController extends Controller
     /**
      * Add CORS headers to response
      */
-    private function addCorsHeaders($response)
-    {
-        $response->header('Access-Control-Allow-Origin', '*');
-        $response->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-        $response->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept');
-        return $response;
-    }
+    // private function addCorsHeaders($response)
+    // {
+    //     $response->header('Access-Control-Allow-Origin', '*');
+    //     $response->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    //     $response->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept');
+    //     return $response;
+    // }
 
     public function register(RegisterRequest $request)
     {
@@ -55,9 +55,10 @@ class AuthController extends Controller
                         'id' => $user->id,
                         'first_name' => $user->first_name,
                         'last_name' => $user->last_name,
-                        'full_name' => $user->full_name,
                         'email' => $user->email,
                         'role' => $user->role,
+                        'date_of_birth' => $user->date_of_birth?->format('Y-m-d'),
+                        'age' => $user->age,
                         'address' => $user->address,
                         'contact_number' => $user->contact_number,
                         'profile_picture' => $user->profile_picture ? Storage::url($user->profile_picture) : null,
@@ -120,9 +121,10 @@ class AuthController extends Controller
                         'id' => $user->id,
                         'first_name' => $user->first_name,
                         'last_name' => $user->last_name,
-                        'full_name' => $user->full_name,
                         'email' => $user->email,
                         'role' => $user->role,
+                        'date_of_birth' => $user->date_of_birth?->format('Y-m-d'),
+                        'age' => $user->age,
                         'address' => $user->address,
                         'contact_number' => $user->contact_number,
                         'profile_picture' => $user->profile_picture ? Storage::url($user->profile_picture) : null,
@@ -178,9 +180,9 @@ class AuthController extends Controller
                     'id' => $user->id,
                     'first_name' => $user->first_name,
                     'last_name' => $user->last_name,
-                    'full_name' => $user->full_name,
                     'email' => $user->email,
                     'role' => $user->role,
+                    'date_of_birth' => $user->date_of_birth,
                     'address' => $user->address,
                     'contact_number' => $user->contact_number,
                     'profile_picture' => $user->profile_picture ? Storage::url($user->profile_picture) : null,

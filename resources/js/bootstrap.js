@@ -16,7 +16,7 @@ if (token) {
 }
 
 // Set base URL
-window.axios.defaults.baseURL = "http://localhost:8000";
+window.axios.defaults.baseURL = "http://127.0.0.1:8000";
 
 /**
  * Echo exposes an expressive API for subscribing to channels and listening

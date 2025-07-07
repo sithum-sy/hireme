@@ -23,11 +23,12 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'date_of_birth',
         'address',
         'contact_number',
         'profile_picture',
         'is_active',
-        'email_verified_at'
+        'email_verified_at',
     ];
 
     /**
@@ -47,6 +48,7 @@ class User extends Authenticatable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'date_of_birth' => 'date',
         'is_active' => 'boolean',
     ];
 
@@ -59,6 +61,11 @@ class User extends Authenticatable
     public function getFullNameAttribute()
     {
         return $this->first_name . ' ' . $this->last_name;
+    }
+
+    public function getAgeAttribute()
+    {
+        return $this->date_of_birth ? $this->date_of_birth->age : null;
     }
 
     public function hasRole($role)

@@ -71,6 +71,181 @@
     transform: translateY(-2px);
 }
 
+/* Review Carousel Styles */
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.review-bg-pattern {
+    background-image: radial-gradient(
+            circle at 20% 80%,
+            rgba(120, 119, 198, 0.3) 0%,
+            transparent 50%
+        ),
+        radial-gradient(
+            circle at 80% 20%,
+            rgba(255, 255, 255, 0.1) 0%,
+            transparent 50%
+        ),
+        radial-gradient(
+            circle at 40% 40%,
+            rgba(120, 119, 198, 0.2) 0%,
+            transparent 50%
+        );
+}
+
+.carousel-btn {
+    width: 50px;
+    height: 50px;
+    border: none;
+    transition: all 0.3s ease;
+    z-index: 10;
+}
+
+.carousel-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.carousel-dot {
+    width: 8px;
+    height: 8px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.carousel-dot:hover {
+    transform: scale(1.2);
+}
+
+.carousel-dot.active {
+    width: 12px;
+    height: 12px;
+}
+
+.review-card {
+    min-height: 400px;
+    transition: all 0.3s ease;
+}
+
+.avatar-circle {
+    transition: all 0.3s ease;
+}
+
+.avatar-circle:hover {
+    transform: scale(1.1);
+}
+
+/* Footer Styles */
+.newsletter-section {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.footer-link {
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+}
+
+.footer-link:hover {
+    color: var(--bs-primary) !important;
+    transform: translateX(5px);
+}
+
+.social-link {
+    transition: all 0.3s ease;
+}
+
+.social-link:hover {
+    background: var(--bs-primary) !important;
+    color: white !important;
+    transform: translateY(-2px);
+}
+
+.social-link:hover i {
+    color: white !important;
+}
+
+.app-store-btn {
+    transition: all 0.3s ease;
+    border-radius: 8px !important;
+}
+
+.app-store-btn:hover {
+    background: var(--bs-primary) !important;
+    transform: translateY(-2px);
+}
+
+.footer-title {
+    position: relative;
+    padding-bottom: 0.5rem;
+}
+
+.footer-title::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 30px;
+    height: 2px;
+    background: var(--bs-primary);
+    border-radius: 1px;
+}
+
+/* Newsletter form */
+.newsletter-form .form-control:focus {
+    box-shadow: none;
+    border-color: transparent;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .carousel-btn-prev {
+        left: 10px !important;
+    }
+
+    .carousel-btn-next {
+        right: 10px !important;
+    }
+
+    .review-card {
+        min-height: auto;
+        margin: 0 10px;
+    }
+
+    .app-store-btn {
+        font-size: 0.8rem;
+    }
+
+    .app-store-btn i {
+        font-size: 1.5rem !important;
+    }
+}
+
+/* Animation for review cards */
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.review-card {
+    animation: slideInUp 0.6s ease-out;
+}
+
+/* Hover effects */
+.transition-all {
+    transition: all 0.3s ease;
+}
+
+.hover-bg-white:hover {
+    background: white !important;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
     .hero-section .display-4 {
@@ -79,5 +254,214 @@
 
     .hero-section .lead {
         font-size: 1rem;
+    }
+}
+/* Navbar Base Styles */
+.navbar {
+    transition: all 0.3s ease;
+    padding: 1rem 0;
+    z-index: 1050;
+}
+
+.navbar-transparent {
+    background: rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+}
+
+.navbar-scrolled {
+    background: rgba(255, 255, 255, 0.98) !important;
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    box-shadow: 0 2px 30px rgba(0, 0, 0, 0.15);
+    padding: 0.5rem 0;
+}
+
+.transition-navbar {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Brand Styles */
+.navbar-brand {
+    font-size: 1.5rem;
+    color: var(--bs-dark) !important;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.navbar-brand:hover {
+    transform: scale(1.05);
+}
+
+.brand-icon {
+    font-size: 1.8rem;
+    transition: transform 0.3s ease;
+}
+
+.navbar-brand:hover .brand-icon {
+    transform: rotate(15deg);
+}
+
+/* Custom Navbar Toggler */
+.navbar-toggler {
+    width: 30px;
+    height: 30px;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.navbar-toggler:focus {
+    box-shadow: none;
+}
+
+.navbar-toggler-icon-custom {
+    display: block;
+    width: 25px;
+    height: 20px;
+    position: relative;
+}
+
+.hamburger-line {
+    display: block;
+    height: 2px;
+    width: 100%;
+    background: var(--bs-dark);
+    border-radius: 1px;
+    position: absolute;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hamburger-line:nth-child(1) {
+    top: 0;
+}
+
+.hamburger-line:nth-child(2) {
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.hamburger-line:nth-child(3) {
+    bottom: 0;
+}
+
+/* Hamburger Animation */
+.navbar-toggler.active .hamburger-line:nth-child(1) {
+    transform: rotate(45deg);
+    top: 50%;
+    transform-origin: center;
+}
+
+.navbar-toggler.active .hamburger-line:nth-child(2) {
+    opacity: 0;
+}
+
+.navbar-toggler.active .hamburger-line:nth-child(3) {
+    transform: rotate(-45deg);
+    bottom: 50%;
+    transform-origin: center;
+}
+
+/* Navigation Links */
+.navbar-nav .nav-link {
+    color: var(--bs-dark) !important;
+    font-weight: 500;
+    padding: 0.5rem 1rem !important;
+    position: relative;
+    transition: all 0.3s ease;
+    border-radius: 6px;
+}
+
+.navbar-nav .nav-link:hover {
+    color: var(--bs-primary) !important;
+    background: rgba(13, 110, 253, 0.1);
+}
+
+.navbar-nav .nav-link::after {
+    content: "";
+    position: absolute;
+    bottom: -2px;
+    left: 50%;
+    width: 0;
+    height: 2px;
+    background: var(--bs-primary);
+    transition: all 0.3s ease;
+    transform: translateX(-50%);
+}
+
+.navbar-nav .nav-link:hover::after {
+    width: 80%;
+}
+
+/* Auth Buttons */
+.nav-auth-buttons .nav-link {
+    color: var(--bs-dark) !important;
+    font-weight: 500;
+}
+
+.nav-auth-buttons .nav-link:hover {
+    color: var(--bs-primary) !important;
+}
+
+.nav-auth-buttons .btn-primary {
+    border-radius: 25px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.nav-auth-buttons .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(13, 110, 253, 0.3);
+}
+
+/* Registration Page */
+.register-page {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.role-card {
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.role-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.step-indicator .step-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #e9ecef;
+    color: #6c757d;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.step-indicator .step-circle.active {
+    background: var(--bs-primary);
+    color: white;
+}
+
+.step-indicator .step-line {
+    width: 60px;
+    height: 2px;
+    background: #e9ecef;
+    margin: 0 1rem;
+    transition: all 0.3s ease;
+}
+
+.step-indicator .step-line.active {
+    background: var(--bs-primary);
+}
+
+@media (max-width: 768px) {
+    .step-line {
+        width: 40px !important;
+        margin: 0 0.5rem !important;
     }
 }
