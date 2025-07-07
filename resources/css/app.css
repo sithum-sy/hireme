@@ -465,3 +465,91 @@
         margin: 0 0.5rem !important;
     }
 }
+
+/* Login Page Styles */
+.login-page {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    position: relative;
+}
+
+.login-page::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"><polygon fill="rgba(255,255,255,0.05)" points="0,1000 1000,0 1000,1000"/></svg>');
+    background-size: cover;
+}
+
+.login-page .container {
+    position: relative;
+    z-index: 1;
+}
+
+.login-page .card {
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.login-page .form-control:focus {
+    border-color: var(--bs-primary);
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+.login-page .btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.login-page .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.login-page .btn-outline-primary:hover,
+.login-page .btn-outline-success:hover {
+    transform: translateY(-1px);
+}
+
+/* Demo buttons */
+.login-page .btn-outline-secondary {
+    font-size: 0.8rem;
+    border-color: rgba(108, 117, 125, 0.3);
+}
+
+.login-page .btn-outline-secondary:hover {
+    background: rgba(108, 117, 125, 0.1);
+    border-color: var(--bs-secondary);
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+    .login-page .card-body {
+        padding: 1.5rem !important;
+    }
+
+    .login-page .btn-lg {
+        padding: 0.75rem 1rem;
+        font-size: 1rem;
+    }
+}
+
+/* Animation for login card */
+.login-page .card {
+    animation: slideInUp 0.6s ease-out;
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

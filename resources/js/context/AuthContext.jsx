@@ -17,7 +17,7 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
     const [token, setToken] = useState(localStorage.getItem("auth_token"));
 
-    // Set up axios defaults
+    // Set up axios defaults when token changes
     useEffect(() => {
         if (token) {
             axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
@@ -26,26 +26,33 @@ export const AuthProvider = ({ children }) => {
         }
     }, [token]);
 
-    // Check if user is authenticated on app load
+    // Check authentication status on app load
     useEffect(() => {
-        const checkAuth = async () => {
-            if (token) {
+        const checkAuthStatus = async () => {
+            const storedToken = localStorage.getItem("auth_token");
+
+            if (storedToken) {
+                setToken(storedToken);
                 try {
-                    // Fix: Use /api/user endpoint
                     const response = await axios.get("/api/user");
                     if (response.data.success) {
                         setUser(response.data.data.user);
+                    } else {
+                        // Token is invalid, clear it
+                        localStorage.removeItem("auth_token");
+                        setToken(null);
                     }
                 } catch (error) {
                     console.error("Auth check failed:", error);
-                    logout();
+                    localStorage.removeItem("auth_token");
+                    setToken(null);
                 }
             }
             setLoading(false);
         };
 
-        checkAuth();
-    }, [token]);
+        checkAuthStatus();
+    }, []); // Empty dependency array - only run on mount
 
     const register = async (userData) => {
         try {
@@ -59,7 +66,6 @@ export const AuthProvider = ({ children }) => {
                 }
             });
 
-            // Fix: Use /api/register endpoint
             const response = await axios.post("/api/register", formData, {
                 headers: {
                     "Content-Type": "multipart/form-data",
@@ -90,7 +96,6 @@ export const AuthProvider = ({ children }) => {
         try {
             setLoading(true);
 
-            // Fix: Use /api/login endpoint
             const response = await axios.post("/api/login", credentials);
 
             if (response.data.success) {
@@ -114,7 +119,6 @@ export const AuthProvider = ({ children }) => {
     const logout = async () => {
         try {
             if (token) {
-                // Fix: Use /api/logout endpoint
                 await axios.post("/api/logout");
             }
         } catch (error) {
