@@ -92,4 +92,50 @@ class User extends Authenticatable
     {
         return $this->role === self::ROLE_STAFF;
     }
+
+    public function providerProfile()
+    {
+        return $this->hasOne(ProviderProfile::class);
+    }
+
+    public function services()
+    {
+        return $this->hasMany(Service::class, 'provider_id');
+    }
+
+    public function availability()
+    {
+        return $this->hasMany(ProviderAvailability::class, 'provider_id');
+    }
+
+    public function providerAppointments()
+    {
+        return $this->hasMany(Appointment::class, 'provider_id');
+    }
+
+    public function clientAppointments()
+    {
+        return $this->hasMany(Appointment::class, 'client_id');
+    }
+
+    // Helper methods
+    // public function isServiceProvider()
+    // {
+    //     return $this->role === 'service_provider';
+    // }
+
+    public function hasProviderProfile()
+    {
+        return $this->providerProfile()->exists();
+    }
+
+    public function isVerifiedProvider()
+    {
+        return $this->hasProviderProfile() && $this->providerProfile->isVerified();
+    }
+
+    public function blockedTimes()
+    {
+        return $this->hasMany(BlockedTime::class, 'provider_id');
+    }
 }

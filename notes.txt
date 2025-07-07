@@ -1,7 +1,41 @@
-Next Steps
+# Create seeder files
+php artisan make:seeder ServiceCategorySeeder
+php artisan make:seeder ProviderProfileSeeder
+php artisan make:seeder ServiceSeeder
+php artisan make:seeder AppointmentSeeder
 
-Create React Authentication Context
-Build Registration Form Component
-Build Login Form Component
-Create Client Dashboard
-Implement Protected Routes
+# Run specific seeder
+php artisan db:seed --class=ServiceCategorySeeder
+
+# Run all seeders
+php artisan db:seed
+
+# Refresh database and seed
+php artisan migrate:fresh --seed
+
+
+# Create factory files
+php artisan make:factory ServiceCategoryFactory
+php artisan make:factory ProviderProfileFactory
+php artisan make:factory ServiceFactory
+php artisan make:factory ProviderAvailabilityFactory
+php artisan make:factory AppointmentFactory
+
+
+# Check migration status
+php artisan migrate:status
+
+# If migrations haven't been run, run them
+php artisan migrate
+
+# If you need to start fresh
+php artisan migrate:fresh
+
+# Try running migrations one by one
+php artisan migrate --path=database/migrations/xxxx_xx_xx_create_service_categories_table.php
+php artisan migrate --path=database/migrations/xxxx_xx_xx_create_provider_profiles_table.php
+
+$ use tinker
+php artisan tinker
+use App\Models\ServiceCategory;
+ServiceCategory::factory(5)->create();

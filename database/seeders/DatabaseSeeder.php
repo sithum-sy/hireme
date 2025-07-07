@@ -18,5 +18,11 @@ class DatabaseSeeder extends Seeder
         //     'name' => 'Test User',
         //     'email' => 'test@example.com',
         // ]);
+
+        // Run in order due to foreign key constraints
+        $this->call([
+            ServiceCategorySeeder::class,
+            // Add more seeders here as needed
+        ]);
     }
 }

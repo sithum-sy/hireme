@@ -1,0 +1,311 @@
+<?php
+
+namespace App\Http\Controllers\API;
+
+use App\Http\Controllers\Controller;
+use App\Http\Requests\AvailabilityRequest;
+use App\Http\Requests\BlockTimeRequest;
+use App\Models\BlockedTime;
+use App\Services\AvailabilityService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+
+class AvailabilityController extends Controller
+{
+    protected $availabilityService;
+
+    public function __construct(AvailabilityService $availabilityService)
+    {
+        $this->availabilityService = $availabilityService;
+    }
+
+    /**
+     * Get provider's weekly availability
+     */
+    public function getWeeklyAvailability()
+    {
+        try {
+            $user = Auth::user();
+
+            if ($user->role !== 'service_provider') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Only service providers can access availability settings'
+                ], 403);
+            }
+
+            $availability = $this->availabilityService->getWeeklyAvailability($user);
+
+            return response()->json([
+                'success' => true,
+                'data' => $availability
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch availability',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Update provider's weekly availability
+     */
+    public function updateWeeklyAvailability(AvailabilityRequest $request)
+    {
+        try {
+            $user = Auth::user();
+
+            if ($user->role !== 'service_provider') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Only service providers can update availability'
+                ], 403);
+            }
+
+            $availability = $this->availabilityService->updateWeeklyAvailability(
+                $user,
+                $request->validated()['availability']
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Availability updated successfully',
+                'data' => $this->availabilityService->getWeeklyAvailability($user)
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update availability',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get availability summary
+     */
+    public function getAvailabilitySummary()
+    {
+        try {
+            $user = Auth::user();
+
+            if ($user->role !== 'service_provider') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Only service providers can access availability summary'
+                ], 403);
+            }
+
+            $summary = $this->availabilityService->getAvailabilitySummary($user);
+
+            return response()->json([
+                'success' => true,
+                'data' => $summary
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch availability summary',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Create blocked time
+     */
+    public function createBlockedTime(BlockTimeRequest $request)
+    {
+        try {
+            $user = Auth::user();
+
+            if ($user->role !== 'service_provider') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Only service providers can block time'
+                ], 403);
+            }
+
+            $blockedTime = $this->availabilityService->createBlockedTime($user, $request->validated());
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Time blocked successfully',
+                'data' => [
+                    'id' => $blockedTime->id,
+                    'start_date' => $blockedTime->start_date->format('Y-m-d'),
+                    'end_date' => $blockedTime->end_date->format('Y-m-d'),
+                    'start_time' => $blockedTime->start_time?->format('H:i'),
+                    'end_time' => $blockedTime->end_time?->format('H:i'),
+                    'all_day' => $blockedTime->all_day,
+                    'reason' => $blockedTime->reason,
+                    'formatted_date_range' => $blockedTime->formatted_date_range,
+                    'formatted_time_range' => $blockedTime->formatted_time_range,
+                ]
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to block time',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get blocked times
+     */
+    public function getBlockedTimes(Request $request)
+    {
+        try {
+            $user = Auth::user();
+
+            if ($user->role !== 'service_provider') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Only service providers can access blocked times'
+                ], 403);
+            }
+
+            $startDate = $request->get('start_date');
+            $endDate = $request->get('end_date');
+
+            $blockedTimes = $this->availabilityService->getBlockedTimes($user, $startDate, $endDate);
+
+            $formattedBlockedTimes = $blockedTimes->map(function ($blocked) {
+                return [
+                    'id' => $blocked->id,
+                    'start_date' => $blocked->start_date->format('Y-m-d'),
+                    'end_date' => $blocked->end_date->format('Y-m-d'),
+                    'start_time' => $blocked->start_time?->format('H:i'),
+                    'end_time' => $blocked->end_time?->format('H:i'),
+                    'all_day' => $blocked->all_day,
+                    'reason' => $blocked->reason,
+                    'formatted_date_range' => $blocked->formatted_date_range,
+                    'formatted_time_range' => $blocked->formatted_time_range,
+                    'is_active' => $blocked->isActive(),
+                    'created_at' => $blocked->created_at->format('Y-m-d H:i:s'),
+                ];
+            });
+
+            return response()->json([
+                'success' => true,
+                'data' => $formattedBlockedTimes
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch blocked times',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Delete blocked time
+     */
+    public function deleteBlockedTime(BlockedTime $blockedTime)
+    {
+        try {
+            $user = Auth::user();
+
+            if ($user->role !== 'service_provider') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Only service providers can delete blocked times'
+                ], 403);
+            }
+
+            $this->availabilityService->deleteBlockedTime($user, $blockedTime);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Blocked time deleted successfully'
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete blocked time',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Check availability for specific date and time (Public)
+     */
+    public function checkAvailability(Request $request, $providerId)
+    {
+        try {
+            $request->validate([
+                'date' => 'required|date|after_or_equal:today',
+                'start_time' => 'required|date_format:H:i',
+                'end_time' => 'required|date_format:H:i|after:start_time',
+            ]);
+
+            $provider = \App\Models\User::where('id', $providerId)
+                ->where('role', 'service_provider')
+                ->firstOrFail();
+
+            $availability = $this->availabilityService->isAvailableAt(
+                $provider,
+                $request->date,
+                $request->start_time,
+                $request->end_time
+            );
+
+            return response()->json([
+                'success' => true,
+                'data' => $availability
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to check availability',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get available time slots for a specific date (Public)
+     */
+    public function getAvailableSlots(Request $request, $providerId)
+    {
+        try {
+            $request->validate([
+                'date' => 'required|date|after_or_equal:today',
+                'service_duration' => 'nullable|numeric|min:0.5|max:8',
+            ]);
+
+            $provider = \App\Models\User::where('id', $providerId)
+                ->where('role', 'service_provider')
+                ->firstOrFail();
+
+            $serviceDuration = $request->get('service_duration', 1);
+            $slots = $this->availabilityService->getAvailableSlots(
+                $provider,
+                $request->date,
+                $serviceDuration
+            );
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'date' => $request->date,
+                    'service_duration_hours' => $serviceDuration,
+                    'available_slots' => $slots,
+                    'total_slots' => count($slots),
+                ]
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch available slots',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+}
