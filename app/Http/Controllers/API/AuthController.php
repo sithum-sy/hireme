@@ -1,5 +1,5 @@
 <?php
-
+// app/Http/Controllers/API/AuthController.php
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
@@ -14,17 +14,6 @@ use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
-    /**
-     * Add CORS headers to response
-     */
-    // private function addCorsHeaders($response)
-    // {
-    //     $response->header('Access-Control-Allow-Origin', '*');
-    //     $response->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    //     $response->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept');
-    //     return $response;
-    // }
-
     public function register(RegisterRequest $request)
     {
         try {
@@ -47,7 +36,7 @@ class AuthController extends Controller
             // Create token
             $token = $user->createToken('auth_token')->plainTextToken;
 
-            $response = response()->json([
+            return response()->json([
                 'success' => true,
                 'message' => 'Registration successful',
                 'data' => [
@@ -55,12 +44,13 @@ class AuthController extends Controller
                         'id' => $user->id,
                         'first_name' => $user->first_name,
                         'last_name' => $user->last_name,
+                        'full_name' => $user->first_name . ' ' . $user->last_name,
                         'email' => $user->email,
                         'role' => $user->role,
-                        'date_of_birth' => $user->date_of_birth?->format('Y-m-d'),
-                        'age' => $user->age,
                         'address' => $user->address,
                         'contact_number' => $user->contact_number,
+                        'date_of_birth' => $user->date_of_birth?->format('Y-m-d'),
+                        'age' => $user->date_of_birth ? $user->date_of_birth->age : null,
                         'profile_picture' => $user->profile_picture ? Storage::url($user->profile_picture) : null,
                         'is_active' => $user->is_active,
                     ],
@@ -68,16 +58,12 @@ class AuthController extends Controller
                     'token_type' => 'Bearer',
                 ]
             ], 201);
-
-            return $this->addCorsHeaders($response);
         } catch (\Exception $e) {
-            $response = response()->json([
+            return response()->json([
                 'success' => false,
                 'message' => 'Registration failed',
                 'error' => $e->getMessage()
             ], 500);
-
-            return $this->addCorsHeaders($response);
         }
     }
 
@@ -87,24 +73,20 @@ class AuthController extends Controller
             $credentials = $request->validated();
 
             if (!Auth::attempt($credentials)) {
-                $response = response()->json([
+                return response()->json([
                     'success' => false,
                     'message' => 'Invalid credentials'
                 ], 401);
-
-                return $this->addCorsHeaders($response);
             }
 
             $user = Auth::user();
 
             // Check if user is active
             if (!$user->is_active) {
-                $response = response()->json([
+                return response()->json([
                     'success' => false,
                     'message' => 'Account is deactivated. Please contact support.'
                 ], 403);
-
-                return $this->addCorsHeaders($response);
             }
 
             // Revoke all existing tokens
@@ -113,7 +95,7 @@ class AuthController extends Controller
             // Create new token
             $token = $user->createToken('auth_token')->plainTextToken;
 
-            $response = response()->json([
+            return response()->json([
                 'success' => true,
                 'message' => 'Login successful',
                 'data' => [
@@ -121,12 +103,13 @@ class AuthController extends Controller
                         'id' => $user->id,
                         'first_name' => $user->first_name,
                         'last_name' => $user->last_name,
+                        'full_name' => $user->first_name . ' ' . $user->last_name,
                         'email' => $user->email,
                         'role' => $user->role,
-                        'date_of_birth' => $user->date_of_birth?->format('Y-m-d'),
-                        'age' => $user->age,
                         'address' => $user->address,
                         'contact_number' => $user->contact_number,
+                        'date_of_birth' => $user->date_of_birth?->format('Y-m-d'),
+                        'age' => $user->date_of_birth ? $user->date_of_birth->age : null,
                         'profile_picture' => $user->profile_picture ? Storage::url($user->profile_picture) : null,
                         'is_active' => $user->is_active,
                     ],
@@ -134,16 +117,12 @@ class AuthController extends Controller
                     'token_type' => 'Bearer',
                 ]
             ], 200);
-
-            return $this->addCorsHeaders($response);
         } catch (\Exception $e) {
-            $response = response()->json([
+            return response()->json([
                 'success' => false,
                 'message' => 'Login failed',
                 'error' => $e->getMessage()
             ], 500);
-
-            return $this->addCorsHeaders($response);
         }
     }
 
@@ -152,20 +131,16 @@ class AuthController extends Controller
         try {
             $request->user()->currentAccessToken()->delete();
 
-            $response = response()->json([
+            return response()->json([
                 'success' => true,
                 'message' => 'Logout successful'
             ], 200);
-
-            return $this->addCorsHeaders($response);
         } catch (\Exception $e) {
-            $response = response()->json([
+            return response()->json([
                 'success' => false,
                 'message' => 'Logout failed',
                 'error' => $e->getMessage()
             ], 500);
-
-            return $this->addCorsHeaders($response);
         }
     }
 
@@ -173,24 +148,24 @@ class AuthController extends Controller
     {
         $user = $request->user();
 
-        $response = response()->json([
+        return response()->json([
             'success' => true,
             'data' => [
                 'user' => [
                     'id' => $user->id,
                     'first_name' => $user->first_name,
                     'last_name' => $user->last_name,
+                    'full_name' => $user->first_name . ' ' . $user->last_name,
                     'email' => $user->email,
                     'role' => $user->role,
-                    'date_of_birth' => $user->date_of_birth,
                     'address' => $user->address,
                     'contact_number' => $user->contact_number,
+                    'date_of_birth' => $user->date_of_birth?->format('Y-m-d'),
+                    'age' => $user->date_of_birth ? $user->date_of_birth->age : null,
                     'profile_picture' => $user->profile_picture ? Storage::url($user->profile_picture) : null,
                     'is_active' => $user->is_active,
                 ]
             ]
         ], 200);
-
-        return $this->addCorsHeaders($response);
     }
 }
