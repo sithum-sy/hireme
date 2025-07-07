@@ -1,0 +1,7 @@
+Next Steps
+
+Create React Authentication Context
+Build Registration Form Component
+Build Login Form Component
+Create Client Dashboard
+Implement Protected Routes
