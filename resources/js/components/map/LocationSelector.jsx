@@ -3,20 +3,60 @@ import MapComponent from "./MapComponent";
 import LocationSearch from "./LocationSearch";
 
 const LocationSelector = ({ value, onChange, error }) => {
-    const [locationState, setLocationState] = useState("detecting"); // detecting, confirmed, selecting, manual
+    const [locationState, setLocationState] = useState("detecting");
     const [currentLocation, setCurrentLocation] = useState(null);
     const [selectedCity, setSelectedCity] = useState(null);
     const [radius, setRadius] = useState(15);
 
     const sriLankanCities = [
-        { name: "Colombo", lat: 6.9271, lng: 79.8612 },
-        { name: "Kandy", lat: 7.2906, lng: 80.6337 },
-        { name: "Galle", lat: 6.0535, lng: 80.221 },
-        { name: "Jaffna", lat: 9.6615, lng: 80.0255 },
-        { name: "Negombo", lat: 7.2083, lng: 79.8358 },
-        { name: "Anuradhapura", lat: 8.3114, lng: 80.4037 },
-        { name: "Trincomalee", lat: 8.5874, lng: 81.2152 },
-        { name: "Matara", lat: 5.9485, lng: 80.5353 },
+        {
+            name: "Colombo",
+            lat: 6.9271,
+            lng: 79.8612,
+            province: "Western Province",
+        },
+        {
+            name: "Kandy",
+            lat: 7.2906,
+            lng: 80.6337,
+            province: "Central Province",
+        },
+        {
+            name: "Galle",
+            lat: 6.0535,
+            lng: 80.221,
+            province: "Southern Province",
+        },
+        {
+            name: "Jaffna",
+            lat: 9.6615,
+            lng: 80.0255,
+            province: "Northern Province",
+        },
+        {
+            name: "Negombo",
+            lat: 7.2083,
+            lng: 79.8358,
+            province: "Western Province",
+        },
+        {
+            name: "Anuradhapura",
+            lat: 8.3114,
+            lng: 80.4037,
+            province: "North Central Province",
+        },
+        {
+            name: "Trincomalee",
+            lat: 8.5874,
+            lng: 81.2152,
+            province: "Eastern Province",
+        },
+        {
+            name: "Matara",
+            lat: 5.9485,
+            lng: 80.5353,
+            province: "Southern Province",
+        },
     ];
 
     const radiusOptions = [
@@ -36,9 +76,9 @@ const LocationSelector = ({ value, onChange, error }) => {
                 lat: currentLocation.lat,
                 lng: currentLocation.lng,
                 address: currentLocation.address,
-                neighborhood: currentLocation.neighborhood,
+                neighborhood: currentLocation.neighborhood || "",
                 city: currentLocation.city,
-                province: currentLocation.province,
+                province: currentLocation.province || "",
                 country: "Sri Lanka",
                 radius: radius,
             });
@@ -50,7 +90,7 @@ const LocationSelector = ({ value, onChange, error }) => {
             navigator.geolocation.getCurrentPosition(
                 async (position) => {
                     const { latitude, longitude } = position.coords;
-                    const locationData = await reverseGeocode(
+                    const locationData = await reverseGeocodeOffline(
                         latitude,
                         longitude
                     );
@@ -68,36 +108,49 @@ const LocationSelector = ({ value, onChange, error }) => {
         }
     };
 
-    const reverseGeocode = async (lat, lng) => {
-        try {
-            const response = await fetch(
-                `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1&countrycodes=lk`
-            );
-            const data = await response.json();
+    // Offline reverse geocoding using closest city
+    const reverseGeocodeOffline = async (lat, lng) => {
+        // Find closest Sri Lankan city
+        let closestCity = sriLankanCities[0];
+        let minDistance = calculateDistance(
+            lat,
+            lng,
+            closestCity.lat,
+            closestCity.lng
+        );
 
-            return {
-                lat,
-                lng,
-                address: data.display_name,
-                neighborhood:
-                    data.address?.suburb || data.address?.neighbourhood || "",
-                city:
-                    data.address?.city ||
-                    data.address?.town ||
-                    data.address?.village ||
-                    "",
-                province: data.address?.state || "",
-                accuracy: "gps",
-            };
-        } catch (error) {
-            console.error("Reverse geocoding failed:", error);
-            return {
-                lat,
-                lng,
-                address: `${lat}, ${lng}`,
-                accuracy: "coordinates",
-            };
-        }
+        sriLankanCities.forEach((city) => {
+            const distance = calculateDistance(lat, lng, city.lat, city.lng);
+            if (distance < minDistance) {
+                minDistance = distance;
+                closestCity = city;
+            }
+        });
+
+        return {
+            lat,
+            lng,
+            address: `Near ${closestCity.name}, ${closestCity.province}, Sri Lanka`,
+            neighborhood: minDistance < 5 ? `${closestCity.name} Area` : "",
+            city: closestCity.name,
+            province: closestCity.province,
+            accuracy: "gps_offline",
+        };
+    };
+
+    // Calculate distance between two coordinates (Haversine formula)
+    const calculateDistance = (lat1, lng1, lat2, lng2) => {
+        const R = 6371; // Earth's radius in km
+        const dLat = ((lat2 - lat1) * Math.PI) / 180;
+        const dLng = ((lng2 - lng1) * Math.PI) / 180;
+        const a =
+            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos((lat1 * Math.PI) / 180) *
+                Math.cos((lat2 * Math.PI) / 180) *
+                Math.sin(dLng / 2) *
+                Math.sin(dLng / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
     };
 
     const handleLocationConfirm = (confirmed) => {
@@ -113,10 +166,10 @@ const LocationSelector = ({ value, onChange, error }) => {
         setCurrentLocation({
             lat: city.lat,
             lng: city.lng,
-            address: `${city.name}, Sri Lanka`,
-            neighborhood: "",
+            address: `${city.name}, ${city.province}, Sri Lanka`,
+            neighborhood: `${city.name} Center`,
             city: city.name,
-            province: "",
+            province: city.province,
             accuracy: "city",
         });
         setLocationState("selecting");
@@ -145,10 +198,9 @@ const LocationSelector = ({ value, onChange, error }) => {
                 <div className="location-confirm p-3 bg-light rounded mb-3">
                     <h6 className="fw-bold mb-2">📍 Location Detected</h6>
                     <p className="mb-3">
-                        You're in{" "}
+                        You're near{" "}
                         <strong>
-                            {currentLocation.neighborhood}{" "}
-                            {currentLocation.city}
+                            {currentLocation.city}, {currentLocation.province}
                         </strong>
                         <br />
                         <small className="text-muted">
@@ -183,7 +235,12 @@ const LocationSelector = ({ value, onChange, error }) => {
                                     className="btn btn-outline-primary w-100"
                                     onClick={() => handleCitySelect(city)}
                                 >
-                                    {city.name}
+                                    <div className="fw-semibold">
+                                        {city.name}
+                                    </div>
+                                    <small className="text-muted">
+                                        {city.province}
+                                    </small>
                                 </button>
                             </div>
                         ))}

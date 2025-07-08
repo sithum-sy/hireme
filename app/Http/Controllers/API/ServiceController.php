@@ -81,12 +81,12 @@ class ServiceController extends Controller
             }
 
             // Check if provider profile is verified
-            if (!$user->providerProfile || !$user->providerProfile->isVerified()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Your provider profile must be verified before creating services'
-                ], 403);
-            }
+            // if (!$user->providerProfile || !$user->providerProfile->isVerified()) {
+            //     return response()->json([
+            //         'success' => false,
+            //         'message' => 'Your provider profile must be verified before creating services'
+            //     ], 403);
+            // }
 
             $service = $this->serviceService->createService($user, $request->validated());
 

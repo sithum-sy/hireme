@@ -25,7 +25,8 @@ class ProviderProfile extends Model
         'total_reviews',
         'total_earnings',
         'is_available',
-        'verified_at'
+        'verified_at',
+        'service_location'
     ];
 
     protected $casts = [

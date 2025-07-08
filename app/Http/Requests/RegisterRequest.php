@@ -38,6 +38,12 @@ class RegisterRequest extends FormRequest
                 'portfolio_images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
                 'service_categories' => 'required|array|min:1',
                 'service_categories.*' => 'exists:service_categories,id',
+                // Update service_location validation
+                'service_location_lat' => 'required|numeric|between:-90,90',
+                'service_location_lng' => 'required|numeric|between:-180,180',
+                'service_location_address' => 'required|string|max:500',
+                'service_location_city' => 'required|string|max:255',
+                'service_location_radius' => 'required|integer|min:1|max:100',
             ]);
         }
 

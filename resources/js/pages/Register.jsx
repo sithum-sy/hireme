@@ -49,15 +49,16 @@ const Register = () => {
         if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
     };
 
-    // const handleFileChange = (e) => {
-    //     const file = e.target.files[0];
-    //     if (file) {
-    //         setFormData((prev) => ({ ...prev, profile_picture: file }));
-    //         const reader = new FileReader();
-    //         reader.onload = (e) => setPreviewImage(e.target.result);
-    //         reader.readAsDataURL(file);
-    //     }
-    // };
+    const handleFileChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setFormData((prev) => ({ ...prev, profile_picture: file }));
+            const reader = new FileReader();
+            reader.onload = (e) => setPreviewImage(e.target.result);
+            reader.readAsDataURL(file);
+        }
+    };
+
     const prepareFormDataForSubmit = () => {
         const submitData = new FormData();
 
@@ -67,15 +68,38 @@ const Register = () => {
                 formData[key].forEach((category, index) => {
                     submitData.append(`service_categories[${index}]`, category);
                 });
+            } else if (key === "service_location" && formData[key]) {
+                // Send service_location as individual fields instead of JSON
+                submitData.append(
+                    "service_location_lat",
+                    formData[key].lat || ""
+                );
+                submitData.append(
+                    "service_location_lng",
+                    formData[key].lng || ""
+                );
+                submitData.append(
+                    "service_location_address",
+                    formData[key].address || ""
+                );
+                submitData.append(
+                    "service_location_city",
+                    formData[key].city || ""
+                );
+                submitData.append(
+                    "service_location_radius",
+                    formData[key].radius || 15
+                );
             } else if (
                 ![
                     "profile_picture",
                     "business_license",
                     "certifications",
                     "portfolio_images",
+                    "service_location",
                 ].includes(key)
             ) {
-                submitData.append(key, formData[key]);
+                submitData.append(key, formData[key] || "");
             }
         });
 
@@ -301,6 +325,15 @@ const Register = () => {
             formData.role === "service_provider"
                 ? prepareFormDataForSubmit()
                 : formData;
+
+        // Debug log to see what we're sending
+        console.log("Form data being submitted:", formData);
+        if (submitData instanceof FormData) {
+            console.log("FormData entries:");
+            for (let [key, value] of submitData.entries()) {
+                console.log(key, value);
+            }
+        }
 
         const result = await register(submitData);
         if (result.success) {

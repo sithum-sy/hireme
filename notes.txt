@@ -39,3 +39,6 @@ $ use tinker
 php artisan tinker
 use App\Models\ServiceCategory;
 ServiceCategory::factory(5)->create();
+
+import ProviderServices from "./pages/provider/Services";
+import ServiceForm from "./pages/provider/ServiceForm";

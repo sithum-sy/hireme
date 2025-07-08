@@ -56,37 +56,35 @@ export const AuthProvider = ({ children }) => {
 
     const register = async (userData) => {
         try {
-            setLoading(true);
-
-            // Create FormData for file upload
-            const formData = new FormData();
-            Object.keys(userData).forEach((key) => {
-                if (userData[key] !== null && userData[key] !== undefined) {
-                    formData.append(key, userData[key]);
-                }
-            });
-
-            const response = await axios.post("/api/register", formData, {
+            const response = await axios.post("/api/register", userData, {
                 headers: {
-                    "Content-Type": "multipart/form-data",
+                    "Content-Type":
+                        userData instanceof FormData
+                            ? "multipart/form-data"
+                            : "application/json",
                 },
             });
 
             if (response.data.success) {
-                const { user: userData, token: userToken } = response.data.data;
-
-                setUser(userData);
-                setToken(userToken);
-                localStorage.setItem("auth_token", userToken);
-
-                return { success: true, user: userData };
+                const { user, token } = response.data.data;
+                setUser(user);
+                setToken(token);
+                localStorage.setItem("auth_token", token);
+                return { success: true, user };
             }
         } catch (error) {
             console.error("Registration error:", error);
-            const message =
-                error.response?.data?.message || "Registration failed";
-            const errors = error.response?.data?.errors || {};
-            return { success: false, message, errors };
+
+            // Log detailed error for debugging
+            if (error.response?.data) {
+                console.log("Validation errors:", error.response.data);
+            }
+
+            return {
+                success: false,
+                message: error.response?.data?.message || "Registration failed",
+                errors: error.response?.data?.errors || {},
+            };
         } finally {
             setLoading(false);
         }
