@@ -5,9 +5,19 @@
 
     RewriteEngine On
 
-    # Handle Authorization Header
-    RewriteCond %{HTTP:Authorization} .
-    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+    # Handle Angular and React Router - send all requests to index.html
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_URI} !^/api/
+    RewriteCond %{REQUEST_URI} !^/storage/
+    RewriteCond %{REQUEST_URI} !^/build/
+    RewriteRule ^(.*)$ /index.html [L]
+
+    # Handle Laravel API routes
+    RewriteCond %{REQUEST_URI} ^/api/
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)$ /index.php [L]
 
     # Redirect Trailing Slashes If Not A Folder...
     RewriteCond %{REQUEST_FILENAME} !-d

@@ -72,6 +72,9 @@ class AuthController extends Controller
             // Create token
             $token = $user->createToken('auth_token')->plainTextToken;
 
+            // Update last login on registration
+            $user->updateLastLogin();
+
             // Prepare response data
             $responseData = [
                 'user' => [
@@ -87,6 +90,7 @@ class AuthController extends Controller
                     'age' => $user->age,
                     'profile_picture' => $user->profile_picture ? Storage::url($user->profile_picture) : null,
                     'is_active' => $user->is_active,
+                    'last_login_at' => $user->last_login_at?->format('Y-m-d H:i:s'),
                 ],
                 'token' => $token,
                 'token_type' => 'Bearer',
@@ -152,6 +156,9 @@ class AuthController extends Controller
             // Revoke all existing tokens
             $user->tokens()->delete();
 
+            // Update last login timestamp
+            $user->updateLastLogin();
+
             // Create new token
             $token = $user->createToken('auth_token')->plainTextToken;
 
@@ -170,10 +177,22 @@ class AuthController extends Controller
                     'age' => $user->age,
                     'profile_picture' => $user->profile_picture ? Storage::url($user->profile_picture) : null,
                     'is_active' => $user->is_active,
+                    'last_login_at' => $user->last_login_at?->format('Y-m-d H:i:s'),
+                    'created_by' => $user->created_by,
+                    'was_created_by_admin' => $user->wasCreatedByAdmin(),
                 ],
                 'token' => $token,
                 'token_type' => 'Bearer',
             ];
+
+            // Add creator information if user was created by admin
+            if ($user->creator) {
+                $responseData['creator'] = [
+                    'id' => $user->creator->id,
+                    'name' => $user->creator->full_name,
+                    'role' => $user->creator->role,
+                ];
+            }
 
             // Add provider profile data if user is service provider
             if ($user->role === 'service_provider' && $user->providerProfile) {
@@ -245,8 +264,21 @@ class AuthController extends Controller
                 'age' => $user->age,
                 'profile_picture' => $user->profile_picture ? Storage::url($user->profile_picture) : null,
                 'is_active' => $user->is_active,
+                'last_login_at' => $user->last_login_at?->format('Y-m-d H:i:s'),
+                'last_login_human' => $user->last_login_human,
+                'created_by' => $user->created_by,
+                'was_created_by_admin' => $user->wasCreatedByAdmin(),
             ]
         ];
+
+        // Add creator information if user was created by admin
+        if ($user->creator) {
+            $responseData['creator'] = [
+                'id' => $user->creator->id,
+                'name' => $user->creator->full_name,
+                'role' => $user->creator->role,
+            ];
+        }
 
         // Add provider profile data if user is service provider
         if ($user->role === 'service_provider' && $user->providerProfile) {

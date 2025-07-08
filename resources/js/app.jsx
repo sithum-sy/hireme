@@ -1,8 +1,8 @@
-// resources/js/app.jsx
 import React from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
+import { AdminProvider } from "./context/AdminContext";
 import { ServicesProvider } from "./context/ServicesContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import DashboardLayout from "./components/DashboardLayout";
@@ -14,10 +14,16 @@ import Login from "./pages/Login";
 
 // Client Pages
 import ClientDashboard from "./pages/client/Dashboard";
-// Provider Dashboard Layout
+
+// Provider Pages
 import ProviderDashboard from "./pages/provider/Dashboard";
 import ProviderServices from "./pages/provider/Services";
 import ServiceForm from "./pages/provider/ServiceForm";
+
+// Admin Pages
+import AdminDashboard from "./pages/admin/Dashboard";
+import StaffList from "./pages/admin/staff/StaffList";
+import CreateStaff from "./pages/admin/staff/CreateStaff";
 
 // Import Bootstrap
 import "./bootstrap";
@@ -593,25 +599,116 @@ function App() {
 
                     {/* ===== ADMIN ROUTES ===== */}
                     <Route
-                        path="/admin/dashboard"
+                        path="/admin/*"
                         element={
                             <ProtectedRoute allowedRoles={["admin"]}>
-                                <div className="container py-5 text-center">
-                                    <h2>Admin Dashboard</h2>
-                                    <p className="lead">Coming soon...</p>
-                                    <div className="card mt-4">
-                                        <div className="card-body">
-                                            <i className="fas fa-crown fa-4x text-warning mb-3"></i>
-                                            <h4>
-                                                Admin Panel Under Development
-                                            </h4>
-                                            <p className="text-muted">
-                                                Administrative tools and system
-                                                management.
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
+                                <AdminProvider>
+                                    <Routes>
+                                        {/* Admin Dashboard */}
+                                        <Route
+                                            path="dashboard"
+                                            element={<AdminDashboard />}
+                                        />
+
+                                        {/* Staff Management Routes */}
+                                        <Route
+                                            path="staff"
+                                            element={<StaffList />}
+                                        />
+
+                                        <Route
+                                            path="staff/create"
+                                            element={<CreateStaff />}
+                                        />
+
+                                        {/* User Management Routes */}
+                                        <Route
+                                            path="users"
+                                            element={
+                                                <div className="container py-5 text-center">
+                                                    <h2>User Management</h2>
+                                                    <p className="lead">
+                                                        Coming in Phase 4...
+                                                    </p>
+                                                    <div className="card mt-4">
+                                                        <div className="card-body">
+                                                            <i className="fas fa-users fa-4x text-info mb-3"></i>
+                                                            <h4>
+                                                                User Management
+                                                                Interface
+                                                            </h4>
+                                                            <p className="text-muted">
+                                                                Manage clients
+                                                                and service
+                                                                providers.
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            }
+                                        />
+
+                                        {/* Reports Routes */}
+                                        <Route
+                                            path="reports/*"
+                                            element={
+                                                <div className="container py-5 text-center">
+                                                    <h2>Reports & Analytics</h2>
+                                                    <p className="lead">
+                                                        Coming in Phase 5...
+                                                    </p>
+                                                    <div className="card mt-4">
+                                                        <div className="card-body">
+                                                            <i className="fas fa-chart-bar fa-4x text-success mb-3"></i>
+                                                            <h4>
+                                                                Reporting
+                                                                Dashboard
+                                                            </h4>
+                                                            <p className="text-muted">
+                                                                Comprehensive
+                                                                analytics and
+                                                                reports.
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            }
+                                        />
+
+                                        {/* Settings Routes */}
+                                        <Route
+                                            path="settings"
+                                            element={
+                                                <div className="container py-5 text-center">
+                                                    <h2>System Settings</h2>
+                                                    <p className="lead">
+                                                        Coming soon...
+                                                    </p>
+                                                    <div className="card mt-4">
+                                                        <div className="card-body">
+                                                            <i className="fas fa-cogs fa-4x text-warning mb-3"></i>
+                                                            <h4>
+                                                                System
+                                                                Configuration
+                                                            </h4>
+                                                            <p className="text-muted">
+                                                                Configure system
+                                                                settings and
+                                                                preferences.
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            }
+                                        />
+
+                                        {/* Default Admin Route - Redirect to Dashboard */}
+                                        <Route
+                                            path="*"
+                                            element={<AdminDashboard />}
+                                        />
+                                    </Routes>
+                                </AdminProvider>
                             </ProtectedRoute>
                         }
                     />

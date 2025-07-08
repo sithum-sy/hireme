@@ -40,5 +40,14 @@ php artisan tinker
 use App\Models\ServiceCategory;
 ServiceCategory::factory(5)->create();
 
-import ProviderServices from "./pages/provider/Services";
-import ServiceForm from "./pages/provider/ServiceForm";
+# Artisan command for admin creation.
+php artisan hireme:create-admin
+
+# Non-Interactive Mode
+php artisan hireme:create-admin \
+  --email="admin@yourdomain.com" \
+  --password="SecurePassword123!" \
+  --first-name="Super" \
+  --last-name="Admin"
+
+  

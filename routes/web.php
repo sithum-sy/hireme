@@ -17,6 +17,11 @@ use Illuminate\Support\Facades\Route;
 //     return view('welcome');
 // });
 
-Route::get('/', function () {
-    return view('app');
-});
+// Route::get('/', function () {
+//     return view('app');
+// });
+
+// SPA Catch-all route - This should be the LAST route
+Route::get('/{any}', function () {
+    return view('app'); // or wherever your React app entry point is
+})->where('any', '^(?!api).*$'); // Exclude API routes

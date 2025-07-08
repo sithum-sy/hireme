@@ -96,6 +96,16 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/quotes/{quote}/respond', [AppointmentController::class, 'respondToQuote']);
     });
 
+    // Admin routes
+    Route::prefix('admin')->middleware('admin')->group(function () {
+        require __DIR__ . '/admin.php';
+    });
+
+    // Staff routes
+    Route::prefix('staff')->middleware('staff')->group(function () {
+        require __DIR__ . '/staff.php';
+    });
+
     // Utility routes (for cron jobs or admin)
     Route::post('/quotes/mark-expired', [AppointmentController::class, 'markExpiredQuotes']);
 });
