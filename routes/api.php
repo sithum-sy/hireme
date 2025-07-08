@@ -7,6 +7,7 @@ use App\Http\Controllers\API\ServiceCategoryController;
 use App\Http\Controllers\API\ServiceController;
 use App\Http\Controllers\API\AvailabilityController;
 use App\Http\Controllers\API\ProfileController;
+use App\Http\Controllers\API\AppointmentController;
 
 /*
 |--------------------------------------------------------------------------
@@ -50,6 +51,17 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/profile/change-password', [ProfileController::class, 'changePassword']);
     Route::delete('/profile/picture', [ProfileController::class, 'deleteProfilePicture']);
 
+    // Appointment Management (All authenticated users)
+    Route::get('/appointments', [AppointmentController::class, 'getAppointments']);
+    Route::get('/appointments/{appointment}', [AppointmentController::class, 'getAppointment']);
+    Route::get('/appointments/upcoming', [AppointmentController::class, 'getUpcomingAppointments']);
+    Route::get('/appointments/statistics', [AppointmentController::class, 'getStatistics']);
+    Route::post('/appointments/{appointment}/review', [AppointmentController::class, 'addReview']);
+    Route::post('/appointments/{appointment}/cancel', [AppointmentController::class, 'cancelAppointment']);
+
+    // Quote Management (All authenticated users)
+    Route::get('/quotes', [AppointmentController::class, 'getQuotes']);
+    Route::get('/quotes/{quote}', [AppointmentController::class, 'getQuote']);
 
     // Service provider routes
     Route::middleware('role:service_provider')->group(function () {
@@ -72,5 +84,18 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/profile/toggle-availability', [ProfileController::class, 'toggleAvailability']);
         Route::delete('/profile/provider/document', [ProfileController::class, 'deleteProviderDocument']);
         Route::get('/profile/provider/statistics', [ProfileController::class, 'getProviderStatistics']);
+
+        Route::post('/appointments/{appointment}/respond', [AppointmentController::class, 'respondToAppointment']);
+        Route::post('/quotes', [AppointmentController::class, 'createQuote']);
+        Route::post('/quotes/{quote}/withdraw', [AppointmentController::class, 'withdrawQuote']);
     });
+
+    // Client-specific routes
+    Route::middleware('role:client')->group(function () {
+        Route::post('/bookings', [AppointmentController::class, 'createBooking']);
+        Route::post('/quotes/{quote}/respond', [AppointmentController::class, 'respondToQuote']);
+    });
+
+    // Utility routes (for cron jobs or admin)
+    Route::post('/quotes/mark-expired', [AppointmentController::class, 'markExpiredQuotes']);
 });

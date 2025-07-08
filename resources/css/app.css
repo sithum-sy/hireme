@@ -768,3 +768,150 @@
         color: #fff;
     }
 }
+
+.provider-section {
+    border-left: 4px solid var(--bs-success);
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+}
+
+.category-quick-select .form-check {
+    margin-bottom: 0.5rem;
+}
+
+.category-quick-select .form-check-input:checked {
+    background-color: var(--bs-success);
+    border-color: var(--bs-success);
+}
+
+//File Upload Styles
+.file-preview {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.portfolio-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 0.5rem;
+}
+
+.portfolio-item {
+    position: relative;
+    aspect-ratio: 1/1;
+}
+
+.portfolio-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 0.375rem;
+}
+
+.file-item {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 0.375rem;
+    transition: all 0.3s ease;
+}
+
+.file-item:hover {
+    background: #e9ecef;
+}
+// Location selector styles
+.location-selector {
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    padding: 1rem;
+}
+
+.location-confirm {
+    border-left: 4px solid var(--bs-success);
+}
+
+.radius-selector .btn {
+    min-width: 80px;
+    text-align: center;
+}
+
+.map-component {
+    border: 1px solid #dee2e6;
+}
+
+.search-results {
+    max-height: 200px;
+    position: relative;
+    z-index: 1000;
+    background: white;
+}
+
+.max-height-200 {
+    max-height: 200px;
+}
+
+@media (max-width: 768px) {
+    .radius-selector .btn {
+        flex: 1;
+        font-size: 0.875rem;
+    }
+
+    .map-component {
+        height: 250px !important;
+    }
+}
+
+/* Provider Dashboard Styles */
+.bg-gradient-success {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+}
+
+.stats-card {
+    transition: all 0.3s ease;
+}
+
+.stats-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1) !important;
+}
+
+.action-card {
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.action-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1) !important;
+}
+
+.appointment-item {
+    background: #f8f9fa;
+    transition: all 0.3s ease;
+}
+
+.appointment-item:hover {
+    background: #e9ecef;
+}
+
+.profile-progress .progress {
+    border-radius: 10px;
+}
+
+.profile-checklist .fas {
+    width: 16px;
+}
+
+/* Mobile responsive */
+@media (max-width: 767.98px) {
+    .welcome-section {
+        text-align: center;
+    }
+
+    .welcome-section .col-md-4 {
+        display: none;
+    }
+
+    .appointment-item .col-md-3:last-child {
+        margin-top: 1rem;
+        text-align: left !important;
+    }
+}

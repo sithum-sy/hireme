@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import LocationSelector from "../components/map/LocationSelector";
 
 const Register = () => {
     const [searchParams] = useSearchParams();
@@ -19,6 +20,23 @@ const Register = () => {
         contact_number: "",
         date_of_birth: "",
         profile_picture: null,
+        // Add provider-specific fields
+        business_name: "",
+        years_of_experience: "",
+        service_area_radius: "",
+        bio: "",
+        service_categories: [],
+        business_license: null,
+        certifications: [],
+        portfolio_images: [],
+        service_location: null,
+    });
+
+    // Add new state for file previews
+    const [documentPreviews, setDocumentPreviews] = useState({
+        business_license: null,
+        certifications: [],
+        portfolio_images: [],
     });
 
     const [errors, setErrors] = useState({});
@@ -31,13 +49,135 @@ const Register = () => {
         if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
     };
 
-    const handleFileChange = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            setFormData((prev) => ({ ...prev, profile_picture: file }));
-            const reader = new FileReader();
-            reader.onload = (e) => setPreviewImage(e.target.result);
-            reader.readAsDataURL(file);
+    // const handleFileChange = (e) => {
+    //     const file = e.target.files[0];
+    //     if (file) {
+    //         setFormData((prev) => ({ ...prev, profile_picture: file }));
+    //         const reader = new FileReader();
+    //         reader.onload = (e) => setPreviewImage(e.target.result);
+    //         reader.readAsDataURL(file);
+    //     }
+    // };
+    const prepareFormDataForSubmit = () => {
+        const submitData = new FormData();
+
+        // Add text fields
+        Object.keys(formData).forEach((key) => {
+            if (key === "service_categories" && Array.isArray(formData[key])) {
+                formData[key].forEach((category, index) => {
+                    submitData.append(`service_categories[${index}]`, category);
+                });
+            } else if (
+                ![
+                    "profile_picture",
+                    "business_license",
+                    "certifications",
+                    "portfolio_images",
+                ].includes(key)
+            ) {
+                submitData.append(key, formData[key]);
+            }
+        });
+
+        // Add files
+        if (formData.profile_picture) {
+            submitData.append("profile_picture", formData.profile_picture);
+        }
+
+        if (formData.business_license) {
+            submitData.append("business_license", formData.business_license);
+        }
+
+        formData.certifications.forEach((file, index) => {
+            submitData.append(`certifications[${index}]`, file);
+        });
+
+        formData.portfolio_images.forEach((file, index) => {
+            submitData.append(`portfolio_images[${index}]`, file);
+        });
+
+        return submitData;
+    };
+
+    const handleDocumentUpload = (e, type) => {
+        const files = Array.from(e.target.files);
+
+        if (type === "business_license") {
+            const file = files[0];
+            if (file) {
+                setFormData((prev) => ({ ...prev, business_license: file }));
+                setDocumentPreviews((prev) => ({
+                    ...prev,
+                    business_license: file.name,
+                }));
+            }
+        } else if (type === "certifications") {
+            setFormData((prev) => ({
+                ...prev,
+                certifications: [...prev.certifications, ...files],
+            }));
+            setDocumentPreviews((prev) => ({
+                ...prev,
+                certifications: [
+                    ...prev.certifications,
+                    ...files.map((f) => f.name),
+                ],
+            }));
+        } else if (type === "portfolio_images") {
+            files.forEach((file) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    setDocumentPreviews((prev) => ({
+                        ...prev,
+                        portfolio_images: [
+                            ...prev.portfolio_images,
+                            e.target.result,
+                        ],
+                    }));
+                };
+                reader.readAsDataURL(file);
+            });
+            setFormData((prev) => ({
+                ...prev,
+                portfolio_images: [...prev.portfolio_images, ...files],
+            }));
+        }
+    };
+
+    const removeDocument = (type, index = null) => {
+        if (type === "business_license") {
+            setFormData((prev) => ({ ...prev, business_license: null }));
+            setDocumentPreviews((prev) => ({
+                ...prev,
+                business_license: null,
+            }));
+            document.getElementById("business_license").value = "";
+        } else if (type === "certifications" && index !== null) {
+            setFormData((prev) => ({
+                ...prev,
+                certifications: prev.certifications.filter(
+                    (_, i) => i !== index
+                ),
+            }));
+            setDocumentPreviews((prev) => ({
+                ...prev,
+                certifications: prev.certifications.filter(
+                    (_, i) => i !== index
+                ),
+            }));
+        } else if (type === "portfolio_images" && index !== null) {
+            setFormData((prev) => ({
+                ...prev,
+                portfolio_images: prev.portfolio_images.filter(
+                    (_, i) => i !== index
+                ),
+            }));
+            setDocumentPreviews((prev) => ({
+                ...prev,
+                portfolio_images: prev.portfolio_images.filter(
+                    (_, i) => i !== index
+                ),
+            }));
         }
     };
 
@@ -82,6 +222,58 @@ const Register = () => {
                 newErrors.address = "Address is required";
             if (!formData.contact_number.trim())
                 newErrors.contact_number = "Contact number is required";
+
+            // Provider-specific validation
+            if (formData.role === "service_provider") {
+                if (!formData.years_of_experience)
+                    newErrors.years_of_experience = "Experience is required";
+                if (!formData.service_area_radius)
+                    newErrors.service_area_radius = "Service area is required";
+                if (!formData.bio || formData.bio.length < 50)
+                    newErrors.bio = "Bio must be at least 50 characters";
+                if (
+                    !formData.service_categories ||
+                    formData.service_categories.length === 0
+                ) {
+                    newErrors.service_categories =
+                        "Please select at least one service category";
+                }
+                // File size validation
+                if (
+                    formData.business_license &&
+                    formData.business_license.size > 5 * 1024 * 1024
+                ) {
+                    newErrors.business_license =
+                        "Business license must be under 5MB";
+                }
+
+                if (
+                    formData.certifications.some(
+                        (file) => file.size > 5 * 1024 * 1024
+                    )
+                ) {
+                    newErrors.certifications =
+                        "Each certification file must be under 5MB";
+                }
+
+                if (
+                    formData.portfolio_images.some(
+                        (file) => file.size > 2 * 1024 * 1024
+                    )
+                ) {
+                    newErrors.portfolio_images =
+                        "Each portfolio image must be under 2MB";
+                }
+
+                if (formData.portfolio_images.length > 10) {
+                    newErrors.portfolio_images =
+                        "Maximum 10 portfolio images allowed";
+                }
+                if (!formData.service_location) {
+                    newErrors.service_location =
+                        "Please select your service area";
+                }
+            }
         }
 
         return newErrors;
@@ -105,7 +297,12 @@ const Register = () => {
             return;
         }
 
-        const result = await register(formData);
+        const submitData =
+            formData.role === "service_provider"
+                ? prepareFormDataForSubmit()
+                : formData;
+
+        const result = await register(submitData);
         if (result.success) {
             navigate(
                 result.user.role === "client"
@@ -176,6 +373,9 @@ const Register = () => {
                                                 ? "Choose Role"
                                                 : step === 2
                                                 ? "Personal Info"
+                                                : formData.role ===
+                                                  "service_provider"
+                                                ? "Contact & Professional Info"
                                                 : "Contact Details"}
                                         </small>
                                     </div>
@@ -537,6 +737,468 @@ const Register = () => {
                                                     </div>
                                                 )}
                                             </div>
+                                            {formData.role ===
+                                                "service_provider" && (
+                                                <div className="provider-section mt-4 p-3 bg-light rounded">
+                                                    <h6 className="fw-bold mb-3 text-success">
+                                                        <i className="fas fa-briefcase me-2"></i>
+                                                        Professional Information
+                                                    </h6>
+
+                                                    <div className="row g-3">
+                                                        <div className="col-md-6">
+                                                            <label className="form-label">
+                                                                Business Name
+                                                            </label>
+                                                            <input
+                                                                type="text"
+                                                                name="business_name"
+                                                                className="form-control"
+                                                                value={
+                                                                    formData.business_name
+                                                                }
+                                                                onChange={
+                                                                    handleInputChange
+                                                                }
+                                                                placeholder="Your business name (optional)"
+                                                            />
+                                                        </div>
+
+                                                        <div className="col-md-6">
+                                                            <label className="form-label">
+                                                                Years of
+                                                                Experience *
+                                                            </label>
+                                                            <select
+                                                                name="years_of_experience"
+                                                                className={`form-control ${
+                                                                    errors.years_of_experience
+                                                                        ? "is-invalid"
+                                                                        : ""
+                                                                }`}
+                                                                value={
+                                                                    formData.years_of_experience
+                                                                }
+                                                                onChange={
+                                                                    handleInputChange
+                                                                }
+                                                            >
+                                                                <option value="">
+                                                                    Select
+                                                                    experience
+                                                                </option>
+                                                                <option value="0">
+                                                                    Less than 1
+                                                                    year
+                                                                </option>
+                                                                <option value="1">
+                                                                    1-2 years
+                                                                </option>
+                                                                <option value="3">
+                                                                    3-5 years
+                                                                </option>
+                                                                <option value="6">
+                                                                    6-10 years
+                                                                </option>
+                                                                <option value="11">
+                                                                    10+ years
+                                                                </option>
+                                                            </select>
+                                                            {errors.years_of_experience && (
+                                                                <div className="invalid-feedback">
+                                                                    {
+                                                                        errors.years_of_experience
+                                                                    }
+                                                                </div>
+                                                            )}
+                                                        </div>
+
+                                                        <div className="col-md-6">
+                                                            <label className="form-label">
+                                                                Service Area *
+                                                            </label>
+                                                            <select
+                                                                name="service_area_radius"
+                                                                className={`form-control ${
+                                                                    errors.service_area_radius
+                                                                        ? "is-invalid"
+                                                                        : ""
+                                                                }`}
+                                                                value={
+                                                                    formData.service_area_radius
+                                                                }
+                                                                onChange={
+                                                                    handleInputChange
+                                                                }
+                                                            >
+                                                                <option value="">
+                                                                    Select
+                                                                    radius
+                                                                </option>
+                                                                <option value="5">
+                                                                    5 km radius
+                                                                </option>
+                                                                <option value="10">
+                                                                    10 km radius
+                                                                </option>
+                                                                <option value="25">
+                                                                    25 km radius
+                                                                </option>
+                                                                <option value="50">
+                                                                    50 km radius
+                                                                </option>
+                                                            </select>
+                                                            {errors.service_area_radius && (
+                                                                <div className="invalid-feedback">
+                                                                    {
+                                                                        errors.service_area_radius
+                                                                    }
+                                                                </div>
+                                                            )}
+                                                        </div>
+
+                                                        <div className="col-md-6">
+                                                            <label className="form-label">
+                                                                Service
+                                                                Categories *
+                                                            </label>
+                                                            <div className="category-quick-select">
+                                                                {[
+                                                                    "Healthcare",
+                                                                    "Tutoring",
+                                                                    "Home Services",
+                                                                    "Cleaning",
+                                                                ].map(
+                                                                    (
+                                                                        cat,
+                                                                        index
+                                                                    ) => (
+                                                                        <div
+                                                                            key={
+                                                                                index
+                                                                            }
+                                                                            className="form-check form-check-inline"
+                                                                        >
+                                                                            <input
+                                                                                className="form-check-input"
+                                                                                type="checkbox"
+                                                                                id={`cat-${index}`}
+                                                                                onChange={(
+                                                                                    e
+                                                                                ) => {
+                                                                                    const value =
+                                                                                        index +
+                                                                                        1; // Assuming IDs 1-4
+                                                                                    const newCategories =
+                                                                                        e
+                                                                                            .target
+                                                                                            .checked
+                                                                                            ? [
+                                                                                                  ...formData.service_categories,
+                                                                                                  value,
+                                                                                              ]
+                                                                                            : formData.service_categories.filter(
+                                                                                                  (
+                                                                                                      id
+                                                                                                  ) =>
+                                                                                                      id !==
+                                                                                                      value
+                                                                                              );
+                                                                                    setFormData(
+                                                                                        (
+                                                                                            prev
+                                                                                        ) => ({
+                                                                                            ...prev,
+                                                                                            service_categories:
+                                                                                                newCategories,
+                                                                                        })
+                                                                                    );
+                                                                                }}
+                                                                            />
+                                                                            <label
+                                                                                className="form-check-label small"
+                                                                                htmlFor={`cat-${index}`}
+                                                                            >
+                                                                                {
+                                                                                    cat
+                                                                                }
+                                                                            </label>
+                                                                        </div>
+                                                                    )
+                                                                )}
+                                                            </div>
+                                                            {errors.service_categories && (
+                                                                <div className="text-danger small">
+                                                                    {
+                                                                        errors.service_categories
+                                                                    }
+                                                                </div>
+                                                            )}
+                                                        </div>
+
+                                                        <div className="col-12">
+                                                            <label className="form-label">
+                                                                Professional Bio
+                                                                *
+                                                            </label>
+                                                            <textarea
+                                                                name="bio"
+                                                                rows="3"
+                                                                className={`form-control ${
+                                                                    errors.bio
+                                                                        ? "is-invalid"
+                                                                        : ""
+                                                                }`}
+                                                                value={
+                                                                    formData.bio
+                                                                }
+                                                                onChange={
+                                                                    handleInputChange
+                                                                }
+                                                                placeholder="Describe your experience and services (minimum 50 characters)"
+                                                            />
+                                                            <small className="text-muted">
+                                                                {
+                                                                    formData.bio
+                                                                        .length
+                                                                }
+                                                                /50 minimum
+                                                            </small>
+                                                            {errors.bio && (
+                                                                <div className="invalid-feedback">
+                                                                    {errors.bio}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                        <div className="col-12">
+                                                            <hr className="my-3" />
+                                                            <h6 className="fw-semibold mb-3 text-secondary">
+                                                                <i className="fas fa-upload me-2"></i>
+                                                                Documents &
+                                                                Portfolio
+                                                                (Optional)
+                                                            </h6>
+                                                        </div>
+
+                                                        {/* Business License */}
+                                                        <div className="col-md-6">
+                                                            <label className="form-label">
+                                                                Business License
+                                                            </label>
+                                                            <input
+                                                                type="file"
+                                                                id="business_license"
+                                                                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                                                                className="form-control"
+                                                                onChange={(e) =>
+                                                                    handleDocumentUpload(
+                                                                        e,
+                                                                        "business_license"
+                                                                    )
+                                                                }
+                                                            />
+                                                            <small className="text-muted">
+                                                                PDF, DOC, or
+                                                                Image (Max 5MB)
+                                                            </small>
+                                                            {documentPreviews.business_license && (
+                                                                <div className="mt-2">
+                                                                    <div className="d-flex align-items-center bg-light p-2 rounded">
+                                                                        <i className="fas fa-file-alt text-primary me-2"></i>
+                                                                        <span className="small flex-grow-1">
+                                                                            {
+                                                                                documentPreviews.business_license
+                                                                            }
+                                                                        </span>
+                                                                        <button
+                                                                            type="button"
+                                                                            className="btn btn-sm btn-outline-danger"
+                                                                            onClick={() =>
+                                                                                removeDocument(
+                                                                                    "business_license"
+                                                                                )
+                                                                            }
+                                                                        >
+                                                                            <i className="fas fa-times"></i>
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                        </div>
+
+                                                        {/* Certifications */}
+                                                        <div className="col-md-6">
+                                                            <label className="form-label">
+                                                                Certifications
+                                                            </label>
+                                                            <input
+                                                                type="file"
+                                                                id="certifications"
+                                                                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                                                                className="form-control"
+                                                                multiple
+                                                                onChange={(e) =>
+                                                                    handleDocumentUpload(
+                                                                        e,
+                                                                        "certifications"
+                                                                    )
+                                                                }
+                                                            />
+                                                            <small className="text-muted">
+                                                                Multiple files
+                                                                allowed (Max 5MB
+                                                                each)
+                                                            </small>
+                                                            {documentPreviews
+                                                                .certifications
+                                                                .length > 0 && (
+                                                                <div className="mt-2">
+                                                                    {documentPreviews.certifications.map(
+                                                                        (
+                                                                            fileName,
+                                                                            index
+                                                                        ) => (
+                                                                            <div
+                                                                                key={
+                                                                                    index
+                                                                                }
+                                                                                className="d-flex align-items-center bg-light p-2 rounded mb-1"
+                                                                            >
+                                                                                <i className="fas fa-certificate text-warning me-2"></i>
+                                                                                <span className="small flex-grow-1">
+                                                                                    {
+                                                                                        fileName
+                                                                                    }
+                                                                                </span>
+                                                                                <button
+                                                                                    type="button"
+                                                                                    className="btn btn-sm btn-outline-danger"
+                                                                                    onClick={() =>
+                                                                                        removeDocument(
+                                                                                            "certifications",
+                                                                                            index
+                                                                                        )
+                                                                                    }
+                                                                                >
+                                                                                    <i className="fas fa-times"></i>
+                                                                                </button>
+                                                                            </div>
+                                                                        )
+                                                                    )}
+                                                                </div>
+                                                            )}
+                                                        </div>
+
+                                                        {/* Portfolio Images */}
+                                                        <div className="col-12">
+                                                            <label className="form-label">
+                                                                Portfolio Images
+                                                            </label>
+                                                            <input
+                                                                type="file"
+                                                                id="portfolio_images"
+                                                                accept="image/*"
+                                                                className="form-control"
+                                                                multiple
+                                                                onChange={(e) =>
+                                                                    handleDocumentUpload(
+                                                                        e,
+                                                                        "portfolio_images"
+                                                                    )
+                                                                }
+                                                            />
+                                                            <small className="text-muted">
+                                                                Showcase your
+                                                                work (Max 10
+                                                                images, 2MB
+                                                                each)
+                                                            </small>
+                                                            {documentPreviews
+                                                                .portfolio_images
+                                                                .length > 0 && (
+                                                                <div className="mt-3">
+                                                                    <div className="row g-2">
+                                                                        {documentPreviews.portfolio_images.map(
+                                                                            (
+                                                                                imageSrc,
+                                                                                index
+                                                                            ) => (
+                                                                                <div
+                                                                                    key={
+                                                                                        index
+                                                                                    }
+                                                                                    className="col-3"
+                                                                                >
+                                                                                    <div className="position-relative">
+                                                                                        <img
+                                                                                            src={
+                                                                                                imageSrc
+                                                                                            }
+                                                                                            alt={`Portfolio ${
+                                                                                                index +
+                                                                                                1
+                                                                                            }`}
+                                                                                            className="img-fluid rounded"
+                                                                                            style={{
+                                                                                                aspectRatio:
+                                                                                                    "1/1",
+                                                                                                objectFit:
+                                                                                                    "cover",
+                                                                                            }}
+                                                                                        />
+                                                                                        <button
+                                                                                            type="button"
+                                                                                            className="btn btn-danger btn-sm position-absolute top-0 end-0 rounded-circle"
+                                                                                            style={{
+                                                                                                transform:
+                                                                                                    "translate(25%, -25%)",
+                                                                                            }}
+                                                                                            onClick={() =>
+                                                                                                removeDocument(
+                                                                                                    "portfolio_images",
+                                                                                                    index
+                                                                                                )
+                                                                                            }
+                                                                                        >
+                                                                                            <i className="fas fa-times"></i>
+                                                                                        </button>
+                                                                                    </div>
+                                                                                </div>
+                                                                            )
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                        <div className="col-12">
+                                                            <label className="form-label">
+                                                                Service Area *
+                                                            </label>
+                                                            <LocationSelector
+                                                                value={
+                                                                    formData.service_location
+                                                                }
+                                                                onChange={(
+                                                                    location
+                                                                ) =>
+                                                                    setFormData(
+                                                                        (
+                                                                            prev
+                                                                        ) => ({
+                                                                            ...prev,
+                                                                            service_location:
+                                                                                location,
+                                                                        })
+                                                                    )
+                                                                }
+                                                                error={
+                                                                    errors.service_location
+                                                                }
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
                                             {errors.general && (
                                                 <div className="alert alert-danger mt-3">
                                                     {errors.general}

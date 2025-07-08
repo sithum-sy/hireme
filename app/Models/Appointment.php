@@ -191,4 +191,9 @@ class Appointment extends Model
             'cancelled_at' => now()
         ]);
     }
+
+    public function quote()
+    {
+        return $this->belongsTo(Quote::class);
+    }
 }

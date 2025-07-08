@@ -13,6 +13,8 @@ import Login from "./pages/Login";
 
 // Client Pages
 import ClientDashboard from "./pages/client/Dashboard";
+// Client Dashboard Layout
+import ProviderDashboard from "./pages/provider/Dashboard";
 
 // Import Bootstrap
 import "./bootstrap";
@@ -538,23 +540,7 @@ function App() {
                         path="/provider/dashboard"
                         element={
                             <ProtectedRoute allowedRoles={["service_provider"]}>
-                                <div className="container py-5 text-center">
-                                    <h2>Service Provider Dashboard</h2>
-                                    <p className="lead">Coming soon...</p>
-                                    <div className="card mt-4">
-                                        <div className="card-body">
-                                            <i className="fas fa-tools fa-4x text-primary mb-3"></i>
-                                            <h4>
-                                                Provider Dashboard Under
-                                                Development
-                                            </h4>
-                                            <p className="text-muted">
-                                                We're building an amazing
-                                                dashboard for service providers.
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
+                                <ProviderDashboard />
                             </ProtectedRoute>
                         }
                     />
