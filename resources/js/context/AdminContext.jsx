@@ -216,27 +216,46 @@ export const AdminProvider = ({ children }) => {
         setErrors((prev) => ({ ...prev, updateStaff: null }));
 
         try {
-            const response = await axios.put(
-                `/api/admin/staff/${staffId}`,
-                staffData,
-                {
-                    headers: {
-                        "Content-Type":
-                            staffData instanceof FormData
-                                ? "multipart/form-data"
-                                : "application/json",
-                    },
-                }
-            );
+            let response;
+
+            if (staffData instanceof FormData) {
+                // For FormData, use POST with _method override
+                staffData.append("_method", "PUT");
+
+                response = await axios.post(
+                    `/api/admin/staff/${staffId}`,
+                    staffData,
+                    {
+                        headers: {
+                            "Content-Type": "multipart/form-data",
+                        },
+                    }
+                );
+            } else {
+                // For regular JSON data, use PUT
+                response = await axios.put(
+                    `/api/admin/staff/${staffId}`,
+                    staffData,
+                    {
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                    }
+                );
+            }
 
             if (response.data.success) {
                 setSuccessMessage(response.data.message);
-                // Update staff in the list
-                setStaff((prev) =>
-                    prev.map((s) =>
-                        s.id === staffId ? response.data.data.staff : s
+
+                // Update staff in the current list if it exists
+                setStaff((prevStaff) =>
+                    prevStaff.map((s) =>
+                        s.id === parseInt(staffId)
+                            ? { ...s, ...response.data.data.staff }
+                            : s
                     )
                 );
+
                 return response.data.data.staff;
             } else {
                 throw new Error(
@@ -247,13 +266,16 @@ export const AdminProvider = ({ children }) => {
             console.error("Update staff error:", error);
             const errorMessage =
                 error.response?.data?.message ||
+                error.message ||
                 "Failed to update staff member";
             const validationErrors = error.response?.data?.errors || {};
+
             setErrors((prev) => ({
                 ...prev,
                 updateStaff: errorMessage,
                 updateStaffValidation: validationErrors,
             }));
+
             throw error;
         } finally {
             setIsProcessing(false);

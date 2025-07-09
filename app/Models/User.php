@@ -53,14 +53,22 @@ class User extends Authenticatable
         'date_of_birth' => 'date',
         'is_active' => 'boolean',
         'last_login_at' => 'datetime',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     /**
-     * The attributes that should be included in soft delete.
+     * IMPORTANT: Specify date format for consistent handling
      *
      * @var array<string>
      */
-    protected $dates = ['deleted_at'];
+    protected $dates = [
+        'date_of_birth',
+        'email_verified_at',
+        'last_login_at',
+        'created_at',
+        'updated_at'
+    ];
 
     // Role constants
     const ROLE_CLIENT = 'client';

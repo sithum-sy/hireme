@@ -171,18 +171,40 @@ const EditStaff = () => {
         try {
             const staffData = new FormData();
 
+            // Debug: Log what we're about to send
+            // console.log("Form data before submission:", formData);
+
             // Append form fields (excluding password fields if not changing password)
             Object.keys(formData).forEach((key) => {
                 if (key === "password" || key === "password_confirmation") {
                     if (changePassword && formData[key]) {
                         staffData.append(key, formData[key]);
+                        console.log(`Appending ${key}:`, formData[key]);
+                    }
+                } else if (key === "profile_picture") {
+                    // Only append if there's a new file
+                    if (formData[key] instanceof File) {
+                        staffData.append(key, formData[key]);
+                        console.log(
+                            `Appending new profile picture:`,
+                            formData[key].name
+                        );
                     }
                 } else if (formData[key] !== null && formData[key] !== "") {
                     staffData.append(key, formData[key]);
+                    console.log(`Appending ${key}:`, formData[key]);
                 }
             });
 
+            // Debug: Check FormData contents
+            // console.log("FormData contents:");
+            // for (let [key, value] of staffData.entries()) {
+            //     console.log(key, value);
+            // }
+
             const updatedStaff = await updateStaff(id, staffData);
+
+            console.log("Update successful:", updatedStaff);
 
             // Navigate to staff details page
             navigate(`/admin/staff/${id}`, {
@@ -190,6 +212,11 @@ const EditStaff = () => {
             });
         } catch (error) {
             console.error("Failed to update staff:", error);
+
+            // Show more detailed error information
+            if (error.response?.data?.errors) {
+                console.error("Validation errors:", error.response.data.errors);
+            }
         }
     };
 

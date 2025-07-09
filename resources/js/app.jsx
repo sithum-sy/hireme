@@ -24,6 +24,8 @@ import ServiceForm from "./pages/provider/ServiceForm";
 import AdminDashboard from "./pages/admin/Dashboard";
 import StaffList from "./pages/admin/staff/StaffList";
 import CreateStaff from "./pages/admin/staff/CreateStaff";
+import EditStaff from "./pages/admin/staff/EditStaff";
+import StaffDetails from "./pages/admin/staff/StaffDetails";
 
 // Import Bootstrap
 import "./bootstrap";
@@ -619,6 +621,14 @@ function App() {
                                         <Route
                                             path="staff/create"
                                             element={<CreateStaff />}
+                                        />
+                                        <Route
+                                            path="staff/:id"
+                                            element={<StaffDetails />}
+                                        />
+                                        <Route
+                                            path="staff/:id/edit"
+                                            element={<EditStaff />}
                                         />
 
                                         {/* User Management Routes */}

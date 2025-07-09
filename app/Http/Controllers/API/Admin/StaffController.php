@@ -49,6 +49,7 @@ class StaffController extends Controller
                     'last_name' => $staffMember->last_name,
                     'full_name' => $staffMember->full_name,
                     'email' => $staffMember->email,
+                    'date_of_birth' => $staffMember->date_of_birth?->format('Y-m-d'), // FIXED: Added null check with ?->
                     'contact_number' => $staffMember->contact_number,
                     'address' => $staffMember->address,
                     'profile_picture' => $staffMember->profile_picture ? Storage::url($staffMember->profile_picture) : null,
@@ -91,6 +92,7 @@ class StaffController extends Controller
                 'first_name' => 'required|string|max:255',
                 'last_name' => 'required|string|max:255',
                 'email' => 'required|email|unique:users,email',
+                'date_of_birth' => 'nullable|date|before:today',
                 'password' => 'required|string|min:8|confirmed',
                 'contact_number' => 'nullable|string|max:20',
                 'address' => 'nullable|string|max:500',
@@ -110,8 +112,14 @@ class StaffController extends Controller
                 'last_name',
                 'email',
                 'contact_number',
-                'address'
+                'address',
+                'date_of_birth'
             ]);
+
+            // Remove empty values to avoid storing empty strings
+            $staffData = array_filter($staffData, function ($value) {
+                return $value !== null && $value !== '';
+            });
 
             // Hash password
             $staffData['password'] = Hash::make($request->password);
@@ -140,6 +148,7 @@ class StaffController extends Controller
                         'last_name' => $staff->last_name,
                         'full_name' => $staff->full_name,
                         'email' => $staff->email,
+                        'date_of_birth' => $staff->date_of_birth?->format('Y-m-d'),
                         'contact_number' => $staff->contact_number,
                         'address' => $staff->address,
                         'profile_picture' => $staff->profile_picture ? Storage::url($staff->profile_picture) : null,
@@ -248,6 +257,19 @@ class StaffController extends Controller
                 'address',
                 'date_of_birth'
             ]);
+
+            // Remove empty values to avoid storing empty strings (but keep null for date_of_birth to clear it)
+            $updateData = array_filter($updateData, function ($value, $key) {
+                if ($key === 'date_of_birth') {
+                    return true; // Always include date_of_birth, even if empty (to allow clearing)
+                }
+                return $value !== null && $value !== '';
+            }, ARRAY_FILTER_USE_BOTH);
+
+            // Convert empty date_of_birth to null
+            if (isset($updateData['date_of_birth']) && $updateData['date_of_birth'] === '') {
+                $updateData['date_of_birth'] = null;
+            }
 
             // Update password if provided
             if ($request->filled('password')) {

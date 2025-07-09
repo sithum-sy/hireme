@@ -26,7 +26,10 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
         Route::get('/', [StaffController::class, 'index']);
         Route::post('/', [StaffController::class, 'store']);
         Route::get('/{staff}', [StaffController::class, 'show']);
+        // Handle both PUT and POST (with _method override) for updates
         Route::put('/{staff}', [StaffController::class, 'update']);
+        Route::post('/{staff}', [StaffController::class, 'update']); // For FormData with _method=PUT
+
         Route::delete('/{staff}', [StaffController::class, 'destroy']);
         Route::patch('/{staff}/toggle-status', [StaffController::class, 'toggleStatus']);
     });

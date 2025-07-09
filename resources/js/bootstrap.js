@@ -8,6 +8,7 @@ import axios from "axios";
 window.axios = axios;
 
 window.axios.defaults.headers.common["X-Requested-With"] = "XMLHttpRequest";
+window.axios.defaults.headers.common["Accept"] = "application/json";
 
 // Add CSRF token to all requests
 const token = document.head.querySelector('meta[name="csrf-token"]');
@@ -17,6 +18,36 @@ if (token) {
 
 // Set base URL
 window.axios.defaults.baseURL = "http://127.0.0.1:8000";
+
+// Simple request interceptor for auth
+window.axios.interceptors.request.use(
+    (config) => {
+        const authToken = localStorage.getItem("auth_token");
+        if (authToken) {
+            config.headers.Authorization = `Bearer ${authToken}`;
+        }
+        return config;
+    },
+    (error) => {
+        return Promise.reject(error);
+    }
+);
+
+// Simple response interceptor for auth errors
+window.axios.interceptors.response.use(
+    (response) => {
+        return response;
+    },
+    (error) => {
+        if (error.response?.status === 401) {
+            localStorage.removeItem("auth_token");
+            if (!window.location.pathname.includes("/login")) {
+                window.location.href = "/login";
+            }
+        }
+        return Promise.reject(error);
+    }
+);
 
 /**
  * Echo exposes an expressive API for subscribing to channels and listening
