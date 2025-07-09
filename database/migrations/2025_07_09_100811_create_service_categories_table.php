@@ -15,12 +15,17 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('slug')->unique();
-            $table->text('description')->nullable();
-            $table->string('icon')->nullable(); // FontAwesome class
-            $table->string('color')->default('primary'); // Bootstrap color
+            $table->text('description');
+            $table->string('icon')->default('fas fa-cog'); // FontAwesome icon class
+            $table->string('color')->default('primary'); // Bootstrap color class
             $table->boolean('is_active')->default(true);
             $table->integer('sort_order')->default(0);
+            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete(); // Track who created this category
             $table->timestamps();
+
+            // Indexes
+            $table->index(['is_active', 'sort_order']);
+            $table->index('slug');
         });
     }
 

@@ -201,19 +201,27 @@ class User extends Authenticatable
             return 'Never logged in';
         }
 
-        return $this->last_login_at->diffForHumans();
+        try {
+            return $this->last_login_at->diffForHumans();
+        } catch (\Exception $e) {
+            return 'Never logged in';
+        }
     }
 
     /**
      * Check if user has logged in recently (within last 30 days)
      */
-    public function hasRecentActivity()
+    public function hasRecentActivity($days = 30)
     {
         if (!$this->last_login_at) {
             return false;
         }
 
-        return $this->last_login_at->isAfter(now()->subDays(30));
+        try {
+            return $this->last_login_at->isAfter(now()->subDays($days));
+        } catch (\Exception $e) {
+            return false;
+        }
     }
 
     /**

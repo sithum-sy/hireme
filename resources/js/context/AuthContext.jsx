@@ -129,6 +129,14 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    const isStaff = () => {
+        return user?.role === "staff";
+    };
+
+    const hasStaffPermission = (permission) => {
+        return isStaff() && user?.permissions?.includes(permission);
+    };
+
     const value = {
         user,
         loading,
@@ -136,6 +144,8 @@ export const AuthProvider = ({ children }) => {
         login,
         logout,
         isAuthenticated: !!user,
+        isStaff,
+        hasStaffPermission,
     };
 
     return (
