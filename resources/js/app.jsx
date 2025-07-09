@@ -31,6 +31,8 @@ import StaffDetails from "./pages/admin/staff/StaffDetails";
 // Staff Components
 import StaffDashboard from "./pages/staff/Dashboard";
 import StaffLayout from "./components/layouts/StaffLayout";
+import CategoriesList from "./pages/staff/categories/CategoriesList";
+import CreateCategory from "./pages/staff/categories/CreateCategory";
 
 // Import Bootstrap
 import "./bootstrap";
@@ -735,22 +737,257 @@ function App() {
                             <ProtectedRoute allowedRoles={["staff"]}>
                                 <StaffProvider>
                                     <Routes>
+                                        {/* Staff Dashboard */}
                                         <Route
                                             path="dashboard"
                                             element={<StaffDashboard />}
                                         />
-                                        {/* <Route
-                                            path="profile"
-                                            element={<StaffProfile />}
+                                        {/* Service Categories Management */}
+                                        <Route
+                                            path="categories"
+                                            element={<CategoriesList />}
                                         />
+                                        <Route
+                                            path="categories/create"
+                                            element={<CreateCategory />}
+                                        />
+                                        {/* User Management */}
+                                        <Route
+                                            path="users"
+                                            element={
+                                                <div className="container-fluid">
+                                                    <h2 className="fw-bold mb-4">
+                                                        User Management
+                                                    </h2>
+                                                    <div className="card border-0 shadow-sm">
+                                                        <div className="card-body text-center py-5">
+                                                            <i className="fas fa-users fa-4x text-info mb-3"></i>
+                                                            <h4>
+                                                                User Management
+                                                                Interface
+                                                            </h4>
+                                                            <p className="text-muted">
+                                                                Manage clients
+                                                                and service
+                                                                providers.
+                                                            </p>
+                                                            <p className="text-muted small">
+                                                                Coming in Phase
+                                                                3...
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            }
+                                        />
+                                        {/* Services Management */}
+                                        <Route
+                                            path="services"
+                                            element={
+                                                <div className="container-fluid">
+                                                    <h2 className="fw-bold mb-4">
+                                                        Services Management
+                                                    </h2>
+                                                    <div className="card border-0 shadow-sm">
+                                                        <div className="card-body text-center py-5">
+                                                            <i className="fas fa-briefcase fa-4x text-success mb-3"></i>
+                                                            <h4>
+                                                                Service
+                                                                Management
+                                                            </h4>
+                                                            <p className="text-muted">
+                                                                Monitor and
+                                                                manage all
+                                                                platform
+                                                                services.
+                                                            </p>
+                                                            <p className="text-muted small">
+                                                                Coming in Phase
+                                                                3...
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            }
+                                        />
+                                        {/* Appointments Management */}
+                                        <Route
+                                            path="appointments"
+                                            element={
+                                                <div className="container-fluid">
+                                                    <h2 className="fw-bold mb-4">
+                                                        Appointments Management
+                                                    </h2>
+                                                    <div className="card border-0 shadow-sm">
+                                                        <div className="card-body text-center py-5">
+                                                            <i className="fas fa-calendar-alt fa-4x text-warning mb-3"></i>
+                                                            <h4>
+                                                                Appointment
+                                                                Management
+                                                            </h4>
+                                                            <p className="text-muted">
+                                                                View and manage
+                                                                platform
+                                                                appointments.
+                                                            </p>
+                                                            <p className="text-muted small">
+                                                                Coming in Phase
+                                                                4...
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            }
+                                        />
+                                        {/* Disputes Management */}
+                                        <Route
+                                            path="disputes"
+                                            element={
+                                                <div className="container-fluid">
+                                                    <h2 className="fw-bold mb-4">
+                                                        Disputes Management
+                                                    </h2>
+                                                    <div className="card border-0 shadow-sm">
+                                                        <div className="card-body text-center py-5">
+                                                            <i className="fas fa-balance-scale fa-4x text-danger mb-3"></i>
+                                                            <h4>
+                                                                Dispute
+                                                                Resolution
+                                                            </h4>
+                                                            <p className="text-muted">
+                                                                Handle and
+                                                                resolve user
+                                                                disputes.
+                                                            </p>
+                                                            <p className="text-muted small">
+                                                                Coming in Phase
+                                                                4...
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            }
+                                        />
+                                        {/* Reports & Analytics */}
+                                        <Route
+                                            path="reports"
+                                            element={
+                                                <div className="container-fluid">
+                                                    <h2 className="fw-bold mb-4">
+                                                        Reports & Analytics
+                                                    </h2>
+                                                    <div className="card border-0 shadow-sm">
+                                                        <div className="card-body text-center py-5">
+                                                            <i className="fas fa-chart-bar fa-4x text-info mb-3"></i>
+                                                            <h4>
+                                                                Analytics
+                                                                Dashboard
+                                                            </h4>
+                                                            <p className="text-muted">
+                                                                Comprehensive
+                                                                platform
+                                                                analytics and
+                                                                reports.
+                                                            </p>
+                                                            <p className="text-muted small">
+                                                                Coming in Phase
+                                                                5...
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            }
+                                        />
+                                        {/* Activity Log */}
+                                        <Route
+                                            path="activities"
+                                            element={
+                                                <div className="container-fluid">
+                                                    <h2 className="fw-bold mb-4">
+                                                        Activity Log
+                                                    </h2>
+                                                    <div className="card border-0 shadow-sm">
+                                                        <div className="card-body text-center py-5">
+                                                            <i className="fas fa-history fa-4x text-secondary mb-3"></i>
+                                                            <h4>
+                                                                Activity
+                                                                Monitoring
+                                                            </h4>
+                                                            <p className="text-muted">
+                                                                Track all staff
+                                                                activities and
+                                                                system events.
+                                                            </p>
+                                                            <p className="text-muted small">
+                                                                Coming in Phase
+                                                                3...
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            }
+                                        />
+                                        {/* Staff Profile */}
+                                        <Route
+                                            path="profile"
+                                            element={
+                                                <div className="container-fluid">
+                                                    <h2 className="fw-bold mb-4">
+                                                        My Profile
+                                                    </h2>
+                                                    <div className="card border-0 shadow-sm">
+                                                        <div className="card-body text-center py-5">
+                                                            <i className="fas fa-user-edit fa-4x text-primary mb-3"></i>
+                                                            <h4>
+                                                                Staff Profile
+                                                                Management
+                                                            </h4>
+                                                            <p className="text-muted">
+                                                                Update your
+                                                                profile
+                                                                information and
+                                                                preferences.
+                                                            </p>
+                                                            <p className="text-muted small">
+                                                                Coming soon...
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            }
+                                        />
+                                        {/* Staff Settings */}
                                         <Route
                                             path="settings"
-                                            element={<StaffSettings />}
+                                            element={
+                                                <div className="container-fluid">
+                                                    <h2 className="fw-bold mb-4">
+                                                        Settings
+                                                    </h2>
+                                                    <div className="card border-0 shadow-sm">
+                                                        <div className="card-body text-center py-5">
+                                                            <i className="fas fa-cog fa-4x text-secondary mb-3"></i>
+                                                            <h4>
+                                                                Staff Settings
+                                                            </h4>
+                                                            <p className="text-muted">
+                                                                Configure your
+                                                                dashboard
+                                                                preferences.
+                                                            </p>
+                                                            <p className="text-muted small">
+                                                                Coming soon...
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            }
                                         />
+                                        {/* Default Staff Route - Redirect to Dashboard */}
                                         <Route
-                                            path="notifications"
-                                            element={<StaffNotifications />}
-                                        /> */}
+                                            path="*"
+                                            element={<StaffDashboard />}
+                                        />
                                     </Routes>
                                 </StaffProvider>
                             </ProtectedRoute>

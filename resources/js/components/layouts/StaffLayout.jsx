@@ -1,70 +1,32 @@
 import React, { useState, useEffect } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { useStaff } from "../../context/StaffContext";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 const StaffLayout = ({ children }) => {
-    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const { user, logout } = useAuth();
+    const { state, addNotification, removeNotification } = useStaff();
     const location = useLocation();
     const navigate = useNavigate();
-    const { user, logout } = useAuth();
+    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+    const [currentTime, setCurrentTime] = useState(new Date());
 
-    // Navigation menu items
-    const menuItems = [
-        {
-            id: "dashboard",
-            label: "Dashboard",
-            icon: "fas fa-tachometer-alt",
-            path: "/staff/dashboard",
-            active: location.pathname === "/staff/dashboard",
-        },
-        {
-            id: "categories",
-            label: "Service Categories",
-            icon: "fas fa-folder-open",
-            path: "/staff/service-categories",
-            active: location.pathname.startsWith("/staff/service-categories"),
-        },
-        {
-            id: "users",
-            label: "User Management",
-            icon: "fas fa-users",
-            path: "/staff/users",
-            active: location.pathname.startsWith("/staff/users"),
-            badge: "5",
-            badgeColor: "bg-warning",
-        },
-        {
-            id: "appointments",
-            label: "Appointments",
-            icon: "fas fa-calendar-alt",
-            path: "/staff/appointments",
-            active: location.pathname.startsWith("/staff/appointments"),
-        },
-        {
-            id: "disputes",
-            label: "Disputes",
-            icon: "fas fa-balance-scale",
-            path: "/staff/disputes",
-            active: location.pathname.startsWith("/staff/disputes"),
-            badge: "2",
-            badgeColor: "bg-danger",
-        },
-        {
-            id: "reports",
-            label: "Reports & Analytics",
-            icon: "fas fa-chart-line",
-            path: "/staff/reports",
-            active: location.pathname.startsWith("/staff/reports"),
-        },
-        {
-            id: "settings",
-            label: "Settings",
-            icon: "fas fa-cogs",
-            path: "/staff/settings",
-            active: location.pathname.startsWith("/staff/settings"),
-        },
-    ];
+    // Update current time every minute
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setCurrentTime(new Date());
+        }, 60000);
+
+        return () => clearInterval(timer);
+    }, []);
+
+    // Clear notifications when route changes (optional)
+    useEffect(() => {
+        // You can clear notifications on route change if needed
+        // state.ui.notifications.forEach(notification => {
+        //     removeNotification(notification.id);
+        // });
+    }, [location.pathname]);
 
     const handleLogout = async () => {
         try {
@@ -75,309 +37,577 @@ const StaffLayout = ({ children }) => {
         }
     };
 
+    const toggleSidebar = () => {
+        setSidebarCollapsed(!sidebarCollapsed);
+    };
+
+    // Navigation items
+    const navigationItems = [
+        {
+            title: "Dashboard",
+            icon: "fas fa-tachometer-alt",
+            path: "/staff/dashboard",
+            exact: true,
+        },
+        {
+            title: "Service Categories",
+            icon: "fas fa-tags",
+            path: "/staff/categories",
+            children: [
+                { title: "All Categories", path: "/staff/categories" },
+                { title: "Create Category", path: "/staff/categories/create" },
+                { title: "Analytics", path: "/staff/categories/analytics" },
+            ],
+        },
+        {
+            title: "User Management",
+            icon: "fas fa-users",
+            path: "/staff/users",
+            children: [
+                { title: "All Users", path: "/staff/users" },
+                { title: "Clients", path: "/staff/users?role=client" },
+                {
+                    title: "Providers",
+                    path: "/staff/users?role=service_provider",
+                },
+                {
+                    title: "Pending Approvals",
+                    path: "/staff/users?status=pending",
+                },
+            ],
+        },
+        {
+            title: "Services",
+            icon: "fas fa-briefcase",
+            path: "/staff/services",
+            children: [
+                { title: "All Services", path: "/staff/services" },
+                {
+                    title: "Active Services",
+                    path: "/staff/services?status=active",
+                },
+                {
+                    title: "Pending Review",
+                    path: "/staff/services?status=pending",
+                },
+            ],
+        },
+        {
+            title: "Appointments",
+            icon: "fas fa-calendar-alt",
+            path: "/staff/appointments",
+            children: [
+                { title: "All Appointments", path: "/staff/appointments" },
+                {
+                    title: "Today's Appointments",
+                    path: "/staff/appointments/today",
+                },
+                {
+                    title: "Upcoming",
+                    path: "/staff/appointments?status=upcoming",
+                },
+            ],
+        },
+        {
+            title: "Disputes",
+            icon: "fas fa-balance-scale",
+            path: "/staff/disputes",
+            children: [
+                { title: "Open Disputes", path: "/staff/disputes?status=open" },
+                { title: "In Review", path: "/staff/disputes?status=review" },
+                { title: "Resolved", path: "/staff/disputes?status=resolved" },
+            ],
+        },
+        {
+            title: "Reports",
+            icon: "fas fa-chart-bar",
+            path: "/staff/reports",
+            children: [
+                { title: "Platform Overview", path: "/staff/reports/overview" },
+                { title: "User Analytics", path: "/staff/reports/users" },
+                {
+                    title: "Activity Reports",
+                    path: "/staff/reports/activities",
+                },
+            ],
+        },
+        {
+            title: "Activity Log",
+            icon: "fas fa-history",
+            path: "/staff/activities",
+        },
+    ];
+
+    const isActiveRoute = (path, exact = false) => {
+        if (exact) {
+            return location.pathname === path;
+        }
+        return location.pathname.startsWith(path);
+    };
+
+    const generateBreadcrumbs = () => {
+        const pathSegments = location.pathname
+            .split("/")
+            .filter((segment) => segment);
+        const breadcrumbs = [];
+
+        // Remove 'staff' from path segments for cleaner breadcrumbs
+        const staffIndex = pathSegments.indexOf("staff");
+        if (staffIndex > -1) {
+            pathSegments.splice(staffIndex, 1);
+        }
+
+        // Add Home breadcrumb
+        breadcrumbs.push({
+            title: "Staff",
+            path: "/staff/dashboard",
+            active: pathSegments.length === 0,
+        });
+
+        // Generate breadcrumbs from path
+        let currentPath = "/staff";
+        pathSegments.forEach((segment, index) => {
+            currentPath += `/${segment}`;
+            const isLast = index === pathSegments.length - 1;
+
+            breadcrumbs.push({
+                title:
+                    segment.charAt(0).toUpperCase() +
+                    segment.slice(1).replace(/-/g, " "),
+                path: currentPath,
+                active: isLast,
+            });
+        });
+
+        return breadcrumbs;
+    };
+
     return (
-        <div className="d-flex vh-100 bg-light">
-            {/* Sidebar */}
-            <div
-                className={`bg-dark text-white position-fixed position-lg-static vh-100 ${
-                    sidebarCollapsed ? "sidebar-collapsed" : "sidebar-expanded"
-                } ${mobileMenuOpen ? "mobile-menu-open" : ""}`}
-                style={{
-                    width: sidebarCollapsed ? "60px" : "250px",
-                    transition: "width 0.3s ease",
-                    zIndex: 1050,
-                }}
-            >
-                {/* Sidebar Header */}
-                <div className="p-3 border-bottom border-secondary">
-                    <div className="d-flex align-items-center">
-                        <div
-                            className="bg-primary rounded-circle d-flex align-items-center justify-content-center me-2"
-                            style={{ width: "32px", height: "32px" }}
-                        >
-                            <i
-                                className="fas fa-briefcase text-white"
-                                style={{ fontSize: "14px" }}
-                            ></i>
+        <div className="min-vh-100 bg-light">
+            {/* Top Navigation Bar */}
+            <nav className="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
+                <div className="container-fluid">
+                    {/* Sidebar Toggle */}
+                    <button
+                        className="btn btn-primary d-lg-none me-3"
+                        type="button"
+                        onClick={toggleSidebar}
+                    >
+                        <i className="fas fa-bars"></i>
+                    </button>
+
+                    {/* Brand */}
+                    <Link
+                        className="navbar-brand fw-bold"
+                        to="/staff/dashboard"
+                    >
+                        <i className="fas fa-user-tie me-2"></i>
+                        HireMe Staff
+                    </Link>
+
+                    {/* Top Nav Items */}
+                    <div className="navbar-nav ms-auto d-flex flex-row align-items-center">
+                        {/* Current Time */}
+                        <div className="text-white-50 me-4 d-none d-md-block">
+                            <i className="fas fa-clock me-1"></i>
+                            {currentTime.toLocaleTimeString([], {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                            })}
                         </div>
-                        {!sidebarCollapsed && (
-                            <div>
-                                <h6 className="mb-0 text-white">HireMe</h6>
-                                <small className="text-muted">
-                                    Staff Portal
-                                </small>
-                            </div>
-                        )}
+
+                        {/* Notifications */}
+                        <div className="dropdown me-3">
+                            <button
+                                className="btn btn-outline-light btn-sm position-relative"
+                                type="button"
+                                data-bs-toggle="dropdown"
+                            >
+                                <i className="fas fa-bell"></i>
+                                {state.ui.notifications.length > 0 && (
+                                    <span
+                                        className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                                        style={{ fontSize: "0.6rem" }}
+                                    >
+                                        {state.ui.notifications.length}
+                                    </span>
+                                )}
+                            </button>
+                            <ul className="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <h6 className="dropdown-header">
+                                        Notifications
+                                    </h6>
+                                </li>
+                                {state.ui.notifications.length === 0 ? (
+                                    <li>
+                                        <span className="dropdown-item-text text-muted">
+                                            No new notifications
+                                        </span>
+                                    </li>
+                                ) : (
+                                    state.ui.notifications.map(
+                                        (notification) => (
+                                            <li key={notification.id}>
+                                                <div className="dropdown-item">
+                                                    <small className="text-muted">
+                                                        Just now
+                                                    </small>
+                                                    <br />
+                                                    {notification.message}
+                                                    <button
+                                                        className="btn btn-sm btn-link p-0 ms-2"
+                                                        onClick={() =>
+                                                            removeNotification(
+                                                                notification.id
+                                                            )
+                                                        }
+                                                    >
+                                                        <i className="fas fa-times"></i>
+                                                    </button>
+                                                </div>
+                                            </li>
+                                        )
+                                    )
+                                )}
+                                <li>
+                                    <hr className="dropdown-divider" />
+                                </li>
+                                <li>
+                                    <Link
+                                        className="dropdown-item text-center"
+                                        to="/staff/activities"
+                                    >
+                                        View all activities
+                                    </Link>
+                                </li>
+                            </ul>
+                        </div>
+
+                        {/* User Dropdown */}
+                        <div className="dropdown">
+                            <button
+                                className="btn btn-outline-light btn-sm dropdown-toggle d-flex align-items-center"
+                                type="button"
+                                data-bs-toggle="dropdown"
+                            >
+                                <div className="me-2">
+                                    {user?.profile_picture ? (
+                                        <img
+                                            src={user.profile_picture}
+                                            alt="Profile"
+                                            className="rounded-circle"
+                                            style={{
+                                                width: "24px",
+                                                height: "24px",
+                                                objectFit: "cover",
+                                            }}
+                                        />
+                                    ) : (
+                                        <i className="fas fa-user-circle"></i>
+                                    )}
+                                </div>
+                                <span className="d-none d-md-inline">
+                                    {user?.full_name}
+                                </span>
+                            </button>
+                            <ul className="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <h6 className="dropdown-header">
+                                        {user?.full_name}
+                                        <br />
+                                        <small className="text-muted">
+                                            {user?.email}
+                                        </small>
+                                    </h6>
+                                </li>
+                                <li>
+                                    <hr className="dropdown-divider" />
+                                </li>
+                                <li>
+                                    <Link
+                                        className="dropdown-item"
+                                        to="/staff/profile"
+                                    >
+                                        <i className="fas fa-user me-2"></i>
+                                        Profile
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link
+                                        className="dropdown-item"
+                                        to="/staff/settings"
+                                    >
+                                        <i className="fas fa-cog me-2"></i>
+                                        Settings
+                                    </Link>
+                                </li>
+                                <li>
+                                    <hr className="dropdown-divider" />
+                                </li>
+                                <li>
+                                    <button
+                                        className="dropdown-item text-danger"
+                                        onClick={handleLogout}
+                                    >
+                                        <i className="fas fa-sign-out-alt me-2"></i>
+                                        Logout
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
+            </nav>
 
-                {/* Navigation Menu */}
-                <nav className="flex-grow-1 py-3">
-                    <ul className="nav nav-pills flex-column">
-                        {menuItems.map((item) => (
-                            <li key={item.id} className="nav-item mb-1">
-                                <Link
-                                    to={item.path}
-                                    className={`nav-link d-flex align-items-center px-3 py-2 mx-2 rounded ${
-                                        item.active
-                                            ? "active bg-primary"
-                                            : "text-light"
-                                    }`}
-                                    onClick={() => setMobileMenuOpen(false)}
-                                >
-                                    <i
-                                        className={`${item.icon} me-2`}
-                                        style={{ width: "20px" }}
-                                    ></i>
-                                    {!sidebarCollapsed && (
-                                        <>
-                                            <span className="flex-grow-1">
-                                                {item.label}
-                                            </span>
-                                            {item.badge && (
-                                                <span
-                                                    className={`badge ${item.badgeColor} ms-2`}
-                                                >
-                                                    {item.badge}
-                                                </span>
-                                            )}
-                                        </>
-                                    )}
-                                </Link>
-                            </li>
-                        ))}
-                    </ul>
-                </nav>
-
-                {/* Sidebar Footer */}
-                <div className="p-3 border-top border-secondary">
-                    <div className="d-flex align-items-center">
+            <div className="container-fluid">
+                <div className="row">
+                    {/* Sidebar */}
+                    <div
+                        className={`col-lg-3 col-xl-2 p-0 ${
+                            sidebarCollapsed ? "d-none" : ""
+                        } d-lg-block`}
+                    >
                         <div
-                            className="bg-success rounded-circle d-flex align-items-center justify-content-center me-2"
-                            style={{ width: "32px", height: "32px" }}
+                            className="bg-white shadow-sm"
+                            style={{ minHeight: "calc(100vh - 56px)" }}
                         >
-                            <i
-                                className="fas fa-user text-white"
-                                style={{ fontSize: "14px" }}
-                            ></i>
-                        </div>
-                        {!sidebarCollapsed && (
-                            <div className="flex-grow-1">
-                                <div className="text-white small fw-semibold">
-                                    {user?.full_name || "Staff User"}
+                            <div className="p-3">
+                                <div className="d-flex justify-content-between align-items-center mb-3">
+                                    <h6 className="mb-0 text-muted">
+                                        NAVIGATION
+                                    </h6>
+                                    <button
+                                        className="btn btn-sm btn-outline-secondary d-lg-none"
+                                        onClick={toggleSidebar}
+                                    >
+                                        <i className="fas fa-times"></i>
+                                    </button>
                                 </div>
-                                <div
-                                    className="text-muted"
-                                    style={{ fontSize: "12px" }}
-                                >
-                                    Online
+
+                                <nav className="nav flex-column">
+                                    {navigationItems.map((item, index) => (
+                                        <div key={index} className="mb-1">
+                                            {item.children ? (
+                                                // Dropdown navigation item
+                                                <div className="dropdown">
+                                                    <Link
+                                                        to={item.path}
+                                                        className={`nav-link d-flex align-items-center justify-content-between text-decoration-none ${
+                                                            isActiveRoute(
+                                                                item.path
+                                                            )
+                                                                ? "active bg-primary text-white"
+                                                                : "text-dark"
+                                                        }`}
+                                                        data-bs-toggle="dropdown"
+                                                    >
+                                                        <div>
+                                                            <i
+                                                                className={`${item.icon} me-2`}
+                                                            ></i>
+                                                            {item.title}
+                                                        </div>
+                                                        <i className="fas fa-chevron-down"></i>
+                                                    </Link>
+                                                    <ul className="dropdown-menu w-100 border-0 shadow-sm">
+                                                        {item.children.map(
+                                                            (
+                                                                child,
+                                                                childIndex
+                                                            ) => (
+                                                                <li
+                                                                    key={
+                                                                        childIndex
+                                                                    }
+                                                                >
+                                                                    <Link
+                                                                        to={
+                                                                            child.path
+                                                                        }
+                                                                        className={`dropdown-item ${
+                                                                            isActiveRoute(
+                                                                                child.path,
+                                                                                true
+                                                                            )
+                                                                                ? "active"
+                                                                                : ""
+                                                                        }`}
+                                                                    >
+                                                                        {
+                                                                            child.title
+                                                                        }
+                                                                    </Link>
+                                                                </li>
+                                                            )
+                                                        )}
+                                                    </ul>
+                                                </div>
+                                            ) : (
+                                                // Simple navigation item
+                                                <Link
+                                                    to={item.path}
+                                                    className={`nav-link d-flex align-items-center text-decoration-none ${
+                                                        isActiveRoute(
+                                                            item.path,
+                                                            item.exact
+                                                        )
+                                                            ? "active bg-primary text-white rounded"
+                                                            : "text-dark"
+                                                    }`}
+                                                >
+                                                    <i
+                                                        className={`${item.icon} me-2`}
+                                                    ></i>
+                                                    {item.title}
+                                                </Link>
+                                            )}
+                                        </div>
+                                    ))}
+                                </nav>
+                            </div>
+
+                            {/* Sidebar Footer */}
+                            <div className="mt-auto p-3 border-top bg-light">
+                                <div className="text-center">
+                                    <small className="text-muted">
+                                        HireMe Staff v1.0
+                                        <br />
+                                        Last login:{" "}
+                                        {user?.last_login_human || "N/A"}
+                                    </small>
                                 </div>
                             </div>
-                        )}
+                        </div>
+                    </div>
+
+                    {/* Main Content */}
+                    <div className="col-lg-9 col-xl-10">
+                        <div className="p-4">
+                            {/* Breadcrumbs */}
+                            <nav aria-label="breadcrumb" className="mb-4">
+                                <ol className="breadcrumb">
+                                    {generateBreadcrumbs().map(
+                                        (crumb, index) => (
+                                            <li
+                                                key={index}
+                                                className={`breadcrumb-item ${
+                                                    crumb.active ? "active" : ""
+                                                }`}
+                                            >
+                                                {crumb.active ? (
+                                                    crumb.title
+                                                ) : (
+                                                    <Link
+                                                        to={crumb.path}
+                                                        className="text-decoration-none"
+                                                    >
+                                                        {crumb.title}
+                                                    </Link>
+                                                )}
+                                            </li>
+                                        )
+                                    )}
+                                </ol>
+                            </nav>
+
+                            {/* Success/Error Messages from Staff Context */}
+                            {state.ui.notifications
+                                .filter((n) => n.type === "success")
+                                .map((notification) => (
+                                    <div
+                                        key={notification.id}
+                                        className="alert alert-success alert-dismissible fade show"
+                                        role="alert"
+                                    >
+                                        <i className="fas fa-check-circle me-2"></i>
+                                        {notification.message}
+                                        <button
+                                            type="button"
+                                            className="btn-close"
+                                            onClick={() =>
+                                                removeNotification(
+                                                    notification.id
+                                                )
+                                            }
+                                        ></button>
+                                    </div>
+                                ))}
+
+                            {state.ui.notifications
+                                .filter((n) => n.type === "error")
+                                .map((notification) => (
+                                    <div
+                                        key={notification.id}
+                                        className="alert alert-danger alert-dismissible fade show"
+                                        role="alert"
+                                    >
+                                        <i className="fas fa-exclamation-circle me-2"></i>
+                                        {notification.message}
+                                        <button
+                                            type="button"
+                                            className="btn-close"
+                                            onClick={() =>
+                                                removeNotification(
+                                                    notification.id
+                                                )
+                                            }
+                                        ></button>
+                                    </div>
+                                ))}
+
+                            {/* Dashboard/Category Errors */}
+                            {state.dashboard.error && (
+                                <div
+                                    className="alert alert-danger alert-dismissible fade show"
+                                    role="alert"
+                                >
+                                    <i className="fas fa-exclamation-circle me-2"></i>
+                                    <strong>Dashboard Error:</strong>{" "}
+                                    {state.dashboard.error}
+                                    <button
+                                        type="button"
+                                        className="btn-close"
+                                        onClick={() => {
+                                            // You'd need to add a clearDashboardError action
+                                        }}
+                                    ></button>
+                                </div>
+                            )}
+
+                            {state.categories.error && (
+                                <div
+                                    className="alert alert-danger alert-dismissible fade show"
+                                    role="alert"
+                                >
+                                    <i className="fas fa-exclamation-circle me-2"></i>
+                                    <strong>Categories Error:</strong>{" "}
+                                    {state.categories.error}
+                                    <button
+                                        type="button"
+                                        className="btn-close"
+                                        onClick={() => {
+                                            // You'd need to add a clearCategoriesError action
+                                        }}
+                                    ></button>
+                                </div>
+                            )}
+
+                            {/* Page Content */}
+                            <div className="content-wrapper">{children}</div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            {/* Mobile Menu Overlay */}
-            {mobileMenuOpen && (
+            {/* Mobile Sidebar Overlay */}
+            {!sidebarCollapsed && (
                 <div
-                    className="position-fixed w-100 h-100 bg-dark bg-opacity-50 d-lg-none"
+                    className="d-lg-none position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50"
                     style={{ zIndex: 1040 }}
-                    onClick={() => setMobileMenuOpen(false)}
+                    onClick={toggleSidebar}
                 ></div>
             )}
-
-            {/* Main Content */}
-            <div
-                className="flex-grow-1 d-flex flex-column"
-                style={{
-                    marginLeft:
-                        window.innerWidth >= 992
-                            ? sidebarCollapsed
-                                ? "60px"
-                                : "250px"
-                            : "0",
-                    transition: "margin-left 0.3s ease",
-                }}
-            >
-                {/* Top Header */}
-                <header className="bg-white border-bottom shadow-sm py-3 px-4">
-                    <div className="d-flex align-items-center justify-content-between">
-                        <div className="d-flex align-items-center">
-                            {/* Mobile Menu Button */}
-                            <button
-                                className="btn btn-link text-dark d-lg-none me-3"
-                                onClick={() =>
-                                    setMobileMenuOpen(!mobileMenuOpen)
-                                }
-                            >
-                                <i className="fas fa-bars"></i>
-                            </button>
-
-                            {/* Sidebar Toggle Button */}
-                            <button
-                                className="btn btn-link text-dark d-none d-lg-block me-3"
-                                onClick={() =>
-                                    setSidebarCollapsed(!sidebarCollapsed)
-                                }
-                            >
-                                <i
-                                    className={`fas ${
-                                        sidebarCollapsed
-                                            ? "fa-chevron-right"
-                                            : "fa-chevron-left"
-                                    }`}
-                                ></i>
-                            </button>
-
-                            {/* Page Title */}
-                            <div>
-                                <h5 className="mb-0 text-dark">
-                                    Staff Dashboard
-                                </h5>
-                                <small className="text-muted">
-                                    Manage your platform efficiently
-                                </small>
-                            </div>
-                        </div>
-
-                        {/* Header Actions */}
-                        <div className="d-flex align-items-center">
-                            {/* Notifications */}
-                            <div className="dropdown me-3">
-                                <button
-                                    className="btn btn-link text-dark position-relative"
-                                    data-bs-toggle="dropdown"
-                                >
-                                    <i className="fas fa-bell fs-5"></i>
-                                    <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                                        3
-                                    </span>
-                                </button>
-                                <ul
-                                    className="dropdown-menu dropdown-menu-end shadow"
-                                    style={{ width: "300px" }}
-                                >
-                                    <li>
-                                        <h6 className="dropdown-header">
-                                            Notifications
-                                        </h6>
-                                    </li>
-                                    <li>
-                                        <a className="dropdown-item" href="#">
-                                            <div className="d-flex">
-                                                <i className="fas fa-user-plus text-success me-2 mt-1"></i>
-                                                <div>
-                                                    <div className="fw-semibold">
-                                                        New user registered
-                                                    </div>
-                                                    <small className="text-muted">
-                                                        2 minutes ago
-                                                    </small>
-                                                </div>
-                                            </div>
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a className="dropdown-item" href="#">
-                                            <div className="d-flex">
-                                                <i className="fas fa-exclamation-triangle text-warning me-2 mt-1"></i>
-                                                <div>
-                                                    <div className="fw-semibold">
-                                                        Dispute requires
-                                                        attention
-                                                    </div>
-                                                    <small className="text-muted">
-                                                        15 minutes ago
-                                                    </small>
-                                                </div>
-                                            </div>
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <hr className="dropdown-divider" />
-                                    </li>
-                                    <li>
-                                        <a
-                                            className="dropdown-item text-center"
-                                            href="#"
-                                        >
-                                            View all notifications
-                                        </a>
-                                    </li>
-                                </ul>
-                            </div>
-
-                            {/* User Profile */}
-                            <div className="dropdown">
-                                <button
-                                    className="btn btn-link text-dark d-flex align-items-center"
-                                    data-bs-toggle="dropdown"
-                                >
-                                    <div
-                                        className="bg-primary rounded-circle d-flex align-items-center justify-content-center me-2"
-                                        style={{
-                                            width: "32px",
-                                            height: "32px",
-                                        }}
-                                    >
-                                        <i
-                                            className="fas fa-user text-white"
-                                            style={{ fontSize: "14px" }}
-                                        ></i>
-                                    </div>
-                                    <span className="d-none d-md-block me-1">
-                                        {user?.first_name || "Staff"}
-                                    </span>
-                                    <i className="fas fa-chevron-down"></i>
-                                </button>
-                                <ul className="dropdown-menu dropdown-menu-end shadow">
-                                    <li>
-                                        <h6 className="dropdown-header">
-                                            Staff Menu
-                                        </h6>
-                                    </li>
-                                    <li>
-                                        <a className="dropdown-item" href="#">
-                                            <i className="fas fa-user me-2"></i>
-                                            Profile
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a className="dropdown-item" href="#">
-                                            <i className="fas fa-cog me-2"></i>
-                                            Settings
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a className="dropdown-item" href="#">
-                                            <i className="fas fa-question-circle me-2"></i>
-                                            Help
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <hr className="dropdown-divider" />
-                                    </li>
-                                    <li>
-                                        <button
-                                            className="dropdown-item"
-                                            onClick={handleLogout}
-                                        >
-                                            <i className="fas fa-sign-out-alt me-2"></i>
-                                            Logout
-                                        </button>
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </header>
-
-                {/* Main Content Area */}
-                <main className="flex-grow-1 p-4 overflow-auto">
-                    {children}
-                </main>
-            </div>
         </div>
     );
 };

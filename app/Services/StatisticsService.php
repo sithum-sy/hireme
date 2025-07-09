@@ -339,9 +339,9 @@ class StatisticsService
             ->get()
             ->map(function ($category) {
                 return [
-                    'category' => $category->name,
-                    'count' => $category->services_count,
-                    'color' => $category->color,
+                    'category' => $category->name ?? 'Unknown',
+                    'count' => $category->services_count ?? 0,
+                    'color' => $category->color ?? '#000000',
                 ];
             });
     }
@@ -359,8 +359,8 @@ class StatisticsService
             ->get()
             ->map(function ($provider) {
                 return [
-                    'provider' => $provider->full_name,
-                    'count' => $provider->services_count,
+                    'provider' => $provider->full_name ?? 'Unknown Provider',
+                    'count' => $provider->services_count ?? 0,
                 ];
             });
     }

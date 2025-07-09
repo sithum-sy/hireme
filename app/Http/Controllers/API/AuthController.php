@@ -231,7 +231,11 @@ class AuthController extends Controller
     public function logout(Request $request)
     {
         try {
-            $request->user()->currentAccessToken()->delete();
+            $user = $request->user();
+            if ($user) {
+                // Delete the current access token for the user (Sanctum)
+                $user->tokens()->where('id', $user->currentAccessToken()->id)->delete();
+            }
 
             return response()->json([
                 'success' => true,

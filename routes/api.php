@@ -3,7 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\AuthController;
-use App\Http\Controllers\API\ServiceCategoryController;
+use App\Http\Controllers\API\staff\ServiceCategoryController;
 use App\Http\Controllers\API\ServiceController;
 use App\Http\Controllers\API\AvailabilityController;
 use App\Http\Controllers\API\ProfileController;
@@ -97,12 +97,12 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     // Admin routes
-    Route::prefix('admin')->middleware('admin')->group(function () {
+    Route::prefix('admin')->middleware('role:admin')->group(function () {
         require __DIR__ . '/admin.php';
     });
 
     // Staff routes
-    Route::prefix('staff')->middleware('staff')->group(function () {
+    Route::prefix('staff')->middleware('role:staff')->group(function () {
         require __DIR__ . '/staff.php';
     });
 

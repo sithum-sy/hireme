@@ -237,7 +237,7 @@ class ActivityService
             'total_activities' => $activities->count(),
             'unique_staff' => $activities->unique('staff_id')->count(),
             'by_action_type' => $activities->groupBy('action_type')
-                ->map(function ($group, $action) {
+                ->map(function ($group, $action) use ($activities) {
                     return [
                         'action' => $action,
                         'count' => $group->count(),

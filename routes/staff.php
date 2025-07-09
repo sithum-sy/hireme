@@ -15,7 +15,7 @@ use App\Http\Controllers\API\Staff\DashboardController;
 */
 
 // Staff API Routes - using Sanctum authentication
-Route::middleware(['auth:sanctum', 'role:staff'])->group(function () {
+Route::middleware(['auth:sanctum', 'staff'])->group(function () {
 
     // Dashboard Routes
     Route::prefix('dashboard')->group(function () {

@@ -10,6 +10,7 @@ use App\Models\StaffActivity;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
 
 class ServiceCategoryController extends Controller
 {
@@ -17,19 +18,101 @@ class ServiceCategoryController extends Controller
     /**
      * Get all service categories with staff-specific data
      */
+    // public function index(Request $request)
+    // {
+    //     try {
+    //         $perPage = $request->get('per_page', 15);
+    //         $search = $request->get('search');
+    //         $status = $request->get('status'); // 'active', 'inactive', or null for all
+    //         $sortBy = $request->get('sort_by', 'sort_order');
+    //         $sortOrder = $request->get('sort_order', 'asc');
+
+    //         $query = ServiceCategory::query();
+
+    //         // Apply search filter
+    //         if ($search) {
+    //             $query->where(function ($q) use ($search) {
+    //                 $q->where('name', 'like', "%{$search}%")
+    //                     ->orWhere('description', 'like', "%{$search}%");
+    //             });
+    //         }
+
+    //         // Apply status filter
+    //         if ($status !== null) {
+    //             $isActive = $status === 'active';
+    //             $query->where('is_active', $isActive);
+    //         }
+
+    //         // Apply sorting
+    //         $allowedSortFields = ['name', 'sort_order', 'created_at', 'updated_at'];
+    //         if (in_array($sortBy, $allowedSortFields)) {
+    //             $query->orderBy($sortBy, $sortOrder);
+    //         } else {
+    //             $query->orderBy('sort_order', 'asc')->orderBy('name', 'asc');
+    //         }
+
+    //         $categories = $query->paginate($perPage);
+
+    //         // Transform the data with staff-specific information
+    //         $categories->getCollection->transform(function ($category) {
+    //             $totalServices = $category->services()->count();
+    //             $activeServices = $category->activeServices()->count();
+    //             $inactiveServices = $totalServices - $activeServices;
+
+    //             return [
+    //                 'id' => $category->id,
+    //                 'name' => $category->name,
+    //                 'slug' => $category->slug,
+    //                 'description' => $category->description,
+    //                 'icon' => $category->icon,
+    //                 'color' => $category->color,
+    //                 'is_active' => $category->is_active,
+    //                 'sort_order' => $category->sort_order,
+    //                 'services_count' => [
+    //                     'total' => $totalServices,
+    //                     'active' => $activeServices,
+    //                     'inactive' => $inactiveServices,
+    //                 ],
+    //                 'created_at' => $category->created_at->format('Y-m-d H:i:s'),
+    //                 'updated_at' => $category->updated_at->format('Y-m-d H:i:s'),
+    //             ];
+    //         });
+
+    //         return response()->json([
+    //             'success' => true,
+    //             'data' => $categories,
+    //             'meta' => [
+    //                 'total_categories' => ServiceCategory::count(),
+    //                 'active_categories' => ServiceCategory::where('is_active', true)->count(),
+    //                 'inactive_categories' => ServiceCategory::where('is_active', false)->count(),
+    //             ]
+    //         ]);
+    //     } catch (\Exception $e) {
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'Failed to fetch service categories',
+    //             'error' => app()->environment('local') ? $e->getMessage() : 'An error occurred'
+    //         ], 500);
+    //     }
+    // }
+
     public function index(Request $request)
     {
         try {
-            $perPage = $request->get('per_page', 15);
-            $search = $request->get('search');
-            $status = $request->get('status'); // 'active', 'inactive', or null for all
+            \Log::info('ServiceCategory index called with params: ' . json_encode($request->all()));
+
+            // Get filters from request
+            $search = $request->get('search', '');
+            $status = $request->get('status', '');
             $sortBy = $request->get('sort_by', 'sort_order');
             $sortOrder = $request->get('sort_order', 'asc');
+            $perPage = $request->get('per_page', 15);
 
-            $query = ServiceCategory::query();
+            // Build query
+            $query = \App\Models\ServiceCategory::query();
 
             // Apply search filter
-            if ($search) {
+            if (!empty($search)) {
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
                         ->orWhere('description', 'like', "%{$search}%");
@@ -37,60 +120,39 @@ class ServiceCategoryController extends Controller
             }
 
             // Apply status filter
-            if ($status !== null) {
-                $isActive = $status === 'active';
+            if (!empty($status)) {
+                $isActive = $status === 'active' ? 1 : 0;
                 $query->where('is_active', $isActive);
             }
 
             // Apply sorting
-            $allowedSortFields = ['name', 'sort_order', 'created_at', 'updated_at'];
-            if (in_array($sortBy, $allowedSortFields)) {
-                $query->orderBy($sortBy, $sortOrder);
-            } else {
-                $query->orderBy('sort_order', 'asc')->orderBy('name', 'asc');
-            }
+            $query->orderBy($sortBy, $sortOrder);
 
+            // Get paginated results
             $categories = $query->paginate($perPage);
 
-            // Transform the data with staff-specific information
-            $categories->getCollection()->transform(function ($category) {
-                $totalServices = $category->services()->count();
-                $activeServices = $category->activeServices()->count();
-                $inactiveServices = $totalServices - $activeServices;
-
-                return [
-                    'id' => $category->id,
-                    'name' => $category->name,
-                    'slug' => $category->slug,
-                    'description' => $category->description,
-                    'icon' => $category->icon,
-                    'color' => $category->color,
-                    'is_active' => $category->is_active,
-                    'sort_order' => $category->sort_order,
-                    'services_count' => [
-                        'total' => $totalServices,
-                        'active' => $activeServices,
-                        'inactive' => $inactiveServices,
-                    ],
-                    'created_at' => $category->created_at->format('Y-m-d H:i:s'),
-                    'updated_at' => $category->updated_at->format('Y-m-d H:i:s'),
-                ];
-            });
+            \Log::info('Query successful, found ' . $categories->total() . ' categories');
 
             return response()->json([
                 'success' => true,
                 'data' => $categories,
                 'meta' => [
-                    'total_categories' => ServiceCategory::count(),
-                    'active_categories' => ServiceCategory::where('is_active', true)->count(),
-                    'inactive_categories' => ServiceCategory::where('is_active', false)->count(),
+                    'filters_applied' => [
+                        'search' => $search,
+                        'status' => $status,
+                        'sort_by' => $sortBy,
+                        'sort_order' => $sortOrder
+                    ]
                 ]
             ]);
         } catch (\Exception $e) {
+            \Log::error('ServiceCategory index error: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
+
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to fetch service categories',
-                'error' => app()->environment('local') ? $e->getMessage() : 'An error occurred'
+                'message' => 'Failed to fetch categories',
+                'error' => app()->environment('local') ? $e->getMessage() : 'Server error'
             ], 500);
         }
     }

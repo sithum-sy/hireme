@@ -9,6 +9,8 @@ use App\Services\ActivityService;
 use App\Models\StaffActivity;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class DashboardController extends Controller
 {
@@ -67,11 +69,77 @@ class DashboardController extends Controller
     /**
      * Get platform statistics
      */
+    // public function getStats(Request $request)
+    // {
+    //     try {
+    //         $cacheMinutes = $request->get('cache', 5);
+    //         $stats = $this->statisticsService->getPlatformStats($cacheMinutes);
+
+    //         return response()->json([
+    //             'success' => true,
+    //             'data' => $stats,
+    //             'meta' => [
+    //                 'cached_for' => $cacheMinutes . ' minutes',
+    //                 'generated_at' => now()->toISOString(),
+    //             ]
+    //         ]);
+    //     } catch (\Exception $e) {
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'Failed to fetch statistics',
+    //             'error' => app()->environment('local') ? $e->getMessage() : 'An error occurred'
+    //         ], 500);
+    //     }
+    // }
     public function getStats(Request $request)
     {
         try {
             $cacheMinutes = $request->get('cache', 5);
-            $stats = $this->statisticsService->getPlatformStats($cacheMinutes);
+
+            // Try to get stats with error handling for each section
+            $stats = [];
+
+            try {
+                $stats['users'] = $this->statisticsService->getUserStatistics();
+            } catch (\Exception $e) {
+                \Log::error('User statistics error: ' . $e->getMessage());
+                $stats['users'] = ['error' => 'Failed to load user statistics'];
+            }
+
+            try {
+                $stats['services'] = $this->statisticsService->getServiceStatistics();
+            } catch (\Exception $e) {
+                \Log::error('Service statistics error: ' . $e->getMessage());
+                $stats['services'] = ['error' => 'Failed to load service statistics'];
+            }
+
+            try {
+                $stats['categories'] = $this->statisticsService->getCategoryStatistics();
+            } catch (\Exception $e) {
+                \Log::error('Category statistics error: ' . $e->getMessage());
+                $stats['categories'] = ['error' => 'Failed to load category statistics'];
+            }
+
+            try {
+                $stats['appointments'] = $this->statisticsService->getAppointmentStatistics();
+            } catch (\Exception $e) {
+                \Log::error('Appointment statistics error: ' . $e->getMessage());
+                $stats['appointments'] = ['error' => 'Failed to load appointment statistics'];
+            }
+
+            try {
+                $stats['platform_health'] = $this->statisticsService->getPlatformHealthStats();
+            } catch (\Exception $e) {
+                \Log::error('Platform health error: ' . $e->getMessage());
+                $stats['platform_health'] = ['error' => 'Failed to load platform health'];
+            }
+
+            try {
+                $stats['trends'] = $this->statisticsService->getTrendData();
+            } catch (\Exception $e) {
+                \Log::error('Trends error: ' . $e->getMessage());
+                $stats['trends'] = ['error' => 'Failed to load trend data'];
+            }
 
             return response()->json([
                 'success' => true,
@@ -82,6 +150,7 @@ class DashboardController extends Controller
                 ]
             ]);
         } catch (\Exception $e) {
+            \Log::error('Stats general error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch statistics',
@@ -127,7 +196,7 @@ class DashboardController extends Controller
         try {
             $limit = $request->get('limit', 20);
             $days = $request->get('days', 30);
-            
+
             $activities = $this->activityService->getRecentActivities($limit, $days);
 
             return response()->json([
@@ -182,7 +251,7 @@ class DashboardController extends Controller
         try {
             $staffId = $request->get('staff_id', auth()->id());
             $days = $request->get('days', 30);
-            
+
             $summary = $this->activityService->getStaffActivitySummary($staffId, $days);
 
             return response()->json([
@@ -234,7 +303,7 @@ class DashboardController extends Controller
         try {
             $days = $request->get('days', 30);
             $includeCharts = $request->get('charts', true);
-            
+
             $overview = [
                 'summary' => $this->statisticsService->getPlatformStats(10), // 10 minute cache
                 'system_health' => $this->getSystemHealth(),
@@ -313,7 +382,7 @@ class DashboardController extends Controller
         try {
             $format = $request->get('format', 'json');
             $days = $request->get('days', 30);
-            
+
             $data = [
                 'stats' => $this->statisticsService->getPlatformStats(0), // No cache for export
                 'activities' => $this->activityService->getRecentActivities(100, $days),
@@ -370,7 +439,7 @@ class DashboardController extends Controller
     private function generateTodaysTasks()
     {
         $stats = $this->statisticsService->getPlatformStats(5);
-        
+
         $tasks = [
             'high_priority' => [],
             'medium_priority' => [],
@@ -504,7 +573,7 @@ class DashboardController extends Controller
 
         // Check for system issues
         $stats = $this->statisticsService->getPlatformStats(1);
-        
+
         if ($stats['platform_health']['active_sessions'] > 100) {
             $alerts[] = [
                 'type' => 'warning',
@@ -575,7 +644,7 @@ class DashboardController extends Controller
     private function checkDatabaseHealth()
     {
         try {
-            \DB::connection()->getPdo();
+            DB::connection()->getPdo();
             return ['status' => 'healthy', 'response_time' => '< 50ms'];
         } catch (\Exception $e) {
             return ['status' => 'unhealthy', 'error' => 'Connection failed'];
@@ -598,14 +667,7 @@ class DashboardController extends Controller
             $diskSpace = disk_free_space('/');
             $totalSpace = disk_total_space('/');
             $usedPercentage = (($totalSpace - $diskSpace) / $totalSpace) * 100;
-            
-    private function checkStorageHealth()
-    {
-        try {
-            $diskSpace = disk_free_space('/');
-            $totalSpace = disk_total_space('/');
-            $usedPercentage = (($totalSpace - $diskSpace) / $totalSpace) * 100;
-            
+
             return [
                 'status' => $usedPercentage > 90 ? 'warning' : 'healthy',
                 'used_percentage' => round($usedPercentage, 1),
@@ -630,7 +692,7 @@ class DashboardController extends Controller
     private function getTimeOfDay()
     {
         $hour = now()->hour;
-        
+
         if ($hour < 12) {
             return 'morning';
         } elseif ($hour < 17) {
@@ -655,11 +717,11 @@ class DashboardController extends Controller
     private function formatBytes($bytes, $precision = 2)
     {
         $units = ['B', 'KB', 'MB', 'GB', 'TB'];
-        
+
         for ($i = 0; $bytes > 1024 && $i < count($units) - 1; $i++) {
             $bytes /= 1024;
         }
-        
+
         return round($bytes, $precision) . ' ' . $units[$i];
     }
 }
