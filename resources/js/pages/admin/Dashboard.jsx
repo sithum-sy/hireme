@@ -1,7 +1,7 @@
 // resources/js/pages/admin/Dashboard.jsx
 import React, { useState, useEffect } from "react";
 import { useAdmin } from "../../context/AdminContext";
-import AdminLayout from "../../components/AdminLayout";
+import AdminLayout from "../../components/layouts/AdminLayout";
 
 // Import the new dashboard components
 import {

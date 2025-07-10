@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAdmin } from "../../../context/AdminContext";
-import AdminLayout from "../../../components/AdminLayout";
+import AdminLayout from "../../../components/layouts/AdminLayout";
 
 const CreateStaff = () => {
     const { createStaff, errors, isProcessing } = useAdmin();

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useAdmin } from "../../../context/AdminContext";
-import AdminLayout from "../../../components/AdminLayout";
+import AdminLayout from "../../../components/layouts/AdminLayout";
 
 const EditStaff = () => {
     const { id } = useParams();
@@ -192,7 +192,7 @@ const EditStaff = () => {
                     }
                 } else if (formData[key] !== null && formData[key] !== "") {
                     staffData.append(key, formData[key]);
-                    console.log(`Appending ${key}:`, formData[key]);
+                    // console.log(`Appending ${key}:`, formData[key]);
                 }
             });
 

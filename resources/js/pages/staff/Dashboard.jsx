@@ -226,32 +226,31 @@ const StaffDashboard = () => {
                     {/* Main Statistics Cards Row */}
                     <div className="row mb-4">
                         <UserStatsCard
-                            users={dashboardStats.users}
+                            users={dashboardStats.users || {}}
                             loading={dashboardLoading}
                         />
                         <ActiveUsersCard
-                            users={dashboardStats.users}
+                            users={dashboardStats.users || {}}
                             loading={dashboardLoading}
                         />
                         <ProvidersCard
-                            users={dashboardStats.users}
-                            services={dashboardStats.services}
+                            users={dashboardStats.users || {}}
+                            services={dashboardStats.services || {}}
                             loading={dashboardLoading}
                         />
                         <CategoriesCard
-                            categories={dashboardStats.categories}
+                            categories={dashboardStats.categories || {}}
                             loading={dashboardLoading}
                         />
                     </div>
-
                     {/* Secondary Statistics Cards Row */}
                     <div className="row mb-4">
                         <ServicesCard
-                            services={dashboardStats.services}
+                            services={dashboardStats.services || {}}
                             loading={dashboardLoading}
                         />
                         <AppointmentsCard
-                            appointments={dashboardStats.appointments}
+                            appointments={dashboardStats.appointments || {}}
                             loading={dashboardLoading}
                         />
 
@@ -369,7 +368,6 @@ const StaffDashboard = () => {
                             </div>
                         </div>
                     </div>
-
                     {/* Charts and Actions Row */}
                     <div className="row mb-4">
                         {/* Platform Growth Chart */}
@@ -391,7 +389,6 @@ const StaffDashboard = () => {
                             <StaffQuickActions onAction={handleQuickAction} />
                         </div>
                     </div>
-
                     {/* Activity and Management Row */}
                     <div className="row mb-4">
                         {/* Recent User Activity */}
@@ -413,7 +410,6 @@ const StaffDashboard = () => {
                             />
                         </div>
                     </div>
-
                     {/* Management Tools Row */}
                     <div className="row mb-4">
                         {/* Management Quick Actions */}

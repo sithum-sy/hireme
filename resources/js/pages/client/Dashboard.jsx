@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import DashboardLayout from "../../components/DashboardLayout";
+import ClientLayout from "../../components/layouts/ClientLayout";
 import { useAuth } from "../../context/AuthContext";
 
 const ClientDashboard = () => {
@@ -93,119 +93,8 @@ const ClientDashboard = () => {
     ];
 
     return (
-        <DashboardLayout>
-            <div className="dashboard-content">
-                {/* Welcome Section */}
-                <div className="welcome-section bg-gradient-primary text-white rounded-4 p-4 mb-4">
-                    <div className="row align-items-center">
-                        <div className="col-md-8">
-                            <h2 className="fw-bold mb-2">
-                                Welcome back, {user?.first_name}!
-                            </h2>
-                            <p className="mb-3 opacity-90">
-                                Ready to book your next service? We have{" "}
-                                {stats.pendingAppointments} upcoming
-                                appointments waiting for you.
-                            </p>
-                            <Link
-                                to="/client/services"
-                                className="btn btn-light btn-lg"
-                            >
-                                <i className="fas fa-search me-2"></i>
-                                Browse Services
-                            </Link>
-                        </div>
-                        <div className="col-md-4 text-center">
-                            <div className="welcome-illustration">
-                                <i className="fas fa-handshake fa-5x opacity-50"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Quick Stats */}
-                <div className="row mb-4">
-                    <div className="col-xl-3 col-md-6 mb-3">
-                        <div className="card stats-card border-0 shadow-sm">
-                            <div className="card-body">
-                                <div className="d-flex align-items-center">
-                                    <div className="stats-icon bg-primary bg-opacity-10 text-primary rounded-3 p-3 me-3">
-                                        <i className="fas fa-calendar-check fa-lg"></i>
-                                    </div>
-                                    <div>
-                                        <div className="stats-number h4 fw-bold mb-0">
-                                            {stats.totalAppointments}
-                                        </div>
-                                        <div className="stats-label text-muted small">
-                                            Total Appointments
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="col-xl-3 col-md-6 mb-3">
-                        <div className="card stats-card border-0 shadow-sm">
-                            <div className="card-body">
-                                <div className="d-flex align-items-center">
-                                    <div className="stats-icon bg-success bg-opacity-10 text-success rounded-3 p-3 me-3">
-                                        <i className="fas fa-check-circle fa-lg"></i>
-                                    </div>
-                                    <div>
-                                        <div className="stats-number h4 fw-bold mb-0">
-                                            {stats.completedAppointments}
-                                        </div>
-                                        <div className="stats-label text-muted small">
-                                            Completed
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="col-xl-3 col-md-6 mb-3">
-                        <div className="card stats-card border-0 shadow-sm">
-                            <div className="card-body">
-                                <div className="d-flex align-items-center">
-                                    <div className="stats-icon bg-warning bg-opacity-10 text-warning rounded-3 p-3 me-3">
-                                        <i className="fas fa-clock fa-lg"></i>
-                                    </div>
-                                    <div>
-                                        <div className="stats-number h4 fw-bold mb-0">
-                                            {stats.pendingAppointments}
-                                        </div>
-                                        <div className="stats-label text-muted small">
-                                            Pending
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="col-xl-3 col-md-6 mb-3">
-                        <div className="card stats-card border-0 shadow-sm">
-                            <div className="card-body">
-                                <div className="d-flex align-items-center">
-                                    <div className="stats-icon bg-info bg-opacity-10 text-info rounded-3 p-3 me-3">
-                                        <i className="fas fa-star fa-lg"></i>
-                                    </div>
-                                    <div>
-                                        <div className="stats-number h4 fw-bold mb-0">
-                                            {stats.averageRating}
-                                        </div>
-                                        <div className="stats-label text-muted small">
-                                            Average Rating
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
+        <ClientLayout>
+            <div className="client-dashboard-content">
                 {/* Quick Actions */}
                 <div className="row mb-4">
                     <div className="col-12">
@@ -436,7 +325,7 @@ const ClientDashboard = () => {
                     </div>
                 </div>
             </div>
-        </DashboardLayout>
+        </ClientLayout>
     );
 };
 

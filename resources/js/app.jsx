@@ -33,6 +33,8 @@ import StaffDashboard from "./pages/staff/Dashboard";
 import StaffLayout from "./components/layouts/StaffLayout";
 import CategoriesList from "./pages/staff/categories/CategoriesList";
 import CreateCategory from "./pages/staff/categories/CreateCategory";
+import EditCategory from "./pages/staff/categories/EditCategory";
+import CategoryDetails from "./pages/staff/categories/CategoryDetails";
 
 // Import Bootstrap
 import "./bootstrap";
@@ -750,6 +752,14 @@ function App() {
                                         <Route
                                             path="categories/create"
                                             element={<CreateCategory />}
+                                        />
+                                        <Route
+                                            path="categories/:id/edit"
+                                            element={<EditCategory />}
+                                        />
+                                        <Route
+                                            path="categories/:id"
+                                            element={<CategoryDetails />}
                                         />
                                         {/* User Management */}
                                         <Route

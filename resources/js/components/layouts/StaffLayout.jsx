@@ -1,150 +1,82 @@
+// resources/js/components/layouts/StaffLayout.jsx
+// New Staff Layout using Universal Navigation Components
+
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useStaff } from "../../context/StaffContext";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import DashboardNavbar from "../Navigation/shared/DashboardNavbar";
+import DashboardSidebar from "../Navigation/shared/DashboardSidebar";
 
 const StaffLayout = ({ children }) => {
-    const { user, logout } = useAuth();
-    const { state, addNotification, removeNotification } = useStaff();
+    const { user } = useAuth();
+    const {
+        state,
+        addNotification,
+        removeNotification,
+        clearErrors,
+        clearSuccessMessage,
+    } = useStaff();
     const location = useLocation();
     const navigate = useNavigate();
+
+    // Sidebar state
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-    const [currentTime, setCurrentTime] = useState(new Date());
 
-    // Update current time every minute
+    // Check for mobile screen
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+    // Handle window resize
     useEffect(() => {
-        const timer = setInterval(() => {
-            setCurrentTime(new Date());
-        }, 60000);
+        const handleResize = () => {
+            const mobile = window.innerWidth < 768;
+            setIsMobile(mobile);
+            if (mobile) {
+                setSidebarCollapsed(true);
+            }
+        };
 
-        return () => clearInterval(timer);
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
     }, []);
 
-    // Clear notifications when route changes (optional)
+    // Auto-close sidebar on mobile when route changes
     useEffect(() => {
-        // You can clear notifications on route change if needed
-        // state.ui.notifications.forEach(notification => {
-        //     removeNotification(notification.id);
-        // });
-    }, [location.pathname]);
-
-    const handleLogout = async () => {
-        try {
-            await logout();
-            navigate("/login");
-        } catch (error) {
-            console.error("Logout error:", error);
+        if (isMobile) {
+            setSidebarCollapsed(true);
         }
-    };
+    }, [location.pathname, isMobile]);
 
-    const toggleSidebar = () => {
+    // Sidebar toggle handler
+    const handleToggleSidebar = () => {
         setSidebarCollapsed(!sidebarCollapsed);
     };
 
-    // Navigation items
-    const navigationItems = [
-        {
-            title: "Dashboard",
-            icon: "fas fa-tachometer-alt",
-            path: "/staff/dashboard",
-            exact: true,
-        },
-        {
-            title: "Service Categories",
-            icon: "fas fa-tags",
-            path: "/staff/categories",
-            children: [
-                { title: "All Categories", path: "/staff/categories" },
-                { title: "Create Category", path: "/staff/categories/create" },
-                { title: "Analytics", path: "/staff/categories/analytics" },
-            ],
-        },
-        {
-            title: "User Management",
-            icon: "fas fa-users",
-            path: "/staff/users",
-            children: [
-                { title: "All Users", path: "/staff/users" },
-                { title: "Clients", path: "/staff/users?role=client" },
-                {
-                    title: "Providers",
-                    path: "/staff/users?role=service_provider",
-                },
-                {
-                    title: "Pending Approvals",
-                    path: "/staff/users?status=pending",
-                },
-            ],
-        },
-        {
-            title: "Services",
-            icon: "fas fa-briefcase",
-            path: "/staff/services",
-            children: [
-                { title: "All Services", path: "/staff/services" },
-                {
-                    title: "Active Services",
-                    path: "/staff/services?status=active",
-                },
-                {
-                    title: "Pending Review",
-                    path: "/staff/services?status=pending",
-                },
-            ],
-        },
-        {
-            title: "Appointments",
-            icon: "fas fa-calendar-alt",
-            path: "/staff/appointments",
-            children: [
-                { title: "All Appointments", path: "/staff/appointments" },
-                {
-                    title: "Today's Appointments",
-                    path: "/staff/appointments/today",
-                },
-                {
-                    title: "Upcoming",
-                    path: "/staff/appointments?status=upcoming",
-                },
-            ],
-        },
-        {
-            title: "Disputes",
-            icon: "fas fa-balance-scale",
-            path: "/staff/disputes",
-            children: [
-                { title: "Open Disputes", path: "/staff/disputes?status=open" },
-                { title: "In Review", path: "/staff/disputes?status=review" },
-                { title: "Resolved", path: "/staff/disputes?status=resolved" },
-            ],
-        },
-        {
-            title: "Reports",
-            icon: "fas fa-chart-bar",
-            path: "/staff/reports",
-            children: [
-                { title: "Platform Overview", path: "/staff/reports/overview" },
-                { title: "User Analytics", path: "/staff/reports/users" },
-                {
-                    title: "Activity Reports",
-                    path: "/staff/reports/activities",
-                },
-            ],
-        },
-        {
-            title: "Activity Log",
-            icon: "fas fa-history",
-            path: "/staff/activities",
-        },
-    ];
-
-    const isActiveRoute = (path, exact = false) => {
-        if (exact) {
-            return location.pathname === path;
+    // Search handler
+    const handleSearch = (query) => {
+        if (query.trim()) {
+            navigate(`/staff/search?q=${encodeURIComponent(query)}`);
+            addNotification(`Searching for: ${query}`, "info", 3000);
         }
-        return location.pathname.startsWith(path);
     };
 
+    // Menu item click handler
+    const handleMenuItemClick = (item) => {
+        console.log("Staff menu clicked:", item);
+
+        // Add any staff-specific menu click handling here
+        if (item.id === "categories") {
+            // Example: Track category section access
+            addNotification("Accessing Service Categories", "info", 2000);
+        }
+
+        // Close sidebar on mobile after clicking
+        if (isMobile) {
+            setSidebarCollapsed(true);
+        }
+    };
+
+    // Generate breadcrumbs from current path
     const generateBreadcrumbs = () => {
         const pathSegments = location.pathname
             .split("/")
@@ -159,7 +91,7 @@ const StaffLayout = ({ children }) => {
 
         // Add Home breadcrumb
         breadcrumbs.push({
-            title: "Staff",
+            title: "Staff Dashboard",
             path: "/staff/dashboard",
             active: pathSegments.length === 0,
         });
@@ -170,10 +102,28 @@ const StaffLayout = ({ children }) => {
             currentPath += `/${segment}`;
             const isLast = index === pathSegments.length - 1;
 
+            // Convert segment to readable title
+            let title = segment.charAt(0).toUpperCase() + segment.slice(1);
+            title = title.replace(/-/g, " ");
+
+            // Special cases for better readability
+            const titleMappings = {
+                categories: "Service Categories",
+                create: "Create New",
+                edit: "Edit",
+                analytics: "Analytics",
+                users: "User Management",
+                services: "Services",
+                appointments: "Appointments",
+                reports: "Reports",
+                activities: "Activity Log",
+                support: "Customer Support",
+            };
+
+            title = titleMappings[segment] || title;
+
             breadcrumbs.push({
-                title:
-                    segment.charAt(0).toUpperCase() +
-                    segment.slice(1).replace(/-/g, " "),
+                title: title,
                 path: currentPath,
                 active: isLast,
             });
@@ -182,346 +132,165 @@ const StaffLayout = ({ children }) => {
         return breadcrumbs;
     };
 
+    // Auto-dismiss notifications after timeout
+    useEffect(() => {
+        const timers = [];
+
+        state.ui.notifications.forEach((notification) => {
+            if (notification.duration && notification.duration > 0) {
+                const timer = setTimeout(() => {
+                    removeNotification(notification.id);
+                }, notification.duration);
+                timers.push(timer);
+            }
+        });
+
+        return () => {
+            timers.forEach((timer) => clearTimeout(timer));
+        };
+    }, [state.ui.notifications, removeNotification]);
+
+    // Get notification count for different types
+    const getNotificationCounts = () => {
+        return {
+            total: state.ui.notifications.length,
+            errors: state.ui.notifications.filter((n) => n.type === "error")
+                .length,
+            success: state.ui.notifications.filter((n) => n.type === "success")
+                .length,
+            info: state.ui.notifications.filter((n) => n.type === "info")
+                .length,
+            warning: state.ui.notifications.filter((n) => n.type === "warning")
+                .length,
+        };
+    };
+
+    const notificationCounts = getNotificationCounts();
+
     return (
-        <div className="min-vh-100 bg-light">
-            {/* Top Navigation Bar */}
-            <nav className="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
-                <div className="container-fluid">
-                    {/* Sidebar Toggle */}
-                    <button
-                        className="btn btn-primary d-lg-none me-3"
-                        type="button"
-                        onClick={toggleSidebar}
-                    >
-                        <i className="fas fa-bars"></i>
-                    </button>
+        <div className="staff-dashboard-layout">
+            {/* Universal Navigation Bar */}
+            <DashboardNavbar
+                role="staff"
+                sidebarCollapsed={sidebarCollapsed}
+                onToggleSidebar={handleToggleSidebar}
+                onSearch={handleSearch}
+                className="staff-navbar"
+            />
 
-                    {/* Brand */}
-                    <Link
-                        className="navbar-brand fw-bold"
-                        to="/staff/dashboard"
-                    >
-                        <i className="fas fa-user-tie me-2"></i>
-                        HireMe Staff
-                    </Link>
+            {/* Main Layout Container */}
+            <div className="d-flex">
+                {/* Universal Sidebar */}
+                <DashboardSidebar
+                    role="staff"
+                    collapsed={sidebarCollapsed}
+                    onMenuItemClick={handleMenuItemClick}
+                    className={`staff-sidebar ${
+                        isMobile && !sidebarCollapsed ? "mobile-overlay" : ""
+                    }`}
+                />
 
-                    {/* Top Nav Items */}
-                    <div className="navbar-nav ms-auto d-flex flex-row align-items-center">
-                        {/* Current Time */}
-                        <div className="text-white-50 me-4 d-none d-md-block">
-                            <i className="fas fa-clock me-1"></i>
-                            {currentTime.toLocaleTimeString([], {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                            })}
-                        </div>
+                {/* Mobile Sidebar Backdrop */}
+                {isMobile && !sidebarCollapsed && (
+                    <div
+                        className="position-fixed w-100 h-100 bg-dark bg-opacity-50 d-block d-lg-none"
+                        style={{
+                            top: "60px",
+                            left: 0,
+                            zIndex: 1020,
+                        }}
+                        onClick={handleToggleSidebar}
+                    ></div>
+                )}
 
-                        {/* Notifications */}
-                        <div className="dropdown me-3">
-                            <button
-                                className="btn btn-outline-light btn-sm position-relative"
-                                type="button"
-                                data-bs-toggle="dropdown"
-                            >
-                                <i className="fas fa-bell"></i>
-                                {state.ui.notifications.length > 0 && (
-                                    <span
-                                        className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
-                                        style={{ fontSize: "0.6rem" }}
+                {/* Main Content Area */}
+                <div
+                    className="main-content flex-grow-1"
+                    style={{
+                        marginLeft: isMobile
+                            ? "0"
+                            : sidebarCollapsed
+                            ? "70px"
+                            : "280px",
+                        marginTop: "60px",
+                        transition: "margin-left 0.3s ease",
+                        minHeight: "calc(100vh - 60px)",
+                        backgroundColor: "#f8f9fa",
+                    }}
+                >
+                    <div className="content-container p-4">
+                        {/* Breadcrumb Navigation */}
+                        <nav aria-label="breadcrumb" className="mb-4">
+                            <ol className="breadcrumb bg-white px-3 py-2 rounded shadow-sm">
+                                {generateBreadcrumbs().map((crumb, index) => (
+                                    <li
+                                        key={index}
+                                        className={`breadcrumb-item ${
+                                            crumb.active ? "active" : ""
+                                        }`}
                                     >
-                                        {state.ui.notifications.length}
-                                    </span>
-                                )}
-                            </button>
-                            <ul className="dropdown-menu dropdown-menu-end">
-                                <li>
-                                    <h6 className="dropdown-header">
-                                        Notifications
-                                    </h6>
-                                </li>
-                                {state.ui.notifications.length === 0 ? (
-                                    <li>
-                                        <span className="dropdown-item-text text-muted">
-                                            No new notifications
-                                        </span>
+                                        {crumb.active ? (
+                                            <span className="text-muted">
+                                                {crumb.title}
+                                            </span>
+                                        ) : (
+                                            <Link
+                                                to={crumb.path}
+                                                className="text-decoration-none text-success"
+                                            >
+                                                {crumb.title}
+                                            </Link>
+                                        )}
                                     </li>
-                                ) : (
-                                    state.ui.notifications.map(
-                                        (notification) => (
-                                            <li key={notification.id}>
-                                                <div className="dropdown-item">
-                                                    <small className="text-muted">
-                                                        Just now
-                                                    </small>
-                                                    <br />
-                                                    {notification.message}
-                                                    <button
-                                                        className="btn btn-sm btn-link p-0 ms-2"
-                                                        onClick={() =>
-                                                            removeNotification(
-                                                                notification.id
-                                                            )
-                                                        }
-                                                    >
-                                                        <i className="fas fa-times"></i>
-                                                    </button>
-                                                </div>
-                                            </li>
-                                        )
-                                    )
-                                )}
-                                <li>
-                                    <hr className="dropdown-divider" />
-                                </li>
-                                <li>
-                                    <Link
-                                        className="dropdown-item text-center"
-                                        to="/staff/activities"
-                                    >
-                                        View all activities
-                                    </Link>
-                                </li>
-                            </ul>
-                        </div>
+                                ))}
+                            </ol>
+                        </nav>
 
-                        {/* User Dropdown */}
-                        <div className="dropdown">
-                            <button
-                                className="btn btn-outline-light btn-sm dropdown-toggle d-flex align-items-center"
-                                type="button"
-                                data-bs-toggle="dropdown"
+                        {/* System Status Banner */}
+                        {(state.dashboard.error || state.categories.error) && (
+                            <div
+                                className="alert alert-warning alert-dismissible fade show mb-4"
+                                role="alert"
                             >
-                                <div className="me-2">
-                                    {user?.profile_picture ? (
-                                        <img
-                                            src={user.profile_picture}
-                                            alt="Profile"
-                                            className="rounded-circle"
-                                            style={{
-                                                width: "24px",
-                                                height: "24px",
-                                                objectFit: "cover",
-                                            }}
-                                        />
-                                    ) : (
-                                        <i className="fas fa-user-circle"></i>
-                                    )}
-                                </div>
-                                <span className="d-none d-md-inline">
-                                    {user?.full_name}
-                                </span>
-                            </button>
-                            <ul className="dropdown-menu dropdown-menu-end">
-                                <li>
-                                    <h6 className="dropdown-header">
-                                        {user?.full_name}
+                                <div className="d-flex align-items-center">
+                                    <i className="fas fa-exclamation-triangle me-3 fa-lg"></i>
+                                    <div className="flex-grow-1">
+                                        <strong>System Notice:</strong> Some
+                                        features may be temporarily unavailable.
                                         <br />
                                         <small className="text-muted">
-                                            {user?.email}
+                                            {state.dashboard.error ||
+                                                state.categories.error}
                                         </small>
-                                    </h6>
-                                </li>
-                                <li>
-                                    <hr className="dropdown-divider" />
-                                </li>
-                                <li>
-                                    <Link
-                                        className="dropdown-item"
-                                        to="/staff/profile"
-                                    >
-                                        <i className="fas fa-user me-2"></i>
-                                        Profile
-                                    </Link>
-                                </li>
-                                <li>
-                                    <Link
-                                        className="dropdown-item"
-                                        to="/staff/settings"
-                                    >
-                                        <i className="fas fa-cog me-2"></i>
-                                        Settings
-                                    </Link>
-                                </li>
-                                <li>
-                                    <hr className="dropdown-divider" />
-                                </li>
-                                <li>
-                                    <button
-                                        className="dropdown-item text-danger"
-                                        onClick={handleLogout}
-                                    >
-                                        <i className="fas fa-sign-out-alt me-2"></i>
-                                        Logout
-                                    </button>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </nav>
-
-            <div className="container-fluid">
-                <div className="row">
-                    {/* Sidebar */}
-                    <div
-                        className={`col-lg-3 col-xl-2 p-0 ${
-                            sidebarCollapsed ? "d-none" : ""
-                        } d-lg-block`}
-                    >
-                        <div
-                            className="bg-white shadow-sm"
-                            style={{ minHeight: "calc(100vh - 56px)" }}
-                        >
-                            <div className="p-3">
-                                <div className="d-flex justify-content-between align-items-center mb-3">
-                                    <h6 className="mb-0 text-muted">
-                                        NAVIGATION
-                                    </h6>
-                                    <button
-                                        className="btn btn-sm btn-outline-secondary d-lg-none"
-                                        onClick={toggleSidebar}
-                                    >
-                                        <i className="fas fa-times"></i>
-                                    </button>
+                                    </div>
                                 </div>
-
-                                <nav className="nav flex-column">
-                                    {navigationItems.map((item, index) => (
-                                        <div key={index} className="mb-1">
-                                            {item.children ? (
-                                                // Dropdown navigation item
-                                                <div className="dropdown">
-                                                    <Link
-                                                        to={item.path}
-                                                        className={`nav-link d-flex align-items-center justify-content-between text-decoration-none ${
-                                                            isActiveRoute(
-                                                                item.path
-                                                            )
-                                                                ? "active bg-primary text-white"
-                                                                : "text-dark"
-                                                        }`}
-                                                        data-bs-toggle="dropdown"
-                                                    >
-                                                        <div>
-                                                            <i
-                                                                className={`${item.icon} me-2`}
-                                                            ></i>
-                                                            {item.title}
-                                                        </div>
-                                                        <i className="fas fa-chevron-down"></i>
-                                                    </Link>
-                                                    <ul className="dropdown-menu w-100 border-0 shadow-sm">
-                                                        {item.children.map(
-                                                            (
-                                                                child,
-                                                                childIndex
-                                                            ) => (
-                                                                <li
-                                                                    key={
-                                                                        childIndex
-                                                                    }
-                                                                >
-                                                                    <Link
-                                                                        to={
-                                                                            child.path
-                                                                        }
-                                                                        className={`dropdown-item ${
-                                                                            isActiveRoute(
-                                                                                child.path,
-                                                                                true
-                                                                            )
-                                                                                ? "active"
-                                                                                : ""
-                                                                        }`}
-                                                                    >
-                                                                        {
-                                                                            child.title
-                                                                        }
-                                                                    </Link>
-                                                                </li>
-                                                            )
-                                                        )}
-                                                    </ul>
-                                                </div>
-                                            ) : (
-                                                // Simple navigation item
-                                                <Link
-                                                    to={item.path}
-                                                    className={`nav-link d-flex align-items-center text-decoration-none ${
-                                                        isActiveRoute(
-                                                            item.path,
-                                                            item.exact
-                                                        )
-                                                            ? "active bg-primary text-white rounded"
-                                                            : "text-dark"
-                                                    }`}
-                                                >
-                                                    <i
-                                                        className={`${item.icon} me-2`}
-                                                    ></i>
-                                                    {item.title}
-                                                </Link>
-                                            )}
-                                        </div>
-                                    ))}
-                                </nav>
+                                <button
+                                    type="button"
+                                    className="btn-close"
+                                    onClick={() => {
+                                        clearErrors();
+                                    }}
+                                ></button>
                             </div>
+                        )}
 
-                            {/* Sidebar Footer */}
-                            <div className="mt-auto p-3 border-top bg-light">
-                                <div className="text-center">
-                                    <small className="text-muted">
-                                        HireMe Staff v1.0
-                                        <br />
-                                        Last login:{" "}
-                                        {user?.last_login_human || "N/A"}
-                                    </small>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Main Content */}
-                    <div className="col-lg-9 col-xl-10">
-                        <div className="p-4">
-                            {/* Breadcrumbs */}
-                            <nav aria-label="breadcrumb" className="mb-4">
-                                <ol className="breadcrumb">
-                                    {generateBreadcrumbs().map(
-                                        (crumb, index) => (
-                                            <li
-                                                key={index}
-                                                className={`breadcrumb-item ${
-                                                    crumb.active ? "active" : ""
-                                                }`}
-                                            >
-                                                {crumb.active ? (
-                                                    crumb.title
-                                                ) : (
-                                                    <Link
-                                                        to={crumb.path}
-                                                        className="text-decoration-none"
-                                                    >
-                                                        {crumb.title}
-                                                    </Link>
-                                                )}
-                                            </li>
-                                        )
-                                    )}
-                                </ol>
-                            </nav>
-
-                            {/* Success/Error Messages from Staff Context */}
+                        {/* Notification Messages */}
+                        <div className="notifications-container mb-4">
+                            {/* Success Messages */}
                             {state.ui.notifications
                                 .filter((n) => n.type === "success")
                                 .map((notification) => (
                                     <div
                                         key={notification.id}
-                                        className="alert alert-success alert-dismissible fade show"
+                                        className="alert alert-success alert-dismissible fade show mb-2"
                                         role="alert"
                                     >
-                                        <i className="fas fa-check-circle me-2"></i>
-                                        {notification.message}
+                                        <div className="d-flex align-items-center">
+                                            <i className="fas fa-check-circle me-3"></i>
+                                            <div className="flex-grow-1">
+                                                {notification.message}
+                                            </div>
+                                        </div>
                                         <button
                                             type="button"
                                             className="btn-close"
@@ -534,16 +303,22 @@ const StaffLayout = ({ children }) => {
                                     </div>
                                 ))}
 
+                            {/* Error Messages */}
                             {state.ui.notifications
                                 .filter((n) => n.type === "error")
                                 .map((notification) => (
                                     <div
                                         key={notification.id}
-                                        className="alert alert-danger alert-dismissible fade show"
+                                        className="alert alert-danger alert-dismissible fade show mb-2"
                                         role="alert"
                                     >
-                                        <i className="fas fa-exclamation-circle me-2"></i>
-                                        {notification.message}
+                                        <div className="d-flex align-items-center">
+                                            <i className="fas fa-exclamation-circle me-3"></i>
+                                            <div className="flex-grow-1">
+                                                <strong>Error:</strong>{" "}
+                                                {notification.message}
+                                            </div>
+                                        </div>
                                         <button
                                             type="button"
                                             className="btn-close"
@@ -556,58 +331,314 @@ const StaffLayout = ({ children }) => {
                                     </div>
                                 ))}
 
-                            {/* Dashboard/Category Errors */}
-                            {state.dashboard.error && (
-                                <div
-                                    className="alert alert-danger alert-dismissible fade show"
-                                    role="alert"
-                                >
-                                    <i className="fas fa-exclamation-circle me-2"></i>
-                                    <strong>Dashboard Error:</strong>{" "}
-                                    {state.dashboard.error}
-                                    <button
-                                        type="button"
-                                        className="btn-close"
-                                        onClick={() => {
-                                            // You'd need to add a clearDashboardError action
-                                        }}
-                                    ></button>
-                                </div>
-                            )}
+                            {/* Warning Messages */}
+                            {state.ui.notifications
+                                .filter((n) => n.type === "warning")
+                                .map((notification) => (
+                                    <div
+                                        key={notification.id}
+                                        className="alert alert-warning alert-dismissible fade show mb-2"
+                                        role="alert"
+                                    >
+                                        <div className="d-flex align-items-center">
+                                            <i className="fas fa-exclamation-triangle me-3"></i>
+                                            <div className="flex-grow-1">
+                                                <strong>Warning:</strong>{" "}
+                                                {notification.message}
+                                            </div>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            className="btn-close"
+                                            onClick={() =>
+                                                removeNotification(
+                                                    notification.id
+                                                )
+                                            }
+                                        ></button>
+                                    </div>
+                                ))}
 
-                            {state.categories.error && (
-                                <div
-                                    className="alert alert-danger alert-dismissible fade show"
-                                    role="alert"
-                                >
-                                    <i className="fas fa-exclamation-circle me-2"></i>
-                                    <strong>Categories Error:</strong>{" "}
-                                    {state.categories.error}
-                                    <button
-                                        type="button"
-                                        className="btn-close"
-                                        onClick={() => {
-                                            // You'd need to add a clearCategoriesError action
-                                        }}
-                                    ></button>
-                                </div>
-                            )}
-
-                            {/* Page Content */}
-                            <div className="content-wrapper">{children}</div>
+                            {/* Info Messages */}
+                            {state.ui.notifications
+                                .filter((n) => n.type === "info")
+                                .map((notification) => (
+                                    <div
+                                        key={notification.id}
+                                        className="alert alert-info alert-dismissible fade show mb-2"
+                                        role="alert"
+                                    >
+                                        <div className="d-flex align-items-center">
+                                            <i className="fas fa-info-circle me-3"></i>
+                                            <div className="flex-grow-1">
+                                                {notification.message}
+                                            </div>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            className="btn-close"
+                                            onClick={() =>
+                                                removeNotification(
+                                                    notification.id
+                                                )
+                                            }
+                                        ></button>
+                                    </div>
+                                ))}
                         </div>
+
+                        {/* Dashboard Specific Errors */}
+                        {state.dashboard.error && (
+                            <div
+                                className="alert alert-danger alert-dismissible fade show mb-4"
+                                role="alert"
+                            >
+                                <div className="d-flex align-items-center">
+                                    <i className="fas fa-exclamation-circle me-3 fa-lg"></i>
+                                    <div className="flex-grow-1">
+                                        <strong>Dashboard Error:</strong>{" "}
+                                        {state.dashboard.error}
+                                        <br />
+                                        <small className="text-muted">
+                                            Try refreshing the page or contact
+                                            support if the issue persists.
+                                        </small>
+                                    </div>
+                                </div>
+                                <button
+                                    type="button"
+                                    className="btn-close"
+                                    onClick={() => clearErrors()}
+                                ></button>
+                            </div>
+                        )}
+
+                        {/* Categories Specific Errors */}
+                        {state.categories.error && (
+                            <div
+                                className="alert alert-danger alert-dismissible fade show mb-4"
+                                role="alert"
+                            >
+                                <div className="d-flex align-items-center">
+                                    <i className="fas fa-exclamation-circle me-3 fa-lg"></i>
+                                    <div className="flex-grow-1">
+                                        <strong>Categories Error:</strong>{" "}
+                                        {state.categories.error}
+                                        <br />
+                                        <small className="text-muted">
+                                            Unable to load category data. Please
+                                            try again.
+                                        </small>
+                                    </div>
+                                </div>
+                                <button
+                                    type="button"
+                                    className="btn-close"
+                                    onClick={() => clearErrors()}
+                                ></button>
+                            </div>
+                        )}
+
+                        {/* Loading Indicator */}
+                        {(state.dashboard.loading ||
+                            state.categories.loading) && (
+                            <div
+                                className="alert alert-info border-0 shadow-sm mb-4"
+                                role="alert"
+                            >
+                                <div className="d-flex align-items-center">
+                                    <div
+                                        className="spinner-border spinner-border-sm text-success me-3"
+                                        role="status"
+                                    >
+                                        <span className="visually-hidden">
+                                            Loading...
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <strong>Loading data...</strong>
+                                        <br />
+                                        <small className="text-muted">
+                                            {state.dashboard.loading &&
+                                                "Dashboard data"}
+                                            {state.dashboard.loading &&
+                                                state.categories.loading &&
+                                                " and "}
+                                            {state.categories.loading &&
+                                                "Category data"}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Quick Stats Bar (Optional - only on dashboard) */}
+                        {location.pathname === "/staff/dashboard" &&
+                            notificationCounts.total > 0 && (
+                                <div
+                                    className="alert alert-light border-start border-success border-4 mb-4"
+                                    role="alert"
+                                >
+                                    <div className="d-flex align-items-center justify-content-between">
+                                        <div className="d-flex align-items-center">
+                                            <i className="fas fa-bell text-success me-3"></i>
+                                            <div>
+                                                <strong>
+                                                    Active Notifications:
+                                                </strong>{" "}
+                                                {notificationCounts.total} items
+                                                need attention
+                                                <br />
+                                                <small className="text-muted">
+                                                    {notificationCounts.errors >
+                                                        0 &&
+                                                        `${notificationCounts.errors} errors`}
+                                                    {notificationCounts.errors >
+                                                        0 &&
+                                                        notificationCounts.warning >
+                                                            0 &&
+                                                        ", "}
+                                                    {notificationCounts.warning >
+                                                        0 &&
+                                                        `${notificationCounts.warning} warnings`}
+                                                </small>
+                                            </div>
+                                        </div>
+                                        <div className="d-flex gap-2">
+                                            <button
+                                                className="btn btn-outline-success btn-sm"
+                                                onClick={() => {
+                                                    state.ui.notifications.forEach(
+                                                        (n) =>
+                                                            removeNotification(
+                                                                n.id
+                                                            )
+                                                    );
+                                                }}
+                                            >
+                                                Clear All
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                        {/* Main Page Content */}
+                        <div className="page-content">{children}</div>
+
+                        {/* Footer Information */}
+                        <footer className="content-footer mt-5 pt-4 border-top">
+                            <div className="row align-items-center">
+                                <div className="col-md-6">
+                                    <small className="text-muted">
+                                        <i className="fas fa-user-tie me-1"></i>
+                                        HireMe Staff Panel v1.0
+                                        <span className="mx-2">|</span>
+                                        {user?.full_name}
+                                    </small>
+                                </div>
+                                <div className="col-md-6 text-md-end">
+                                    <small className="text-muted">
+                                        Last login:{" "}
+                                        {user?.last_login_human || "First time"}
+                                        <span className="mx-2">|</span>
+                                        <span className="text-success">
+                                            <i
+                                                className="fas fa-circle me-1"
+                                                style={{ fontSize: "0.5rem" }}
+                                            ></i>
+                                            Online
+                                        </span>
+                                    </small>
+                                </div>
+                            </div>
+                        </footer>
                     </div>
                 </div>
             </div>
 
-            {/* Mobile Sidebar Overlay */}
-            {!sidebarCollapsed && (
-                <div
-                    className="d-lg-none position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50"
-                    style={{ zIndex: 1040 }}
-                    onClick={toggleSidebar}
-                ></div>
-            )}
+            {/* Custom Styles for Staff Layout */}
+            <style jsx>{`
+                .staff-dashboard-layout {
+                    min-height: 100vh;
+                    background-color: #f8f9fa;
+                }
+
+                .main-content {
+                    transition: margin-left 0.3s ease;
+                }
+
+                .content-container {
+                    max-width: 100%;
+                }
+
+                .notifications-container {
+                    position: relative;
+                    z-index: 1010;
+                }
+
+                .alert {
+                    border: none;
+                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                }
+
+                .breadcrumb {
+                    background-color: white;
+                    margin-bottom: 0;
+                }
+
+                .breadcrumb-item + .breadcrumb-item::before {
+                    color: #28a745;
+                }
+
+                .content-footer {
+                    background-color: white;
+                    margin: 0 -1.5rem -1.5rem -1.5rem;
+                    padding: 1.5rem;
+                    border-radius: 0.5rem 0.5rem 0 0;
+                }
+
+                @media (max-width: 768px) {
+                    .main-content {
+                        margin-left: 0 !important;
+                    }
+
+                    .staff-sidebar.mobile-overlay {
+                        position: fixed;
+                        top: 60px;
+                        left: 0;
+                        z-index: 1025;
+                        height: calc(100vh - 60px);
+                    }
+                }
+
+                /* Smooth animations */
+                .alert {
+                    animation: slideIn 0.3s ease-out;
+                }
+
+                @keyframes slideIn {
+                    from {
+                        opacity: 0;
+                        transform: translateY(-10px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+
+                /* Loading state improvements */
+                .spinner-border-sm {
+                    width: 1rem;
+                    height: 1rem;
+                }
+
+                /* Custom notification styling */
+                .alert-dismissible .btn-close {
+                    padding: 0.75rem 1rem;
+                }
+            `}</style>
         </div>
     );
 };

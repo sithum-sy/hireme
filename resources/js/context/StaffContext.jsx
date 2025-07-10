@@ -432,6 +432,10 @@ export const StaffProvider = ({ children }) => {
 
             if (response.data.success) {
                 setCurrentCategory(response.data.data);
+
+                // Add this debug:
+                console.log("API returned category:", response.data.data);
+
                 return response.data.data;
             } else {
                 throw new Error(

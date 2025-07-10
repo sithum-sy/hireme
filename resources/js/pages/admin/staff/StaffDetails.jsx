@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useParams, useLocation } from "react-router-dom";
 import { useAdmin } from "../../../context/AdminContext";
-import AdminLayout from "../../../components/AdminLayout";
+import AdminLayout from "../../../components/layouts/AdminLayout";
 
 const StaffDetails = () => {
     const { id } = useParams();

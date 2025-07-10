@@ -331,7 +331,7 @@ const Register = () => {
         if (submitData instanceof FormData) {
             console.log("FormData entries:");
             for (let [key, value] of submitData.entries()) {
-                console.log(key, value);
+                // console.log(key, value);
             }
         }
 
