@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import LocationSelector from "../components/map/LocationSelector";
 
 const Register = () => {
     const [searchParams] = useSearchParams();
@@ -20,16 +19,13 @@ const Register = () => {
         contact_number: "",
         date_of_birth: "",
         profile_picture: null,
-        // Add provider-specific fields
+        // Provider-specific fields (no service-related fields during registration)
         business_name: "",
         years_of_experience: "",
-        service_area_radius: "",
         bio: "",
-        service_categories: [],
         business_license: null,
         certifications: [],
         portfolio_images: [],
-        service_location: null,
     });
 
     // Add new state for file previews
@@ -64,39 +60,12 @@ const Register = () => {
 
         // Add text fields
         Object.keys(formData).forEach((key) => {
-            if (key === "service_categories" && Array.isArray(formData[key])) {
-                formData[key].forEach((category, index) => {
-                    submitData.append(`service_categories[${index}]`, category);
-                });
-            } else if (key === "service_location" && formData[key]) {
-                // Send service_location as individual fields instead of JSON
-                submitData.append(
-                    "service_location_lat",
-                    formData[key].lat || ""
-                );
-                submitData.append(
-                    "service_location_lng",
-                    formData[key].lng || ""
-                );
-                submitData.append(
-                    "service_location_address",
-                    formData[key].address || ""
-                );
-                submitData.append(
-                    "service_location_city",
-                    formData[key].city || ""
-                );
-                submitData.append(
-                    "service_location_radius",
-                    formData[key].radius || 15
-                );
-            } else if (
+            if (
                 ![
                     "profile_picture",
                     "business_license",
                     "certifications",
                     "portfolio_images",
-                    "service_location",
                 ].includes(key)
             ) {
                 submitData.append(key, formData[key] || "");
@@ -247,21 +216,13 @@ const Register = () => {
             if (!formData.contact_number.trim())
                 newErrors.contact_number = "Contact number is required";
 
-            // Provider-specific validation
+            // Provider-specific validation (simplified - no service details)
             if (formData.role === "service_provider") {
                 if (!formData.years_of_experience)
                     newErrors.years_of_experience = "Experience is required";
-                if (!formData.service_area_radius)
-                    newErrors.service_area_radius = "Service area is required";
                 if (!formData.bio || formData.bio.length < 50)
                     newErrors.bio = "Bio must be at least 50 characters";
-                if (
-                    !formData.service_categories ||
-                    formData.service_categories.length === 0
-                ) {
-                    newErrors.service_categories =
-                        "Please select at least one service category";
-                }
+
                 // File size validation
                 if (
                     formData.business_license &&
@@ -293,17 +254,14 @@ const Register = () => {
                     newErrors.portfolio_images =
                         "Maximum 10 portfolio images allowed";
                 }
-                if (!formData.service_location) {
-                    newErrors.service_location =
-                        "Please select your service area";
-                }
             }
         }
 
         return newErrors;
     };
 
-    const handleNext = () => {
+    const handleNext = (e) => {
+        e.preventDefault(); // Prevent any form submission
         const stepErrors = validateStep(step);
         if (Object.keys(stepErrors).length > 0) {
             setErrors(stepErrors);
@@ -311,6 +269,11 @@ const Register = () => {
         }
         setErrors({});
         setStep(step + 1);
+    };
+
+    const handlePrevious = (e) => {
+        e.preventDefault(); // Prevent any form submission
+        setStep(step - 1);
     };
 
     const handleSubmit = async (e) => {
@@ -327,13 +290,13 @@ const Register = () => {
                 : formData;
 
         // Debug log to see what we're sending
-        console.log("Form data being submitted:", formData);
-        if (submitData instanceof FormData) {
-            console.log("FormData entries:");
-            for (let [key, value] of submitData.entries()) {
-                // console.log(key, value);
-            }
-        }
+        // console.log("Form data being submitted:", formData);
+        // if (submitData instanceof FormData) {
+        //     console.log("FormData entries:");
+        //     for (let [key, value] of submitData.entries()) {
+        //         console.log(key, value);
+        //     }
+        // }
 
         const result = await register(submitData);
         if (result.success) {
@@ -846,129 +809,6 @@ const Register = () => {
                                                             )}
                                                         </div>
 
-                                                        <div className="col-md-6">
-                                                            <label className="form-label">
-                                                                Service Area *
-                                                            </label>
-                                                            <select
-                                                                name="service_area_radius"
-                                                                className={`form-control ${
-                                                                    errors.service_area_radius
-                                                                        ? "is-invalid"
-                                                                        : ""
-                                                                }`}
-                                                                value={
-                                                                    formData.service_area_radius
-                                                                }
-                                                                onChange={
-                                                                    handleInputChange
-                                                                }
-                                                            >
-                                                                <option value="">
-                                                                    Select
-                                                                    radius
-                                                                </option>
-                                                                <option value="5">
-                                                                    5 km radius
-                                                                </option>
-                                                                <option value="10">
-                                                                    10 km radius
-                                                                </option>
-                                                                <option value="25">
-                                                                    25 km radius
-                                                                </option>
-                                                                <option value="50">
-                                                                    50 km radius
-                                                                </option>
-                                                            </select>
-                                                            {errors.service_area_radius && (
-                                                                <div className="invalid-feedback">
-                                                                    {
-                                                                        errors.service_area_radius
-                                                                    }
-                                                                </div>
-                                                            )}
-                                                        </div>
-
-                                                        <div className="col-md-6">
-                                                            <label className="form-label">
-                                                                Service
-                                                                Categories *
-                                                            </label>
-                                                            <div className="category-quick-select">
-                                                                {[
-                                                                    "Healthcare",
-                                                                    "Tutoring",
-                                                                    "Home Services",
-                                                                    "Cleaning",
-                                                                ].map(
-                                                                    (
-                                                                        cat,
-                                                                        index
-                                                                    ) => (
-                                                                        <div
-                                                                            key={
-                                                                                index
-                                                                            }
-                                                                            className="form-check form-check-inline"
-                                                                        >
-                                                                            <input
-                                                                                className="form-check-input"
-                                                                                type="checkbox"
-                                                                                id={`cat-${index}`}
-                                                                                onChange={(
-                                                                                    e
-                                                                                ) => {
-                                                                                    const value =
-                                                                                        index +
-                                                                                        1; // Assuming IDs 1-4
-                                                                                    const newCategories =
-                                                                                        e
-                                                                                            .target
-                                                                                            .checked
-                                                                                            ? [
-                                                                                                  ...formData.service_categories,
-                                                                                                  value,
-                                                                                              ]
-                                                                                            : formData.service_categories.filter(
-                                                                                                  (
-                                                                                                      id
-                                                                                                  ) =>
-                                                                                                      id !==
-                                                                                                      value
-                                                                                              );
-                                                                                    setFormData(
-                                                                                        (
-                                                                                            prev
-                                                                                        ) => ({
-                                                                                            ...prev,
-                                                                                            service_categories:
-                                                                                                newCategories,
-                                                                                        })
-                                                                                    );
-                                                                                }}
-                                                                            />
-                                                                            <label
-                                                                                className="form-check-label small"
-                                                                                htmlFor={`cat-${index}`}
-                                                                            >
-                                                                                {
-                                                                                    cat
-                                                                                }
-                                                                            </label>
-                                                                        </div>
-                                                                    )
-                                                                )}
-                                                            </div>
-                                                            {errors.service_categories && (
-                                                                <div className="text-danger small">
-                                                                    {
-                                                                        errors.service_categories
-                                                                    }
-                                                                </div>
-                                                            )}
-                                                        </div>
-
                                                         <div className="col-12">
                                                             <label className="form-label">
                                                                 Professional Bio
@@ -988,7 +828,7 @@ const Register = () => {
                                                                 onChange={
                                                                     handleInputChange
                                                                 }
-                                                                placeholder="Describe your experience and services (minimum 50 characters)"
+                                                                placeholder="Describe your experience and skills (minimum 50 characters)"
                                                             />
                                                             <small className="text-muted">
                                                                 {
@@ -1003,6 +843,24 @@ const Register = () => {
                                                                 </div>
                                                             )}
                                                         </div>
+
+                                                        <div className="col-12 mt-3">
+                                                            <div className="alert alert-info">
+                                                                <i className="fas fa-info-circle me-2"></i>
+                                                                <strong>
+                                                                    Note:
+                                                                </strong>{" "}
+                                                                You can add your
+                                                                services,
+                                                                service areas,
+                                                                and pricing
+                                                                after
+                                                                registration
+                                                                from your
+                                                                dashboard.
+                                                            </div>
+                                                        </div>
+
                                                         <div className="col-12">
                                                             <hr className="my-3" />
                                                             <h6 className="fw-semibold mb-3 text-secondary">
@@ -1203,32 +1061,6 @@ const Register = () => {
                                                                 </div>
                                                             )}
                                                         </div>
-                                                        <div className="col-12">
-                                                            <label className="form-label">
-                                                                Service Area *
-                                                            </label>
-                                                            <LocationSelector
-                                                                value={
-                                                                    formData.service_location
-                                                                }
-                                                                onChange={(
-                                                                    location
-                                                                ) =>
-                                                                    setFormData(
-                                                                        (
-                                                                            prev
-                                                                        ) => ({
-                                                                            ...prev,
-                                                                            service_location:
-                                                                                location,
-                                                                        })
-                                                                    )
-                                                                }
-                                                                error={
-                                                                    errors.service_location
-                                                                }
-                                                            />
-                                                        </div>
                                                     </div>
                                                 </div>
                                             )}
@@ -1246,9 +1078,7 @@ const Register = () => {
                                             <button
                                                 type="button"
                                                 className="btn btn-outline-secondary"
-                                                onClick={() =>
-                                                    setStep(step - 1)
-                                                }
+                                                onClick={handlePrevious}
                                                 disabled={loading}
                                             >
                                                 <i className="fas fa-arrow-left me-2"></i>
@@ -1306,6 +1136,52 @@ const Register = () => {
                     </div>
                 </div>
             </div>
+
+            <style jsx>{`
+                .step-indicator .step-circle {
+                    width: 40px;
+                    height: 40px;
+                    border-radius: 50%;
+                    background-color: #e9ecef;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-weight: bold;
+                    color: #6c757d;
+                    transition: all 0.3s ease;
+                }
+
+                .step-indicator .step-circle.active {
+                    background-color: #28a745;
+                    color: white;
+                }
+
+                .step-indicator .step-line {
+                    width: 80px;
+                    height: 3px;
+                    background-color: #e9ecef;
+                    margin: 0 10px;
+                    transition: all 0.3s ease;
+                }
+
+                .step-indicator .step-line.active {
+                    background-color: #28a745;
+                }
+
+                .role-card {
+                    transition: all 0.3s ease;
+                    cursor: pointer;
+                }
+
+                .role-card:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                }
+
+                .cursor-pointer {
+                    cursor: pointer;
+                }
+            `}</style>
         </div>
     );
 };

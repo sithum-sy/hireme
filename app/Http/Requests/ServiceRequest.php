@@ -31,6 +31,14 @@ class ServiceRequest extends FormRequest
             'service_images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
             'is_active' => 'sometimes|boolean',
 
+            // New location validation rules
+            'latitude' => 'required|numeric|between:-90,90',
+            'longitude' => 'required|numeric|between:-180,180',
+            'location_address' => 'required|string|max:255',
+            'location_city' => 'required|string|max:100',
+            'location_neighborhood' => 'nullable|string|max:100',
+            'service_radius' => 'required|integer|min:1|max:50',
+
             // Custom pricing validation
             'custom_pricing_description' => 'required_if:pricing_type,custom|nullable|string|max:500',
         ];
@@ -67,6 +75,10 @@ class ServiceRequest extends FormRequest
             'service_images.*.mimes' => 'Service images must be JPEG, PNG, JPG, or GIF',
             'service_images.*.max' => 'Each service image must not exceed 2MB',
             'custom_pricing_description.required_if' => 'Custom pricing description is required when using custom pricing',
+            'latitude.required' => 'Please select a location on the map',
+            'longitude.required' => 'Please select a location on the map',
+            'location_address.required' => 'Service location address is required',
+            'service_radius.required' => 'Please specify your service coverage area',
         ];
     }
 

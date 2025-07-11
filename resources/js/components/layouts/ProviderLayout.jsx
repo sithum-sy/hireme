@@ -1,11 +1,24 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
+import { useProvider } from "../../context/ProviderContext";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import DashboardNavbar from "../navigation/shared/DashboardNavbar";
 import DashboardSidebar from "../navigation/shared/DashboardSidebar";
 
 const ProviderLayout = ({ children }) => {
     const { user } = useAuth();
+    const {
+        businessStats,
+        dashboardMetrics,
+        providerNotifications,
+        unreadNotifications,
+        getBusinessInsights,
+        getPerformanceStatus,
+        getTodaysPotentialEarnings,
+        markNotificationAsRead,
+        loading: providerLoading,
+    } = useProvider();
+
     const location = useLocation();
     const navigate = useNavigate();
 
@@ -14,21 +27,6 @@ const ProviderLayout = ({ children }) => {
 
     // Check for mobile screen
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-
-    // Provider-specific state
-    const [notifications, setNotifications] = useState([]);
-    const [todaysSchedule, setTodaysSchedule] = useState([]);
-    const [businessStats, setBusinessStats] = useState({
-        totalEarnings: 0,
-        monthlyEarnings: 0,
-        todaysAppointments: 0,
-        pendingRequests: 0,
-        averageRating: 0,
-        responseRate: 0,
-        completedJobs: 0,
-        activeServices: 0,
-    });
-    const [businessAlerts, setBusinessAlerts] = useState([]);
 
     // Handle window resize
     useEffect(() => {
@@ -51,110 +49,6 @@ const ProviderLayout = ({ children }) => {
         }
     }, [location.pathname, isMobile]);
 
-    // Load provider data
-    useEffect(() => {
-        loadProviderData();
-    }, []);
-
-    // Load provider-specific data
-    const loadProviderData = useCallback(async () => {
-        try {
-            // Mock data - replace with actual API calls
-            setBusinessStats({
-                totalEarnings: 2450.0,
-                monthlyEarnings: 850.0,
-                todaysAppointments: 3,
-                pendingRequests: 7,
-                averageRating: 4.8,
-                responseRate: 95,
-                completedJobs: 24,
-                activeServices: 8,
-            });
-
-            setTodaysSchedule([
-                {
-                    id: 1,
-                    client: "Sarah Perera",
-                    service: "House Cleaning",
-                    time: "10:00 AM",
-                    location: "Bambalapitiya, Colombo",
-                    status: "confirmed",
-                    earnings: 150,
-                },
-                {
-                    id: 2,
-                    client: "Kamal Silva",
-                    service: "Plumbing Repair",
-                    time: "2:00 PM",
-                    location: "Mount Lavinia",
-                    status: "in_progress",
-                    earnings: 200,
-                },
-                {
-                    id: 3,
-                    client: "Nuwan Fernando",
-                    service: "Garden Maintenance",
-                    time: "4:00 PM",
-                    location: "Dehiwala",
-                    status: "upcoming",
-                    earnings: 120,
-                },
-            ]);
-
-            setNotifications([
-                {
-                    id: 1,
-                    type: "request",
-                    title: "New Service Request",
-                    message: "Sarah requested house cleaning service",
-                    time: "5 minutes ago",
-                    read: false,
-                    priority: "high",
-                },
-                {
-                    id: 2,
-                    type: "payment",
-                    title: "Payment Received",
-                    message: "Rs. 150 payment received from completed job",
-                    time: "1 hour ago",
-                    read: false,
-                    priority: "medium",
-                },
-                {
-                    id: 3,
-                    type: "review",
-                    title: "New 5-Star Review",
-                    message: "Excellent service! - Client feedback",
-                    time: "2 hours ago",
-                    read: true,
-                    priority: "low",
-                },
-            ]);
-
-            setBusinessAlerts([
-                {
-                    id: 1,
-                    type: "opportunity",
-                    title: "Peak Hours Opportunity",
-                    message: "High demand in your area between 2-4 PM today",
-                    action: "Update Availability",
-                    actionUrl: "/provider/schedule",
-                },
-                {
-                    id: 2,
-                    type: "verification",
-                    title: "Profile Verification",
-                    message:
-                        "Complete your business verification for better visibility",
-                    action: "Verify Now",
-                    actionUrl: "/provider/profile/verification",
-                },
-            ]);
-        } catch (error) {
-            console.error("Failed to load provider data:", error);
-        }
-    }, []);
-
     // Sidebar toggle handler
     const handleToggleSidebar = () => {
         setSidebarCollapsed(!sidebarCollapsed);
@@ -165,16 +59,11 @@ const ProviderLayout = ({ children }) => {
         if (query.trim()) {
             // Providers can search appointments, clients, analytics, services
             navigate(`/provider/search?q=${encodeURIComponent(query)}`);
-
-            // Add notification for search
-            addNotification(`Searching for: ${query}`, "info");
         }
     };
 
     // Menu item click handler with provider-specific tracking
     const handleMenuItemClick = (item) => {
-        // console.log("Provider menu clicked:", item);
-
         // Add provider-specific menu click handling
         if (item.id === "services") {
             console.log("Managing services");
@@ -183,11 +72,9 @@ const ProviderLayout = ({ children }) => {
         } else if (item.id === "requests") {
             console.log("Checking service requests");
             // Mark request notifications as seen
-            setNotifications((prev) =>
-                prev.map((n) =>
-                    n.type === "request" ? { ...n, read: true } : n
-                )
-            );
+            providerNotifications
+                .filter((n) => n.type === "request" && !n.read)
+                .forEach((n) => markNotificationAsRead(n.id));
         } else if (item.id === "earnings") {
             console.log("Viewing earnings");
         }
@@ -196,38 +83,6 @@ const ProviderLayout = ({ children }) => {
         if (isMobile) {
             setSidebarCollapsed(true);
         }
-    };
-
-    // Add notification helper
-    const addNotification = (message, type = "info", priority = "medium") => {
-        const newNotification = {
-            id: Date.now(),
-            type: type,
-            title: type.charAt(0).toUpperCase() + type.slice(1),
-            message: message,
-            time: "Just now",
-            read: false,
-            priority: priority,
-        };
-
-        setNotifications((prev) => [newNotification, ...prev]);
-
-        // Auto-remove after 5 seconds for low priority
-        if (priority === "low") {
-            setTimeout(() => {
-                removeNotification(newNotification.id);
-            }, 5000);
-        }
-    };
-
-    // Remove notification
-    const removeNotification = (notificationId) => {
-        setNotifications((prev) => prev.filter((n) => n.id !== notificationId));
-    };
-
-    // Dismiss business alert
-    const dismissBusinessAlert = (alertId) => {
-        setBusinessAlerts((prev) => prev.filter((a) => a.id !== alertId));
     };
 
     // Generate breadcrumbs from current path
@@ -307,62 +162,62 @@ const ProviderLayout = ({ children }) => {
         return breadcrumbs;
     };
 
-    // Get today's earnings
-    const getTodaysEarnings = () => {
-        return todaysSchedule
-            .filter(
-                (appointment) =>
-                    appointment.status === "confirmed" ||
-                    appointment.status === "in_progress"
-            )
-            .reduce((total, appointment) => total + appointment.earnings, 0);
-    };
-
-    // Get business performance indicators
+    // Get business performance indicators using context helper
     const getPerformanceIndicators = () => {
-        const responseRateStatus =
-            businessStats.responseRate >= 90
-                ? "excellent"
-                : businessStats.responseRate >= 75
-                ? "good"
-                : "needs_improvement";
-
-        const ratingStatus =
-            businessStats.averageRating >= 4.5
-                ? "excellent"
-                : businessStats.averageRating >= 4.0
-                ? "good"
-                : "needs_improvement";
-
         return {
             responseRate: {
                 value: businessStats.responseRate,
-                status: responseRateStatus,
+                status: getPerformanceStatus(
+                    businessStats.responseRate,
+                    "responseRate"
+                ),
                 color:
-                    responseRateStatus === "excellent"
+                    getPerformanceStatus(
+                        businessStats.responseRate,
+                        "responseRate"
+                    ) === "excellent"
                         ? "success"
-                        : responseRateStatus === "good"
+                        : getPerformanceStatus(
+                              businessStats.responseRate,
+                              "responseRate"
+                          ) === "good"
                         ? "warning"
                         : "danger",
             },
             rating: {
                 value: businessStats.averageRating,
-                status: ratingStatus,
+                status: getPerformanceStatus(
+                    businessStats.averageRating,
+                    "rating"
+                ),
                 color:
-                    ratingStatus === "excellent"
+                    getPerformanceStatus(
+                        businessStats.averageRating,
+                        "rating"
+                    ) === "excellent"
                         ? "success"
-                        : ratingStatus === "good"
+                        : getPerformanceStatus(
+                              businessStats.averageRating,
+                              "rating"
+                          ) === "good"
                         ? "warning"
                         : "danger",
             },
         };
     };
 
-    const todaysEarnings = getTodaysEarnings();
-    const unreadNotifications = notifications.filter((n) => !n.read).length;
-    const highPriorityNotifications = notifications.filter(
+    // Get today's earnings from context
+    const todaysEarnings = getTodaysPotentialEarnings();
+
+    // Get high priority notifications
+    const highPriorityNotifications = providerNotifications.filter(
         (n) => !n.read && n.priority === "high"
     ).length;
+
+    // Get business insights from context
+    const businessInsights = getBusinessInsights();
+
+    // Get performance indicators
     const performanceIndicators = getPerformanceIndicators();
 
     return (
@@ -517,7 +372,10 @@ const ProviderLayout = ({ children }) => {
                                             </div>
                                             <h4 className="fw-bold mb-1">
                                                 Rs.{" "}
-                                                {businessStats.monthlyEarnings.toLocaleString()}
+                                                {(
+                                                    businessStats.monthlyEarnings ??
+                                                    0
+                                                ).toLocaleString()}
                                             </h4>
                                             <small className="text-muted">
                                                 This Month's Earnings
@@ -575,18 +433,20 @@ const ProviderLayout = ({ children }) => {
                             </div>
                         )}
 
-                        {/* Business Alerts */}
-                        {businessAlerts.length > 0 && (
+                        {/* Business Insights (Replaces Business Alerts) */}
+                        {businessInsights.length > 0 && (
                             <div className="business-alerts mb-4">
-                                {businessAlerts.map((alert) => (
+                                {businessInsights.map((insight, index) => (
                                     <div
-                                        key={alert.id}
+                                        key={index}
                                         className={`alert ${
-                                            alert.type === "opportunity"
-                                                ? "alert-success"
-                                                : alert.type === "verification"
+                                            insight.type === "info"
+                                                ? "alert-info"
+                                                : insight.type === "warning"
                                                 ? "alert-warning"
-                                                : "alert-info"
+                                                : insight.type === "danger"
+                                                ? "alert-danger"
+                                                : "alert-success"
                                         } alert-dismissible fade show mb-2`}
                                         role="alert"
                                     >
@@ -594,46 +454,41 @@ const ProviderLayout = ({ children }) => {
                                             <div className="d-flex align-items-center">
                                                 <i
                                                     className={`fas ${
-                                                        alert.type ===
-                                                        "opportunity"
-                                                            ? "fa-chart-line"
-                                                            : alert.type ===
-                                                              "verification"
-                                                            ? "fa-shield-alt"
-                                                            : "fa-info-circle"
+                                                        insight.type === "info"
+                                                            ? "fa-info-circle"
+                                                            : insight.type ===
+                                                              "warning"
+                                                            ? "fa-exclamation-triangle"
+                                                            : insight.type ===
+                                                              "danger"
+                                                            ? "fa-exclamation-circle"
+                                                            : "fa-lightbulb"
                                                     } me-3`}
                                                 ></i>
                                                 <div>
                                                     <strong>
-                                                        {alert.title}:
+                                                        {insight.title}:
                                                     </strong>{" "}
-                                                    {alert.message}
+                                                    {insight.message}
                                                 </div>
                                             </div>
                                             <div className="d-flex gap-2">
                                                 <Link
-                                                    to={alert.actionUrl}
+                                                    to={insight.actionUrl}
                                                     className={`btn btn-sm ${
-                                                        alert.type ===
-                                                        "opportunity"
-                                                            ? "btn-success"
-                                                            : alert.type ===
-                                                              "verification"
+                                                        insight.type === "info"
+                                                            ? "btn-info"
+                                                            : insight.type ===
+                                                              "warning"
                                                             ? "btn-warning"
-                                                            : "btn-info"
+                                                            : insight.type ===
+                                                              "danger"
+                                                            ? "btn-danger"
+                                                            : "btn-success"
                                                     }`}
                                                 >
-                                                    {alert.action}
+                                                    {insight.action}
                                                 </Link>
-                                                <button
-                                                    type="button"
-                                                    className="btn-close"
-                                                    onClick={() =>
-                                                        dismissBusinessAlert(
-                                                            alert.id
-                                                        )
-                                                    }
-                                                ></button>
                                             </div>
                                         </div>
                                     </div>
@@ -661,7 +516,7 @@ const ProviderLayout = ({ children }) => {
                                             <br />
                                             <small className="text-muted">
                                                 {
-                                                    notifications.find(
+                                                    providerNotifications.find(
                                                         (n) =>
                                                             !n.read &&
                                                             n.priority ===
@@ -765,9 +620,9 @@ const ProviderLayout = ({ children }) => {
                         )}
 
                         {/* Notifications Display */}
-                        {notifications.length > 0 && (
+                        {providerNotifications.length > 0 && (
                             <div className="notifications-container mb-4">
-                                {notifications
+                                {providerNotifications
                                     .slice(0, 2)
                                     .map((notification) => (
                                         <div
@@ -816,18 +671,45 @@ const ProviderLayout = ({ children }) => {
                                                         URGENT
                                                     </span>
                                                 )}
+                                                {notification.actionUrl && (
+                                                    <Link
+                                                        to={
+                                                            notification.actionUrl
+                                                        }
+                                                        className="btn btn-outline-primary btn-sm me-2"
+                                                    >
+                                                        View
+                                                    </Link>
+                                                )}
                                             </div>
                                             <button
                                                 type="button"
                                                 className="btn-close"
                                                 onClick={() =>
-                                                    removeNotification(
+                                                    markNotificationAsRead(
                                                         notification.id
                                                     )
                                                 }
                                             ></button>
                                         </div>
                                     ))}
+                            </div>
+                        )}
+
+                        {/* Loading Indicator */}
+                        {providerLoading && (
+                            <div
+                                className="loading-overlay position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center bg-dark bg-opacity-25"
+                                style={{ zIndex: 9999 }}
+                            >
+                                <div
+                                    className="spinner-border text-orange"
+                                    role="status"
+                                >
+                                    <span className="visually-hidden">
+                                        Loading...
+                                    </span>
+                                </div>
                             </div>
                         )}
 
@@ -876,7 +758,10 @@ const ProviderLayout = ({ children }) => {
                                             <small className="text-muted">
                                                 <i className="fas fa-dollar-sign me-1"></i>
                                                 Total Earnings: Rs.{" "}
-                                                {businessStats.totalEarnings.toLocaleString()}
+                                                {(
+                                                    businessStats.totalEarnings ??
+                                                    0
+                                                ).toLocaleString()}
                                             </small>
                                             <small className="text-muted">
                                                 <i className="fas fa-handshake me-1"></i>
@@ -1076,6 +961,10 @@ const ProviderLayout = ({ children }) => {
                     border-left-color: #0dcaf0;
                 }
 
+                .business-alerts .alert-danger {
+                    border-left-color: #dc3545;
+                }
+
                 /* Notification priority styling */
                 .notifications-container .alert-primary {
                     background-color: #e3f2fd;
@@ -1107,6 +996,15 @@ const ProviderLayout = ({ children }) => {
                 /* Performance indicator cards */
                 .card-header {
                     background-color: #f8f9fa !important;
+                }
+
+                /* Loading overlay */
+                .loading-overlay {
+                    backdrop-filter: blur(2px);
+                }
+
+                .spinner-border.text-orange {
+                    color: #fd7e14 !important;
                 }
 
                 /* Responsive text sizing */
@@ -1144,6 +1042,7 @@ const ProviderLayout = ({ children }) => {
                 .btn-outline-primary:hover {
                     background-color: #fd7e14;
                     border-color: #fd7e14;
+                    color: white;
                 }
             `}</style>
         </div>

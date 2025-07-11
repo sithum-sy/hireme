@@ -5,6 +5,7 @@ import { AuthProvider } from "./context/AuthContext";
 import { AdminProvider } from "./context/AdminContext";
 import { ServicesProvider } from "./context/ServicesContext";
 import { StaffProvider } from "./context/StaffContext";
+import { ProviderProvider } from "./context/ProviderContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import DashboardLayout from "./components/DashboardLayout";
 
@@ -557,54 +558,38 @@ function App() {
 
                     {/* ===== SERVICE PROVIDER ROUTES ===== */}
                     <Route
-                        path="/provider/dashboard"
+                        path="/provider/*"
                         element={
-                            <ServicesProvider>
-                                <ProtectedRoute
-                                    allowedRoles={["service_provider"]}
-                                >
-                                    <ProviderDashboard />
-                                </ProtectedRoute>
-                            </ServicesProvider>
-                        }
-                    />
-
-                    <Route
-                        path="/provider/services"
-                        element={
-                            <ServicesProvider>
-                                <ProtectedRoute
-                                    allowedRoles={["service_provider"]}
-                                >
-                                    <ProviderServices />
-                                </ProtectedRoute>
-                            </ServicesProvider>
-                        }
-                    />
-
-                    <Route
-                        path="/provider/services/create"
-                        element={
-                            <ServicesProvider>
-                                <ProtectedRoute
-                                    allowedRoles={["service_provider"]}
-                                >
-                                    <ServiceForm />
-                                </ProtectedRoute>
-                            </ServicesProvider>
-                        }
-                    />
-
-                    <Route
-                        path="/provider/services/:id/edit"
-                        element={
-                            <ServicesProvider>
-                                <ProtectedRoute
-                                    allowedRoles={["service_provider"]}
-                                >
-                                    <ServiceForm />
-                                </ProtectedRoute>
-                            </ServicesProvider>
+                            <ProtectedRoute allowedRoles={["service_provider"]}>
+                                <ProviderProvider>
+                                    <ServicesProvider>
+                                        <Routes>
+                                            {/* Provider Dashboard */}
+                                            <Route
+                                                path="dashboard"
+                                                element={<ProviderDashboard />}
+                                            />
+                                            {/* Provider Services Management */}
+                                            <Route
+                                                path="services"
+                                                element={<ProviderServices />}
+                                            />
+                                            <Route
+                                                path="services/create"
+                                                element={<ServiceForm />}
+                                            />
+                                            {/* <Route
+                                            path="services/:id"
+                                            element={<ServiceDetails />}
+                                        /> */}
+                                            {/* <Route
+                                            path="services/:id/edit"
+                                            element={<ServiceForm />}
+                                        /> */}
+                                        </Routes>
+                                    </ServicesProvider>
+                                </ProviderProvider>
+                            </ProtectedRoute>
                         }
                     />
 

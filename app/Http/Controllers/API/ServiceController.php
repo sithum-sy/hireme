@@ -33,10 +33,22 @@ class ServiceController extends Controller
                 'min_rating',
                 'search',
                 'sort_by',
-                'sort_order'
+                'sort_order',
+                // New location filters
+                'lat',
+                'lng',
+                'radius'
             ]);
 
             $query = $this->serviceService->getServicesWithFilters($filters);
+
+            // If location is provided, filter by services that cover that location
+            if ($request->has('lat') && $request->has('lng')) {
+                $query = $query->servingLocation(
+                    $request->lat,
+                    $request->lng
+                );
+            }
 
             $perPage = $request->get('per_page', 15);
             $services = $query->paginate($perPage);
@@ -316,66 +328,18 @@ class ServiceController extends Controller
             'formatted_price' => $service->formatted_price,
             'duration_hours' => $service->duration_hours,
             'service_areas' => $service->service_areas,
-            'service_image_urls' => $service->service_image_urls,
+            'service_images' => $service->service_image_urls,
             'first_image_url' => $service->first_image_url,
             'average_rating' => $service->average_rating,
             'rating_stars' => $service->rating_stars,
             'views_count' => $service->views_count,
             'bookings_count' => $service->bookings_count,
             'is_active' => $service->is_active,
+            // Add location data
+            'location' => $service->location,
+            'service_radius' => $service->service_radius,
+            'distance' => $service->distance ?? null, // If calculated by query
             'created_at' => $service->created_at->format('Y-m-d H:i:s'),
             'updated_at' => $service->updated_at->format('Y-m-d H:i:s'),
         ];
-
-        // Add provider information
-        if ($service->relationLoaded('provider')) {
-            $baseResponse['provider'] = [
-                'id' => $service->provider->id,
-                'name' => $service->provider->full_name,
-                'profile_picture' => $service->provider->profile_picture
-                    ? \Storage::url($service->provider->profile_picture)
-                    : null,
-            ];
-
-            if ($service->provider->relationLoaded('providerProfile')) {
-                $profile = $service->provider->providerProfile;
-                $baseResponse['provider'] = array_merge($baseResponse['provider'], [
-                    'business_name' => $profile->business_name,
-                    'years_of_experience' => $profile->years_of_experience,
-                    'average_rating' => $profile->average_rating,
-                    'total_reviews' => $profile->total_reviews,
-                    'verification_status' => $profile->verification_status,
-                    'is_available' => $profile->is_available,
-                ]);
-            }
-        }
-
-        // Add detailed information if requested
-        if ($detailed) {
-            $baseResponse = array_merge($baseResponse, [
-                'requirements' => $service->requirements,
-                'includes' => $service->includes,
-            ]);
-
-            // Add recent reviews if appointments are loaded
-            if ($service->relationLoaded('appointments')) {
-                $baseResponse['recent_reviews'] = $service->appointments
-                    ->filter(function ($appointment) {
-                        return $appointment->provider_review && $appointment->provider_rating;
-                    })
-                    ->take(5)
-                    ->map(function ($appointment) {
-                        return [
-                            'client_name' => $appointment->client->first_name,
-                            'rating' => $appointment->provider_rating,
-                            'review' => $appointment->provider_review,
-                            'date' => $appointment->completed_at->format('Y-m-d'),
-                        ];
-                    })
-                    ->values();
-            }
-        }
-
-        return $baseResponse;
-    }
 }
