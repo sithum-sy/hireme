@@ -215,7 +215,7 @@ class AvailabilityService
         // Generate time slots (30-minute intervals)
         $availableSlots = [];
         $currentTime = $workStart->copy();
-        $slotDuration = 30; // minutes
+        $slotDuration = 60; // minutes
 
         while ($currentTime->copy()->addMinutes($serviceDuration * 60)->lte($workEnd)) {
             $slotEnd = $currentTime->copy()->addMinutes($serviceDuration * 60);

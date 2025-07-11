@@ -148,8 +148,6 @@ class ServiceController extends Controller
     /**
      * Get service details for editing (Provider only)
      */
-    // In ServiceController.php, update the edit method to return more complete data:
-
     public function edit(Service $service)
     {
         try {
@@ -165,17 +163,6 @@ class ServiceController extends Controller
 
             // Load related data
             $service->load(['category']);
-
-            // Calculate performance metrics
-            $totalEarnings = $service->appointments()
-                ->where('status', 'completed')
-                ->sum('total_amount') ?? 0;
-
-            $last30DaysBookings = $service->appointments()
-                ->where('created_at', '>=', now()->subDays(30))
-                ->count();
-
-            $last30DaysViews = $service->views_count ? floor($service->views_count * 0.3) : 0;
 
             // Format service data for editing
             $serviceData = [
@@ -206,21 +193,11 @@ class ServiceController extends Controller
                 // Images
                 'existing_images' => $service->service_image_urls ?? [],
 
-                // Stats
+                // Basic stats (no appointments dependency)
                 'average_rating' => $service->average_rating ?? 0,
                 'views_count' => $service->views_count ?? 0,
                 'bookings_count' => $service->bookings_count ?? 0,
-                'total_earnings' => $totalEarnings,
-
-                // Performance data
-                'performance' => [
-                    'last_30_days' => [
-                        'views' => $last30DaysViews,
-                        'bookings' => $last30DaysBookings,
-                        'earnings' => floor($totalEarnings * 0.3),
-                        'rating' => $service->average_rating ?? 0
-                    ]
-                ],
+                'total_earnings' => 0, // Set to 0 for now
 
                 // Metadata
                 'is_active' => $service->is_active,
@@ -231,8 +208,8 @@ class ServiceController extends Controller
                 'category' => [
                     'id' => $service->category->id,
                     'name' => $service->category->name,
-                    'icon' => $service->category->icon,
-                    'color' => $service->category->color,
+                    'icon' => $service->category->icon ?? 'fas fa-cog',
+                    'color' => $service->category->color ?? 'primary',
                 ]
             ];
 

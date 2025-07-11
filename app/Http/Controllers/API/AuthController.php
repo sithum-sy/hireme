@@ -160,7 +160,7 @@ class AuthController extends Controller
             $user->updateLastLogin();
 
             // Create new token
-            $token = $user->createToken('auth_token')->plainTextToken;
+            $token = $user->createToken('auth_token', ['*'], now()->addHours(24))->plainTextToken;
 
             // Prepare response data
             $responseData = [

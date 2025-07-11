@@ -25,10 +25,13 @@ const ServiceDetails = () => {
         setServiceLoading(true);
         setError(null);
         try {
-            // Use the real API call instead of mock data
-            const result = await getService(id);
+            // console.log("=== LOADING SERVICE DETAILS ===");
+            // console.log("Service ID:", id);
 
+            const result = await getService(id);
+            // console.log("=== SERVICE DETAILS RESULT ===", result);
             if (result.success) {
+                // console.log("=== SERVICE DATA ===", result.data);
                 const service = result.data;
 
                 // Transform API data to match component expectations
@@ -92,11 +95,12 @@ const ServiceDetails = () => {
 
                 setService(transformedService);
             } else {
+                console.error("=== SERVICE LOAD FAILED ===", result.message);
                 setError(result.message || "Failed to load service details");
             }
         } catch (err) {
-            setError("Failed to load service details");
             console.error("Error loading service:", err);
+            setError("Failed to load service details");
         } finally {
             setServiceLoading(false);
         }

@@ -2,6 +2,7 @@
 
 namespace App\Http;
 
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
 
 class Kernel extends HttpKernel
@@ -72,4 +73,15 @@ class Kernel extends HttpKernel
         'staff' => \App\Http\Middleware\EnsureUserIsStaff::class,
         'admin.or.staff' => \App\Http\Middleware\EnsureUserIsAdminOrStaff::class,
     ];
+
+    protected function schedule(Schedule $schedule)
+    {
+        // Clean up expired tokens daily
+        $schedule->command('sanctum:prune-expired')->daily();
+
+        // Or clean up tokens older than 24 hours
+        $schedule->call(function () {
+            \Laravel\Sanctum\PersonalAccessToken::where('created_at', '<', now()->subHours(24))->delete();
+        })->hourly();
+    }
 }

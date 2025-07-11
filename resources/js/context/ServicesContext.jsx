@@ -132,7 +132,7 @@ export const ServicesProvider = ({ children }) => {
         setLoading(true);
         setError(null);
         try {
-            console.log("=== UPDATING SERVICE ===", serviceId);
+            // console.log("=== UPDATING SERVICE ===", serviceId);
 
             // Add method spoofing for Laravel
             serviceData.append("_method", "PUT");
@@ -148,7 +148,7 @@ export const ServicesProvider = ({ children }) => {
                 }
             );
 
-            console.log("=== UPDATE API RESPONSE ===", response.data);
+            // console.log("=== UPDATE API RESPONSE ===", response.data);
 
             if (response.data.success) {
                 // Refresh services list
