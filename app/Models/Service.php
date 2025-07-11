@@ -135,19 +135,40 @@ class Service extends Model
     }
 
     // Accessors
+    /**
+     * Get service image URLs
+     */
     public function getServiceImageUrlsAttribute()
     {
-        if (!$this->service_images) return [];
+        if (empty($this->service_images)) {
+            return [];
+        }
+
+        // If service_images is stored as JSON array of filenames
+        $images = is_string($this->service_images)
+            ? json_decode($this->service_images, true)
+            : $this->service_images;
+
+        if (!is_array($images)) {
+            return [];
+        }
 
         return array_map(function ($image) {
-            return Storage::url($image);
-        }, $this->service_images);
+            // Convert relative paths to full URLs
+            if (str_starts_with($image, 'http')) {
+                return $image; // Already a full URL
+            }
+            return asset('storage/services/' . $image);
+        }, $images);
     }
 
+    /**
+     * Get first image URL
+     */
     public function getFirstImageUrlAttribute()
     {
         $images = $this->service_image_urls;
-        return count($images) > 0 ? $images[0] : asset('images/default-service.jpg');
+        return !empty($images) ? $images[0] : null;
     }
 
     public function getFormattedPriceAttribute()

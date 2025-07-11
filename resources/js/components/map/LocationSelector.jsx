@@ -67,12 +67,48 @@ const LocationSelector = ({ value, onChange, error }) => {
     ];
 
     useEffect(() => {
-        detectLocation();
+        // Initialize with existing value if provided
+        if (value && value.lat && value.lng) {
+            setCurrentLocation({
+                lat: value.lat,
+                lng: value.lng,
+                address: value.address,
+                neighborhood: value.neighborhood || "",
+                city: value.city,
+                province: value.province || "",
+                accuracy: "existing",
+            });
+            setRadius(value.radius || 15);
+            setLocationState("confirmed");
+        } else {
+            detectLocation();
+        }
     }, []);
 
     useEffect(() => {
-        if (currentLocation && radius) {
-            onChange({
+        // Initialize with existing value if provided
+        if (value && value.lat && value.lng && !currentLocation) {
+            setCurrentLocation({
+                lat: value.lat,
+                lng: value.lng,
+                address: value.address,
+                neighborhood: value.neighborhood || "",
+                city: value.city,
+                province: value.province || "",
+                accuracy: "existing",
+            });
+            setRadius(value.radius || 15);
+            setLocationState("confirmed");
+        } else if (!value && !currentLocation) {
+            detectLocation();
+        }
+    }, [value]);
+
+    // Separate useEffect for handling onChange calls
+    useEffect(() => {
+        if (currentLocation && radius && onChange) {
+            // Create a stable reference to prevent loops
+            const locationData = {
                 lat: currentLocation.lat,
                 lng: currentLocation.lng,
                 address: currentLocation.address,
@@ -81,9 +117,21 @@ const LocationSelector = ({ value, onChange, error }) => {
                 province: currentLocation.province || "",
                 country: "Sri Lanka",
                 radius: radius,
-            });
+            };
+
+            // Use a timeout to debounce rapid changes
+            const timeoutId = setTimeout(() => {
+                onChange(locationData);
+            }, 100);
+
+            return () => clearTimeout(timeoutId);
         }
-    }, [currentLocation, radius]);
+    }, [
+        currentLocation?.lat,
+        currentLocation?.lng,
+        currentLocation?.address,
+        radius,
+    ]); // Specific dependencies
 
     const detectLocation = () => {
         if ("geolocation" in navigator) {
@@ -180,8 +228,27 @@ const LocationSelector = ({ value, onChange, error }) => {
         setLocationState("confirmed");
     };
 
+    const handleRadiusChange = (newRadius) => {
+        setRadius(newRadius);
+    };
+
+    // Prevent any event bubbling that might trigger form submission
+    const handleContainerClick = (e) => {
+        e.stopPropagation();
+    };
+
+    const handleContainerSubmit = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+    };
+
     return (
-        <div className={`location-selector ${error ? "is-invalid" : ""}`}>
+        <div
+            className={`location-selector ${error ? "is-invalid" : ""}`}
+            onClick={handleContainerClick}
+            onSubmit={handleContainerSubmit}
+        >
             {/* Location Detection */}
             {locationState === "detecting" && (
                 <div className="text-center py-4">
@@ -209,14 +276,24 @@ const LocationSelector = ({ value, onChange, error }) => {
                     </p>
                     <div className="d-flex gap-2">
                         <button
+                            type="button"
                             className="btn btn-success btn-sm"
-                            onClick={() => handleLocationConfirm(true)}
+                            onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                handleLocationConfirm(true);
+                            }}
                         >
                             ✅ Yes, this is correct
                         </button>
                         <button
+                            type="button"
                             className="btn btn-outline-secondary btn-sm"
-                            onClick={() => handleLocationConfirm(false)}
+                            onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                handleLocationConfirm(false);
+                            }}
                         >
                             ❌ No, let me choose
                         </button>
@@ -232,8 +309,13 @@ const LocationSelector = ({ value, onChange, error }) => {
                         {sriLankanCities.map((city) => (
                             <div key={city.name} className="col-6 col-md-4">
                                 <button
+                                    type="button"
                                     className="btn btn-outline-primary w-100"
-                                    onClick={() => handleCitySelect(city)}
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        handleCitySelect(city);
+                                    }}
                                 >
                                     <div className="fw-semibold">
                                         {city.name}
@@ -271,19 +353,74 @@ const LocationSelector = ({ value, onChange, error }) => {
                     <div className="d-flex gap-2 flex-wrap">
                         {radiusOptions.map((option) => (
                             <button
+                                type="button"
                                 key={option.value}
                                 className={`btn ${
                                     radius === option.value
                                         ? "btn-primary"
                                         : "btn-outline-primary"
                                 }`}
-                                onClick={() => setRadius(option.value)}
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    handleRadiusChange(option.value);
+                                }}
                             >
                                 {option.label}
                                 <br />
                                 <small>{option.desc}</small>
                             </button>
                         ))}
+                    </div>
+                </div>
+            )}
+
+            {/* Reset Location Button */}
+            {locationState === "confirmed" && (
+                <div className="mb-3">
+                    <button
+                        type="button"
+                        className="btn btn-outline-secondary btn-sm"
+                        onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setLocationState("manual");
+                            setCurrentLocation(null);
+                        }}
+                    >
+                        <i className="fas fa-redo me-2"></i>
+                        Change Location
+                    </button>
+                </div>
+            )}
+
+            {/* Current Location Display */}
+            {currentLocation && locationState === "confirmed" && (
+                <div className="current-location-display p-3 bg-success bg-opacity-10 rounded mb-3 border-start border-success border-3">
+                    <h6 className="fw-bold text-success mb-2">
+                        <i className="fas fa-check-circle me-2"></i>
+                        Selected Location
+                    </h6>
+                    <div className="location-details">
+                        <div className="mb-2">
+                            <strong>
+                                {currentLocation.city},{" "}
+                                {currentLocation.province}
+                            </strong>
+                        </div>
+                        <div className="text-muted small mb-2">
+                            {currentLocation.address}
+                        </div>
+                        <div className="d-flex align-items-center">
+                            <span className="badge bg-primary me-2">
+                                Service Radius: {radius}km
+                            </span>
+                            <small className="text-muted">
+                                Coordinates:{" "}
+                                {Number(currentLocation.lat).toFixed(4)},{" "}
+                                {Number(currentLocation.lng).toFixed(4)}
+                            </small>
+                        </div>
                     </div>
                 </div>
             )}
@@ -300,6 +437,135 @@ const LocationSelector = ({ value, onChange, error }) => {
             )}
 
             {error && <div className="invalid-feedback d-block">{error}</div>}
+
+            {/* Custom Styles */}
+            <style>{`
+                .location-selector {
+                    position: relative;
+                }
+
+                .location-confirm,
+                .current-location-display {
+                    animation: slideIn 0.3s ease-out;
+                }
+
+                @keyframes slideIn {
+                    from {
+                        opacity: 0;
+                        transform: translateY(-10px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+
+                .city-selector .btn {
+                    transition: all 0.2s ease;
+                    height: auto;
+                    padding: 0.75rem 0.5rem;
+                }
+
+                .city-selector .btn:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                }
+
+                .radius-selector .btn {
+                    min-width: 80px;
+                    text-align: center;
+                    transition: all 0.2s ease;
+                }
+
+                .radius-selector .btn:hover {
+                    transform: translateY(-1px);
+                }
+
+                .radius-selector .btn.btn-primary {
+                    background-color: #0d6efd;
+                    border-color: #0d6efd;
+                }
+
+                .map-container {
+                    border-radius: 0.375rem;
+                    overflow: hidden;
+                    border: 1px solid #dee2e6;
+                }
+
+                .location-details {
+                    font-size: 0.9rem;
+                }
+
+                .badge {
+                    font-size: 0.75rem;
+                }
+
+                /* Prevent any form submission events */
+                .location-selector * {
+                    /* Ensure no elements accidentally trigger form submission */
+                }
+
+                .location-selector button {
+                    /* All buttons are explicitly type="button" */
+                }
+
+                /* Loading spinner styling */
+                .spinner-border {
+                    width: 2rem;
+                    height: 2rem;
+                }
+
+                /* Error state styling */
+                .location-selector.is-invalid {
+                    border: 1px solid #dc3545;
+                    border-radius: 0.375rem;
+                    padding: 1rem;
+                }
+
+                .invalid-feedback {
+                    display: block;
+                    width: 100%;
+                    margin-top: 0.25rem;
+                    font-size: 0.875rem;
+                    color: #dc3545;
+                }
+
+                /* Responsive adjustments */
+                @media (max-width: 576px) {
+                    .city-selector .col-6 {
+                        margin-bottom: 0.5rem;
+                    }
+
+                    .radius-selector .btn {
+                        min-width: 70px;
+                        font-size: 0.8rem;
+                        padding: 0.5rem 0.25rem;
+                    }
+
+                    .d-flex.gap-2 {
+                        gap: 0.5rem !important;
+                    }
+                }
+
+                /* Focus states for accessibility */
+                .location-selector button:focus {
+                    outline: none;
+                    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+                }
+
+                /* Success state styling */
+                .bg-success.bg-opacity-10 {
+                    background-color: rgba(25, 135, 84, 0.1) !important;
+                }
+
+                .border-success {
+                    border-color: #198754 !important;
+                }
+
+                .text-success {
+                    color: #198754 !important;
+                }
+            `}</style>
         </div>
     );
 };

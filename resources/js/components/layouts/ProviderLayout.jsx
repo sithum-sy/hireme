@@ -66,7 +66,7 @@ const ProviderLayout = ({ children }) => {
     const handleMenuItemClick = (item) => {
         // Add provider-specific menu click handling
         if (item.id === "services") {
-            console.log("Managing services");
+            // console.log("Managing services");
         } else if (item.id === "appointments") {
             console.log("Viewing appointments");
         } else if (item.id === "requests") {
@@ -782,7 +782,7 @@ const ProviderLayout = ({ children }) => {
             </div>
 
             {/* Custom Styles for Provider Layout */}
-            <style jsx>{`
+            <style>{`
                 .provider-dashboard-layout {
                     min-height: 100vh;
                     background-color: #f8f9fa;

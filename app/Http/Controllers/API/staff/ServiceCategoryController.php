@@ -96,63 +96,21 @@ class ServiceCategoryController extends Controller
     //     }
     // }
 
-    public function index(Request $request)
+    public function index()
     {
         try {
-            \Log::info('ServiceCategory index called with params: ' . json_encode($request->all()));
-
-            // Get filters from request
-            $search = $request->get('search', '');
-            $status = $request->get('status', '');
-            $sortBy = $request->get('sort_by', 'sort_order');
-            $sortOrder = $request->get('sort_order', 'asc');
-            $perPage = $request->get('per_page', 15);
-
-            // Build query
-            $query = \App\Models\ServiceCategory::query();
-
-            // Apply search filter
-            if (!empty($search)) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%")
-                        ->orWhere('description', 'like', "%{$search}%");
-                });
-            }
-
-            // Apply status filter
-            if (!empty($status)) {
-                $isActive = $status === 'active' ? 1 : 0;
-                $query->where('is_active', $isActive);
-            }
-
-            // Apply sorting
-            $query->orderBy($sortBy, $sortOrder);
-
-            // Get paginated results
-            $categories = $query->paginate($perPage);
-
-            \Log::info('Query successful, found ' . $categories->total() . ' categories');
+            $categories = ServiceCategory::active()
+                ->ordered()
+                ->get(['id', 'name', 'icon', 'color', 'description']);
 
             return response()->json([
                 'success' => true,
-                'data' => $categories,
-                'meta' => [
-                    'filters_applied' => [
-                        'search' => $search,
-                        'status' => $status,
-                        'sort_by' => $sortBy,
-                        'sort_order' => $sortOrder
-                    ]
-                ]
+                'data' => $categories
             ]);
         } catch (\Exception $e) {
-            \Log::error('ServiceCategory index error: ' . $e->getMessage());
-            \Log::error('Stack trace: ' . $e->getTraceAsString());
-
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to fetch categories',
-                'error' => app()->environment('local') ? $e->getMessage() : 'Server error'
+                'message' => 'Failed to fetch service categories'
             ], 500);
         }
     }

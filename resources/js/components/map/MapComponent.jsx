@@ -143,8 +143,8 @@ const MapComponent = ({ center, radius, onLocationChange }) => {
                         📍 Service Area Preview
                     </div>
                     <div className="text-muted small">
-                        Coordinates: {selectedPoint[0].toFixed(4)},{" "}
-                        {selectedPoint[1].toFixed(4)}
+                        Coordinates: {Number(selectedPoint?.[0]).toFixed(4)},{" "}
+                        {Number(selectedPoint?.[1]).toFixed(4)}
                     </div>
                 </div>
 

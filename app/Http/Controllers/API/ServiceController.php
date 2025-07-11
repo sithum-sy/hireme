@@ -8,6 +8,7 @@ use App\Models\Service;
 use App\Services\ServiceService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class ServiceController extends Controller
 {
@@ -145,6 +146,115 @@ class ServiceController extends Controller
     }
 
     /**
+     * Get service details for editing (Provider only)
+     */
+    // In ServiceController.php, update the edit method to return more complete data:
+
+    public function edit(Service $service)
+    {
+        try {
+            $user = Auth::user();
+
+            // Check if user owns this service
+            if ($service->provider_id !== $user->id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You can only edit your own services'
+                ], 403);
+            }
+
+            // Load related data
+            $service->load(['category']);
+
+            // Calculate performance metrics
+            $totalEarnings = $service->appointments()
+                ->where('status', 'completed')
+                ->sum('total_amount') ?? 0;
+
+            $last30DaysBookings = $service->appointments()
+                ->where('created_at', '>=', now()->subDays(30))
+                ->count();
+
+            $last30DaysViews = $service->views_count ? floor($service->views_count * 0.3) : 0;
+
+            // Format service data for editing
+            $serviceData = [
+                'id' => $service->id,
+                'title' => $service->title,
+                'description' => $service->description,
+                'category_id' => $service->category_id,
+                'pricing_type' => $service->pricing_type,
+                'base_price' => $service->base_price,
+                'duration_hours' => $service->duration_hours,
+                'custom_pricing_description' => $service->custom_pricing_description,
+
+                // Location data
+                'latitude' => $service->latitude,
+                'longitude' => $service->longitude,
+                'location_address' => $service->location_address,
+                'location_city' => $service->location_city,
+                'location_neighborhood' => $service->location_neighborhood,
+                'service_radius' => $service->service_radius,
+
+                // Service areas
+                'service_areas' => $service->service_areas ?? [],
+
+                // Additional details
+                'includes' => $service->includes,
+                'requirements' => $service->requirements,
+
+                // Images
+                'existing_images' => $service->service_image_urls ?? [],
+
+                // Stats
+                'average_rating' => $service->average_rating ?? 0,
+                'views_count' => $service->views_count ?? 0,
+                'bookings_count' => $service->bookings_count ?? 0,
+                'total_earnings' => $totalEarnings,
+
+                // Performance data
+                'performance' => [
+                    'last_30_days' => [
+                        'views' => $last30DaysViews,
+                        'bookings' => $last30DaysBookings,
+                        'earnings' => floor($totalEarnings * 0.3),
+                        'rating' => $service->average_rating ?? 0
+                    ]
+                ],
+
+                // Metadata
+                'is_active' => $service->is_active,
+                'created_at' => $service->created_at->format('Y-m-d H:i:s'),
+                'updated_at' => $service->updated_at->format('Y-m-d H:i:s'),
+
+                // Category info
+                'category' => [
+                    'id' => $service->category->id,
+                    'name' => $service->category->name,
+                    'icon' => $service->category->icon,
+                    'color' => $service->category->color,
+                ]
+            ];
+
+            return response()->json([
+                'success' => true,
+                'data' => $serviceData
+            ], 200);
+        } catch (\Exception $e) {
+            \Log::error('Error fetching service for details:', [
+                'service_id' => $service->id,
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch service details',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Update the specified service (Provider only)
      */
     public function update(ServiceRequest $request, Service $service)
@@ -160,6 +270,12 @@ class ServiceController extends Controller
                 ], 403);
             }
 
+            \Log::info('Service update request:', [
+                'service_id' => $service->id,
+                'user_id' => $user->id,
+                'request_data' => $request->except(['service_images'])
+            ]);
+
             $updatedService = $this->serviceService->updateService($service, $request->validated());
 
             return response()->json([
@@ -168,6 +284,12 @@ class ServiceController extends Controller
                 'data' => $this->formatServiceResponse($updatedService)
             ], 200);
         } catch (\Exception $e) {
+            \Log::error('Service update error:', [
+                'service_id' => $service->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to update service',
@@ -263,6 +385,9 @@ class ServiceController extends Controller
         try {
             $user = Auth::user();
 
+            // Add debug logging
+            \Log::info('User accessing myServices:', ['user_id' => $user->id, 'role' => $user->role]);
+
             if ($user->role !== 'service_provider') {
                 return response()->json([
                     'success' => false,
@@ -270,11 +395,14 @@ class ServiceController extends Controller
                 ], 403);
             }
 
-            $status = $request->get('status'); // 'active', 'inactive', or null for all
+            $status = $request->get('status');
             $perPage = $request->get('per_page', 15);
 
             $query = Service::with(['category'])
                 ->where('provider_id', $user->id);
+
+            // Add debug logging
+            \Log::info('Service query count:', ['count' => $query->count()]);
 
             if ($status === 'active') {
                 $query->where('is_active', true);
@@ -284,9 +412,23 @@ class ServiceController extends Controller
 
             $services = $query->orderBy('created_at', 'desc')->paginate($perPage);
 
-            $formattedServices = $services->through(function ($service) {
+            // Add debug logging
+            \Log::info('Services found:', ['total' => $services->total()]);
+
+            $formattedServices = $services->map(function ($service) {
                 return $this->formatServiceResponse($service);
-            });
+            })->values();
+
+            // Add this debug logging:
+            \Log::info('Formatted services sample:', [
+                'first_service' => $formattedServices->first(),
+                'services_collection_type' => get_class($formattedServices),
+                'response_structure' => [
+                    'success' => true,
+                    'data_type' => get_class($formattedServices),
+                    'data_count' => $formattedServices->count()
+                ]
+            ]);
 
             return response()->json([
                 'success' => true,
@@ -299,6 +441,7 @@ class ServiceController extends Controller
                 ]
             ], 200);
         } catch (\Exception $e) {
+            \Log::error('Error in myServices:', ['error' => $e->getMessage()]);
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch your services',
@@ -335,11 +478,30 @@ class ServiceController extends Controller
             'views_count' => $service->views_count,
             'bookings_count' => $service->bookings_count,
             'is_active' => $service->is_active,
-            // Add location data
             'location' => $service->location,
             'service_radius' => $service->service_radius,
-            'distance' => $service->distance ?? null, // If calculated by query
+            'distance' => $service->distance ?? null,
             'created_at' => $service->created_at->format('Y-m-d H:i:s'),
             'updated_at' => $service->updated_at->format('Y-m-d H:i:s'),
         ];
+
+        // Add additional fields for detailed view
+        if ($detailed) {
+            $baseResponse['includes'] = $service->includes;
+            $baseResponse['requirements'] = $service->requirements;
+            $baseResponse['custom_pricing_description'] = $service->custom_pricing_description;
+
+            // Add provider info for detailed view
+            if ($service->relationLoaded('provider')) {
+                $baseResponse['provider'] = [
+                    'id' => $service->provider->id,
+                    'name' => $service->provider->full_name,
+                    'profile_image' => $service->provider->profile_image_url,
+                    'verification_status' => $service->provider->providerProfile?->verification_status,
+                ];
+            }
+        }
+
+        return $baseResponse;
+    }
 }

@@ -823,7 +823,7 @@ const DashboardSidebar = ({
             </div>
 
             {/* Custom Styles */}
-            <style jsx>{`
+            <style>{`
                 .dashboard-sidebar {
                     position: fixed;
                     top: 60px;

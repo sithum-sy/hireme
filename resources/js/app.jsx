@@ -21,6 +21,7 @@ import ClientDashboard from "./pages/client/Dashboard";
 import ProviderDashboard from "./pages/provider/Dashboard";
 import ProviderServices from "./pages/provider/Services";
 import ServiceForm from "./pages/provider/ServiceForm";
+import ServiceDetails from "./pages/provider/ServiceDetails";
 
 // Admin Pages
 import AdminDashboard from "./pages/admin/Dashboard";
@@ -39,6 +40,7 @@ import CategoryDetails from "./pages/staff/categories/CategoryDetails";
 
 // Import Bootstrap
 import "./bootstrap";
+import EditService from "./pages/provider/EditService";
 
 function App() {
     return (
@@ -578,14 +580,14 @@ function App() {
                                                 path="services/create"
                                                 element={<ServiceForm />}
                                             />
-                                            {/* <Route
-                                            path="services/:id"
-                                            element={<ServiceDetails />}
-                                        /> */}
-                                            {/* <Route
-                                            path="services/:id/edit"
-                                            element={<ServiceForm />}
-                                        /> */}
+                                            <Route
+                                                path="services/:id"
+                                                element={<ServiceDetails />}
+                                            />
+                                            <Route
+                                                path="services/:id/edit"
+                                                element={<EditService />}
+                                            />
                                         </Routes>
                                     </ServicesProvider>
                                 </ProviderProvider>

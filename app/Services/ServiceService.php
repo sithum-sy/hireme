@@ -48,38 +48,52 @@ class ServiceService
     /**
      * Update an existing service
      */
-    public function updateService(Service $service, array $data): Service
+    public function updateService(Service $service, array $data)
     {
         DB::beginTransaction();
 
         try {
-            // Handle service images update
-            if (isset($data['service_images']) && is_array($data['service_images'])) {
-                // Delete old images
-                if ($service->service_images) {
-                    foreach ($service->service_images as $oldImage) {
-                        Storage::disk('public')->delete($oldImage);
-                    }
+            // Process service areas
+            if (isset($data['service_areas'])) {
+                if (is_string($data['service_areas'])) {
+                    $serviceAreas = json_decode($data['service_areas'], true);
+                    $data['service_areas'] = is_array($serviceAreas) ? $serviceAreas : [];
                 }
-
-                // Upload new images
-                $imagePaths = [];
-                foreach ($data['service_images'] as $index => $image) {
-                    if ($image instanceof UploadedFile) {
-                        $imagePaths[] = $this->uploadServiceImage($image, $service->provider_id, $index);
-                    }
-                }
-                $data['service_images'] = $imagePaths;
             }
 
-            // Update service
+            // Handle existing images
+            $existingImages = [];
+            if (isset($data['existing_images']) && is_string($data['existing_images'])) {
+                $existingImages = json_decode($data['existing_images'], true) ?: [];
+            }
+
+            // Handle new image uploads
+            $newImages = [];
+            if (request()->hasFile('service_images')) {
+                foreach (request()->file('service_images') as $image) {
+                    $newImages[] = $this->uploadServiceImage($image);
+                }
+            }
+
+            // Combine existing and new images
+            $allImages = array_merge($existingImages, $newImages);
+            $data['service_images'] = $allImages;
+
+            // Remove fields that shouldn't be directly updated
+            unset($data['existing_images']);
+
+            // Update the service
             $service->update($data);
 
             DB::commit();
 
-            return $service->load(['category', 'provider']);
+            return $service->fresh(['category']);
         } catch (\Exception $e) {
-            DB::rollBack();
+            DB::rollback();
+            \Log::error('Service update failed:', [
+                'service_id' => $service->id,
+                'error' => $e->getMessage()
+            ]);
             throw $e;
         }
     }
@@ -123,10 +137,11 @@ class ServiceService
     /**
      * Upload service image
      */
-    private function uploadServiceImage(UploadedFile $image, int $providerId, int $index): string
+    private function uploadServiceImage($image)
     {
-        $filename = 'service_' . $providerId . '_' . time() . '_' . $index . '.' . $image->getClientOriginalExtension();
-        return $image->storeAs('services', $filename, 'public');
+        $filename = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
+        $path = $image->storeAs('services', $filename, 'public');
+        return $filename; // Store just the filename, not the full path
     }
 
     /**

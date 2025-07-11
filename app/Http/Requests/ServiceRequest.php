@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Log;
 
 class ServiceRequest extends FormRequest
 {
@@ -14,33 +15,35 @@ class ServiceRequest extends FormRequest
 
     public function rules()
     {
-        $serviceId = $this->route('service');
+        $serviceId = $this->route('service') ? $this->route('service')->id : null;
 
         return [
             'title' => 'required|string|max:255',
             'description' => 'required|string|min:50|max:2000',
             'category_id' => 'required|exists:service_categories,id',
-            'pricing_type' => 'required|in:hourly,fixed,custom',
+            'pricing_type' => 'required|in:fixed,hourly,custom',
             'base_price' => 'required|numeric|min:0|max:99999.99',
             'duration_hours' => 'required|numeric|min:0.5|max:24',
-            'requirements' => 'nullable|string|max:1000',
-            'includes' => 'required|string|max:1000',
-            'service_areas' => 'required|array|min:1',
-            'service_areas.*' => 'string|max:100',
-            'service_images' => 'nullable|array|max:5',
-            'service_images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
-            'is_active' => 'sometimes|boolean',
+            'custom_pricing_description' => 'nullable|string|max:500',
 
-            // New location validation rules
+            // Location fields
             'latitude' => 'required|numeric|between:-90,90',
             'longitude' => 'required|numeric|between:-180,180',
-            'location_address' => 'required|string|max:255',
-            'location_city' => 'required|string|max:100',
+            'location_address' => 'required|string|max:500',
+            'location_city' => 'nullable|string|max:100',
             'location_neighborhood' => 'nullable|string|max:100',
-            'service_radius' => 'required|integer|min:1|max:50',
+            'service_radius' => 'required|integer|min:1|max:100',
 
-            // Custom pricing validation
-            'custom_pricing_description' => 'required_if:pricing_type,custom|nullable|string|max:500',
+            // Service areas (expecting JSON string)
+            'service_areas' => 'required|string',
+
+            // Additional details
+            'includes' => 'nullable|string|max:1000',
+            'requirements' => 'nullable|string|max:1000',
+
+            // Images
+            'service_images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // 2MB max
+            'existing_images' => 'nullable|string', // JSON string of kept images
         ];
     }
 
@@ -50,46 +53,53 @@ class ServiceRequest extends FormRequest
             'title.required' => 'Service title is required',
             'title.max' => 'Service title cannot exceed 255 characters',
             'description.required' => 'Service description is required',
-            'description.min' => 'Service description must be at least 50 characters',
-            'description.max' => 'Service description cannot exceed 2000 characters',
+            'description.min' => 'Description must be at least 50 characters',
+            'description.max' => 'Description cannot exceed 2000 characters',
             'category_id.required' => 'Please select a service category',
-            'category_id.exists' => 'Selected service category is invalid',
-            'pricing_type.required' => 'Please select a pricing type',
-            'pricing_type.in' => 'Invalid pricing type selected',
-            'base_price.required' => 'Base price is required',
-            'base_price.numeric' => 'Base price must be a valid number',
-            'base_price.min' => 'Base price cannot be negative',
-            'base_price.max' => 'Base price cannot exceed $99,999.99',
-            'duration_hours.required' => 'Duration is required',
-            'duration_hours.numeric' => 'Duration must be a valid number',
+            'category_id.exists' => 'Selected category is invalid',
+            'base_price.required' => 'Service price is required',
+            'base_price.numeric' => 'Price must be a valid number',
+            'base_price.min' => 'Price cannot be negative',
+            'base_price.max' => 'Price cannot exceed Rs. 99,999.99',
+            'duration_hours.required' => 'Service duration is required',
             'duration_hours.min' => 'Minimum duration is 0.5 hours',
             'duration_hours.max' => 'Maximum duration is 24 hours',
-            'includes.required' => 'Please specify what is included in this service',
-            'includes.max' => 'Service includes cannot exceed 1000 characters',
-            'requirements.max' => 'Requirements cannot exceed 1000 characters',
-            'service_areas.required' => 'Please specify at least one service area',
-            'service_areas.min' => 'Please specify at least one service area',
-            'service_areas.*.max' => 'Each service area cannot exceed 100 characters',
-            'service_images.max' => 'You can upload maximum 5 images',
-            'service_images.*.image' => 'Service images must be valid image files',
-            'service_images.*.mimes' => 'Service images must be JPEG, PNG, JPG, or GIF',
-            'service_images.*.max' => 'Each service image must not exceed 2MB',
-            'custom_pricing_description.required_if' => 'Custom pricing description is required when using custom pricing',
-            'latitude.required' => 'Please select a location on the map',
-            'longitude.required' => 'Please select a location on the map',
-            'location_address.required' => 'Service location address is required',
-            'service_radius.required' => 'Please specify your service coverage area',
+            'latitude.required' => 'Service location is required',
+            'longitude.required' => 'Service location is required',
+            'location_address.required' => 'Service address is required',
+            'service_radius.required' => 'Service radius is required',
+            'service_areas.required' => 'Please select at least one service area',
+            'service_images.*.image' => 'Uploaded files must be images',
+            'service_images.*.mimes' => 'Images must be JPEG, PNG, JPG, or GIF format',
+            'service_images.*.max' => 'Each image must be less than 2MB',
         ];
     }
 
-    /**
-     * Get custom attributes for validator errors.
-     */
-    public function attributes()
+    public function prepareForValidation()
     {
-        return [
-            'service_areas.*' => 'service area',
-            'service_images.*' => 'service image',
-        ];
+        \Log::info('Service request validation data:', [
+            'all_data' => $this->all(),
+            'files' => $this->allFiles(),
+            'method' => $this->method(),
+        ]);
+
+        // Decode service_areas if it's a JSON string
+        if ($this->has('service_areas') && is_string($this->service_areas)) {
+            $areas = json_decode($this->service_areas, true);
+            if (is_array($areas)) {
+                $this->merge(['service_areas_decoded' => $areas]);
+            }
+        }
     }
+
+    // protected function prepareForValidation()
+    // {
+    //     // Decode service_areas if it's a JSON string
+    //     if ($this->has('service_areas') && is_string($this->service_areas)) {
+    //         $areas = json_decode($this->service_areas, true);
+    //         if (is_array($areas)) {
+    //             $this->merge(['service_areas_decoded' => $areas]);
+    //         }
+    //     }
+    // }
 }

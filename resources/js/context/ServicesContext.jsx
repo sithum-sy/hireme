@@ -26,7 +26,7 @@ export const ServicesProvider = ({ children }) => {
             params.append("page", page);
 
             const response = await axios.get(
-                `/api/services/my-services?${params}`
+                `/api/provider/services/my-services?${params}`
             );
 
             if (response.data.success) {
@@ -56,42 +56,8 @@ export const ServicesProvider = ({ children }) => {
         setLoading(true);
         setError(null);
         try {
-            const response = await axios.post("/api/services", serviceData, {
-                headers: {
-                    "Content-Type": "multipart/form-data",
-                },
-            });
-
-            if (response.data.success) {
-                // Refresh services list
-                await getMyServices();
-                return {
-                    success: true,
-                    data: response.data.data,
-                    message: response.data.message,
-                };
-            }
-        } catch (error) {
-            const errorMessage =
-                error.response?.data?.message || "Failed to create service";
-            setError(errorMessage);
-            return {
-                success: false,
-                message: errorMessage,
-                errors: error.response?.data?.errors || {},
-            };
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    // Update service
-    const updateService = async (serviceId, serviceData) => {
-        setLoading(true);
-        setError(null);
-        try {
-            const response = await axios.put(
-                `/api/services/${serviceId}`,
+            const response = await axios.post(
+                "/api/provider/services",
                 serviceData,
                 {
                     headers: {
@@ -110,9 +76,96 @@ export const ServicesProvider = ({ children }) => {
                 };
             }
         } catch (error) {
+            console.error("=== API ERROR RESPONSE ===", error.response?.data);
+
+            const errorMessage =
+                error.response?.data?.message || "Failed to create service";
+            setError(errorMessage);
+
+            return {
+                success: false,
+                message: errorMessage,
+                errors: error.response?.data?.errors || {},
+                validationErrors: error.response?.data?.errors || {},
+            };
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Get single service
+    const getService = async (serviceId) => {
+        setLoading(true);
+        setError(null);
+        try {
+            const response = await axios.get(
+                `/api/provider/services/${serviceId}/edit`
+            );
+
+            if (response.data.success) {
+                return {
+                    success: true,
+                    data: response.data.data,
+                };
+            } else {
+                return {
+                    success: false,
+                    message: response.data.message || "Failed to fetch service",
+                };
+            }
+        } catch (error) {
+            console.error("Error fetching service:", error);
+            const errorMessage =
+                error.response?.data?.message || "Failed to fetch service";
+            setError(errorMessage);
+            return {
+                success: false,
+                message: errorMessage,
+            };
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Update service
+    const updateService = async (serviceId, serviceData) => {
+        setLoading(true);
+        setError(null);
+        try {
+            console.log("=== UPDATING SERVICE ===", serviceId);
+
+            // Add method spoofing for Laravel
+            serviceData.append("_method", "PUT");
+
+            // Use POST instead of PUT for multipart/form-data
+            const response = await axios.post(
+                `/api/provider/services/${serviceId}`,
+                serviceData,
+                {
+                    headers: {
+                        "Content-Type": "multipart/form-data",
+                    },
+                }
+            );
+
+            console.log("=== UPDATE API RESPONSE ===", response.data);
+
+            if (response.data.success) {
+                // Refresh services list
+                await getMyServices();
+                return {
+                    success: true,
+                    data: response.data.data,
+                    message: response.data.message,
+                };
+            }
+        } catch (error) {
+            console.error("=== UPDATE API ERROR ===", error.response?.data);
+
             const errorMessage =
                 error.response?.data?.message || "Failed to update service";
             setError(errorMessage);
+
             return {
                 success: false,
                 message: errorMessage,
@@ -128,7 +181,9 @@ export const ServicesProvider = ({ children }) => {
         setLoading(true);
         setError(null);
         try {
-            const response = await axios.delete(`/api/services/${serviceId}`);
+            const response = await axios.delete(
+                `/api/provider/services/${serviceId}`
+            );
 
             if (response.data.success) {
                 // Refresh services list
@@ -157,7 +212,7 @@ export const ServicesProvider = ({ children }) => {
         setError(null);
         try {
             const response = await axios.patch(
-                `/api/services/${serviceId}/toggle-status`
+                `/api/provider/services/${serviceId}/toggle-status`
             );
 
             if (response.data.success) {
@@ -186,7 +241,9 @@ export const ServicesProvider = ({ children }) => {
     // Get service categories
     const getServiceCategories = async () => {
         try {
-            const response = await axios.get("/api/service-categories");
+            const response = await axios.get(
+                "/api/provider/service-categories"
+            );
             if (response.data.success) {
                 return {
                     success: true,
@@ -208,6 +265,7 @@ export const ServicesProvider = ({ children }) => {
         loading,
         error,
         getMyServices,
+        getService,
         createService,
         updateService,
         deleteService,

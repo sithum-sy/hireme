@@ -1,49 +1,22 @@
-import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { useProvider } from "../../context/ProviderContext";
 import ProviderLayout from "../../components/layouts/ProviderLayout";
 
 const ProviderDashboard = () => {
-    const { user, logout } = useAuth();
-    const navigate = useNavigate();
-    const [notifications, setNotifications] = useState([]);
+    const { user } = useAuth();
+    const {
+        businessStats,
+        dashboardMetrics,
+        providerNotifications,
+        getBusinessInsights,
+        getPerformanceStatus,
+        loading,
+    } = useProvider();
 
-    // Mock data - Replace with actual API calls later
-    const [todayStats, setTodayStats] = useState({
-        todayAppointments: 3,
-        totalEarnings: 2450.0,
-        pendingRequests: 5,
-        averageRating: 4.8,
-        completedJobs: 15,
-        responseRate: 95,
-    });
-
-    const [upcomingAppointments, setUpcomingAppointments] = useState([
-        {
-            id: 1,
-            client: "Sarah Perera",
-            service: "House Cleaning",
-            date: "2024-01-15",
-            time: "10:00 AM",
-            status: "confirmed",
-            location: "Bambalapitiya, Colombo",
-            price: 150,
-            clientImage: null,
-        },
-        {
-            id: 2,
-            client: "Kamal Silva",
-            service: "Plumbing Repair",
-            date: "2024-01-16",
-            time: "2:00 PM",
-            status: "pending",
-            location: "Mount Lavinia",
-            price: 200,
-            clientImage: null,
-        },
-    ]);
-
-    const [quickActions] = useState([
+    // Quick Actions with dynamic counts from context
+    const quickActions = [
         {
             icon: "fas fa-plus-circle",
             title: "Add Service",
@@ -56,7 +29,7 @@ const ProviderDashboard = () => {
             icon: "fas fa-calendar-check",
             title: "Manage Schedule",
             description: "Update availability",
-            path: "/provider/availability",
+            path: "/provider/schedule",
             color: "success",
             count: null,
         },
@@ -66,7 +39,7 @@ const ProviderDashboard = () => {
             description: "Pending bookings",
             path: "/provider/requests",
             color: "warning",
-            count: todayStats.pendingRequests,
+            count: businessStats.pendingRequests,
         },
         {
             icon: "fas fa-chart-line",
@@ -76,37 +49,66 @@ const ProviderDashboard = () => {
             color: "info",
             count: null,
         },
-    ]);
+    ];
 
-    useEffect(() => {
-        // Mock notifications
-        setNotifications([
-            {
-                id: 1,
-                type: "booking",
-                title: "New booking request",
-                message: "Sarah Perera requested house cleaning service",
-                time: "2 minutes ago",
-                read: false,
+    // Get performance indicators with proper colors
+    const getPerformanceIndicators = () => {
+        const responseRateStatus = getPerformanceStatus(
+            businessStats.responseRate,
+            "responseRate"
+        );
+        const ratingStatus = getPerformanceStatus(
+            businessStats.averageRating,
+            "rating"
+        );
+
+        return {
+            responseRate: {
+                value: businessStats.responseRate,
+                status: responseRateStatus,
+                color:
+                    responseRateStatus === "excellent"
+                        ? "success"
+                        : responseRateStatus === "good"
+                        ? "warning"
+                        : "danger",
             },
-            {
-                id: 2,
-                type: "payment",
-                title: "Payment received",
-                message: "Rs. 150 payment for completed cleaning job",
-                time: "1 hour ago",
-                read: false,
+            rating: {
+                value: businessStats.averageRating,
+                status: ratingStatus,
+                color:
+                    ratingStatus === "excellent"
+                        ? "success"
+                        : ratingStatus === "good"
+                        ? "warning"
+                        : "danger",
             },
-            {
-                id: 3,
-                type: "review",
-                title: "New review",
-                message: "Nuwan Fernando left a 5-star review",
-                time: "3 hours ago",
-                read: true,
-            },
-        ]);
-    }, []);
+        };
+    };
+
+    const performanceIndicators = getPerformanceIndicators();
+
+    // Show loading state
+    if (loading) {
+        return (
+            <ProviderLayout>
+                <div
+                    className="d-flex justify-content-center align-items-center"
+                    style={{ height: "400px" }}
+                >
+                    <div className="text-center">
+                        <div
+                            className="spinner-border text-orange mb-3"
+                            role="status"
+                        >
+                            <span className="visually-hidden">Loading...</span>
+                        </div>
+                        <p className="text-muted">Loading your dashboard...</p>
+                    </div>
+                </div>
+            </ProviderLayout>
+        );
+    }
 
     return (
         <ProviderLayout>
@@ -115,8 +117,14 @@ const ProviderDashboard = () => {
                 <div className="row mb-4">
                     <div className="col-12">
                         <div className="section-card">
-                            <div className="section-header">
-                                <h5 className="fw-bold mb-0">Quick Actions</h5>
+                            <div className="section-header mb-3">
+                                <h5 className="fw-bold mb-0">
+                                    <i className="fas fa-bolt text-orange me-2"></i>
+                                    Quick Actions
+                                </h5>
+                                <p className="text-muted small mb-0">
+                                    Get things done faster
+                                </p>
                             </div>
                             <div className="section-content">
                                 <div className="row">
@@ -129,9 +137,7 @@ const ProviderDashboard = () => {
                                                 to={action.path}
                                                 className="text-decoration-none"
                                             >
-                                                <div
-                                                    className={`card border-0 shadow-sm h-100 quick-action-card`}
-                                                >
+                                                <div className="card border-0 shadow-sm h-100 quick-action-card">
                                                     <div className="card-body text-center p-4">
                                                         <div
                                                             className={`action-icon bg-${action.color} bg-opacity-10 text-${action.color} rounded-3 p-3 mb-3 d-inline-block position-relative`}
@@ -139,13 +145,16 @@ const ProviderDashboard = () => {
                                                             <i
                                                                 className={`${action.icon} fa-2x`}
                                                             ></i>
-                                                            {action.count && (
-                                                                <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                                                                    {
-                                                                        action.count
-                                                                    }
-                                                                </span>
-                                                            )}
+                                                            {action.count &&
+                                                                action.count >
+                                                                    0 && (
+                                                                    <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                                                        {action.count >
+                                                                        99
+                                                                            ? "99+"
+                                                                            : action.count}
+                                                                    </span>
+                                                                )}
                                                         </div>
                                                         <h6 className="fw-bold mb-2">
                                                             {action.title}
@@ -171,67 +180,60 @@ const ProviderDashboard = () => {
                         <div className="card border-0 shadow-sm">
                             <div className="card-header bg-white border-bottom">
                                 <div className="d-flex justify-content-between align-items-center">
-                                    <h5 className="fw-bold mb-0">
-                                        Upcoming Appointments
-                                    </h5>
+                                    <div>
+                                        <h5 className="fw-bold mb-0">
+                                            <i className="fas fa-calendar-alt text-orange me-2"></i>
+                                            Upcoming Appointments
+                                        </h5>
+                                        <small className="text-muted">
+                                            Your schedule for the next few days
+                                        </small>
+                                    </div>
                                     <Link
                                         to="/provider/appointments"
                                         className="btn btn-outline-orange btn-sm"
                                     >
+                                        <i className="fas fa-external-link-alt me-1"></i>
                                         View All
                                     </Link>
                                 </div>
                             </div>
                             <div className="card-body">
-                                {upcomingAppointments.length > 0 ? (
+                                {dashboardMetrics.recentAppointments &&
+                                dashboardMetrics.recentAppointments.length >
+                                    0 ? (
                                     <div className="appointments-list">
-                                        {upcomingAppointments.map(
+                                        {dashboardMetrics.recentAppointments.map(
                                             (appointment) => (
                                                 <div
                                                     key={appointment.id}
-                                                    className="appointment-card border rounded-3 p-3 mb-3"
+                                                    className="appointment-card border rounded-3 p-3 mb-3 position-relative"
                                                 >
                                                     <div className="row align-items-center">
                                                         <div className="col-md-8">
                                                             <div className="d-flex align-items-center">
                                                                 <div className="me-3">
-                                                                    {appointment.clientImage ? (
-                                                                        <img
-                                                                            src={
-                                                                                appointment.clientImage
-                                                                            }
-                                                                            alt="Client"
-                                                                            className="rounded-circle"
-                                                                            style={{
-                                                                                width: "50px",
-                                                                                height: "50px",
-                                                                                objectFit:
-                                                                                    "cover",
-                                                                            }}
-                                                                        />
-                                                                    ) : (
-                                                                        <div
-                                                                            className="bg-orange bg-opacity-10 text-orange rounded-circle d-flex align-items-center justify-content-center fw-bold"
-                                                                            style={{
-                                                                                width: "50px",
-                                                                                height: "50px",
-                                                                            }}
-                                                                        >
-                                                                            {appointment.client
-                                                                                .split(
-                                                                                    " "
-                                                                                )
-                                                                                .map(
-                                                                                    (
-                                                                                        n
-                                                                                    ) =>
-                                                                                        n[0]
-                                                                                )
-                                                                                .join(
-                                                                                    ""
-                                                                                )}
-                                                                        </div>
-                                                                    )}
+                                                                    <div
+                                                                        className="bg-orange bg-opacity-10 text-orange rounded-circle d-flex align-items-center justify-content-center fw-bold"
+                                                                        style={{
+                                                                            width: "50px",
+                                                                            height: "50px",
+                                                                        }}
+                                                                    >
+                                                                        {appointment.client
+                                                                            .split(
+                                                                                " "
+                                                                            )
+                                                                            .map(
+                                                                                (
+                                                                                    n
+                                                                                ) =>
+                                                                                    n[0]
+                                                                            )
+                                                                            .join(
+                                                                                ""
+                                                                            )}
+                                                                    </div>
                                                                 </div>
                                                                 <div>
                                                                     <h6 className="fw-bold mb-1">
@@ -275,29 +277,33 @@ const ProviderDashboard = () => {
                                                                             ? "bg-success"
                                                                             : appointment.status ===
                                                                               "pending"
-                                                                            ? "bg-warning"
+                                                                            ? "bg-warning text-dark"
+                                                                            : appointment.status ===
+                                                                              "in_progress"
+                                                                            ? "bg-info"
                                                                             : "bg-secondary"
                                                                     }`}
                                                                 >
-                                                                    {
-                                                                        appointment.status
-                                                                    }
+                                                                    {appointment.status.replace(
+                                                                        "_",
+                                                                        " "
+                                                                    )}
                                                                 </span>
                                                             </div>
                                                             <div className="fw-bold text-orange mb-2">
                                                                 Rs.{" "}
-                                                                {
-                                                                    appointment.price
-                                                                }
+                                                                {appointment.earnings?.toLocaleString()}
                                                             </div>
                                                             <div className="d-flex gap-1 justify-content-end">
                                                                 {appointment.status ===
                                                                 "pending" ? (
                                                                     <>
                                                                         <button className="btn btn-success btn-sm">
+                                                                            <i className="fas fa-check me-1"></i>
                                                                             Accept
                                                                         </button>
                                                                         <button className="btn btn-outline-danger btn-sm">
+                                                                            <i className="fas fa-times me-1"></i>
                                                                             Decline
                                                                         </button>
                                                                     </>
@@ -311,30 +317,64 @@ const ProviderDashboard = () => {
                                                             </div>
                                                         </div>
                                                     </div>
+
+                                                    {/* Status indicator stripe */}
+                                                    <div
+                                                        className="position-absolute top-0 start-0 h-100 rounded-start"
+                                                        style={{
+                                                            width: "4px",
+                                                            backgroundColor:
+                                                                appointment.status ===
+                                                                "confirmed"
+                                                                    ? "#198754"
+                                                                    : appointment.status ===
+                                                                      "pending"
+                                                                    ? "#ffc107"
+                                                                    : appointment.status ===
+                                                                      "in_progress"
+                                                                    ? "#0dcaf0"
+                                                                    : "#6c757d",
+                                                        }}
+                                                    ></div>
                                                 </div>
                                             )
                                         )}
                                     </div>
                                 ) : (
                                     <div className="text-center py-5">
-                                        <i className="fas fa-calendar-times fa-3x text-muted mb-3"></i>
-                                        <h6 className="text-muted">
-                                            No upcoming appointments
-                                        </h6>
-                                        <Link
-                                            to="/provider/schedule"
-                                            className="btn btn-orange mt-2"
-                                        >
-                                            <i className="fas fa-calendar-plus me-2"></i>
-                                            Update Your Availability
-                                        </Link>
+                                        <div className="mb-4">
+                                            <i className="fas fa-calendar-times fa-4x text-muted mb-3"></i>
+                                            <h6 className="text-muted mb-2">
+                                                No upcoming appointments
+                                            </h6>
+                                            <p className="text-muted small">
+                                                When clients book your services,
+                                                they'll appear here
+                                            </p>
+                                        </div>
+                                        <div className="d-flex gap-2 justify-content-center">
+                                            <Link
+                                                to="/provider/schedule"
+                                                className="btn btn-orange"
+                                            >
+                                                <i className="fas fa-calendar-plus me-2"></i>
+                                                Update Availability
+                                            </Link>
+                                            <Link
+                                                to="/provider/services"
+                                                className="btn btn-outline-orange"
+                                            >
+                                                <i className="fas fa-plus me-2"></i>
+                                                Add Services
+                                            </Link>
+                                        </div>
                                     </div>
                                 )}
                             </div>
                         </div>
                     </div>
 
-                    {/* Performance & Tips Panel */}
+                    {/* Right Sidebar */}
                     <div className="col-lg-4">
                         {/* Performance Summary */}
                         <div className="card border-0 shadow-sm mb-4">
@@ -348,23 +388,117 @@ const ProviderDashboard = () => {
                                 <div className="d-flex justify-content-between align-items-center mb-3">
                                     <span>Jobs Completed:</span>
                                     <span className="badge bg-info">
-                                        {todayStats.completedJobs}
+                                        {businessStats.completedJobs}
                                     </span>
                                 </div>
                                 <div className="d-flex justify-content-between align-items-center mb-3">
                                     <span>Response Rate:</span>
-                                    <span className="badge bg-success">
-                                        {todayStats.responseRate}%
+                                    <span
+                                        className={`badge bg-${performanceIndicators.responseRate.color}`}
+                                    >
+                                        {
+                                            performanceIndicators.responseRate
+                                                .value
+                                        }
+                                        %
+                                    </span>
+                                </div>
+                                <div className="d-flex justify-content-between align-items-center mb-3">
+                                    <span>Average Rating:</span>
+                                    <span
+                                        className={`badge bg-${performanceIndicators.rating.color}`}
+                                    >
+                                        ⭐ {performanceIndicators.rating.value}
                                     </span>
                                 </div>
                                 <div className="d-flex justify-content-between align-items-center">
-                                    <span>Average Rating:</span>
-                                    <span className="badge bg-warning text-dark">
-                                        ⭐ {todayStats.averageRating}
+                                    <span>Active Services:</span>
+                                    <span className="badge bg-primary">
+                                        {businessStats.activeServices}
                                     </span>
                                 </div>
                             </div>
                         </div>
+
+                        {/* Recent Reviews */}
+                        {dashboardMetrics.clientReviews &&
+                            dashboardMetrics.clientReviews.length > 0 && (
+                                <div className="card border-0 shadow-sm mb-4">
+                                    <div className="card-header bg-white border-bottom">
+                                        <div className="d-flex justify-content-between align-items-center">
+                                            <h6 className="fw-bold mb-0">
+                                                <i className="fas fa-star text-warning me-2"></i>
+                                                Recent Reviews
+                                            </h6>
+                                            <Link
+                                                to="/provider/reviews"
+                                                className="btn btn-link btn-sm text-orange p-0"
+                                            >
+                                                View All
+                                            </Link>
+                                        </div>
+                                    </div>
+                                    <div className="card-body">
+                                        {dashboardMetrics.clientReviews
+                                            .slice(0, 2)
+                                            .map((review) => (
+                                                <div
+                                                    key={review.id}
+                                                    className="review-item mb-3 pb-3 border-bottom"
+                                                >
+                                                    <div className="d-flex align-items-start">
+                                                        <div className="me-2">
+                                                            <div
+                                                                className="bg-warning bg-opacity-10 text-warning rounded-circle d-flex align-items-center justify-content-center fw-bold"
+                                                                style={{
+                                                                    width: "35px",
+                                                                    height: "35px",
+                                                                    fontSize:
+                                                                        "0.8rem",
+                                                                }}
+                                                            >
+                                                                {review.client
+                                                                    .split(" ")
+                                                                    .map(
+                                                                        (n) =>
+                                                                            n[0]
+                                                                    )
+                                                                    .join("")}
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex-grow-1">
+                                                            <div className="d-flex align-items-center mb-1">
+                                                                <strong className="me-2">
+                                                                    {
+                                                                        review.client
+                                                                    }
+                                                                </strong>
+                                                                <div className="text-warning">
+                                                                    {"★".repeat(
+                                                                        review.rating
+                                                                    )}
+                                                                    {"☆".repeat(
+                                                                        5 -
+                                                                            review.rating
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                            <p className="small text-muted mb-1">
+                                                                "
+                                                                {review.comment}
+                                                                "
+                                                            </p>
+                                                            <small className="text-muted">
+                                                                {review.service}{" "}
+                                                                • {review.date}
+                                                            </small>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                    </div>
+                                </div>
+                            )}
 
                         {/* Quick Tips */}
                         <div className="card border-0 shadow-sm">
@@ -389,17 +523,224 @@ const ProviderDashboard = () => {
                                         reviews
                                     </small>
                                 </div>
-                                <div className="tip-item d-flex align-items-start">
+                                <div className="tip-item d-flex align-items-start mb-3">
                                     <i className="fas fa-calendar text-info me-3 mt-1"></i>
                                     <small>
                                         Keep your availability calendar updated
+                                        daily
+                                    </small>
+                                </div>
+                                <div className="tip-item d-flex align-items-start">
+                                    <i className="fas fa-images text-primary me-3 mt-1"></i>
+                                    <small>
+                                        Add photos to your services to attract
+                                        more clients
                                     </small>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
+
+                {/* Bottom Statistics Row */}
+                <div className="row mt-4">
+                    <div className="col-12">
+                        <div className="card border-0 shadow-sm">
+                            <div className="card-header bg-white border-bottom">
+                                <h6 className="fw-bold mb-0">
+                                    <i className="fas fa-trophy text-warning me-2"></i>
+                                    Your Achievements
+                                </h6>
+                            </div>
+                            <div className="card-body">
+                                <div className="row text-center">
+                                    <div className="col-md-3 col-6 mb-3">
+                                        <div className="achievement-item">
+                                            <div className="achievement-icon text-success mb-2">
+                                                <i className="fas fa-eye fa-2x"></i>
+                                            </div>
+                                            <h4 className="fw-bold mb-1">
+                                                {businessStats.totalViews?.toLocaleString() ||
+                                                    "N/A"}
+                                            </h4>
+                                            <small className="text-muted">
+                                                Profile Views
+                                            </small>
+                                        </div>
+                                    </div>
+                                    <div className="col-md-3 col-6 mb-3">
+                                        <div className="achievement-item">
+                                            <div className="achievement-icon text-info mb-2">
+                                                <i className="fas fa-percentage fa-2x"></i>
+                                            </div>
+                                            <h4 className="fw-bold mb-1">
+                                                {businessStats.conversionRate?.toFixed(
+                                                    1
+                                                ) || "N/A"}
+                                                %
+                                            </h4>
+                                            <small className="text-muted">
+                                                Conversion Rate
+                                            </small>
+                                        </div>
+                                    </div>
+                                    <div className="col-md-3 col-6 mb-3">
+                                        <div className="achievement-item">
+                                            <div className="achievement-icon text-warning mb-2">
+                                                <i className="fas fa-medal fa-2x"></i>
+                                            </div>
+                                            <h4 className="fw-bold mb-1">
+                                                {performanceIndicators.rating
+                                                    .status === "excellent"
+                                                    ? "Elite"
+                                                    : performanceIndicators
+                                                          .rating.status ===
+                                                      "good"
+                                                    ? "Pro"
+                                                    : "Rising"}
+                                            </h4>
+                                            <small className="text-muted">
+                                                Provider Level
+                                            </small>
+                                        </div>
+                                    </div>
+                                    <div className="col-md-3 col-6 mb-3">
+                                        <div className="achievement-item">
+                                            <div className="achievement-icon text-orange mb-2">
+                                                <i className="fas fa-calendar-check fa-2x"></i>
+                                            </div>
+                                            <h4 className="fw-bold mb-1">
+                                                {businessStats.totalAppointments ||
+                                                    "N/A"}
+                                            </h4>
+                                            <small className="text-muted">
+                                                Total Bookings
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
+
+            {/* Custom Styles */}
+            <style jsx>{`
+                .provider-dashboard-content {
+                    animation: fadeIn 0.3s ease-in;
+                }
+
+                @keyframes fadeIn {
+                    from {
+                        opacity: 0;
+                        transform: translateY(10px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+
+                .quick-action-card {
+                    transition: all 0.3s ease;
+                    border: 1px solid transparent !important;
+                }
+
+                .quick-action-card:hover {
+                    transform: translateY(-5px);
+                    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1) !important;
+                    border-color: #fd7e14 !important;
+                }
+
+                .appointment-card {
+                    transition: all 0.2s ease;
+                    border: 1px solid #e9ecef !important;
+                }
+
+                .appointment-card:hover {
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                    border-color: #fd7e14 !important;
+                }
+
+                .section-card {
+                    background: white;
+                    border-radius: 0.5rem;
+                    padding: 1.5rem;
+                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                    margin-bottom: 1rem;
+                }
+
+                .achievement-item {
+                    padding: 1rem;
+                    border-radius: 0.5rem;
+                    transition: all 0.2s ease;
+                }
+
+                .achievement-item:hover {
+                    background-color: #f8f9fa;
+                    transform: translateY(-2px);
+                }
+
+                .review-item:last-child {
+                    border-bottom: none !important;
+                    margin-bottom: 0 !important;
+                    padding-bottom: 0 !important;
+                }
+
+                .tip-item {
+                    padding: 0.5rem 0;
+                    border-radius: 0.25rem;
+                    transition: all 0.2s ease;
+                }
+
+                .tip-item:hover {
+                    background-color: #fff3e0;
+                    padding-left: 0.5rem;
+                    margin-left: -0.5rem;
+                }
+
+                .text-orange {
+                    color: #fd7e14 !important;
+                }
+
+                .btn-orange {
+                    background-color: #fd7e14;
+                    border-color: #fd7e14;
+                    color: white;
+                }
+
+                .btn-orange:hover {
+                    background-color: #e55100;
+                    border-color: #e55100;
+                    color: white;
+                }
+
+                .btn-outline-orange {
+                    color: #fd7e14;
+                    border-color: #fd7e14;
+                }
+
+                .btn-outline-orange:hover {
+                    background-color: #fd7e14;
+                    border-color: #fd7e14;
+                    color: white;
+                }
+
+                .bg-orange {
+                    background-color: #fd7e14 !important;
+                }
+
+                @media (max-width: 768px) {
+                    .section-card {
+                        padding: 1rem;
+                    }
+
+                    .quick-action-card .card-body {
+                        padding: 1.5rem !important;
+                    }
+                }
+            `}</style>
         </ProviderLayout>
     );
 };

@@ -167,9 +167,9 @@ export const ProviderProvider = ({ children }) => {
         setLoading(true);
         setError(null);
         try {
-            const response = await axios.get(
-                `/api/profile/provider/statistics?period=${period}`
-            );
+            // const response = await axios.get(
+            //     `/api/profile/provider/statistics?period=${period}`
+            // );
 
             if (response.data.success) {
                 setBusinessStats(response.data.data);
