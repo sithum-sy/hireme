@@ -35,7 +35,8 @@ class ServiceRequest extends FormRequest
             'service_radius' => 'required|integer|min:1|max:100',
 
             // Service areas (expecting JSON string)
-            'service_areas' => 'required|string',
+            'service_areas' => 'required|array|min:1',
+            'service_areas.*' => 'string|max:100',
 
             // Additional details
             'includes' => 'nullable|string|max:1000',
@@ -69,27 +70,76 @@ class ServiceRequest extends FormRequest
             'location_address.required' => 'Service address is required',
             'service_radius.required' => 'Service radius is required',
             'service_areas.required' => 'Please select at least one service area',
+            'service_areas.array' => 'Service areas must be a valid list',
+            'service_areas.min' => 'Please select at least one service area',
+            'service_areas.*.string' => 'Each service area must be a valid text',
+            'service_areas.*.max' => 'Service area names cannot exceed 100 characters',
             'service_images.*.image' => 'Uploaded files must be images',
             'service_images.*.mimes' => 'Images must be JPEG, PNG, JPG, or GIF format',
             'service_images.*.max' => 'Each image must be less than 2MB',
         ];
     }
 
-    public function prepareForValidation()
+    // public function prepareForValidation()
+    // {
+    //     \Log::info('Service request validation data:', [
+    //         'all_data' => $this->all(),
+    //         'files' => $this->allFiles(),
+    //         'method' => $this->method(),
+    //     ]);
+
+    //     // Decode service_areas if it's a JSON string
+    //     if ($this->has('service_areas') && is_string($this->service_areas)) {
+    //         $areas = json_decode($this->service_areas, true);
+    //         if (is_array($areas)) {
+    //             $this->merge(['service_areas_decoded' => $areas]);
+    //         }
+    //     }
+    // }
+
+    protected function prepareForValidation()
     {
-        \Log::info('Service request validation data:', [
+        \Log::info('Service request validation data (BEFORE processing):', [
             'all_data' => $this->all(),
-            'files' => $this->allFiles(),
-            'method' => $this->method(),
+            'service_areas_raw' => $this->service_areas,
+            'service_areas_type' => gettype($this->service_areas)
         ]);
 
-        // Decode service_areas if it's a JSON string
+        // Handle service_areas JSON string conversion
         if ($this->has('service_areas') && is_string($this->service_areas)) {
-            $areas = json_decode($this->service_areas, true);
-            if (is_array($areas)) {
-                $this->merge(['service_areas_decoded' => $areas]);
+            try {
+                $areas = json_decode($this->service_areas, true);
+                if (is_array($areas) && json_last_error() === JSON_ERROR_NONE) {
+                    $this->merge(['service_areas' => $areas]);
+                    \Log::info('Successfully converted service_areas to array:', $areas);
+                } else {
+                    \Log::error('Failed to decode service_areas JSON:', [
+                        'raw_value' => $this->service_areas,
+                        'json_error' => json_last_error_msg()
+                    ]);
+                }
+            } catch (\Exception $e) {
+                \Log::error('Exception while processing service_areas:', [
+                    'error' => $e->getMessage(),
+                    'raw_value' => $this->service_areas
+                ]);
             }
         }
+
+        // Ensure optional fields are present (convert null to empty string)
+        $this->merge([
+            'includes' => $this->includes ?? '',
+            'requirements' => $this->requirements ?? '',
+            'custom_pricing_description' => $this->custom_pricing_description ?: null,
+            'location_city' => $this->location_city ?? null,
+            'location_neighborhood' => $this->location_neighborhood ?? null,
+        ]);
+
+        \Log::info('Service request validation data (AFTER processing):', [
+            'all_data' => $this->all(),
+            'service_areas_processed' => $this->service_areas,
+            'service_areas_type_after' => gettype($this->service_areas)
+        ]);
     }
 
     // protected function prepareForValidation()

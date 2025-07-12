@@ -20,6 +20,8 @@ import Login from "./pages/Login";
 import ClientDashboard from "./pages/client/Dashboard";
 import ServicesBrowse from "./pages/client/services/ServicesBrowse";
 import ServiceSearch from "./pages/client/services/ServiceSearch";
+import ServiceDetail from "./pages/client/services/ServiceDetail";
+import QuotesList from "./pages/client/quotes/QuotesList";
 
 // Provider Pages
 import ProviderDashboard from "./pages/provider/Dashboard";
@@ -100,6 +102,11 @@ function App() {
                                         />
 
                                         <Route
+                                            path="quotes"
+                                            element={<QuotesList />}
+                                        />
+
+                                        <Route
                                             path="services/categories"
                                             element={
                                                 <DashboardLayout>
@@ -129,31 +136,7 @@ function App() {
 
                                         <Route
                                             path="services/:id"
-                                            element={
-                                                <DashboardLayout>
-                                                    <div className="container-fluid">
-                                                        <h2 className="fw-bold mb-4">
-                                                            Service Details
-                                                        </h2>
-                                                        <div className="card border-0 shadow-sm">
-                                                            <div className="card-body text-center py-5">
-                                                                <i className="fas fa-info-circle fa-4x text-muted mb-3"></i>
-                                                                <h4>
-                                                                    Service
-                                                                    details page
-                                                                    coming soon
-                                                                </h4>
-                                                                <p className="text-muted">
-                                                                    View service
-                                                                    details and
-                                                                    book
-                                                                    appointments.
-                                                                </p>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </DashboardLayout>
-                                            }
+                                            element={<ServiceDetail />}
                                         />
 
                                         {/* Provider Routes */}

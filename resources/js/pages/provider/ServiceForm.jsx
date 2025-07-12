@@ -298,10 +298,22 @@ const ServiceForm = () => {
         return Object.keys(newErrors).length === 0;
     };
 
-    const handleNext = () => {
-        if (validateStep(currentStep)) {
-            setCurrentStep((prev) => prev + 1);
-            window.scrollTo(0, 0);
+    const handleNext = (e) => {
+        e?.preventDefault();
+        e?.stopPropagation();
+
+        // console.log("=== HANDLE NEXT CALLED ===");
+        // console.log("Current step:", currentStep);
+
+        if (!validateStep(currentStep)) {
+            console.log("=== VALIDATION FAILED ===");
+            return;
+        }
+
+        if (currentStep < steps.length) {
+            // console.log("=== MOVING TO NEXT STEP ===", currentStep + 1);
+            setCurrentStep(currentStep + 1);
+            setErrors({}); // Clear any previous errors
         }
     };
 
@@ -309,6 +321,79 @@ const ServiceForm = () => {
         setCurrentStep((prev) => prev - 1);
         window.scrollTo(0, 0);
     };
+
+    // const handleSubmit = async (e) => {
+    //     e.preventDefault();
+    //     setIsSubmitting(true);
+
+    //     if (!validateStep(currentStep)) {
+    //         setIsSubmitting(false);
+    //         return;
+    //     }
+
+    //     const submitData = new FormData();
+
+    //     // Add all form fields
+    //     Object.keys(formData).forEach((key) => {
+    //         if (key === "service_areas") {
+    //             formData[key].forEach((area, index) => {
+    //                 submitData.append(`service_areas[${index}]`, area);
+    //             });
+    //         } else if (key === "service_images") {
+    //             formData[key].forEach((image, index) => {
+    //                 submitData.append(`service_images[${index}]`, image);
+    //             });
+    //         } else if (
+    //             formData[key] !== null &&
+    //             formData[key] !== undefined &&
+    //             formData[key] !== ""
+    //         ) {
+    //             submitData.append(key, formData[key]);
+    //         }
+    //     });
+
+    //     try {
+    //         const result = isEdit
+    //             ? await updateService(id, submitData)
+    //             : await createService(submitData);
+
+    //         if (result.success) {
+    //             navigate("/provider/services", {
+    //                 state: {
+    //                     message: isEdit
+    //                         ? "Service updated successfully!"
+    //                         : "Service created successfully!",
+    //                     type: "success",
+    //                 },
+    //             });
+    //         } else {
+    //             setErrors(result.errors || { general: result.message });
+    //             // Navigate to the step with errors
+    //             if (result.errors) {
+    //                 if (
+    //                     result.errors.title ||
+    //                     result.errors.description ||
+    //                     result.errors.category_id
+    //                 ) {
+    //                     setCurrentStep(1);
+    //                 } else if (
+    //                     result.errors.latitude ||
+    //                     result.errors.location_address
+    //                 ) {
+    //                     setCurrentStep(2);
+    //                 } else if (result.errors.service_areas) {
+    //                     setCurrentStep(3);
+    //                 }
+    //             }
+    //         }
+    //     } catch (error) {
+    //         setErrors({
+    //             general: "An unexpected error occurred. Please try again.",
+    //         });
+    //     } finally {
+    //         setIsSubmitting(false);
+    //     }
+    // };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -321,60 +406,67 @@ const ServiceForm = () => {
 
         const submitData = new FormData();
 
-        // Add all form fields
-        Object.keys(formData).forEach((key) => {
-            if (key === "service_areas") {
-                formData[key].forEach((area, index) => {
-                    submitData.append(`service_areas[${index}]`, area);
-                });
-            } else if (key === "service_images") {
-                formData[key].forEach((image, index) => {
-                    submitData.append(`service_images[${index}]`, image);
-                });
-            } else if (
-                formData[key] !== null &&
-                formData[key] !== undefined &&
-                formData[key] !== ""
-            ) {
-                submitData.append(key, formData[key]);
-            }
-        });
+        // Required fields
+        submitData.append("title", formData.title || "");
+        submitData.append("description", formData.description || "");
+        submitData.append("category_id", formData.category_id || "");
+        submitData.append("pricing_type", formData.pricing_type || "fixed");
+        submitData.append("base_price", formData.base_price || "0");
+        submitData.append("duration_hours", formData.duration_hours || "1");
+
+        // Location fields
+        submitData.append("latitude", formData.latitude || "");
+        submitData.append("longitude", formData.longitude || "");
+        submitData.append("location_address", formData.location_address || "");
+        submitData.append("service_radius", formData.service_radius || "15");
+
+        // Optional fields - always include with empty string if not set
+        submitData.append(
+            "custom_pricing_description",
+            formData.custom_pricing_description || ""
+        );
+        submitData.append("location_city", formData.location_city || "");
+        submitData.append(
+            "location_neighborhood",
+            formData.location_neighborhood || ""
+        );
+        submitData.append("includes", formData.includes || ""); // This was missing!
+        submitData.append("requirements", formData.requirements || ""); // This was missing!
+
+        // Service areas as JSON string
+        submitData.append(
+            "service_areas",
+            JSON.stringify(formData.service_areas || [])
+        );
+
+        // Images
+        if (formData.service_images && formData.service_images.length > 0) {
+            formData.service_images.forEach((image, index) => {
+                submitData.append(`service_images[]`, image);
+            });
+        }
+
+        // Debug log
+        // console.log("=== COMPLETE FORM DATA ===");
+        for (let [key, value] of submitData.entries()) {
+            // console.log(`${key}:`, value);
+        }
 
         try {
-            const result = isEdit
-                ? await updateService(id, submitData)
-                : await createService(submitData);
-
+            const result = await createService(submitData);
             if (result.success) {
                 navigate("/provider/services", {
                     state: {
-                        message: isEdit
-                            ? "Service updated successfully!"
-                            : "Service created successfully!",
+                        message: "Service created successfully!",
                         type: "success",
                     },
                 });
             } else {
                 setErrors(result.errors || { general: result.message });
-                // Navigate to the step with errors
-                if (result.errors) {
-                    if (
-                        result.errors.title ||
-                        result.errors.description ||
-                        result.errors.category_id
-                    ) {
-                        setCurrentStep(1);
-                    } else if (
-                        result.errors.latitude ||
-                        result.errors.location_address
-                    ) {
-                        setCurrentStep(2);
-                    } else if (result.errors.service_areas) {
-                        setCurrentStep(3);
-                    }
-                }
+                // Handle step navigation for errors...
             }
         } catch (error) {
+            console.error("Form submission error:", error);
             setErrors({
                 general: "An unexpected error occurred. Please try again.",
             });

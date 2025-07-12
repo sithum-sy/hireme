@@ -144,12 +144,21 @@ const ServiceCard = ({ service, showDistance = true }) => {
 
                         {/* Quick Actions */}
                         <div className="quick-actions mt-3 d-flex gap-2">
-                            <button
+                            {/* <button
                                 className="btn btn-purple btn-sm flex-grow-1"
                                 onClick={(e) => {
                                     e.preventDefault();
                                     // Handle quick book - could open modal or navigate
                                     window.location.href = `/client/services/${service.id}#book`;
+                                }}
+                            > */}
+                            <button
+                                className="btn btn-purple btn-sm flex-grow-1"
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation(); // Prevent event bubbling
+                                    // Navigate to service detail page
+                                    window.location.href = `/client/services/${service.id}`;
                                 }}
                             >
                                 <i className="fas fa-calendar-plus me-1"></i>
