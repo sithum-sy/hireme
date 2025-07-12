@@ -1,8 +1,169 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useProvider } from "../../context/ProviderContext";
 import ProviderLayout from "../../components/layouts/ProviderLayout";
+import availabilityService from "../../services/availabilityService";
+
+const AvailabilityWidget = () => {
+    const [availabilityData, setAvailabilityData] = useState(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        loadAvailabilityData();
+    }, []);
+
+    const loadAvailabilityData = async () => {
+        try {
+            const result = await availabilityService.getAvailabilitySummary();
+            if (result.success) {
+                setAvailabilityData(result.data);
+            }
+        } catch (error) {
+            console.error("Error loading availability data:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="card border-0 shadow-sm mb-4">
+                <div className="card-body text-center p-4">
+                    <div
+                        className="spinner-border spinner-border-sm text-orange mb-2"
+                        role="status"
+                    ></div>
+                    <p className="text-muted small mb-0">
+                        Loading availability...
+                    </p>
+                </div>
+            </div>
+        );
+    }
+
+    const getAvailabilityStatus = () => {
+        if (!availabilityData)
+            return { color: "secondary", text: "Unknown", icon: "question" };
+
+        const workingDays = availabilityData.total_working_days || 0;
+        const blockedTimes = availabilityData.blocked_times_count || 0;
+
+        if (workingDays === 0) {
+            return {
+                color: "danger",
+                text: "No Schedule Set",
+                icon: "exclamation-triangle",
+            };
+        } else if (workingDays < 3) {
+            return { color: "warning", text: "Limited Hours", icon: "clock" };
+        } else if (blockedTimes > 5) {
+            return {
+                color: "info",
+                text: "Partially Available",
+                icon: "calendar-times",
+            };
+        } else {
+            return {
+                color: "success",
+                text: "Fully Available",
+                icon: "calendar-check",
+            };
+        }
+    };
+
+    const status = getAvailabilityStatus();
+
+    return (
+        <div className="card border-0 shadow-sm mb-4">
+            <div className="card-header bg-white border-bottom">
+                <div className="d-flex justify-content-between align-items-center">
+                    <h6 className="fw-bold mb-0">
+                        <i className="fas fa-calendar-alt text-orange me-2"></i>
+                        Availability Status
+                    </h6>
+                    <Link
+                        to="/provider/availability"
+                        className="btn btn-link btn-sm text-orange p-0"
+                    >
+                        Manage
+                    </Link>
+                </div>
+            </div>
+            <div className="card-body">
+                <div className="d-flex align-items-center mb-3">
+                    <div
+                        className={`bg-${status.color} bg-opacity-10 text-${status.color} rounded-circle d-flex align-items-center justify-content-center me-3`}
+                        style={{ width: "40px", height: "40px" }}
+                    >
+                        <i className={`fas fa-${status.icon}`}></i>
+                    </div>
+                    <div>
+                        <div className={`fw-bold text-${status.color}`}>
+                            {status.text}
+                        </div>
+                        <small className="text-muted">
+                            Current availability status
+                        </small>
+                    </div>
+                </div>
+
+                {availabilityData && (
+                    <div className="availability-summary">
+                        <div className="row text-center">
+                            <div className="col-6">
+                                <div className="fw-bold text-orange">
+                                    {availabilityData.total_working_days}
+                                </div>
+                                <small className="text-muted">
+                                    Working Days
+                                </small>
+                            </div>
+                            <div className="col-6">
+                                <div className="fw-bold text-info">
+                                    {availabilityData.total_weekly_hours}h
+                                </div>
+                                <small className="text-muted">
+                                    Weekly Hours
+                                </small>
+                            </div>
+                        </div>
+
+                        {availabilityData.next_blocked_period && (
+                            <div className="alert alert-warning mt-3 py-2 mb-0">
+                                <small>
+                                    <i className="fas fa-exclamation-triangle me-2"></i>
+                                    Next block:{" "}
+                                    {
+                                        availabilityData.next_blocked_period
+                                            .formatted_date_range
+                                    }
+                                </small>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                <div className="d-grid gap-2 mt-3">
+                    <Link
+                        to="/provider/availability/schedule"
+                        className="btn btn-outline-orange btn-sm"
+                    >
+                        <i className="fas fa-clock me-2"></i>
+                        Update Schedule
+                    </Link>
+                    <Link
+                        to="/provider/availability/blocked"
+                        className="btn btn-outline-danger btn-sm"
+                    >
+                        <i className="fas fa-ban me-2"></i>
+                        Block Time
+                    </Link>
+                </div>
+            </div>
+        </div>
+    );
+};
 
 const ProviderDashboard = () => {
     const { user } = useAuth();
@@ -15,7 +176,7 @@ const ProviderDashboard = () => {
         loading,
     } = useProvider();
 
-    // Quick Actions with dynamic counts from context
+    // Quick Actions with dynamic counts from context - Updated schedule path
     const quickActions = [
         {
             icon: "fas fa-plus-circle",
@@ -29,7 +190,7 @@ const ProviderDashboard = () => {
             icon: "fas fa-calendar-check",
             title: "Manage Schedule",
             description: "Update availability",
-            path: "/provider/schedule",
+            path: "/provider/availability", // Updated path
             color: "success",
             count: null,
         },
@@ -354,7 +515,7 @@ const ProviderDashboard = () => {
                                         </div>
                                         <div className="d-flex gap-2 justify-content-center">
                                             <Link
-                                                to="/provider/schedule"
+                                                to="/provider/availability"
                                                 className="btn btn-orange"
                                             >
                                                 <i className="fas fa-calendar-plus me-2"></i>
@@ -376,6 +537,9 @@ const ProviderDashboard = () => {
 
                     {/* Right Sidebar */}
                     <div className="col-lg-4">
+                        {/* NEW: Availability Widget */}
+                        <AvailabilityWidget />
+
                         {/* Performance Summary */}
                         <div className="card border-0 shadow-sm mb-4">
                             <div className="card-header bg-white border-bottom">
@@ -626,7 +790,7 @@ const ProviderDashboard = () => {
             </div>
 
             {/* Custom Styles */}
-            <style jsx>{`
+            <style>{`
                 .provider-dashboard-content {
                     animation: fadeIn 0.3s ease-in;
                 }

@@ -463,22 +463,22 @@ const DashboardSidebar = ({
                     ],
                 },
                 {
-                    id: "schedule",
-                    icon: "fas fa-clock",
+                    id: "availability",
+                    icon: "fas fa-calendar-alt",
                     label: "Availability",
-                    path: "/provider/schedule",
+                    path: "/provider/availability",
                     children: [
                         {
-                            label: "Set Availability",
-                            path: "/provider/schedule/availability",
+                            label: "Weekly Schedule",
+                            path: "/provider/availability/schedule",
                         },
                         {
                             label: "Blocked Times",
-                            path: "/provider/schedule/blocked",
+                            path: "/provider/availability/blocked",
                         },
                         {
-                            label: "Time Slots",
-                            path: "/provider/schedule/slots",
+                            label: "Overview",
+                            path: "/provider/availability",
                         },
                     ],
                 },

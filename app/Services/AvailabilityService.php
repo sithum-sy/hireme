@@ -1,30 +1,88 @@
 <?php
+// app/Services/AvailabilityService.php
 
 namespace App\Services;
 
 use App\Models\User;
 use App\Models\ProviderAvailability;
 use App\Models\BlockedTime;
-use App\Models\Appointment;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class AvailabilityService
 {
     /**
-     * Update provider's weekly availability
+     * Get provider's weekly availability
      */
-    public function updateWeeklyAvailability(User $provider, array $availabilityData): array
+    public function getWeeklyAvailability(User $provider): array
+    {
+        try {
+            Log::info('Getting weekly availability for provider: ' . $provider->id);
+
+            $availability = ProviderAvailability::where('provider_id', $provider->id)
+                ->orderBy('day_of_week')
+                ->get()
+                ->keyBy('day_of_week');
+
+            $weeklySchedule = [];
+            $dayNames = [
+                0 => 'Sunday',
+                1 => 'Monday',
+                2 => 'Tuesday',
+                3 => 'Wednesday',
+                4 => 'Thursday',
+                5 => 'Friday',
+                6 => 'Saturday'
+            ];
+
+            for ($day = 0; $day <= 6; $day++) {
+                $dayAvailability = $availability->get($day);
+
+                $weeklySchedule[] = [
+                    'day_of_week' => $day,
+                    'day_name' => $dayNames[$day],
+                    'is_available' => $dayAvailability ? $dayAvailability->is_available : false,
+                    'start_time' => $dayAvailability && $dayAvailability->start_time
+                        ? $dayAvailability->start_time->format('H:i')
+                        : null,
+                    'end_time' => $dayAvailability && $dayAvailability->end_time
+                        ? $dayAvailability->end_time->format('H:i')
+                        : null,
+                    'formatted_time_range' => $dayAvailability && $dayAvailability->is_available
+                        ? $this->formatTimeRange($dayAvailability->start_time, $dayAvailability->end_time)
+                        : 'Unavailable',
+                ];
+            }
+
+            Log::info('Weekly schedule retrieved: ' . json_encode($weeklySchedule));
+            return $weeklySchedule;
+        } catch (\Exception $e) {
+            Log::error('Error getting weekly availability: ' . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    /**
+     * Create or update provider's weekly availability
+     */
+    public function createOrUpdateWeeklyAvailability(User $provider, array $availabilityData): array
     {
         DB::beginTransaction();
 
         try {
+            Log::info('Creating/updating availability for provider: ' . $provider->id);
+            Log::info('Availability data: ' . json_encode($availabilityData));
+
             // Delete existing availability
-            ProviderAvailability::where('provider_id', $provider->id)->delete();
+            $deletedCount = ProviderAvailability::where('provider_id', $provider->id)->delete();
+            Log::info('Deleted existing records: ' . $deletedCount);
 
             $createdAvailability = [];
 
             foreach ($availabilityData as $dayData) {
+                Log::info('Processing day: ' . json_encode($dayData));
+
                 $availability = ProviderAvailability::create([
                     'provider_id' => $provider->id,
                     'day_of_week' => $dayData['day_of_week'],
@@ -33,244 +91,27 @@ class AvailabilityService
                     'is_available' => $dayData['is_available'],
                 ]);
 
-                $createdAvailability[] = $availability;
+                $createdAvailability[] = [
+                    'day_of_week' => $availability->day_of_week,
+                    'day_name' => $availability->day_name ?? $this->getDayName($availability->day_of_week),
+                    'is_available' => $availability->is_available,
+                    'start_time' => $availability->start_time ? $availability->start_time->format('H:i') : null,
+                    'end_time' => $availability->end_time ? $availability->end_time->format('H:i') : null,
+                    'formatted_time_range' => $availability->is_available && $availability->start_time && $availability->end_time
+                        ? $this->formatTimeRange($availability->start_time, $availability->end_time)
+                        : 'Unavailable',
+                ];
             }
 
             DB::commit();
+            Log::info('Successfully saved availability');
 
             return $createdAvailability;
         } catch (\Exception $e) {
             DB::rollBack();
+            Log::error('Failed to save availability: ' . $e->getMessage());
             throw $e;
         }
-    }
-
-    /**
-     * Get provider's weekly availability
-     */
-    public function getWeeklyAvailability(User $provider): array
-    {
-        $availability = ProviderAvailability::where('provider_id', $provider->id)
-            ->orderBy('day_of_week')
-            ->get()
-            ->keyBy('day_of_week');
-
-        $weeklySchedule = [];
-        $dayNames = ProviderAvailability::getDaysOfWeek();
-
-        for ($day = 0; $day <= 6; $day++) {
-            $dayAvailability = $availability->get($day);
-
-            $weeklySchedule[] = [
-                'day_of_week' => $day,
-                'day_name' => $dayNames[$day],
-                'is_available' => $dayAvailability ? $dayAvailability->is_available : false,
-                'start_time' => $dayAvailability && $dayAvailability->start_time
-                    ? $dayAvailability->start_time->format('H:i')
-                    : null,
-                'end_time' => $dayAvailability && $dayAvailability->end_time
-                    ? $dayAvailability->end_time->format('H:i')
-                    : null,
-                'formatted_time_range' => $dayAvailability
-                    ? $dayAvailability->formatted_time_range
-                    : 'Unavailable',
-            ];
-        }
-
-        return $weeklySchedule;
-    }
-
-    /**
-     * Create blocked time period
-     */
-    public function createBlockedTime(User $provider, array $data): BlockedTime
-    {
-        return BlockedTime::create([
-            'provider_id' => $provider->id,
-            'start_date' => $data['start_date'],
-            'end_date' => $data['end_date'],
-            'start_time' => $data['all_day'] ? null : ($data['start_time'] ?? null),
-            'end_time' => $data['all_day'] ? null : ($data['end_time'] ?? null),
-            'reason' => $data['reason'] ?? null,
-            'all_day' => $data['all_day'] ?? false,
-        ]);
-    }
-
-    /**
-     * Get provider's blocked times
-     */
-    public function getBlockedTimes(User $provider, $startDate = null, $endDate = null)
-    {
-        $query = BlockedTime::where('provider_id', $provider->id);
-
-        if ($startDate && $endDate) {
-            $query->forDateRange($startDate, $endDate);
-        } else {
-            $query->active();
-        }
-
-        return $query->orderBy('start_date')->get();
-    }
-
-    /**
-     * Check if provider is available at specific date and time
-     */
-    public function isAvailableAt(User $provider, $date, $startTime, $endTime): array
-    {
-        $date = Carbon::parse($date);
-        $dayOfWeek = $date->dayOfWeek;
-
-        // Check weekly availability
-        $weeklyAvailability = ProviderAvailability::where('provider_id', $provider->id)
-            ->where('day_of_week', $dayOfWeek)
-            ->first();
-
-        if (!$weeklyAvailability || !$weeklyAvailability->is_available) {
-            return [
-                'available' => false,
-                'reason' => 'Provider is not available on ' . $date->format('l') . 's'
-            ];
-        }
-
-        // Check if time is within working hours
-        $requestStart = Carbon::parse($startTime);
-        $requestEnd = Carbon::parse($endTime);
-        $workStart = Carbon::parse($weeklyAvailability->start_time);
-        $workEnd = Carbon::parse($weeklyAvailability->end_time);
-
-        if ($requestStart->lt($workStart) || $requestEnd->gt($workEnd)) {
-            return [
-                'available' => false,
-                'reason' => 'Requested time is outside working hours (' .
-                    $weeklyAvailability->formatted_time_range . ')'
-            ];
-        }
-
-        // Check for blocked times
-        $blockedTimes = BlockedTime::where('provider_id', $provider->id)
-            ->forDate($date->toDateString())
-            ->get();
-
-        foreach ($blockedTimes as $blocked) {
-            if ($blocked->conflictsWith($date, $date, $requestStart->format('H:i'), $requestEnd->format('H:i'))) {
-                return [
-                    'available' => false,
-                    'reason' => 'Provider has blocked this time' .
-                        ($blocked->reason ? ': ' . $blocked->reason : '')
-                ];
-            }
-        }
-
-        // Check for existing appointments
-        $existingAppointments = Appointment::where('provider_id', $provider->id)
-            ->where('appointment_date', $date->toDateString())
-            ->whereIn('status', ['confirmed', 'in_progress'])
-            ->get();
-
-        foreach ($existingAppointments as $appointment) {
-            $appointmentStart = Carbon::parse($appointment->appointment_time);
-            $appointmentEnd = $appointmentStart->copy()->addHours($appointment->duration_hours);
-
-            if (!($requestEnd->lte($appointmentStart) || $requestStart->gte($appointmentEnd))) {
-                return [
-                    'available' => false,
-                    'reason' => 'Provider has another appointment at this time'
-                ];
-            }
-        }
-
-        return ['available' => true];
-    }
-
-    /**
-     * Get available time slots for a specific date
-     */
-    public function getAvailableSlots(User $provider, $date, $serviceDuration = 1): array
-    {
-        $date = Carbon::parse($date);
-        $dayOfWeek = $date->dayOfWeek;
-
-        // Get weekly availability
-        $weeklyAvailability = ProviderAvailability::where('provider_id', $provider->id)
-            ->where('day_of_week', $dayOfWeek)
-            ->first();
-
-        if (!$weeklyAvailability || !$weeklyAvailability->is_available) {
-            return [];
-        }
-
-        $workStart = Carbon::parse($date->toDateString() . ' ' . $weeklyAvailability->start_time);
-        $workEnd = Carbon::parse($date->toDateString() . ' ' . $weeklyAvailability->end_time);
-
-        // Get blocked times and appointments for the date
-        $blockedTimes = BlockedTime::where('provider_id', $provider->id)
-            ->forDate($date->toDateString())
-            ->get();
-
-        $appointments = Appointment::where('provider_id', $provider->id)
-            ->where('appointment_date', $date->toDateString())
-            ->whereIn('status', ['confirmed', 'in_progress'])
-            ->get();
-
-        // Generate time slots (30-minute intervals)
-        $availableSlots = [];
-        $currentTime = $workStart->copy();
-        $slotDuration = 60; // minutes
-
-        while ($currentTime->copy()->addMinutes($serviceDuration * 60)->lte($workEnd)) {
-            $slotEnd = $currentTime->copy()->addMinutes($serviceDuration * 60);
-            $isAvailable = true;
-
-            // Check against blocked times
-            foreach ($blockedTimes as $blocked) {
-                if ($blocked->conflictsWith(
-                    $date->toDateString(),
-                    $date->toDateString(),
-                    $currentTime->format('H:i'),
-                    $slotEnd->format('H:i')
-                )) {
-                    $isAvailable = false;
-                    break;
-                }
-            }
-
-            // Check against existing appointments
-            if ($isAvailable) {
-                foreach ($appointments as $appointment) {
-                    $appointmentStart = Carbon::parse($date->toDateString() . ' ' . $appointment->appointment_time);
-                    $appointmentEnd = $appointmentStart->copy()->addHours($appointment->duration_hours);
-
-                    if (!($slotEnd->lte($appointmentStart) || $currentTime->gte($appointmentEnd))) {
-                        $isAvailable = false;
-                        break;
-                    }
-                }
-            }
-
-            if ($isAvailable) {
-                $availableSlots[] = [
-                    'start_time' => $currentTime->format('H:i'),
-                    'end_time' => $slotEnd->format('H:i'),
-                    'formatted_time' => $currentTime->format('g:i A') . ' - ' . $slotEnd->format('g:i A'),
-                ];
-            }
-
-            $currentTime->addMinutes($slotDuration);
-        }
-
-        return $availableSlots;
-    }
-
-    /**
-     * Delete blocked time
-     */
-    public function deleteBlockedTime(User $provider, BlockedTime $blockedTime): bool
-    {
-        if ($blockedTime->provider_id !== $provider->id) {
-            throw new \Exception('You can only delete your own blocked times');
-        }
-
-        return $blockedTime->delete();
     }
 
     /**
@@ -278,27 +119,134 @@ class AvailabilityService
      */
     public function getAvailabilitySummary(User $provider): array
     {
-        $weeklyAvailability = $this->getWeeklyAvailability($provider);
-        $activeBlockedTimes = $this->getBlockedTimes($provider);
+        try {
+            Log::info('Getting availability summary for provider: ' . $provider->id);
 
-        $totalWorkingDays = collect($weeklyAvailability)->where('is_available', true)->count();
-        $totalWorkingHours = collect($weeklyAvailability)
-            ->where('is_available', true)
-            ->sum(function ($day) {
-                if (!$day['start_time'] || !$day['end_time']) return 0;
+            $weeklyAvailability = $this->getWeeklyAvailability($provider);
+            $activeBlockedTimes = $this->getBlockedTimes($provider);
 
-                $start = Carbon::parse($day['start_time']);
-                $end = Carbon::parse($day['end_time']);
-                return $end->diffInHours($start);
-            });
+            $totalWorkingDays = collect($weeklyAvailability)->where('is_available', true)->count();
+            $totalWorkingHours = collect($weeklyAvailability)
+                ->where('is_available', true)
+                ->sum(function ($day) {
+                    if (!$day['start_time'] || !$day['end_time']) return 0;
 
-        return [
-            'weekly_availability' => $weeklyAvailability,
-            'blocked_times_count' => $activeBlockedTimes->count(),
-            'total_working_days' => $totalWorkingDays,
-            'total_weekly_hours' => $totalWorkingHours,
-            'average_daily_hours' => $totalWorkingDays > 0 ? round($totalWorkingHours / $totalWorkingDays, 1) : 0,
-            'next_blocked_period' => $activeBlockedTimes->first(),
+                    $start = Carbon::parse($day['start_time']);
+                    $end = Carbon::parse($day['end_time']);
+                    return $end->diffInHours($start);
+                });
+
+            return [
+                'weekly_availability' => $weeklyAvailability,
+                'blocked_times_count' => $activeBlockedTimes->count(),
+                'total_working_days' => $totalWorkingDays,
+                'total_weekly_hours' => $totalWorkingHours,
+                'average_daily_hours' => $totalWorkingDays > 0 ? round($totalWorkingHours / $totalWorkingDays, 1) : 0,
+                'next_blocked_period' => null, // We'll implement this later
+            ];
+        } catch (\Exception $e) {
+            Log::error('Error getting availability summary: ' . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    /**
+     * Create blocked time period
+     */
+    public function createBlockedTime(User $provider, array $data): BlockedTime
+    {
+        try {
+            \Log::info('Creating blocked time for provider: ' . $provider->id);
+            \Log::info('Original blocked time data: ' . json_encode($data));
+
+            // Ensure dates are parsed correctly without timezone conversion
+            $startDate = Carbon::parse($data['start_date'])->format('Y-m-d');
+            $endDate = Carbon::parse($data['end_date'])->format('Y-m-d');
+
+            \Log::info('Parsed dates - Start: ' . $startDate . ', End: ' . $endDate);
+
+            $blockedTime = BlockedTime::create([
+                'provider_id' => $provider->id,
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+                'start_time' => $data['all_day'] ? null : ($data['start_time'] ?? null),
+                'end_time' => $data['all_day'] ? null : ($data['end_time'] ?? null),
+                'reason' => $data['reason'] ?? null,
+                'all_day' => $data['all_day'] ?? false,
+            ]);
+
+            \Log::info('Created blocked time: ' . json_encode($blockedTime->toArray()));
+
+            return $blockedTime;
+        } catch (\Exception $e) {
+            \Log::error('Error creating blocked time: ' . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    /**
+     * Get provider's blocked times
+     */
+    public function getBlockedTimes(User $provider, $startDate = null, $endDate = null)
+    {
+        try {
+            \Log::info('Getting blocked times for provider: ' . $provider->id);
+
+            $query = BlockedTime::where('provider_id', $provider->id);
+
+            if ($startDate && $endDate) {
+                $query->forDateRange($startDate, $endDate);
+            } else {
+                $query->active();
+            }
+
+            return $query->orderBy('start_date')->get();
+        } catch (\Exception $e) {
+            \Log::error('Error getting blocked times: ' . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    /**
+     * Delete blocked time
+     */
+    public function deleteBlockedTime(User $provider, BlockedTime $blockedTime): bool
+    {
+        try {
+            \Log::info('Deleting blocked time: ' . $blockedTime->id . ' for provider: ' . $provider->id);
+
+            if ($blockedTime->provider_id !== $provider->id) {
+                throw new \Exception('You can only delete your own blocked times');
+            }
+
+            return $blockedTime->delete();
+        } catch (\Exception $e) {
+            \Log::error('Error deleting blocked time: ' . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    /**
+     * Helper methods
+     */
+    private function formatTimeRange($startTime, $endTime)
+    {
+        if (!$startTime || !$endTime) return 'Unavailable';
+
+        return $startTime->format('g:i A') . ' - ' . $endTime->format('g:i A');
+    }
+
+    private function getDayName($dayOfWeek)
+    {
+        $days = [
+            0 => 'Sunday',
+            1 => 'Monday',
+            2 => 'Tuesday',
+            3 => 'Wednesday',
+            4 => 'Thursday',
+            5 => 'Friday',
+            6 => 'Saturday'
         ];
+        return $days[$dayOfWeek] ?? 'Unknown';
     }
 }

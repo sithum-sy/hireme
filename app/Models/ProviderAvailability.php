@@ -10,6 +10,8 @@ class ProviderAvailability extends Model
 {
     use HasFactory;
 
+    protected $table = 'provider_availability';
+
     protected $fillable = [
         'provider_id',
         'day_of_week',

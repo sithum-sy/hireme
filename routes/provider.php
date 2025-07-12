@@ -31,8 +31,12 @@ Route::get('/service-categories', [ServiceCategoryController::class, 'index']);
 Route::prefix('availability')->group(function () {
     // Weekly availability
     Route::get('/weekly', [AvailabilityController::class, 'getWeeklyAvailability']);
+    // Route::post('/weekly', [AvailabilityController::class, 'createWeeklyAvailability']);
+    Route::post('/weekly', [AvailabilityController::class, 'saveWeeklyAvailability']);
     Route::put('/weekly', [AvailabilityController::class, 'updateWeeklyAvailability']);
     Route::get('/summary', [AvailabilityController::class, 'getAvailabilitySummary']);
+
+    Route::post('/availability/test', [AvailabilityController::class, 'testSave']);
 
     // Blocked times
     Route::get('/blocked-times', [AvailabilityController::class, 'getBlockedTimes']);

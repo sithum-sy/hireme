@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import axios from "axios";
+import availabilityService from "../services/availabilityService";
 
 const ProviderContext = createContext();
 
@@ -47,17 +48,23 @@ export const ProviderProvider = ({ children }) => {
     const [providerNotifications, setProviderNotifications] = useState([]);
     const [unreadNotifications, setUnreadNotifications] = useState(0);
 
-    // Availability State
+    // Availability State - Enhanced
     const [availability, setAvailability] = useState({
         isAvailable: true,
         weeklySchedule: {},
         blockedTimes: [],
         timeSlots: [],
+        summary: null,
+        lastUpdated: null,
     });
 
     // Loading States
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+
+    // Availability Management State
+    const [availabilityData, setAvailabilityData] = useState(null);
+    const [availabilityLoading, setAvailabilityLoading] = useState(false);
 
     // Initialize provider data on mount
     useEffect(() => {
@@ -69,7 +76,7 @@ export const ProviderProvider = ({ children }) => {
         setProfileLoading(true);
         setError(null);
         try {
-            const response = await axios.get("/api/profile/provider");
+            const response = await axios.get("/api/provider/profile");
 
             if (response.data.success) {
                 setProviderProfile(response.data.data);
@@ -97,7 +104,7 @@ export const ProviderProvider = ({ children }) => {
         setError(null);
         try {
             const response = await axios.put(
-                "/api/profile/provider",
+                "/api/provider/profile",
                 profileData,
                 {
                     headers: {
@@ -132,17 +139,21 @@ export const ProviderProvider = ({ children }) => {
     const toggleAvailability = async () => {
         try {
             const response = await axios.post(
-                "/api/profile/toggle-availability"
+                "/api/provider/profile/toggle-availability"
             );
 
             if (response.data.success) {
                 setAvailability((prev) => ({
                     ...prev,
                     isAvailable: !prev.isAvailable,
+                    lastUpdated: new Date(),
                 }));
 
-                // Refresh business stats
-                await getBusinessStatistics();
+                // Refresh business stats and availability data
+                await Promise.all([
+                    getBusinessStatistics(),
+                    refreshAvailabilityData(),
+                ]);
 
                 return {
                     success: true,
@@ -167,24 +178,20 @@ export const ProviderProvider = ({ children }) => {
         setLoading(true);
         setError(null);
         try {
+            // Uncomment when endpoint is ready
             // const response = await axios.get(
-            //     `/api/profile/provider/statistics?period=${period}`
+            //     `/api/provider/profile/statistics?period=${period}`
             // );
 
-            if (response.data.success) {
-                setBusinessStats(response.data.data);
-                return {
-                    success: true,
-                    data: response.data.data,
-                };
-            }
-        } catch (error) {
-            const errorMessage =
-                error.response?.data?.message ||
-                "Failed to fetch business statistics";
-            setError(errorMessage);
+            // if (response.data.success) {
+            //     setBusinessStats(response.data.data);
+            //     return {
+            //         success: true,
+            //         data: response.data.data,
+            //     };
+            // }
 
-            // Use mock data if API fails (for development)
+            // Use mock data for now
             const mockStats = {
                 totalEarnings: 25450.0,
                 monthlyEarnings: 8750.0,
@@ -204,9 +211,17 @@ export const ProviderProvider = ({ children }) => {
             setBusinessStats(mockStats);
 
             return {
+                success: true,
+                data: mockStats,
+            };
+        } catch (error) {
+            const errorMessage =
+                error.response?.data?.message ||
+                "Failed to fetch business statistics";
+            setError(errorMessage);
+            return {
                 success: false,
                 message: errorMessage,
-                mockData: mockStats,
             };
         } finally {
             setLoading(false);
@@ -225,7 +240,7 @@ export const ProviderProvider = ({ children }) => {
                         id: 1,
                         client: "Sarah Perera",
                         service: "House Cleaning",
-                        date: "2024-01-15",
+                        date: "2025-07-15",
                         time: "10:00 AM",
                         status: "confirmed",
                         location: "Bambalapitiya, Colombo",
@@ -235,7 +250,7 @@ export const ProviderProvider = ({ children }) => {
                         id: 2,
                         client: "Kamal Silva",
                         service: "Plumbing Repair",
-                        date: "2024-01-16",
+                        date: "2025-07-16",
                         time: "2:00 PM",
                         status: "pending",
                         location: "Mount Lavinia",
@@ -307,7 +322,7 @@ export const ProviderProvider = ({ children }) => {
                         comment:
                             "Excellent cleaning service! Very professional.",
                         service: "House Cleaning",
-                        date: "2024-01-10",
+                        date: "2025-07-10",
                     },
                     {
                         id: 2,
@@ -315,7 +330,7 @@ export const ProviderProvider = ({ children }) => {
                         rating: 5,
                         comment: "Great tutoring session. Highly recommended!",
                         service: "Math Tutoring",
-                        date: "2024-01-08",
+                        date: "2025-07-08",
                     },
                 ],
             };
@@ -398,7 +413,7 @@ export const ProviderProvider = ({ children }) => {
                     time: "1 day ago",
                     read: true,
                     priority: "low",
-                    actionUrl: "/provider/schedule",
+                    actionUrl: "/provider/availability",
                 },
             ];
 
@@ -475,85 +490,211 @@ export const ProviderProvider = ({ children }) => {
         }
     };
 
-    // **AVAILABILITY MANAGEMENT**
+    // **ENHANCED AVAILABILITY MANAGEMENT**
     const getWeeklyAvailability = async () => {
+        setAvailabilityLoading(true);
         try {
-            // const response = await axios.get("/api/availability/weekly");
+            const result = await availabilityService.getWeeklyAvailability();
 
-            if (response.data.success) {
+            if (result.success) {
                 setAvailability((prev) => ({
                     ...prev,
-                    weeklySchedule: response.data.data,
+                    weeklySchedule: result.data,
+                    lastUpdated: new Date(),
+                }));
+
+                return result;
+            } else {
+                // Fallback to mock data
+                const mockAvailability = {
+                    monday: { enabled: true, start: "09:00", end: "17:00" },
+                    tuesday: { enabled: true, start: "09:00", end: "17:00" },
+                    wednesday: { enabled: true, start: "09:00", end: "17:00" },
+                    thursday: { enabled: true, start: "09:00", end: "17:00" },
+                    friday: { enabled: true, start: "09:00", end: "17:00" },
+                    saturday: { enabled: true, start: "10:00", end: "15:00" },
+                    sunday: { enabled: false, start: "", end: "" },
+                };
+
+                setAvailability((prev) => ({
+                    ...prev,
+                    weeklySchedule: mockAvailability,
+                    lastUpdated: new Date(),
                 }));
 
                 return {
-                    success: true,
-                    data: response.data.data,
+                    success: false,
+                    message: result.message,
+                    mockData: mockAvailability,
                 };
             }
         } catch (error) {
-            const errorMessage =
-                error.response?.data?.message || "Failed to fetch availability";
+            const errorMessage = "Failed to fetch availability";
             setError(errorMessage);
-
-            // Mock availability data
-            const mockAvailability = {
-                monday: { enabled: true, start: "09:00", end: "17:00" },
-                tuesday: { enabled: true, start: "09:00", end: "17:00" },
-                wednesday: { enabled: true, start: "09:00", end: "17:00" },
-                thursday: { enabled: true, start: "09:00", end: "17:00" },
-                friday: { enabled: true, start: "09:00", end: "17:00" },
-                saturday: { enabled: true, start: "10:00", end: "15:00" },
-                sunday: { enabled: false, start: "", end: "" },
-            };
-
-            setAvailability((prev) => ({
-                ...prev,
-                weeklySchedule: mockAvailability,
-            }));
-
             return {
                 success: false,
                 message: errorMessage,
-                mockData: mockAvailability,
             };
+        } finally {
+            setAvailabilityLoading(false);
         }
     };
 
     const updateWeeklyAvailability = async (scheduleData) => {
-        setLoading(true);
+        setAvailabilityLoading(true);
         setError(null);
         try {
-            const response = await axios.put(
-                "/api/availability/weekly",
+            const result = await availabilityService.updateWeeklyAvailability(
                 scheduleData
             );
 
-            if (response.data.success) {
+            if (result.success) {
                 setAvailability((prev) => ({
                     ...prev,
-                    weeklySchedule: response.data.data,
+                    weeklySchedule: result.data,
+                    lastUpdated: new Date(),
                 }));
 
-                return {
-                    success: true,
-                    data: response.data.data,
-                    message: response.data.message,
-                };
+                // Refresh availability summary
+                await refreshAvailabilityData();
+
+                return result;
+            } else {
+                setError(result.message);
+                return result;
             }
         } catch (error) {
-            const errorMessage =
-                error.response?.data?.message ||
-                "Failed to update availability";
+            const errorMessage = "Failed to update availability";
             setError(errorMessage);
             return {
                 success: false,
                 message: errorMessage,
-                errors: error.response?.data?.errors || {},
             };
         } finally {
-            setLoading(false);
+            setAvailabilityLoading(false);
         }
+    };
+
+    // **NEW: Enhanced Availability Functions**
+    const getAvailabilitySummary = async () => {
+        try {
+            const result = await availabilityService.getAvailabilitySummary();
+
+            if (result.success) {
+                setAvailabilityData(result.data);
+                setAvailability((prev) => ({
+                    ...prev,
+                    summary: result.data,
+                    lastUpdated: new Date(),
+                }));
+            }
+
+            return result;
+        } catch (error) {
+            console.error("Error getting availability summary:", error);
+            return {
+                success: false,
+                message: "Failed to get availability summary",
+            };
+        }
+    };
+
+    const getBlockedTimes = async (startDate = null, endDate = null) => {
+        try {
+            const result = await availabilityService.getBlockedTimes(
+                startDate,
+                endDate
+            );
+
+            if (result.success) {
+                setAvailability((prev) => ({
+                    ...prev,
+                    blockedTimes: result.data,
+                    lastUpdated: new Date(),
+                }));
+            }
+
+            return result;
+        } catch (error) {
+            console.error("Error getting blocked times:", error);
+            return {
+                success: false,
+                message: "Failed to get blocked times",
+            };
+        }
+    };
+
+    const createBlockedTime = async (blockedTimeData) => {
+        try {
+            const result = await availabilityService.createBlockedTime(
+                blockedTimeData
+            );
+
+            if (result.success) {
+                // Refresh blocked times and summary
+                await Promise.all([
+                    getBlockedTimes(),
+                    refreshAvailabilityData(),
+                ]);
+            }
+
+            return result;
+        } catch (error) {
+            console.error("Error creating blocked time:", error);
+            return {
+                success: false,
+                message: "Failed to create blocked time",
+            };
+        }
+    };
+
+    const deleteBlockedTime = async (blockedTimeId) => {
+        try {
+            const result = await availabilityService.deleteBlockedTime(
+                blockedTimeId
+            );
+
+            if (result.success) {
+                // Refresh blocked times and summary
+                await Promise.all([
+                    getBlockedTimes(),
+                    refreshAvailabilityData(),
+                ]);
+            }
+
+            return result;
+        } catch (error) {
+            console.error("Error deleting blocked time:", error);
+            return {
+                success: false,
+                message: "Failed to delete blocked time",
+            };
+        }
+    };
+
+    const refreshAvailabilityData = async () => {
+        try {
+            const result = await getAvailabilitySummary();
+            return result;
+        } catch (error) {
+            console.error("Error refreshing availability data:", error);
+            return {
+                success: false,
+                message: "Failed to refresh availability data",
+            };
+        }
+    };
+
+    const getAvailabilityStatus = () => {
+        if (!availabilityData) return "unknown";
+
+        const workingDays = availabilityData.total_working_days || 0;
+        const blockedTimes = availabilityData.blocked_times_count || 0;
+
+        if (workingDays === 0) return "no_schedule";
+        if (workingDays < 3) return "limited";
+        if (blockedTimes > 5) return "partial";
+        return "available";
     };
 
     // **EARNINGS MANAGEMENT**
@@ -571,27 +712,27 @@ export const ProviderProvider = ({ children }) => {
                 },
                 history: [
                     {
-                        date: "2024-01-01",
+                        date: "2025-07-01",
                         amount: 150,
                         service: "House Cleaning",
                     },
                     {
-                        date: "2024-01-03",
+                        date: "2025-07-03",
                         amount: 200,
                         service: "Plumbing Repair",
                     },
                     {
-                        date: "2024-01-05",
+                        date: "2025-07-05",
                         amount: 300,
                         service: "Math Tutoring",
                     },
                     {
-                        date: "2024-01-08",
+                        date: "2025-07-08",
                         amount: 150,
                         service: "House Cleaning",
                     },
                     {
-                        date: "2024-01-10",
+                        date: "2025-07-10",
                         amount: 250,
                         service: "Garden Maintenance",
                     },
@@ -632,6 +773,7 @@ export const ProviderProvider = ({ children }) => {
                 getDashboardMetrics(),
                 getProviderNotifications(),
                 getWeeklyAvailability(),
+                getAvailabilitySummary(),
             ]);
         } catch (error) {
             console.error("Failed to load provider data:", error);
@@ -713,6 +855,27 @@ export const ProviderProvider = ({ children }) => {
             });
         }
 
+        // Availability-specific insights
+        const availabilityStatus = getAvailabilityStatus();
+        if (availabilityStatus === "no_schedule") {
+            insights.push({
+                type: "warning",
+                title: "Set Your Schedule",
+                message: "Set your working hours to start receiving bookings",
+                action: "Set Schedule",
+                actionUrl: "/provider/availability/schedule",
+            });
+        } else if (availabilityStatus === "limited") {
+            insights.push({
+                type: "info",
+                title: "Expand Availability",
+                message:
+                    "More working days can increase your booking opportunities",
+                action: "Update Schedule",
+                actionUrl: "/provider/availability/schedule",
+            });
+        }
+
         return insights;
     };
 
@@ -740,10 +903,18 @@ export const ProviderProvider = ({ children }) => {
         markNotificationAsRead,
         markAllNotificationsAsRead,
 
-        // Availability
+        // Enhanced Availability Management
         availability,
+        availabilityData,
+        availabilityLoading,
         getWeeklyAvailability,
         updateWeeklyAvailability,
+        getAvailabilitySummary,
+        getBlockedTimes,
+        createBlockedTime,
+        deleteBlockedTime,
+        refreshAvailabilityData,
+        getAvailabilityStatus,
 
         // Earnings
         getEarningsData,

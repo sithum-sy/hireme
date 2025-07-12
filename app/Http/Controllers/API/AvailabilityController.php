@@ -6,9 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\AvailabilityRequest;
 use App\Http\Requests\BlockTimeRequest;
 use App\Models\BlockedTime;
+use App\Models\ProviderAvailability;
 use App\Services\AvailabilityService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class AvailabilityController extends Controller
 {
@@ -25,6 +27,8 @@ class AvailabilityController extends Controller
     public function getWeeklyAvailability()
     {
         try {
+            Log::info('getWeeklyAvailability called for user: ' . Auth::id());
+
             $user = Auth::user();
 
             if ($user->role !== 'service_provider') {
@@ -41,46 +45,63 @@ class AvailabilityController extends Controller
                 'data' => $availability
             ], 200);
         } catch (\Exception $e) {
+            Log::error('Error in getWeeklyAvailability: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
+
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch availability',
-                'error' => $e->getMessage()
+                'error' => app()->environment('local') ? $e->getMessage() : 'Server error'
             ], 500);
         }
     }
 
     /**
-     * Update provider's weekly availability
+     * Create or update provider's weekly availability
      */
-    public function updateWeeklyAvailability(AvailabilityRequest $request)
+    public function saveWeeklyAvailability(AvailabilityRequest $request)
     {
         try {
+            Log::info('saveWeeklyAvailability called for user: ' . Auth::id());
+            Log::info('Request data: ' . json_encode($request->all()));
+
             $user = Auth::user();
 
             if ($user->role !== 'service_provider') {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Only service providers can update availability'
+                    'message' => 'Only service providers can manage availability'
                 ], 403);
             }
 
-            $availability = $this->availabilityService->updateWeeklyAvailability(
+            $availability = $this->availabilityService->createOrUpdateWeeklyAvailability(
                 $user,
                 $request->validated()['availability']
             );
 
             return response()->json([
                 'success' => true,
-                'message' => 'Availability updated successfully',
-                'data' => $this->availabilityService->getWeeklyAvailability($user)
+                'message' => 'Availability schedule saved successfully',
+                'data' => $availability
             ], 200);
         } catch (\Exception $e) {
+            Log::error('Error saving weekly availability: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
+
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to update availability',
-                'error' => $e->getMessage()
+                'message' => 'Failed to save availability schedule',
+                'error' => app()->environment('local') ? $e->getMessage() : 'Server error'
             ], 500);
         }
+    }
+
+    /**
+     * Update provider's weekly availability (for PUT requests)
+     */
+    public function updateWeeklyAvailability(AvailabilityRequest $request)
+    {
+        return $this->saveWeeklyAvailability($request);
     }
 
     /**
@@ -89,6 +110,8 @@ class AvailabilityController extends Controller
     public function getAvailabilitySummary()
     {
         try {
+            Log::info('getAvailabilitySummary called for user: ' . Auth::id());
+
             $user = Auth::user();
 
             if ($user->role !== 'service_provider') {
@@ -105,9 +128,39 @@ class AvailabilityController extends Controller
                 'data' => $summary
             ], 200);
         } catch (\Exception $e) {
+            Log::error('Error in getAvailabilitySummary: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
+
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch availability summary',
+                'error' => app()->environment('local') ? $e->getMessage() : 'Server error'
+            ], 500);
+        }
+    }
+
+    /**
+     * Test endpoint
+     */
+    public function testSave(Request $request)
+    {
+        try {
+            Log::info('Test endpoint called');
+            Log::info('User: ' . Auth::id());
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Test endpoint working',
+                'user_id' => Auth::id(),
+                'user_role' => Auth::user()->role ?? 'unknown',
+                'data' => $request->all()
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error in test endpoint: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Test failed',
                 'error' => $e->getMessage()
             ], 500);
         }
@@ -119,6 +172,9 @@ class AvailabilityController extends Controller
     public function createBlockedTime(BlockTimeRequest $request)
     {
         try {
+            \Log::info('createBlockedTime called for user: ' . Auth::id());
+            \Log::info('Request data: ' . json_encode($request->all()));
+
             $user = Auth::user();
 
             if ($user->role !== 'service_provider') {
@@ -143,13 +199,18 @@ class AvailabilityController extends Controller
                     'reason' => $blockedTime->reason,
                     'formatted_date_range' => $blockedTime->formatted_date_range,
                     'formatted_time_range' => $blockedTime->formatted_time_range,
+                    'is_active' => $blockedTime->isActive(),
+                    'created_at' => $blockedTime->created_at->format('Y-m-d H:i:s'),
                 ]
             ], 201);
         } catch (\Exception $e) {
+            \Log::error('Error creating blocked time: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
+
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to block time',
-                'error' => $e->getMessage()
+                'error' => app()->environment('local') ? $e->getMessage() : 'Server error'
             ], 500);
         }
     }
@@ -160,6 +221,8 @@ class AvailabilityController extends Controller
     public function getBlockedTimes(Request $request)
     {
         try {
+            \Log::info('getBlockedTimes called for user: ' . Auth::id());
+
             $user = Auth::user();
 
             if ($user->role !== 'service_provider') {
@@ -195,10 +258,13 @@ class AvailabilityController extends Controller
                 'data' => $formattedBlockedTimes
             ], 200);
         } catch (\Exception $e) {
+            \Log::error('Error fetching blocked times: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
+
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch blocked times',
-                'error' => $e->getMessage()
+                'error' => app()->environment('local') ? $e->getMessage() : 'Server error'
             ], 500);
         }
     }
@@ -209,6 +275,8 @@ class AvailabilityController extends Controller
     public function deleteBlockedTime(BlockedTime $blockedTime)
     {
         try {
+            \Log::info('deleteBlockedTime called for user: ' . Auth::id() . ', blocked time: ' . $blockedTime->id);
+
             $user = Auth::user();
 
             if ($user->role !== 'service_provider') {
@@ -225,10 +293,13 @@ class AvailabilityController extends Controller
                 'message' => 'Blocked time deleted successfully'
             ], 200);
         } catch (\Exception $e) {
+            \Log::error('Error deleting blocked time: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
+
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to delete blocked time',
-                'error' => $e->getMessage()
+                'error' => app()->environment('local') ? $e->getMessage() : 'Server error'
             ], 500);
         }
     }

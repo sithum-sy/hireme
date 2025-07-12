@@ -41,4 +41,46 @@ class BlockTimeRequest extends FormRequest
             'all_day.boolean' => 'All day must be true or false',
         ];
     }
+    /**
+     * Configure the validator instance.
+     */
+    public function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            $startDate = $this->input('start_date');
+            $endDate = $this->input('end_date');
+            $startTime = $this->input('start_time');
+            $endTime = $this->input('end_time');
+            $allDay = $this->boolean('all_day');
+
+            // If not all day, validate time range
+            if (!$allDay && $startTime && $endTime) {
+                // If same date, ensure time range is valid
+                if ($startDate === $endDate) {
+                    $start = Carbon::createFromFormat('H:i', $startTime);
+                    $end = Carbon::createFromFormat('H:i', $endTime);
+
+                    if ($end->diffInMinutes($start) < 30) {
+                        $validator->errors()->add(
+                            'end_time',
+                            'The blocked period must be at least 30 minutes'
+                        );
+                    }
+                }
+            }
+
+            // Check if date range is reasonable (not more than 365 days)
+            if ($startDate && $endDate) {
+                $start = Carbon::parse($startDate);
+                $end = Carbon::parse($endDate);
+
+                if ($end->diffInDays($start) > 365) {
+                    $validator->errors()->add(
+                        'end_date',
+                        'The blocked period cannot exceed 365 days'
+                    );
+                }
+            }
+        });
+    }
 }

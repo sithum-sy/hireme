@@ -8,6 +8,7 @@ import { StaffProvider } from "./context/StaffContext";
 import { ProviderProvider } from "./context/ProviderContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import DashboardLayout from "./components/DashboardLayout";
+import "react-toastify/dist/ReactToastify.css";
 
 // Public Pages
 import LandingPage from "./pages/LandingPage";
@@ -22,6 +23,10 @@ import ProviderDashboard from "./pages/provider/Dashboard";
 import ProviderServices from "./pages/provider/Services";
 import ServiceForm from "./pages/provider/ServiceForm";
 import ServiceDetails from "./pages/provider/ServiceDetails";
+import EditService from "./pages/provider/EditService";
+import AvailabilityDashboard from "./pages/provider/availability/AvailabilityDashboard";
+import WeeklySchedule from "./pages/provider/availability/WeeklySchedule";
+import BlockedTimes from "./pages/provider/availability/BlockedTimes";
 
 // Admin Pages
 import AdminDashboard from "./pages/admin/Dashboard";
@@ -40,7 +45,6 @@ import CategoryDetails from "./pages/staff/categories/CategoryDetails";
 
 // Import Bootstrap
 import "./bootstrap";
-import EditService from "./pages/provider/EditService";
 
 function App() {
     return (
@@ -587,6 +591,21 @@ function App() {
                                             <Route
                                                 path="services/:id/edit"
                                                 element={<EditService />}
+                                            />
+                                            {/* Provider Availability Management */}
+                                            <Route
+                                                path="availability"
+                                                element={
+                                                    <AvailabilityDashboard />
+                                                }
+                                            />
+                                            <Route
+                                                path="availability/schedule"
+                                                element={<WeeklySchedule />}
+                                            />
+                                            <Route
+                                                path="availability/blocked"
+                                                element={<BlockedTimes />}
                                             />
                                         </Routes>
                                     </ServicesProvider>

@@ -21,8 +21,8 @@ class BlockedTime extends Model
     ];
 
     protected $casts = [
-        'start_date' => 'date',
-        'end_date' => 'date',
+        'start_date' => 'date:Y-m-d',  // Ensure consistent format
+        'end_date' => 'date:Y-m-d',    // Ensure consistent format
         'start_time' => 'datetime:H:i',
         'end_time' => 'datetime:H:i',
         'all_day' => 'boolean',
@@ -61,11 +61,15 @@ class BlockedTime extends Model
     // Accessors
     public function getFormattedDateRangeAttribute()
     {
-        if ($this->start_date->isSameDay($this->end_date)) {
-            return $this->start_date->format('M j, Y');
+        // Use Carbon explicitly and avoid timezone issues
+        $startDate = Carbon::parse($this->start_date)->startOfDay();
+        $endDate = Carbon::parse($this->end_date)->startOfDay();
+
+        if ($startDate->isSameDay($endDate)) {
+            return $startDate->format('M j, Y');
         }
 
-        return $this->start_date->format('M j, Y') . ' - ' . $this->end_date->format('M j, Y');
+        return $startDate->format('M j, Y') . ' - ' . $endDate->format('M j, Y');
     }
 
     public function getFormattedTimeRangeAttribute()
