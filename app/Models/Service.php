@@ -134,6 +134,73 @@ class Service extends Model
             ->orderBy('distance');
     }
 
+    /**
+     * Scope for advanced search with multiple filters
+     */
+    public function scopeAdvancedSearch($query, $filters = [])
+    {
+        // Text search
+        if (!empty($filters['search'])) {
+            $searchTerm = $filters['search'];
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('title', 'like', "%{$searchTerm}%")
+                    ->orWhere('description', 'like', "%{$searchTerm}%")
+                    ->orWhereHas('category', function ($catQuery) use ($searchTerm) {
+                        $catQuery->where('name', 'like', "%{$searchTerm}%");
+                    });
+            });
+        }
+
+        // Category filter
+        if (!empty($filters['category_id'])) {
+            $query->where('category_id', $filters['category_id']);
+        }
+
+        // Price range filters
+        if (!empty($filters['min_price'])) {
+            $query->where('base_price', '>=', $filters['min_price']);
+        }
+        if (!empty($filters['max_price'])) {
+            $query->where('base_price', '<=', $filters['max_price']);
+        }
+
+        // Rating filter
+        if (!empty($filters['min_rating'])) {
+            $query->where('average_rating', '>=', $filters['min_rating']);
+        }
+
+        // Pricing type filter
+        if (!empty($filters['pricing_type'])) {
+            $query->where('pricing_type', $filters['pricing_type']);
+        }
+
+        // Only active services
+        $query->where('is_active', true);
+
+        return $query;
+    }
+
+    /**
+     * Scope for popular services (high views/bookings)
+     */
+    public function scopePopular($query, $limit = 10)
+    {
+        return $query->where('is_active', true)
+            ->orderByDesc('views_count')
+            ->orderByDesc('bookings_count')
+            ->limit($limit);
+    }
+
+    /**
+     * Scope for recent services
+     */
+    public function scopeRecent($query, $days = 30)
+    {
+        return $query->where('is_active', true)
+            ->where('created_at', '>=', now()->subDays($days))
+            ->orderByDesc('created_at');
+    }
+
     // Accessors
     /**
      * Get service image URLs

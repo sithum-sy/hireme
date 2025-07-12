@@ -125,15 +125,15 @@ const ClientLayout = ({ children }) => {
 
     // Menu item click handler with client-specific tracking
     const handleMenuItemClick = (item) => {
-        console.log("Client menu clicked:", item);
+        // console.log("Client menu clicked:", item);
 
         // Add client-specific menu click handling
         if (item.id === "services") {
-            console.log("Browsing services");
+            // console.log("Browsing services");
         } else if (item.id === "appointments") {
-            console.log("Viewing appointments");
+            // console.log("Viewing appointments");
         } else if (item.id === "bookings") {
-            console.log("New booking started");
+            // console.log("New booking started");
             addNotification("Ready to book a service!", "info");
         }
 
@@ -660,7 +660,7 @@ const ClientLayout = ({ children }) => {
             </div>
 
             {/* Custom Styles for Client Layout */}
-            <style jsx>{`
+            <style>{`
                 .client-dashboard-layout {
                     min-height: 100vh;
                     background-color: #f8f9fa;

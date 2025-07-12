@@ -65,9 +65,8 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     // Client-specific routes
-    Route::middleware('role:client')->group(function () {
-        Route::post('/bookings', [AppointmentController::class, 'createBooking']);
-        Route::post('/quotes/{quote}/respond', [AppointmentController::class, 'respondToQuote']);
+    Route::prefix('client')->middleware(['auth:sanctum', 'role:client'])->group(function () {
+        require __DIR__ . '/client.php';
     });
 
     // Admin routes

@@ -6,6 +6,7 @@ import { AdminProvider } from "./context/AdminContext";
 import { ServicesProvider } from "./context/ServicesContext";
 import { StaffProvider } from "./context/StaffContext";
 import { ProviderProvider } from "./context/ProviderContext";
+import { ClientProvider } from "./context/ClientContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import DashboardLayout from "./components/DashboardLayout";
 import "react-toastify/dist/ReactToastify.css";
@@ -17,6 +18,8 @@ import Login from "./pages/Login";
 
 // Client Pages
 import ClientDashboard from "./pages/client/Dashboard";
+import ServicesBrowse from "./pages/client/services/ServicesBrowse";
+import ServiceSearch from "./pages/client/services/ServiceSearch";
 
 // Provider Pages
 import ProviderDashboard from "./pages/provider/Dashboard";
@@ -54,7 +57,7 @@ function App() {
                     {/* Public Routes */}
                     <Route path="/" element={<LandingPage />} />
 
-                    {/* Auth Routes (redirect to dashboard if already logged in) */}
+                    {/* Auth Routes */}
                     <Route
                         path="/register"
                         element={
@@ -73,491 +76,453 @@ function App() {
                     />
 
                     {/* ===== CLIENT ROUTES ===== */}
-                    {/* Main Dashboard */}
                     <Route
-                        path="/client/dashboard"
+                        path="/client/*"
                         element={
                             <ProtectedRoute allowedRoles={["client"]}>
-                                <ClientDashboard />
-                            </ProtectedRoute>
-                        }
-                    />
+                                <ClientProvider>
+                                    <Routes>
+                                        {/* Client Dashboard */}
+                                        <Route
+                                            path="dashboard"
+                                            element={<ClientDashboard />}
+                                        />
 
-                    {/* Browse Services */}
-                    <Route
-                        path="/client/services"
-                        element={
-                            <ProtectedRoute allowedRoles={["client"]}>
-                                <DashboardLayout>
-                                    <div className="container-fluid">
-                                        <div className="row">
-                                            <div className="col-12">
-                                                <div className="d-flex justify-content-between align-items-center mb-4">
-                                                    <h2 className="fw-bold">
-                                                        Browse Services
-                                                    </h2>
-                                                    <button className="btn btn-primary">
-                                                        <i className="fas fa-filter me-2"></i>
-                                                        Filter
-                                                    </button>
-                                                </div>
-                                                <div className="card border-0 shadow-sm">
-                                                    <div className="card-body text-center py-5">
-                                                        <i className="fas fa-search fa-4x text-muted mb-3"></i>
-                                                        <h4>
-                                                            Service browsing
-                                                            functionality coming
-                                                            soon
-                                                        </h4>
-                                                        <p className="text-muted">
-                                                            We're working on
-                                                            building an amazing
-                                                            service discovery
-                                                            experience for you.
-                                                        </p>
+                                        {/* Service Browsing Routes */}
+                                        <Route
+                                            path="services"
+                                            element={<ServicesBrowse />}
+                                        />
+
+                                        <Route
+                                            path="services/search"
+                                            element={<ServiceSearch />}
+                                        />
+
+                                        <Route
+                                            path="services/categories"
+                                            element={
+                                                <DashboardLayout>
+                                                    <div className="container-fluid">
+                                                        <h2 className="fw-bold mb-4">
+                                                            Service Categories
+                                                        </h2>
+                                                        <div className="card border-0 shadow-sm">
+                                                            <div className="card-body text-center py-5">
+                                                                <i className="fas fa-th-large fa-4x text-muted mb-3"></i>
+                                                                <h4>
+                                                                    Categories
+                                                                    page coming
+                                                                    soon
+                                                                </h4>
+                                                                <p className="text-muted">
+                                                                    Browse
+                                                                    services by
+                                                                    category.
+                                                                </p>
+                                                            </div>
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </DashboardLayout>
-                            </ProtectedRoute>
-                        }
-                    />
+                                                </DashboardLayout>
+                                            }
+                                        />
 
-                    {/* Service Booking by Category */}
-                    <Route
-                        path="/client/book/:category"
-                        element={
-                            <ProtectedRoute allowedRoles={["client"]}>
-                                <DashboardLayout>
-                                    <div className="container-fluid">
-                                        <h2 className="fw-bold mb-4">
-                                            Book Service
-                                        </h2>
-                                        <div className="card border-0 shadow-sm">
-                                            <div className="card-body text-center py-5">
-                                                <i className="fas fa-calendar-plus fa-4x text-primary mb-3"></i>
-                                                <h4>
-                                                    Service booking coming soon
-                                                </h4>
-                                                <p className="text-muted">
-                                                    Quick booking functionality
-                                                    is under development.
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </DashboardLayout>
-                            </ProtectedRoute>
-                        }
-                    />
+                                        <Route
+                                            path="services/:id"
+                                            element={
+                                                <DashboardLayout>
+                                                    <div className="container-fluid">
+                                                        <h2 className="fw-bold mb-4">
+                                                            Service Details
+                                                        </h2>
+                                                        <div className="card border-0 shadow-sm">
+                                                            <div className="card-body text-center py-5">
+                                                                <i className="fas fa-info-circle fa-4x text-muted mb-3"></i>
+                                                                <h4>
+                                                                    Service
+                                                                    details page
+                                                                    coming soon
+                                                                </h4>
+                                                                <p className="text-muted">
+                                                                    View service
+                                                                    details and
+                                                                    book
+                                                                    appointments.
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </DashboardLayout>
+                                            }
+                                        />
 
-                    {/* My Appointments */}
-                    <Route
-                        path="/client/appointments"
-                        element={
-                            <ProtectedRoute allowedRoles={["client"]}>
-                                <DashboardLayout>
-                                    <div className="container-fluid">
-                                        <div className="d-flex justify-content-between align-items-center mb-4">
-                                            <h2 className="fw-bold">
-                                                My Appointments
-                                            </h2>
-                                            <div className="d-flex gap-2">
-                                                <button className="btn btn-outline-secondary">
-                                                    <i className="fas fa-calendar me-2"></i>
-                                                    Calendar View
-                                                </button>
-                                                <button className="btn btn-primary">
-                                                    <i className="fas fa-plus me-2"></i>
-                                                    Book New
-                                                </button>
-                                            </div>
-                                        </div>
+                                        {/* Provider Routes */}
+                                        <Route
+                                            path="providers"
+                                            element={
+                                                <DashboardLayout>
+                                                    <div className="container-fluid">
+                                                        <h2 className="fw-bold mb-4">
+                                                            Browse Providers
+                                                        </h2>
+                                                        <div className="card border-0 shadow-sm">
+                                                            <div className="card-body text-center py-5">
+                                                                <i className="fas fa-users fa-4x text-muted mb-3"></i>
+                                                                <h4>
+                                                                    Provider
+                                                                    browsing
+                                                                    coming soon
+                                                                </h4>
+                                                                <p className="text-muted">
+                                                                    Find and
+                                                                    connect with
+                                                                    service
+                                                                    providers.
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </DashboardLayout>
+                                            }
+                                        />
 
-                                        {/* Appointment Tabs */}
-                                        <div className="card border-0 shadow-sm">
-                                            <div className="card-header bg-white">
-                                                <ul className="nav nav-tabs card-header-tabs">
-                                                    <li className="nav-item">
-                                                        <button className="nav-link active">
-                                                            Upcoming
-                                                        </button>
-                                                    </li>
-                                                    <li className="nav-item">
-                                                        <button className="nav-link">
-                                                            Completed
-                                                        </button>
-                                                    </li>
-                                                    <li className="nav-item">
-                                                        <button className="nav-link">
-                                                            Cancelled
-                                                        </button>
-                                                    </li>
-                                                </ul>
-                                            </div>
-                                            <div className="card-body text-center py-5">
-                                                <i className="fas fa-calendar-check fa-4x text-muted mb-3"></i>
-                                                <h4>
-                                                    Appointment management
-                                                    coming soon
-                                                </h4>
-                                                <p className="text-muted">
-                                                    Full appointment tracking
-                                                    and management features are
-                                                    being developed.
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </DashboardLayout>
-                            </ProtectedRoute>
-                        }
-                    />
+                                        <Route
+                                            path="providers/:id"
+                                            element={
+                                                <DashboardLayout>
+                                                    <div className="container-fluid">
+                                                        <h2 className="fw-bold mb-4">
+                                                            Provider Details
+                                                        </h2>
+                                                        <div className="card border-0 shadow-sm">
+                                                            <div className="card-body text-center py-5">
+                                                                <i className="fas fa-user-circle fa-4x text-muted mb-3"></i>
+                                                                <h4>
+                                                                    Provider
+                                                                    details page
+                                                                    coming soon
+                                                                </h4>
+                                                                <p className="text-muted">
+                                                                    View
+                                                                    provider
+                                                                    profile and
+                                                                    services.
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </DashboardLayout>
+                                            }
+                                        />
 
-                    {/* Notifications */}
-                    <Route
-                        path="/client/notifications"
-                        element={
-                            <ProtectedRoute allowedRoles={["client"]}>
-                                <DashboardLayout>
-                                    <div className="container-fluid">
-                                        <div className="d-flex justify-content-between align-items-center mb-4">
-                                            <h2 className="fw-bold">
-                                                Notifications
-                                            </h2>
-                                            <button className="btn btn-outline-secondary">
-                                                <i className="fas fa-check-double me-2"></i>
-                                                Mark All Read
-                                            </button>
-                                        </div>
+                                        {/* Booking Routes */}
+                                        <Route
+                                            path="booking/new/:serviceId"
+                                            element={
+                                                <DashboardLayout>
+                                                    <div className="container-fluid">
+                                                        <h2 className="fw-bold mb-4">
+                                                            Book Service
+                                                        </h2>
+                                                        <div className="card border-0 shadow-sm">
+                                                            <div className="card-body text-center py-5">
+                                                                <i className="fas fa-calendar-plus fa-4x text-primary mb-3"></i>
+                                                                <h4>
+                                                                    Booking
+                                                                    wizard
+                                                                    coming soon
+                                                                </h4>
+                                                                <p className="text-muted">
+                                                                    Complete
+                                                                    your service
+                                                                    booking.
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </DashboardLayout>
+                                            }
+                                        />
 
-                                        <div className="row">
-                                            <div className="col-lg-8">
-                                                <div className="card border-0 shadow-sm">
-                                                    <div className="card-body">
-                                                        {/* Sample Notifications */}
-                                                        <div className="notification-item border-bottom py-3">
-                                                            <div className="d-flex">
-                                                                <div className="notification-icon me-3">
-                                                                    <i className="fas fa-check-circle text-success fa-lg"></i>
-                                                                </div>
-                                                                <div className="flex-grow-1">
-                                                                    <h6 className="fw-semibold mb-1">
-                                                                        Appointment
-                                                                        Confirmed
-                                                                    </h6>
-                                                                    <p className="text-muted mb-1">
-                                                                        Your
-                                                                        cleaning
-                                                                        service
-                                                                        appointment
-                                                                        has been
-                                                                        confirmed
-                                                                        for
-                                                                        tomorrow
-                                                                        at 10:00
-                                                                        AM.
-                                                                    </p>
-                                                                    <small className="text-muted">
-                                                                        2 hours
-                                                                        ago
-                                                                    </small>
-                                                                </div>
-                                                                <div className="notification-actions">
-                                                                    <button className="btn btn-sm btn-outline-primary">
-                                                                        View
-                                                                    </button>
-                                                                </div>
+                                        {/* Legacy booking route */}
+                                        <Route
+                                            path="book/:category"
+                                            element={
+                                                <DashboardLayout>
+                                                    <div className="container-fluid">
+                                                        <h2 className="fw-bold mb-4">
+                                                            Book Service
+                                                        </h2>
+                                                        <div className="card border-0 shadow-sm">
+                                                            <div className="card-body text-center py-5">
+                                                                <i className="fas fa-calendar-plus fa-4x text-primary mb-3"></i>
+                                                                <h4>
+                                                                    Service
+                                                                    booking
+                                                                    coming soon
+                                                                </h4>
+                                                                <p className="text-muted">
+                                                                    Quick
+                                                                    booking
+                                                                    functionality
+                                                                    is under
+                                                                    development.
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </DashboardLayout>
+                                            }
+                                        />
+
+                                        {/* Appointment Management */}
+                                        <Route
+                                            path="appointments"
+                                            element={
+                                                <DashboardLayout>
+                                                    <div className="container-fluid">
+                                                        <div className="d-flex justify-content-between align-items-center mb-4">
+                                                            <h2 className="fw-bold">
+                                                                My Appointments
+                                                            </h2>
+                                                            <div className="d-flex gap-2">
+                                                                <button className="btn btn-outline-secondary">
+                                                                    <i className="fas fa-calendar me-2"></i>
+                                                                    Calendar
+                                                                    View
+                                                                </button>
+                                                                <button className="btn btn-primary">
+                                                                    <i className="fas fa-plus me-2"></i>
+                                                                    Book New
+                                                                </button>
                                                             </div>
                                                         </div>
 
-                                                        <div className="notification-item border-bottom py-3">
-                                                            <div className="d-flex">
-                                                                <div className="notification-icon me-3">
-                                                                    <i className="fas fa-star text-warning fa-lg"></i>
-                                                                </div>
-                                                                <div className="flex-grow-1">
-                                                                    <h6 className="fw-semibold mb-1">
-                                                                        Please
-                                                                        Rate
-                                                                        Your
-                                                                        Service
-                                                                    </h6>
-                                                                    <p className="text-muted mb-1">
-                                                                        How was
-                                                                        your
-                                                                        recent
-                                                                        tutoring
-                                                                        session
-                                                                        with
-                                                                        Sarah
-                                                                        Johnson?
-                                                                    </p>
-                                                                    <small className="text-muted">
-                                                                        1 day
-                                                                        ago
-                                                                    </small>
-                                                                </div>
-                                                                <div className="notification-actions">
-                                                                    <button className="btn btn-sm btn-outline-warning">
-                                                                        Rate Now
-                                                                    </button>
-                                                                </div>
+                                                        <div className="card border-0 shadow-sm">
+                                                            <div className="card-header bg-white">
+                                                                <ul className="nav nav-tabs card-header-tabs">
+                                                                    <li className="nav-item">
+                                                                        <button className="nav-link active">
+                                                                            Upcoming
+                                                                        </button>
+                                                                    </li>
+                                                                    <li className="nav-item">
+                                                                        <button className="nav-link">
+                                                                            Completed
+                                                                        </button>
+                                                                    </li>
+                                                                    <li className="nav-item">
+                                                                        <button className="nav-link">
+                                                                            Cancelled
+                                                                        </button>
+                                                                    </li>
+                                                                </ul>
+                                                            </div>
+                                                            <div className="card-body text-center py-5">
+                                                                <i className="fas fa-calendar-check fa-4x text-muted mb-3"></i>
+                                                                <h4>
+                                                                    Appointment
+                                                                    management
+                                                                    coming soon
+                                                                </h4>
+                                                                <p className="text-muted">
+                                                                    Full
+                                                                    appointment
+                                                                    tracking and
+                                                                    management
+                                                                    features are
+                                                                    being
+                                                                    developed.
+                                                                </p>
                                                             </div>
                                                         </div>
+                                                    </div>
+                                                </DashboardLayout>
+                                            }
+                                        />
 
-                                                        <div className="text-center py-4">
-                                                            <p className="text-muted">
-                                                                More
-                                                                notification
-                                                                features coming
-                                                                soon!
-                                                            </p>
+                                        <Route
+                                            path="appointments/:id"
+                                            element={
+                                                <DashboardLayout>
+                                                    <div className="container-fluid">
+                                                        <h2 className="fw-bold mb-4">
+                                                            Appointment Details
+                                                        </h2>
+                                                        <div className="card border-0 shadow-sm">
+                                                            <div className="card-body text-center py-5">
+                                                                <i className="fas fa-calendar-alt fa-4x text-muted mb-3"></i>
+                                                                <h4>
+                                                                    Appointment
+                                                                    details page
+                                                                    coming soon
+                                                                </h4>
+                                                                <p className="text-muted">
+                                                                    View and
+                                                                    manage your
+                                                                    appointment
+                                                                    details.
+                                                                </p>
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                </div>
-                                            </div>
+                                                </DashboardLayout>
+                                            }
+                                        />
 
-                                            <div className="col-lg-4">
-                                                <div className="card border-0 shadow-sm">
-                                                    <div className="card-header bg-white">
-                                                        <h6 className="fw-bold mb-0">
-                                                            Notification
-                                                            Settings
-                                                        </h6>
-                                                    </div>
-                                                    <div className="card-body">
-                                                        <div className="form-check mb-3">
-                                                            <input
-                                                                className="form-check-input"
-                                                                type="checkbox"
-                                                                id="emailNotif"
-                                                                defaultChecked
-                                                            />
-                                                            <label
-                                                                className="form-check-label"
-                                                                htmlFor="emailNotif"
-                                                            >
-                                                                Email
-                                                                notifications
-                                                            </label>
-                                                        </div>
-                                                        <div className="form-check mb-3">
-                                                            <input
-                                                                className="form-check-input"
-                                                                type="checkbox"
-                                                                id="smsNotif"
-                                                                defaultChecked
-                                                            />
-                                                            <label
-                                                                className="form-check-label"
-                                                                htmlFor="smsNotif"
-                                                            >
-                                                                SMS
-                                                                notifications
-                                                            </label>
-                                                        </div>
-                                                        <div className="form-check mb-3">
-                                                            <input
-                                                                className="form-check-input"
-                                                                type="checkbox"
-                                                                id="pushNotif"
-                                                                defaultChecked
-                                                            />
-                                                            <label
-                                                                className="form-check-label"
-                                                                htmlFor="pushNotif"
-                                                            >
-                                                                Push
-                                                                notifications
-                                                            </label>
-                                                        </div>
-                                                        <button className="btn btn-primary btn-sm w-100">
-                                                            Save Preferences
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </DashboardLayout>
-                            </ProtectedRoute>
-                        }
-                    />
-
-                    {/* Account Settings */}
-                    <Route
-                        path="/client/settings"
-                        element={
-                            <ProtectedRoute allowedRoles={["client"]}>
-                                <DashboardLayout>
-                                    <div className="container-fluid">
-                                        <h2 className="fw-bold mb-4">
-                                            Account Settings
-                                        </h2>
-
-                                        <div className="row">
-                                            <div className="col-lg-3">
-                                                <div className="card border-0 shadow-sm">
-                                                    <div className="card-body">
-                                                        <div className="list-group list-group-flush">
-                                                            <button className="list-group-item list-group-item-action active">
-                                                                <i className="fas fa-user me-2"></i>
-                                                                Profile
-                                                            </button>
-                                                            <button className="list-group-item list-group-item-action">
-                                                                <i className="fas fa-lock me-2"></i>
-                                                                Security
-                                                            </button>
-                                                            <button className="list-group-item list-group-item-action">
-                                                                <i className="fas fa-bell me-2"></i>
-                                                                Notifications
-                                                            </button>
-                                                            <button className="list-group-item list-group-item-action">
-                                                                <i className="fas fa-credit-card me-2"></i>
-                                                                Payment
-                                                            </button>
-                                                            <button className="list-group-item list-group-item-action">
-                                                                <i className="fas fa-shield-alt me-2"></i>
-                                                                Privacy
-                                                            </button>
+                                        {/* Other client routes */}
+                                        <Route
+                                            path="notifications"
+                                            element={
+                                                <DashboardLayout>
+                                                    <div className="container-fluid">
+                                                        <h2 className="fw-bold mb-4">
+                                                            Notifications
+                                                        </h2>
+                                                        <div className="card border-0 shadow-sm">
+                                                            <div className="card-body text-center py-5">
+                                                                <i className="fas fa-bell fa-4x text-muted mb-3"></i>
+                                                                <h4>
+                                                                    Notifications
+                                                                    coming soon
+                                                                </h4>
+                                                                <p className="text-muted">
+                                                                    Stay updated
+                                                                    with booking
+                                                                    alerts and
+                                                                    updates.
+                                                                </p>
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                </div>
-                                            </div>
+                                                </DashboardLayout>
+                                            }
+                                        />
 
-                                            <div className="col-lg-9">
-                                                <div className="card border-0 shadow-sm">
-                                                    <div className="card-body text-center py-5">
-                                                        <i className="fas fa-cog fa-4x text-muted mb-3"></i>
-                                                        <h4>
-                                                            Settings panel
-                                                            coming soon
-                                                        </h4>
-                                                        <p className="text-muted">
-                                                            Comprehensive
-                                                            account management
-                                                            features are being
-                                                            developed.
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </DashboardLayout>
-                            </ProtectedRoute>
-                        }
-                    />
-
-                    {/* Additional Client Routes */}
-                    <Route
-                        path="/client/profile"
-                        element={
-                            <ProtectedRoute allowedRoles={["client"]}>
-                                <DashboardLayout>
-                                    <div className="container-fluid">
-                                        <h2 className="fw-bold mb-4">
-                                            My Profile
-                                        </h2>
-                                        <div className="card border-0 shadow-sm">
-                                            <div className="card-body text-center py-5">
-                                                <i className="fas fa-user-edit fa-4x text-muted mb-3"></i>
-                                                <h4>
-                                                    Profile management coming
-                                                    soon
-                                                </h4>
-                                                <p className="text-muted">
-                                                    Edit your profile
-                                                    information and preferences.
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </DashboardLayout>
-                            </ProtectedRoute>
-                        }
-                    />
-
-                    <Route
-                        path="/client/reviews"
-                        element={
-                            <ProtectedRoute allowedRoles={["client"]}>
-                                <DashboardLayout>
-                                    <div className="container-fluid">
-                                        <h2 className="fw-bold mb-4">
-                                            Reviews & Ratings
-                                        </h2>
-                                        <div className="card border-0 shadow-sm">
-                                            <div className="card-body text-center py-5">
-                                                <i className="fas fa-star fa-4x text-warning mb-3"></i>
-                                                <h4>
-                                                    Review system coming soon
-                                                </h4>
-                                                <p className="text-muted">
-                                                    Rate and review your service
-                                                    providers.
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </DashboardLayout>
-                            </ProtectedRoute>
-                        }
-                    />
-
-                    <Route
-                        path="/client/support"
-                        element={
-                            <ProtectedRoute allowedRoles={["client"]}>
-                                <DashboardLayout>
-                                    <div className="container-fluid">
-                                        <h2 className="fw-bold mb-4">
-                                            Help & Support
-                                        </h2>
-                                        <div className="row">
-                                            <div className="col-md-8">
-                                                <div className="card border-0 shadow-sm">
-                                                    <div className="card-body text-center py-5">
-                                                        <i className="fas fa-headset fa-4x text-info mb-3"></i>
-                                                        <h4>
-                                                            Support system
-                                                            coming soon
-                                                        </h4>
-                                                        <p className="text-muted">
-                                                            Get help and contact
-                                                            our support team.
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="col-md-4">
-                                                <div className="card border-0 shadow-sm">
-                                                    <div className="card-header bg-white">
-                                                        <h6 className="fw-bold mb-0">
-                                                            Quick Help
-                                                        </h6>
-                                                    </div>
-                                                    <div className="card-body">
-                                                        <div className="d-grid gap-2">
-                                                            <button className="btn btn-outline-primary">
-                                                                FAQ
-                                                            </button>
-                                                            <button className="btn btn-outline-primary">
-                                                                Live Chat
-                                                            </button>
-                                                            <button className="btn btn-outline-primary">
-                                                                Contact Us
-                                                            </button>
+                                        <Route
+                                            path="profile"
+                                            element={
+                                                <DashboardLayout>
+                                                    <div className="container-fluid">
+                                                        <h2 className="fw-bold mb-4">
+                                                            My Profile
+                                                        </h2>
+                                                        <div className="card border-0 shadow-sm">
+                                                            <div className="card-body text-center py-5">
+                                                                <i className="fas fa-user-edit fa-4x text-muted mb-3"></i>
+                                                                <h4>
+                                                                    Profile
+                                                                    management
+                                                                    coming soon
+                                                                </h4>
+                                                                <p className="text-muted">
+                                                                    Edit your
+                                                                    profile
+                                                                    information
+                                                                    and
+                                                                    preferences.
+                                                                </p>
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </DashboardLayout>
+                                                </DashboardLayout>
+                                            }
+                                        />
+
+                                        <Route
+                                            path="reviews"
+                                            element={
+                                                <DashboardLayout>
+                                                    <div className="container-fluid">
+                                                        <h2 className="fw-bold mb-4">
+                                                            Reviews & Ratings
+                                                        </h2>
+                                                        <div className="card border-0 shadow-sm">
+                                                            <div className="card-body text-center py-5">
+                                                                <i className="fas fa-star fa-4x text-warning mb-3"></i>
+                                                                <h4>
+                                                                    Review
+                                                                    system
+                                                                    coming soon
+                                                                </h4>
+                                                                <p className="text-muted">
+                                                                    Rate and
+                                                                    review your
+                                                                    service
+                                                                    providers.
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </DashboardLayout>
+                                            }
+                                        />
+
+                                        <Route
+                                            path="support"
+                                            element={
+                                                <DashboardLayout>
+                                                    <div className="container-fluid">
+                                                        <h2 className="fw-bold mb-4">
+                                                            Help & Support
+                                                        </h2>
+                                                        <div className="card border-0 shadow-sm">
+                                                            <div className="card-body text-center py-5">
+                                                                <i className="fas fa-headset fa-4x text-info mb-3"></i>
+                                                                <h4>
+                                                                    Support
+                                                                    system
+                                                                    coming soon
+                                                                </h4>
+                                                                <p className="text-muted">
+                                                                    Get help and
+                                                                    contact our
+                                                                    support
+                                                                    team.
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </DashboardLayout>
+                                            }
+                                        />
+
+                                        <Route
+                                            path="favorites"
+                                            element={
+                                                <DashboardLayout>
+                                                    <div className="container-fluid">
+                                                        <h2 className="fw-bold mb-4">
+                                                            Favorite Providers
+                                                        </h2>
+                                                        <div className="card border-0 shadow-sm">
+                                                            <div className="card-body text-center py-5">
+                                                                <i className="fas fa-heart fa-4x text-danger mb-3"></i>
+                                                                <h4>
+                                                                    Favorites
+                                                                    page coming
+                                                                    soon
+                                                                </h4>
+                                                                <p className="text-muted">
+                                                                    Manage your
+                                                                    favorite
+                                                                    service
+                                                                    providers.
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </DashboardLayout>
+                                            }
+                                        />
+
+                                        {/* Default client route redirect */}
+                                        <Route
+                                            path="*"
+                                            element={<ClientDashboard />}
+                                        />
+                                    </Routes>
+                                </ClientProvider>
                             </ProtectedRoute>
                         }
                     />
@@ -632,7 +597,6 @@ function App() {
                                             path="staff"
                                             element={<StaffList />}
                                         />
-
                                         <Route
                                             path="staff/create"
                                             element={<CreateStaff />}
@@ -646,88 +610,7 @@ function App() {
                                             element={<EditStaff />}
                                         />
 
-                                        {/* User Management Routes */}
-                                        <Route
-                                            path="users"
-                                            element={
-                                                <div className="container py-5 text-center">
-                                                    <h2>User Management</h2>
-                                                    <p className="lead">
-                                                        Coming in Phase 4...
-                                                    </p>
-                                                    <div className="card mt-4">
-                                                        <div className="card-body">
-                                                            <i className="fas fa-users fa-4x text-info mb-3"></i>
-                                                            <h4>
-                                                                User Management
-                                                                Interface
-                                                            </h4>
-                                                            <p className="text-muted">
-                                                                Manage clients
-                                                                and service
-                                                                providers.
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            }
-                                        />
-
-                                        {/* Reports Routes */}
-                                        <Route
-                                            path="reports/*"
-                                            element={
-                                                <div className="container py-5 text-center">
-                                                    <h2>Reports & Analytics</h2>
-                                                    <p className="lead">
-                                                        Coming in Phase 5...
-                                                    </p>
-                                                    <div className="card mt-4">
-                                                        <div className="card-body">
-                                                            <i className="fas fa-chart-bar fa-4x text-success mb-3"></i>
-                                                            <h4>
-                                                                Reporting
-                                                                Dashboard
-                                                            </h4>
-                                                            <p className="text-muted">
-                                                                Comprehensive
-                                                                analytics and
-                                                                reports.
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            }
-                                        />
-
-                                        {/* Settings Routes */}
-                                        <Route
-                                            path="settings"
-                                            element={
-                                                <div className="container py-5 text-center">
-                                                    <h2>System Settings</h2>
-                                                    <p className="lead">
-                                                        Coming soon...
-                                                    </p>
-                                                    <div className="card mt-4">
-                                                        <div className="card-body">
-                                                            <i className="fas fa-cogs fa-4x text-warning mb-3"></i>
-                                                            <h4>
-                                                                System
-                                                                Configuration
-                                                            </h4>
-                                                            <p className="text-muted">
-                                                                Configure system
-                                                                settings and
-                                                                preferences.
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            }
-                                        />
-
-                                        {/* Default Admin Route - Redirect to Dashboard */}
+                                        {/* Other admin routes... */}
                                         <Route
                                             path="*"
                                             element={<AdminDashboard />}
@@ -767,239 +650,8 @@ function App() {
                                             path="categories/:id"
                                             element={<CategoryDetails />}
                                         />
-                                        {/* User Management */}
-                                        <Route
-                                            path="users"
-                                            element={
-                                                <div className="container-fluid">
-                                                    <h2 className="fw-bold mb-4">
-                                                        User Management
-                                                    </h2>
-                                                    <div className="card border-0 shadow-sm">
-                                                        <div className="card-body text-center py-5">
-                                                            <i className="fas fa-users fa-4x text-info mb-3"></i>
-                                                            <h4>
-                                                                User Management
-                                                                Interface
-                                                            </h4>
-                                                            <p className="text-muted">
-                                                                Manage clients
-                                                                and service
-                                                                providers.
-                                                            </p>
-                                                            <p className="text-muted small">
-                                                                Coming in Phase
-                                                                3...
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            }
-                                        />
-                                        {/* Services Management */}
-                                        <Route
-                                            path="services"
-                                            element={
-                                                <div className="container-fluid">
-                                                    <h2 className="fw-bold mb-4">
-                                                        Services Management
-                                                    </h2>
-                                                    <div className="card border-0 shadow-sm">
-                                                        <div className="card-body text-center py-5">
-                                                            <i className="fas fa-briefcase fa-4x text-success mb-3"></i>
-                                                            <h4>
-                                                                Service
-                                                                Management
-                                                            </h4>
-                                                            <p className="text-muted">
-                                                                Monitor and
-                                                                manage all
-                                                                platform
-                                                                services.
-                                                            </p>
-                                                            <p className="text-muted small">
-                                                                Coming in Phase
-                                                                3...
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            }
-                                        />
-                                        {/* Appointments Management */}
-                                        <Route
-                                            path="appointments"
-                                            element={
-                                                <div className="container-fluid">
-                                                    <h2 className="fw-bold mb-4">
-                                                        Appointments Management
-                                                    </h2>
-                                                    <div className="card border-0 shadow-sm">
-                                                        <div className="card-body text-center py-5">
-                                                            <i className="fas fa-calendar-alt fa-4x text-warning mb-3"></i>
-                                                            <h4>
-                                                                Appointment
-                                                                Management
-                                                            </h4>
-                                                            <p className="text-muted">
-                                                                View and manage
-                                                                platform
-                                                                appointments.
-                                                            </p>
-                                                            <p className="text-muted small">
-                                                                Coming in Phase
-                                                                4...
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            }
-                                        />
-                                        {/* Disputes Management */}
-                                        <Route
-                                            path="disputes"
-                                            element={
-                                                <div className="container-fluid">
-                                                    <h2 className="fw-bold mb-4">
-                                                        Disputes Management
-                                                    </h2>
-                                                    <div className="card border-0 shadow-sm">
-                                                        <div className="card-body text-center py-5">
-                                                            <i className="fas fa-balance-scale fa-4x text-danger mb-3"></i>
-                                                            <h4>
-                                                                Dispute
-                                                                Resolution
-                                                            </h4>
-                                                            <p className="text-muted">
-                                                                Handle and
-                                                                resolve user
-                                                                disputes.
-                                                            </p>
-                                                            <p className="text-muted small">
-                                                                Coming in Phase
-                                                                4...
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            }
-                                        />
-                                        {/* Reports & Analytics */}
-                                        <Route
-                                            path="reports"
-                                            element={
-                                                <div className="container-fluid">
-                                                    <h2 className="fw-bold mb-4">
-                                                        Reports & Analytics
-                                                    </h2>
-                                                    <div className="card border-0 shadow-sm">
-                                                        <div className="card-body text-center py-5">
-                                                            <i className="fas fa-chart-bar fa-4x text-info mb-3"></i>
-                                                            <h4>
-                                                                Analytics
-                                                                Dashboard
-                                                            </h4>
-                                                            <p className="text-muted">
-                                                                Comprehensive
-                                                                platform
-                                                                analytics and
-                                                                reports.
-                                                            </p>
-                                                            <p className="text-muted small">
-                                                                Coming in Phase
-                                                                5...
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            }
-                                        />
-                                        {/* Activity Log */}
-                                        <Route
-                                            path="activities"
-                                            element={
-                                                <div className="container-fluid">
-                                                    <h2 className="fw-bold mb-4">
-                                                        Activity Log
-                                                    </h2>
-                                                    <div className="card border-0 shadow-sm">
-                                                        <div className="card-body text-center py-5">
-                                                            <i className="fas fa-history fa-4x text-secondary mb-3"></i>
-                                                            <h4>
-                                                                Activity
-                                                                Monitoring
-                                                            </h4>
-                                                            <p className="text-muted">
-                                                                Track all staff
-                                                                activities and
-                                                                system events.
-                                                            </p>
-                                                            <p className="text-muted small">
-                                                                Coming in Phase
-                                                                3...
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            }
-                                        />
-                                        {/* Staff Profile */}
-                                        <Route
-                                            path="profile"
-                                            element={
-                                                <div className="container-fluid">
-                                                    <h2 className="fw-bold mb-4">
-                                                        My Profile
-                                                    </h2>
-                                                    <div className="card border-0 shadow-sm">
-                                                        <div className="card-body text-center py-5">
-                                                            <i className="fas fa-user-edit fa-4x text-primary mb-3"></i>
-                                                            <h4>
-                                                                Staff Profile
-                                                                Management
-                                                            </h4>
-                                                            <p className="text-muted">
-                                                                Update your
-                                                                profile
-                                                                information and
-                                                                preferences.
-                                                            </p>
-                                                            <p className="text-muted small">
-                                                                Coming soon...
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            }
-                                        />
-                                        {/* Staff Settings */}
-                                        <Route
-                                            path="settings"
-                                            element={
-                                                <div className="container-fluid">
-                                                    <h2 className="fw-bold mb-4">
-                                                        Settings
-                                                    </h2>
-                                                    <div className="card border-0 shadow-sm">
-                                                        <div className="card-body text-center py-5">
-                                                            <i className="fas fa-cog fa-4x text-secondary mb-3"></i>
-                                                            <h4>
-                                                                Staff Settings
-                                                            </h4>
-                                                            <p className="text-muted">
-                                                                Configure your
-                                                                dashboard
-                                                                preferences.
-                                                            </p>
-                                                            <p className="text-muted small">
-                                                                Coming soon...
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            }
-                                        />
-                                        {/* Default Staff Route - Redirect to Dashboard */}
+
+                                        {/* Other staff routes... */}
                                         <Route
                                             path="*"
                                             element={<StaffDashboard />}
