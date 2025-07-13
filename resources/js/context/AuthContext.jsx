@@ -114,18 +114,51 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    // const logout = async () => {
+    //     try {
+    //         if (token) {
+    //             await axios.post("/api/logout");
+    //         }
+    //     } catch (error) {
+    //         console.error("Logout error:", error);
+    //     } finally {
+    //         setUser(null);
+    //         setToken(null);
+    //         localStorage.removeItem("auth_token");
+    //         delete axios.defaults.headers.common["Authorization"];
+    //     }
+    // };
+
     const logout = async () => {
         try {
+            // Only attempt API logout if we have a valid token
             if (token) {
-                await axios.post("/api/logout");
+                try {
+                    await axios.post("/api/logout");
+                } catch (apiError) {
+                    // Log the API error but don't let it prevent logout
+                    console.warn(
+                        "API logout failed, but continuing with local logout:",
+                        {
+                            status: apiError.response?.status,
+                            message:
+                                apiError.response?.data?.message ||
+                                apiError.message,
+                        }
+                    );
+                }
             }
         } catch (error) {
             console.error("Logout error:", error);
         } finally {
+            // Always clear local auth data regardless of API response
             setUser(null);
             setToken(null);
             localStorage.removeItem("auth_token");
             delete axios.defaults.headers.common["Authorization"];
+
+            // Optional: Clear all localStorage if needed
+            // localStorage.clear();
         }
     };
 

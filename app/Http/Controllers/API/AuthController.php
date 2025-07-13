@@ -228,13 +228,49 @@ class AuthController extends Controller
         }
     }
 
+    // public function logout(Request $request)
+    // {
+    //     try {
+    //         $user = $request->user();
+    //         if ($user) {
+    //             // Delete the current access token for the user (Sanctum)
+    //             $user->tokens()->where('id', $user->currentAccessToken()->id)->delete();
+    //         }
+
+    //         return response()->json([
+    //             'success' => true,
+    //             'message' => 'Logout successful'
+    //         ], 200);
+    //     } catch (\Exception $e) {
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'Logout failed',
+    //             'error' => $e->getMessage()
+    //         ], 500);
+    //     }
+    // }
+
     public function logout(Request $request)
     {
         try {
             $user = $request->user();
+
             if ($user) {
-                // Delete the current access token for the user (Sanctum)
-                $user->tokens()->where('id', $user->currentAccessToken()->id)->delete();
+                // Get the current token
+                $currentToken = $user->currentAccessToken();
+
+                if ($currentToken) {
+                    // Check if it's a real token (not TransientToken)
+                    if (method_exists($currentToken, 'delete')) {
+                        $currentToken->delete();
+                    } else {
+                        // It's a TransientToken, delete all user tokens
+                        $user->tokens()->delete();
+                    }
+                } else {
+                    // No current token, delete all user tokens
+                    $user->tokens()->delete();
+                }
             }
 
             return response()->json([
@@ -242,11 +278,17 @@ class AuthController extends Controller
                 'message' => 'Logout successful'
             ], 200);
         } catch (\Exception $e) {
+            \Log::warning('Logout encountered an error but proceeding:', [
+                'user_id' => $request->user()?->id,
+                'error' => $e->getMessage(),
+                'token_class' => $request->user()?->currentAccessToken() ? get_class($request->user()->currentAccessToken()) : 'null'
+            ]);
+
+            // Always return success for logout - frontend should clear data
             return response()->json([
-                'success' => false,
-                'message' => 'Logout failed',
-                'error' => $e->getMessage()
-            ], 500);
+                'success' => true,
+                'message' => 'Logout completed'
+            ], 200);
         }
     }
 
