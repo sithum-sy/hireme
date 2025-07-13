@@ -6,6 +6,7 @@ use App\Http\Controllers\API\Client\SearchController;
 use App\Http\Controllers\API\Client\ServiceController;
 use App\Http\Controllers\API\Client\ProviderController;
 use App\Http\Controllers\API\Client\DashboardController;
+use App\Http\Controllers\API\Client\BookingController;
 
 /*
 |--------------------------------------------------------------------------
@@ -37,6 +38,23 @@ Route::prefix('providers')->group(function () {
     Route::get('/{provider}/availability/slots', [ProviderController::class, 'getAvailableSlots']);
     Route::get('/{provider}/availability/weekly', [ProviderController::class, 'getWeeklyAvailability']);
     Route::get('/{provider}/availability/check', [ProviderController::class, 'checkAvailability']);
+});
+
+// Booking Management
+Route::prefix('bookings')->group(function () {
+    Route::post('/', [BookingController::class, 'store']); // Create new booking
+    Route::get('/', [BookingController::class, 'index']); // List user's bookings
+    Route::get('/{booking}', [BookingController::class, 'show']); // Get booking details
+    Route::patch('/{booking}/cancel', [BookingController::class, 'cancel']); // Cancel booking
+});
+
+// Quote Management
+Route::prefix('quotes')->group(function () {
+    Route::post('/request', [QuoteController::class, 'store']); // Create quote request
+    Route::get('/', [QuoteController::class, 'index']); // List user's quotes
+    Route::get('/{quote}', [QuoteController::class, 'show']); // Get quote details
+    Route::patch('/{quote}/accept', [QuoteController::class, 'accept']); // Accept quote
+    Route::patch('/{quote}/decline', [QuoteController::class, 'decline']); // Decline quote
 });
 
 // Search Analytics & Suggestions

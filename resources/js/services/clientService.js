@@ -459,75 +459,249 @@ class ClientService {
         }
     }
 
+    // Enhanced booking creation with proper error handling and field mapping
     async createBooking(bookingData) {
         try {
-            const response = await axios.post(
-                `${API_BASE}/bookings`,
+            console.log(
+                "ClientService - Creating booking with data:",
                 bookingData
             );
-            return {
-                success: true,
-                data: response.data.data || response.data,
-                message:
-                    response.data.message || "Booking created successfully",
-            };
-        } catch (error) {
-            console.warn(
-                "Create booking endpoint not available, using fallback"
+
+            // Validate required fields before sending
+            const requiredFields = [
+                "service_id",
+                "provider_id",
+                "appointment_date",
+                "appointment_time",
+            ];
+            const missingFields = requiredFields.filter(
+                (field) => !bookingData[field]
             );
 
-            // Return fallback booking creation for development
-            const mockBooking = {
-                id: Date.now(),
-                ...bookingData,
-                status: "pending",
-                confirmation_code: "HM" + Date.now().toString().slice(-6),
-                created_at: new Date().toISOString(),
+            if (missingFields.length > 0) {
+                throw new Error(
+                    `Missing required fields: ${missingFields.join(", ")}`
+                );
+            }
+
+            // Clean and format the booking data for Laravel backend
+            const cleanedData = {
+                // Core booking info
+                service_id: parseInt(bookingData.service_id),
+                provider_id: parseInt(bookingData.provider_id),
+
+                // Date and time
+                appointment_date: bookingData.appointment_date,
+                appointment_time: bookingData.appointment_time,
+
+                // Duration and pricing
+                duration_hours: parseFloat(bookingData.duration_hours || 1),
+                total_price: parseFloat(bookingData.total_price || 0),
+                base_price: parseFloat(bookingData.base_price || 0),
+                travel_fee: parseFloat(bookingData.travel_fee || 0),
+
+                // Location
+                location_type: bookingData.location_type || "client_address",
+                client_address: bookingData.client_address || "",
+                client_city: bookingData.client_city || "",
+                client_postal_code: bookingData.client_postal_code || "",
+                location_instructions: bookingData.location_instructions || "",
+
+                // Contact info
+                client_phone: bookingData.client_phone || "",
+                client_email: bookingData.client_email || "",
+                contact_preference: bookingData.contact_preference || "phone",
+                emergency_contact: bookingData.emergency_contact || "",
+
+                // Service details
+                client_notes: bookingData.client_notes || "",
+                special_instructions: bookingData.special_instructions || "",
+                additional_services: Array.isArray(
+                    bookingData.additional_services
+                )
+                    ? bookingData.additional_services
+                    : [],
+
+                // Payment and terms
+                payment_method: bookingData.payment_method || "cash",
+                agreed_to_terms: Boolean(bookingData.agreed_to_terms),
+                booking_type: bookingData.booking_type || "standard",
+                status: "pending_confirmation",
+
+                // Metadata
+                booking_source: "web_app",
+                timezone:
+                    bookingData.timezone ||
+                    Intl.DateTimeFormat().resolvedOptions().timeZone,
             };
 
-            return {
-                success: true,
-                data: mockBooking,
-                message:
-                    "Booking request submitted successfully (fallback mode)",
-                fallback: true,
-            };
+            console.log("ClientService - Sending cleaned data:", cleanedData);
+
+            const response = await axios.post(
+                `${API_BASE}/bookings`,
+                cleanedData,
+                {
+                    headers: {
+                        "Content-Type": "application/json",
+                        Accept: "application/json",
+                    },
+                    timeout: 30000, // 30 second timeout
+                }
+            );
+
+            console.log("ClientService - Booking response:", response.data);
+
+            if (response.data && response.data.success !== false) {
+                return {
+                    success: true,
+                    data: response.data.data || response.data,
+                    message:
+                        response.data.message || "Booking created successfully",
+                };
+            } else {
+                throw new Error(
+                    response.data.message || "Booking creation failed"
+                );
+            }
+        } catch (error) {
+            console.error("ClientService - Booking creation error:", error);
+
+            // Handle different types of errors
+            if (error.response) {
+                // Server responded with error status
+                const serverError = error.response.data;
+                return {
+                    success: false,
+                    message: serverError.message || "Server error occurred",
+                    errors: serverError.errors || {},
+                    status: error.response.status,
+                };
+            } else if (error.request) {
+                // Network error
+                return {
+                    success: false,
+                    message:
+                        "Network error. Please check your connection and try again.",
+                    errors: {},
+                };
+            } else {
+                // Other error
+                return {
+                    success: false,
+                    message: error.message || "An unexpected error occurred",
+                    errors: {},
+                };
+            }
         }
     }
 
+    // async requestQuote(quoteData) {
+    //     try {
+    //         const response = await axios.post(
+    //             `${API_BASE}/quotes/request`,
+    //             quoteData
+    //         );
+    //         return {
+    //             success: true,
+    //             data: response.data.data || response.data,
+    //             message:
+    //                 response.data.message || "Quote request sent successfully",
+    //         };
+    //     } catch (error) {
+    //         console.warn(
+    //             "Quote request endpoint not available, using fallback"
+    //         );
+
+    //         // Return fallback quote request for development
+    //         const mockQuote = {
+    //             id: Date.now(),
+    //             ...quoteData,
+    //             status: "pending",
+    //             quote_number: "Q" + Date.now().toString().slice(-6),
+    //             created_at: new Date().toISOString(),
+    //             estimated_response_time: "24 hours",
+    //         };
+
+    //         return {
+    //             success: true,
+    //             data: mockQuote,
+    //             message: "Quote request sent successfully (fallback mode)",
+    //             fallback: true,
+    //         };
+    //     }
+    // }
+
+    // Enhanced quote request method
     async requestQuote(quoteData) {
         try {
+            console.log("ClientService - Creating quote request:", quoteData);
+
+            const cleanedData = {
+                service_id: parseInt(quoteData.service_id),
+                provider_id: parseInt(quoteData.provider_id),
+                requested_date: quoteData.requested_date,
+                requested_time: quoteData.requested_time,
+                message: quoteData.message || "",
+                location_type: quoteData.location_type || "client_address",
+                address: quoteData.address || "",
+                city: quoteData.city || "",
+                contact_preference: quoteData.contact_preference || "phone",
+                phone: quoteData.phone || "",
+                email: quoteData.email || "",
+                special_requirements: quoteData.special_requirements || "",
+                urgency: quoteData.urgency || "normal",
+            };
+
             const response = await axios.post(
                 `${API_BASE}/quotes/request`,
-                quoteData
+                cleanedData,
+                {
+                    headers: {
+                        "Content-Type": "application/json",
+                        Accept: "application/json",
+                    },
+                    timeout: 30000,
+                }
             );
-            return {
-                success: true,
-                data: response.data.data || response.data,
-                message:
-                    response.data.message || "Quote request sent successfully",
-            };
+
+            if (response.data && response.data.success !== false) {
+                return {
+                    success: true,
+                    data: response.data.data || response.data,
+                    message:
+                        response.data.message ||
+                        "Quote request sent successfully",
+                };
+            } else {
+                throw new Error(
+                    response.data.message || "Quote request failed"
+                );
+            }
         } catch (error) {
-            console.warn(
-                "Quote request endpoint not available, using fallback"
-            );
+            console.error("ClientService - Quote request error:", error);
 
-            // Return fallback quote request for development
-            const mockQuote = {
-                id: Date.now(),
-                ...quoteData,
-                status: "pending",
-                quote_number: "Q" + Date.now().toString().slice(-6),
-                created_at: new Date().toISOString(),
-                estimated_response_time: "24 hours",
-            };
-
-            return {
-                success: true,
-                data: mockQuote,
-                message: "Quote request sent successfully (fallback mode)",
-                fallback: true,
-            };
+            if (error.response) {
+                const serverError = error.response.data;
+                return {
+                    success: false,
+                    message: serverError.message || "Server error occurred",
+                    errors: serverError.errors || {},
+                    status: error.response.status,
+                };
+            } else if (error.request) {
+                return {
+                    success: false,
+                    message:
+                        "Network error. Please check your connection and try again.",
+                    errors: {},
+                };
+            } else {
+                return {
+                    success: false,
+                    message: error.message || "An unexpected error occurred",
+                    errors: {},
+                };
+            }
         }
     }
 
@@ -752,6 +926,44 @@ class ClientService {
                     formatted_price: "Rs. 8,000",
                 },
             ],
+        };
+    }
+
+    // Helper method to validate booking data
+    validateBookingData(bookingData) {
+        const errors = {};
+
+        // Required fields validation
+        if (!bookingData.service_id) errors.service_id = "Service is required";
+        if (!bookingData.provider_id)
+            errors.provider_id = "Provider is required";
+        if (!bookingData.appointment_date)
+            errors.appointment_date = "Date is required";
+        if (!bookingData.appointment_time)
+            errors.appointment_time = "Time is required";
+
+        // Contact validation
+        if (!bookingData.client_phone && !bookingData.client_email) {
+            errors.contact = "Either phone number or email is required";
+        }
+
+        // Location validation
+        if (
+            bookingData.location_type === "client_address" &&
+            !bookingData.client_address
+        ) {
+            errors.client_address = "Address is required for home service";
+        }
+
+        // Terms validation
+        if (!bookingData.agreed_to_terms) {
+            errors.agreed_to_terms =
+                "You must agree to the terms and conditions";
+        }
+
+        return {
+            isValid: Object.keys(errors).length === 0,
+            errors,
         };
     }
 }

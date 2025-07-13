@@ -1,3 +1,4 @@
+// components/client/booking/BookingConfirmation.jsx
 import React, { useState } from "react";
 import clientService from "../../../services/clientService";
 
@@ -12,39 +13,128 @@ const BookingConfirmation = ({
     const [loading, setLoading] = useState(false);
     const [agreedToTerms, setAgreedToTerms] = useState(false);
     const [paymentMethod, setPaymentMethod] = useState("cash");
+    const [errors, setErrors] = useState({});
 
     const handleSubmitBooking = async () => {
+        // Clear previous errors
+        setErrors({});
+
+        // Validate required fields
         if (!agreedToTerms) {
-            alert("Please agree to the terms and conditions");
+            setErrors({ terms: "Please agree to the terms and conditions" });
+            return;
+        }
+
+        if (!bookingData.date || !bookingData.time) {
+            setErrors({
+                booking: "Please complete all previous steps before confirming",
+            });
+            return;
+        }
+
+        if (!bookingData.phone && !bookingData.email) {
+            setErrors({ contact: "Contact information is required" });
             return;
         }
 
         setLoading(true);
 
         try {
+            // Prepare booking payload for Laravel backend
             const bookingPayload = {
-                ...bookingData,
+                // Service and provider
+                service_id: bookingData.service_id || service.id,
+                provider_id: bookingData.provider_id || provider.id,
+
+                // Date and time (Laravel expects these field names)
+                appointment_date:
+                    bookingData.date || bookingData.appointment_date,
+                appointment_time:
+                    bookingData.time || bookingData.appointment_time,
+
+                // Duration and pricing
+                duration_hours:
+                    bookingData.duration || bookingData.duration_hours || 1,
+                total_price: calculateFinalTotal(),
+                base_price: bookingData.total_price || service.price || 0,
+                travel_fee: bookingData.estimated_travel_fee || 0,
+
+                // Location details
+                location_type: bookingData.location?.type || "client_address",
+                client_address:
+                    bookingData.client_address ||
+                    bookingData.location?.address ||
+                    "",
+                client_city: bookingData.location?.city || "",
+                client_postal_code: bookingData.location?.postal_code || "",
+                location_instructions: bookingData.location?.instructions || "",
+
+                // Contact information
+                client_phone: bookingData.phone || "",
+                client_email: bookingData.email || "",
+                contact_preference: bookingData.contact_preference || "phone",
+                emergency_contact: bookingData.emergency_contact || "",
+
+                // Service customization
+                client_notes:
+                    bookingData.requirements ||
+                    bookingData.special_instructions ||
+                    "",
+                special_instructions:
+                    bookingData.requirements ||
+                    bookingData.special_instructions ||
+                    "",
+                additional_services: bookingData.additional_services || [],
+
+                // Payment and booking settings
                 payment_method: paymentMethod,
                 agreed_to_terms: agreedToTerms,
                 booking_type: "standard",
+                status: "pending_confirmation",
+
+                // Additional metadata
+                booking_source: "web_app",
+                user_agent: navigator.userAgent,
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
             };
+
+            console.log("Submitting booking payload:", bookingPayload);
 
             const response = await clientService.createBooking(bookingPayload);
 
             if (response.success) {
-                onComplete(response.data);
+                // Call completion handler with formatted response
+                onComplete({
+                    type: "appointment",
+                    appointment: response.data,
+                    data: response.data,
+                    message:
+                        response.message ||
+                        "Booking request submitted successfully!",
+                });
             } else {
-                alert(
-                    "Failed to create booking: " +
-                        (response.message || "Unknown error")
-                );
+                setErrors({
+                    submission:
+                        response.message ||
+                        "Failed to create booking. Please try again.",
+                });
             }
         } catch (error) {
             console.error("Booking submission failed:", error);
-            alert("Failed to submit booking. Please try again.");
+            setErrors({
+                submission:
+                    error.response?.data?.message ||
+                    "Failed to submit booking. Please check your connection and try again.",
+            });
         } finally {
             setLoading(false);
         }
+    };
+
+    const calculateFinalTotal = () => {
+        const basePrice = bookingData.total_price || service.price || 0;
+        const travelFee = bookingData.estimated_travel_fee || 0;
+        return basePrice + travelFee;
     };
 
     const formatDate = (dateString) => {
@@ -56,17 +146,44 @@ const BookingConfirmation = ({
         });
     };
 
-    const totalAmount =
-        (bookingData.total_price || service.price) +
-        (bookingData.estimated_travel_fee || 0);
+    const formatTime = (timeString) => {
+        if (!timeString) return "";
+        try {
+            const [hours, minutes] = timeString.split(":");
+            const hour = parseInt(hours);
+            const ampm = hour >= 12 ? "PM" : "AM";
+            const displayHour = hour % 12 || 12;
+            return `${displayHour}:${minutes} ${ampm}`;
+        } catch (error) {
+            return timeString; // Return original if parsing fails
+        }
+    };
+
+    const totalAmount = calculateFinalTotal();
 
     return (
         <div className="booking-confirmation">
             <div className="row">
                 <div className="col-lg-8">
+                    {/* Error Display */}
+                    {Object.keys(errors).length > 0 && (
+                        <div className="alert alert-danger mb-4" role="alert">
+                            <i className="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Please fix the following issues:</strong>
+                            <ul className="mb-0 mt-2">
+                                {Object.values(errors).map((error, index) => (
+                                    <li key={index}>{error}</li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
+
                     {/* Booking Summary */}
                     <div className="booking-summary-section mb-4">
-                        <h5 className="fw-bold mb-3">Confirm Your Booking</h5>
+                        <h5 className="fw-bold mb-3">
+                            <i className="fas fa-check-circle me-2 text-success"></i>
+                            Confirm Your Booking
+                        </h5>
 
                         <div className="card border-0 shadow-sm">
                             <div className="card-body">
@@ -96,10 +213,11 @@ const BookingConfirmation = ({
                                                     </span>
                                                     <span className="text-muted">
                                                         Duration:{" "}
-                                                        {bookingData.duration}{" "}
+                                                        {bookingData.duration ||
+                                                            1}{" "}
                                                         hour
-                                                        {bookingData.duration >
-                                                        1
+                                                        {(bookingData.duration ||
+                                                            1) > 1
                                                             ? "s"
                                                             : ""}
                                                     </span>
@@ -186,13 +304,21 @@ const BookingConfirmation = ({
                                         <div className="d-flex align-items-center mb-2">
                                             <i className="fas fa-calendar text-success me-2"></i>
                                             <span className="fw-semibold">
-                                                {formatDate(bookingData.date)}
+                                                {bookingData.date
+                                                    ? formatDate(
+                                                          bookingData.date
+                                                      )
+                                                    : "Date not selected"}
                                             </span>
                                         </div>
                                         <div className="d-flex align-items-center">
                                             <i className="fas fa-clock text-info me-2"></i>
                                             <span className="fw-semibold">
-                                                {bookingData.time}
+                                                {bookingData.time
+                                                    ? formatTime(
+                                                          bookingData.time
+                                                      )
+                                                    : "Time not selected"}
                                             </span>
                                         </div>
                                     </div>
@@ -218,8 +344,9 @@ const BookingConfirmation = ({
                                         {bookingData.location?.address && (
                                             <div className="text-muted">
                                                 <i className="fas fa-map-marker-alt me-2"></i>
-                                                {bookingData.location.address},{" "}
-                                                {bookingData.location.city}
+                                                {bookingData.location.address}
+                                                {bookingData.location.city &&
+                                                    `, ${bookingData.location.city}`}
                                                 {bookingData.location
                                                     .postal_code &&
                                                     ` ${bookingData.location.postal_code}`}
@@ -266,13 +393,15 @@ const BookingConfirmation = ({
                                 </div>
 
                                 {/* Special Instructions */}
-                                {bookingData.requirements && (
+                                {(bookingData.requirements ||
+                                    bookingData.special_instructions) && (
                                     <div className="confirmation-section">
                                         <h6 className="fw-bold text-purple mb-2">
                                             Special Instructions
                                         </h6>
                                         <div className="text-muted">
-                                            {bookingData.requirements}
+                                            {bookingData.requirements ||
+                                                bookingData.special_instructions}
                                         </div>
                                     </div>
                                 )}
@@ -282,7 +411,10 @@ const BookingConfirmation = ({
 
                     {/* Payment Method */}
                     <div className="payment-method-section mb-4">
-                        <h5 className="fw-bold mb-3">Payment Method</h5>
+                        <h5 className="fw-bold mb-3">
+                            <i className="fas fa-credit-card me-2 text-purple"></i>
+                            Payment Method
+                        </h5>
 
                         <div className="card border-0 shadow-sm">
                             <div className="card-body">
@@ -352,6 +484,7 @@ const BookingConfirmation = ({
                                                         e.target.value
                                                     )
                                                 }
+                                                disabled
                                             />
                                             <label
                                                 className="form-check-label w-100"
@@ -403,6 +536,7 @@ const BookingConfirmation = ({
                                                         e.target.value
                                                     )
                                                 }
+                                                disabled
                                             />
                                             <label
                                                 className="form-check-label w-100"
@@ -525,7 +659,10 @@ const BookingConfirmation = ({
                     >
                         <div className="card border-0 shadow-lg">
                             <div className="card-header bg-purple text-white">
-                                <h6 className="fw-bold mb-0">Final Summary</h6>
+                                <h6 className="fw-bold mb-0">
+                                    <i className="fas fa-receipt me-2"></i>
+                                    Final Summary
+                                </h6>
                             </div>
                             <div className="card-body">
                                 {/* Quick Details */}
@@ -551,12 +688,17 @@ const BookingConfirmation = ({
                                             Date:
                                         </span>
                                         <span className="fw-semibold">
-                                            {new Date(
-                                                bookingData.date
-                                            ).toLocaleDateString("en-US", {
-                                                month: "short",
-                                                day: "numeric",
-                                            })}
+                                            {bookingData.date
+                                                ? new Date(
+                                                      bookingData.date
+                                                  ).toLocaleDateString(
+                                                      "en-US",
+                                                      {
+                                                          month: "short",
+                                                          day: "numeric",
+                                                      }
+                                                  )
+                                                : "Not set"}
                                         </span>
                                     </div>
                                     <div className="detail-item d-flex justify-content-between">
@@ -564,7 +706,9 @@ const BookingConfirmation = ({
                                             Time:
                                         </span>
                                         <span className="fw-semibold">
-                                            {bookingData.time}
+                                            {bookingData.time
+                                                ? formatTime(bookingData.time)
+                                                : "Not set"}
                                         </span>
                                     </div>
                                 </div>
@@ -575,12 +719,14 @@ const BookingConfirmation = ({
                                 <div className="price-breakdown mb-4">
                                     <div className="d-flex justify-content-between mb-2">
                                         <span>
-                                            Service ({bookingData.duration}h)
+                                            Service ({bookingData.duration || 1}
+                                            h)
                                         </span>
                                         <span>
                                             Rs.{" "}
-                                            {service.price *
-                                                (bookingData.duration || 1)}
+                                            {bookingData.total_price ||
+                                                service.price ||
+                                                0}
                                         </span>
                                     </div>
 
@@ -626,7 +772,7 @@ const BookingConfirmation = ({
                                     </div>
                                 </div>
 
-                                {/* Book Button */}
+                                {/* Confirm Button */}
                                 <div className="d-grid">
                                     <button
                                         className="btn btn-purple btn-lg"
@@ -718,12 +864,8 @@ const BookingConfirmation = ({
             </div>
 
             <style>{`
-                .text-purple {
-                    color: #6f42c1 !important;
-                }
-                .bg-purple {
-                    background-color: #6f42c1 !important;
-                }
+                .text-purple { color: #6f42c1 !important; }
+                .bg-purple { background-color: #6f42c1 !important; }
                 .btn-purple {
                     background-color: #6f42c1;
                     border-color: #6f42c1;

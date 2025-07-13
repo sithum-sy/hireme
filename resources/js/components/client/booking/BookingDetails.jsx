@@ -1,3 +1,4 @@
+// components/client/booking/BookingDetails.jsx
 import React, { useState, useEffect } from "react";
 import { useClient } from "../../../context/ClientContext";
 
@@ -11,49 +12,65 @@ const BookingDetails = ({
 }) => {
     const { location: userLocation } = useClient();
 
+    // Initialize form with booking data or defaults
     const [formData, setFormData] = useState({
         location_type: bookingData.location?.type || "client_address",
-        address: bookingData.location?.address || "",
+        address:
+            bookingData.location?.address || bookingData.client_address || "",
         city: bookingData.location?.city || userLocation?.city || "",
         postal_code: bookingData.location?.postal_code || "",
         instructions: bookingData.location?.instructions || "",
         contact_preference: bookingData.contact_preference || "phone",
         phone: bookingData.phone || "",
         email: bookingData.email || "",
-        special_instructions: bookingData.requirements || "",
+        special_instructions:
+            bookingData.requirements || bookingData.special_instructions || "",
         emergency_contact: bookingData.emergency_contact || "",
     });
 
     const [errors, setErrors] = useState({});
-    const [estimatedTravelFee, setEstimatedTravelFee] = useState(0);
+    const [estimatedTravelFee, setEstimatedTravelFee] = useState(
+        bookingData.estimated_travel_fee || 0
+    );
+    const [loading, setLoading] = useState(false);
 
+    // Calculate travel fee when location changes
     useEffect(() => {
-        // Calculate travel fee if needed
         if (
             formData.location_type === "client_address" &&
+            formData.address &&
+            formData.city &&
             provider.travel_fee > 0
         ) {
             calculateTravelFee();
         } else {
             setEstimatedTravelFee(0);
+            updateBookingData({ estimated_travel_fee: 0 });
         }
-    }, [formData.address, formData.city, formData.location_type]);
+    }, [
+        formData.address,
+        formData.city,
+        formData.location_type,
+        provider.travel_fee,
+    ]);
 
     const calculateTravelFee = async () => {
-        // Mock calculation - in real app, you'd use a distance API
-        if (formData.address && formData.city && provider.travel_fee) {
-            // Simulate distance calculation
+        setLoading(true);
+        try {
+            // Mock calculation - in real app, you'd use a distance API
             const estimatedDistance = Math.floor(Math.random() * 15) + 5; // 5-20km
-            const travelCost = estimatedDistance * provider.travel_fee;
-            setEstimatedTravelFee(travelCost);
+            const travelCost = Math.min(
+                estimatedDistance * (provider.travel_fee || 10),
+                500
+            ); // Cap at Rs. 500
 
-            // Update total price
-            const newTotal =
-                (bookingData.total_price || service.price) + travelCost;
-            updateBookingData({
-                estimated_travel_fee: travelCost,
-                total_price_with_travel: newTotal,
-            });
+            setEstimatedTravelFee(travelCost);
+            updateBookingData({ estimated_travel_fee: travelCost });
+        } catch (error) {
+            console.error("Failed to calculate travel fee:", error);
+            setEstimatedTravelFee(0);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -64,13 +81,27 @@ const BookingDetails = ({
         if (errors[field]) {
             setErrors((prev) => ({ ...prev, [field]: null }));
         }
+
+        // Update booking data in real-time for critical fields
+        if (["phone", "email", "special_instructions"].includes(field)) {
+            const updates = {};
+            if (field === "special_instructions") {
+                updates.requirements = value;
+                updates.client_notes = value;
+            }
+            updates[field] = value;
+            updateBookingData(updates);
+        }
     };
 
     const validateForm = () => {
         const newErrors = {};
 
-        // Required fields based on location type
-        if (formData.location_type === "client_address") {
+        // Location validation
+        if (
+            formData.location_type === "client_address" ||
+            formData.location_type === "custom_location"
+        ) {
             if (!formData.address.trim()) {
                 newErrors.address = "Address is required";
             }
@@ -79,18 +110,24 @@ const BookingDetails = ({
             }
         }
 
-        // Contact information
+        // Contact validation - at least one contact method required
         if (!formData.phone.trim() && !formData.email.trim()) {
-            newErrors.contact = "Either phone or email is required";
+            newErrors.contact = "Either phone number or email is required";
         }
 
-        if (formData.phone && !/^[\d\s\-\+\(\)]+$/.test(formData.phone)) {
-            newErrors.phone = "Please enter a valid phone number";
+        // Phone validation
+        if (
+            formData.phone &&
+            !/^[\d\s\-\+\(\)]{7,}$/.test(formData.phone.trim())
+        ) {
+            newErrors.phone =
+                "Please enter a valid phone number (at least 7 digits)";
         }
 
+        // Email validation
         if (
             formData.email &&
-            !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)
+            !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())
         ) {
             newErrors.email = "Please enter a valid email address";
         }
@@ -100,25 +137,58 @@ const BookingDetails = ({
     };
 
     const handleContinue = () => {
-        if (validateForm()) {
-            // Update booking data with form details
-            updateBookingData({
-                location: {
-                    type: formData.location_type,
-                    address: formData.address,
-                    city: formData.city,
-                    postal_code: formData.postal_code,
-                    instructions: formData.instructions,
-                },
-                contact_preference: formData.contact_preference,
-                phone: formData.phone,
-                email: formData.email,
-                requirements: formData.special_instructions,
-                emergency_contact: formData.emergency_contact,
-                estimated_travel_fee: estimatedTravelFee,
+        if (!validateForm()) {
+            // Scroll to first error
+            const firstErrorField = Object.keys(errors)[0];
+            const errorElement = document.querySelector(
+                `[data-field="${firstErrorField}"]`
+            );
+            errorElement?.scrollIntoView({
+                behavior: "smooth",
+                block: "center",
             });
-            onNext();
+            return;
         }
+
+        // Prepare comprehensive booking data update
+        const locationData = {
+            type: formData.location_type,
+            address: formData.address,
+            city: formData.city,
+            postal_code: formData.postal_code,
+            instructions: formData.instructions,
+        };
+
+        const updateData = {
+            // Location data
+            location: locationData,
+            client_address: formData.address, // Laravel backend field
+            client_location: formData.address
+                ? {
+                      address: formData.address,
+                      city: formData.city,
+                      postal_code: formData.postal_code,
+                  }
+                : null,
+
+            // Contact data
+            contact_preference: formData.contact_preference,
+            phone: formData.phone,
+            email: formData.email,
+            emergency_contact: formData.emergency_contact,
+
+            // Instructions
+            requirements: formData.special_instructions,
+            client_notes: formData.special_instructions,
+            special_instructions: formData.special_instructions,
+
+            // Travel fee
+            estimated_travel_fee: estimatedTravelFee,
+        };
+
+        // console.log("BookingDetails - updating data:", updateData);
+        updateBookingData(updateData);
+        onNext();
     };
 
     const locationTypes = [
@@ -146,9 +216,20 @@ const BookingDetails = ({
         <div className="booking-details">
             <div className="row">
                 <div className="col-lg-8">
+                    {/* Global Error Display */}
+                    {Object.keys(errors).length > 0 && (
+                        <div className="alert alert-danger mb-4">
+                            <i className="fas fa-exclamation-triangle me-2"></i>
+                            Please correct the errors below to continue.
+                        </div>
+                    )}
+
                     {/* Service Location */}
                     <div className="location-section mb-4">
-                        <h5 className="fw-bold mb-3">Service Location</h5>
+                        <h5 className="fw-bold mb-3">
+                            <i className="fas fa-map-marker-alt me-2 text-purple"></i>
+                            Service Location
+                        </h5>
 
                         <div className="location-options">
                             {locationTypes.map((option) => (
@@ -186,7 +267,7 @@ const BookingDetails = ({
                                                                 className={`${option.icon} fa-lg text-purple`}
                                                             ></i>
                                                         </div>
-                                                        <div>
+                                                        <div className="flex-grow-1">
                                                             <div className="fw-semibold">
                                                                 {option.label}
                                                             </div>
@@ -202,8 +283,10 @@ const BookingDetails = ({
                                                                 0 && (
                                                                 <div className="ms-auto">
                                                                     <small className="text-warning">
-                                                                        +Travel
+                                                                        <i className="fas fa-car me-1"></i>
+                                                                        Travel
                                                                         fee
+                                                                        applies
                                                                     </small>
                                                                 </div>
                                                             )}
@@ -216,13 +299,14 @@ const BookingDetails = ({
                             ))}
                         </div>
 
-                        {/* Address Details (if client or custom location) */}
+                        {/* Address Details */}
                         {(formData.location_type === "client_address" ||
                             formData.location_type === "custom_location") && (
                             <div className="address-details mt-4">
                                 <div className="card border-0 shadow-sm">
                                     <div className="card-body">
                                         <h6 className="fw-bold mb-3">
+                                            <i className="fas fa-home me-2"></i>
                                             Address Details
                                         </h6>
 
@@ -238,7 +322,7 @@ const BookingDetails = ({
                                                             ? "is-invalid"
                                                             : ""
                                                     }`}
-                                                    placeholder="Enter full address"
+                                                    placeholder="Enter full address (e.g., 123 Main Street, Apartment 4B)"
                                                     value={formData.address}
                                                     onChange={(e) =>
                                                         handleInputChange(
@@ -246,6 +330,7 @@ const BookingDetails = ({
                                                             e.target.value
                                                         )
                                                     }
+                                                    data-field="address"
                                                 />
                                                 {errors.address && (
                                                     <div className="invalid-feedback">
@@ -273,6 +358,7 @@ const BookingDetails = ({
                                                             e.target.value
                                                         )
                                                     }
+                                                    data-field="city"
                                                 />
                                                 {errors.city && (
                                                     <div className="invalid-feedback">
@@ -306,7 +392,7 @@ const BookingDetails = ({
                                                 <textarea
                                                     className="form-control"
                                                     rows="2"
-                                                    placeholder="Apartment number, building entrance, landmarks, etc."
+                                                    placeholder="Apartment number, building entrance, landmarks, parking info, etc."
                                                     value={
                                                         formData.instructions
                                                     }
@@ -329,7 +415,7 @@ const BookingDetails = ({
                                             <div className="travel-fee-notice mt-3 p-3 bg-warning bg-opacity-10 border border-warning rounded">
                                                 <div className="d-flex align-items-center">
                                                     <i className="fas fa-car text-warning me-2"></i>
-                                                    <div>
+                                                    <div className="flex-grow-1">
                                                         <div className="fw-semibold">
                                                             Estimated Travel
                                                             Fee: Rs.{" "}
@@ -339,6 +425,15 @@ const BookingDetails = ({
                                                             Based on distance
                                                             from provider
                                                             location
+                                                            {loading && (
+                                                                <span className="ms-2">
+                                                                    <span
+                                                                        className="spinner-border spinner-border-sm"
+                                                                        role="status"
+                                                                    ></span>
+                                                                    Calculating...
+                                                                </span>
+                                                            )}
                                                         </small>
                                                     </div>
                                                 </div>
@@ -348,18 +443,65 @@ const BookingDetails = ({
                                 </div>
                             </div>
                         )}
+
+                        {/* Provider Location Info */}
+                        {formData.location_type === "provider_location" && (
+                            <div className="provider-location-info mt-4">
+                                <div className="card border-0 shadow-sm">
+                                    <div className="card-body">
+                                        <h6 className="fw-bold mb-3">
+                                            <i className="fas fa-building me-2"></i>
+                                            Provider Location
+                                        </h6>
+                                        <div className="d-flex align-items-start">
+                                            <i className="fas fa-map-marker-alt text-success me-3 mt-1"></i>
+                                            <div>
+                                                <div className="fw-semibold">
+                                                    {provider.business_name ||
+                                                        provider.name}
+                                                </div>
+                                                <div className="text-muted">
+                                                    {provider.city},{" "}
+                                                    {provider.province}
+                                                </div>
+                                                <small className="text-muted">
+                                                    Exact address will be
+                                                    provided after booking
+                                                    confirmation
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* Contact Information */}
                     <div className="contact-section mb-4">
-                        <h5 className="fw-bold mb-3">Contact Information</h5>
+                        <h5 className="fw-bold mb-3">
+                            <i className="fas fa-phone me-2 text-purple"></i>
+                            Contact Information
+                        </h5>
 
                         <div className="card border-0 shadow-sm">
                             <div className="card-body">
+                                {errors.contact && (
+                                    <div className="alert alert-danger">
+                                        <i className="fas fa-exclamation-triangle me-2"></i>
+                                        {errors.contact}
+                                    </div>
+                                )}
+
                                 <div className="row">
                                     <div className="col-md-6 mb-3">
                                         <label className="form-label">
                                             Phone Number
+                                            {!formData.email && (
+                                                <span className="text-danger">
+                                                    *
+                                                </span>
+                                            )}
                                         </label>
                                         <input
                                             type="tel"
@@ -374,6 +516,7 @@ const BookingDetails = ({
                                                     e.target.value
                                                 )
                                             }
+                                            data-field="phone"
                                         />
                                         {errors.phone && (
                                             <div className="invalid-feedback">
@@ -385,6 +528,11 @@ const BookingDetails = ({
                                     <div className="col-md-6 mb-3">
                                         <label className="form-label">
                                             Email Address
+                                            {!formData.phone && (
+                                                <span className="text-danger">
+                                                    *
+                                                </span>
+                                            )}
                                         </label>
                                         <input
                                             type="email"
@@ -399,6 +547,7 @@ const BookingDetails = ({
                                                     e.target.value
                                                 )
                                             }
+                                            data-field="email"
                                         />
                                         {errors.email && (
                                             <div className="invalid-feedback">
@@ -407,12 +556,6 @@ const BookingDetails = ({
                                         )}
                                     </div>
                                 </div>
-
-                                {errors.contact && (
-                                    <div className="alert alert-danger">
-                                        {errors.contact}
-                                    </div>
-                                )}
 
                                 {/* Contact Preference */}
                                 <div className="contact-preference mt-3">
@@ -438,6 +581,7 @@ const BookingDetails = ({
                                                             e.target.value
                                                         )
                                                     }
+                                                    disabled={!formData.phone}
                                                 />
                                                 <label
                                                     className="form-check-label"
@@ -466,6 +610,7 @@ const BookingDetails = ({
                                                             e.target.value
                                                         )
                                                     }
+                                                    disabled={!formData.phone}
                                                 />
                                                 <label
                                                     className="form-check-label"
@@ -477,6 +622,10 @@ const BookingDetails = ({
                                             </div>
                                         </div>
                                     </div>
+                                    <small className="text-muted">
+                                        This is how the provider will contact
+                                        you for confirmation
+                                    </small>
                                 </div>
                             </div>
                         </div>
@@ -484,18 +633,21 @@ const BookingDetails = ({
 
                     {/* Additional Information */}
                     <div className="additional-info mb-4">
-                        <h5 className="fw-bold mb-3">Additional Information</h5>
+                        <h5 className="fw-bold mb-3">
+                            <i className="fas fa-clipboard-list me-2 text-purple"></i>
+                            Additional Information
+                        </h5>
 
                         <div className="card border-0 shadow-sm">
                             <div className="card-body">
                                 <div className="mb-3">
                                     <label className="form-label">
-                                        Special Instructions
+                                        Special Instructions for Provider
                                     </label>
                                     <textarea
                                         className="form-control"
-                                        rows="3"
-                                        placeholder="Any specific requirements, preferences, or important details the provider should know..."
+                                        rows="4"
+                                        placeholder="Any specific requirements, preferences, allergies, or important details the provider should know..."
                                         value={formData.special_instructions}
                                         onChange={(e) =>
                                             handleInputChange(
@@ -504,6 +656,11 @@ const BookingDetails = ({
                                             )
                                         }
                                     ></textarea>
+                                    <small className="text-muted">
+                                        Examples: specific cleaning products to
+                                        use/avoid, pet considerations, access
+                                        codes, best time to call, etc.
+                                    </small>
                                 </div>
 
                                 <div className="mb-3">
@@ -513,7 +670,7 @@ const BookingDetails = ({
                                     <input
                                         type="text"
                                         className="form-control"
-                                        placeholder="Name and phone number"
+                                        placeholder="Name and phone number (e.g., John Doe - +94 77 555 1234)"
                                         value={formData.emergency_contact}
                                         onChange={(e) =>
                                             handleInputChange(
@@ -540,6 +697,7 @@ const BookingDetails = ({
                         <div className="card border-0 shadow-sm">
                             <div className="card-header bg-purple text-white">
                                 <h6 className="fw-bold mb-0">
+                                    <i className="fas fa-receipt me-2"></i>
                                     Booking Summary
                                 </h6>
                             </div>
@@ -551,27 +709,30 @@ const BookingDetails = ({
                                         {service.title}
                                     </div>
                                     <div className="text-muted small">
-                                        {bookingData.duration} hour
+                                        Duration: {bookingData.duration} hour
                                         {bookingData.duration > 1 ? "s" : ""}
                                     </div>
                                 </div>
 
                                 {/* Date & Time */}
                                 <div className="summary-section mb-3">
-                                    <h6 className="fw-semibold">Date & Time</h6>
+                                    <h6 className="fw-semibold">Schedule</h6>
                                     <div className="text-success">
                                         <i className="fas fa-calendar me-2"></i>
-                                        {new Date(
-                                            bookingData.date
-                                        ).toLocaleDateString("en-US", {
-                                            weekday: "short",
-                                            month: "short",
-                                            day: "numeric",
-                                        })}
+                                        {bookingData.date
+                                            ? new Date(
+                                                  bookingData.date
+                                              ).toLocaleDateString("en-US", {
+                                                  weekday: "short",
+                                                  month: "short",
+                                                  day: "numeric",
+                                              })
+                                            : "Date not selected"}
                                     </div>
                                     <div className="text-success">
                                         <i className="fas fa-clock me-2"></i>
-                                        {bookingData.time}
+                                        {bookingData.time ||
+                                            "Time not selected"}
                                     </div>
                                 </div>
 
@@ -591,10 +752,37 @@ const BookingDetails = ({
                                     </div>
                                     {formData.address && (
                                         <div className="text-muted small">
+                                            <i className="fas fa-map-marker-alt me-1"></i>
                                             {formData.address}
                                         </div>
                                     )}
                                 </div>
+
+                                {/* Contact */}
+                                <div className="summary-section mb-3">
+                                    <h6 className="fw-semibold">Contact</h6>
+                                    {formData.phone && (
+                                        <div className="text-muted small">
+                                            <i className="fas fa-phone me-2"></i>
+                                            {formData.phone}
+                                        </div>
+                                    )}
+                                    {formData.email && (
+                                        <div className="text-muted small">
+                                            <i className="fas fa-envelope me-2"></i>
+                                            {formData.email}
+                                        </div>
+                                    )}
+                                    <div className="text-muted small">
+                                        <i className="fas fa-comment-dots me-2"></i>
+                                        Prefers:{" "}
+                                        {formData.contact_preference === "phone"
+                                            ? "Phone call"
+                                            : "Text/WhatsApp"}
+                                    </div>
+                                </div>
+
+                                <hr />
 
                                 {/* Price Breakdown */}
                                 <div className="price-breakdown">
@@ -602,8 +790,9 @@ const BookingDetails = ({
                                         <span>Service fee</span>
                                         <span>
                                             Rs.{" "}
-                                            {service.price *
-                                                (bookingData.duration || 1)}
+                                            {bookingData.total_price ||
+                                                service.price ||
+                                                0}
                                         </span>
                                     </div>
 
@@ -626,6 +815,7 @@ const BookingDetails = ({
                                     {estimatedTravelFee > 0 && (
                                         <div className="d-flex justify-content-between mb-2">
                                             <span className="text-warning">
+                                                <i className="fas fa-car me-1"></i>
                                                 Travel fee
                                             </span>
                                             <span className="text-warning">
@@ -641,8 +831,8 @@ const BookingDetails = ({
                                         <span className="fw-bold text-purple h5 mb-0">
                                             Rs.{" "}
                                             {(bookingData.total_price ||
-                                                service.price) +
-                                                estimatedTravelFee}
+                                                service.price ||
+                                                0) + estimatedTravelFee}
                                         </span>
                                     </div>
                                 </div>
@@ -663,11 +853,16 @@ const BookingDetails = ({
                                     </li>
                                     <li className="mb-1">
                                         <i className="fas fa-clock text-warning me-2"></i>
-                                        Free cancellation up to 24 hours
+                                        Free cancellation up to 24 hours before
                                     </li>
                                     <li className="mb-1">
                                         <i className="fas fa-shield-alt text-primary me-2"></i>
                                         All bookings are insured
+                                    </li>
+                                    <li className="mb-1">
+                                        <i className="fas fa-phone text-info me-2"></i>
+                                        You'll receive confirmation via your
+                                        preferred contact method
                                     </li>
                                 </ul>
                             </div>
@@ -689,45 +884,58 @@ const BookingDetails = ({
                 <button
                     className="btn btn-purple btn-lg"
                     onClick={handleContinue}
+                    disabled={loading}
                 >
-                    Continue to Confirmation
-                    <i className="fas fa-arrow-right ms-2"></i>
+                    {loading ? (
+                        <>
+                            <span className="spinner-border spinner-border-sm me-2"></span>
+                            Processing...
+                        </>
+                    ) : (
+                        <>
+                            Continue to Confirmation
+                            <i className="fas fa-arrow-right ms-2"></i>
+                        </>
+                    )}
                 </button>
             </div>
 
             <style>{`
-                .text-purple {
-                    color: #6f42c1 !important;
-                }
-                .bg-purple {
-                    background-color: #6f42c1 !important;
-                }
-                .btn-purple {
-                    background-color: #6f42c1;
-                    border-color: #6f42c1;
-                    color: white;
-                }
-                .btn-purple:hover {
-                    background-color: #5a2d91;
-                    border-color: #5a2d91;
-                    color: white;
-                }
-                .form-check-input:checked {
-                    background-color: #6f42c1;
-                    border-color: #6f42c1;
-                }
-                .option-card {
-                    transition: all 0.2s ease;
-                    cursor: pointer;
-                }
-                .form-check-input:checked + .form-check-label .option-card {
-                    border-color: #6f42c1;
-                    background-color: rgba(111, 66, 193, 0.05);
-                }
-                .option-card:hover {
-                    border-color: #6f42c1;
-                }
-            `}</style>
+               .text-purple { color: #6f42c1 !important; }
+               .bg-purple { background-color: #6f42c1 !important; }
+               .btn-purple {
+                   background-color: #6f42c1;
+                   border-color: #6f42c1;
+                   color: white;
+               }
+               .btn-purple:hover {
+                   background-color: #5a2d91;
+                   border-color: #5a2d91;
+                   color: white;
+               }
+               .form-check-input:checked {
+                   background-color: #6f42c1;
+                   border-color: #6f42c1;
+               }
+               .option-card {
+                   transition: all 0.2s ease;
+                   cursor: pointer;
+               }
+               .form-check-input:checked + .form-check-label .option-card {
+                   border-color: #6f42c1;
+                   background-color: rgba(111, 66, 193, 0.05);
+               }
+               .option-card:hover {
+                   border-color: #6f42c1;
+                   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+               }
+               .is-invalid {
+                   border-color: #dc3545;
+               }
+               .invalid-feedback {
+                   display: block;
+               }
+           `}</style>
         </div>
     );
 };

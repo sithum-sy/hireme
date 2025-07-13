@@ -7,11 +7,12 @@ const ServiceSelection = ({
     updateBookingData,
     onNext,
 }) => {
+    // Initialize with current booking data
     const [selectedAddOns, setSelectedAddOns] = useState(
         bookingData.additional_services || []
     );
     const [duration, setDuration] = useState(
-        bookingData.duration || service.default_duration || 1
+        bookingData.duration || service.duration_hours || 1
     );
 
     const handleAddOnToggle = (addOn) => {
@@ -25,51 +26,35 @@ const ServiceSelection = ({
         }
 
         setSelectedAddOns(newAddOns);
-
-        // Calculate total price
-        const addOnsTotal = newAddOns.reduce(
-            (sum, item) => sum + item.price,
-            0
-        );
-        const basePrice = service.price * duration;
-        const totalPrice = basePrice + addOnsTotal;
-
-        updateBookingData({
-            additional_services: newAddOns,
-            total_price: totalPrice,
-        });
+        updateBookingData({ additional_services: newAddOns });
     };
 
     const handleDurationChange = (newDuration) => {
         setDuration(newDuration);
-
-        // Recalculate total price
-        const addOnsTotal = selectedAddOns.reduce(
-            (sum, item) => sum + item.price,
-            0
-        );
-        const basePrice = service.price * newDuration;
-        const totalPrice = basePrice + addOnsTotal;
-
         updateBookingData({
             duration: newDuration,
-            total_price: totalPrice,
+            duration_hours: newDuration,
         });
     };
 
     const handleContinue = () => {
+        // Ensure all data is updated before proceeding
         updateBookingData({
             duration: duration,
+            duration_hours: duration,
             additional_services: selectedAddOns,
         });
         onNext();
     };
 
+    // Use consistent price field
+    const servicePrice = service.price || service.base_price || 0;
+
     return (
         <div className="service-selection">
             <div className="row">
                 <div className="col-lg-8">
-                    {/* Selected Service */}
+                    {/* Selected Service Display */}
                     <div className="selected-service mb-4">
                         <h5 className="fw-bold mb-3">Selected Service</h5>
                         <div className="card border-2 border-purple">
@@ -119,13 +104,17 @@ const ServiceSelection = ({
                                     <div className="col-md-3 text-end">
                                         <div className="price">
                                             <div className="base-price fw-bold text-purple">
-                                                Rs. {service.price}
+                                                Rs. {servicePrice}
                                             </div>
-                                            {service.pricing_type && (
-                                                <small className="text-muted">
-                                                    per {service.pricing_type}
-                                                </small>
-                                            )}
+                                            <small className="text-muted">
+                                                {service.pricing_type ===
+                                                "hourly"
+                                                    ? "per hour"
+                                                    : service.pricing_type ===
+                                                      "fixed"
+                                                    ? "fixed price"
+                                                    : "per service"}
+                                            </small>
                                         </div>
                                     </div>
                                 </div>
@@ -133,8 +122,8 @@ const ServiceSelection = ({
                         </div>
                     </div>
 
-                    {/* Duration Selection */}
-                    {service.pricing_type === "hour" && (
+                    {/* Duration Selection - only show for hourly services */}
+                    {service.pricing_type === "hourly" && (
                         <div className="duration-selection mb-4">
                             <h5 className="fw-bold mb-3">Duration</h5>
                             <div className="card border-0 shadow-sm">
@@ -148,24 +137,24 @@ const ServiceSelection = ({
                                                 <button
                                                     className="btn btn-outline-secondary"
                                                     onClick={() =>
-                                                        duration > 1 &&
+                                                        duration > 0.5 &&
                                                         handleDurationChange(
-                                                            duration - 1
+                                                            duration - 0.5
                                                         )
                                                     }
-                                                    disabled={duration <= 1}
+                                                    disabled={duration <= 0.5}
                                                 >
                                                     <i className="fas fa-minus"></i>
                                                 </button>
                                                 <span className="mx-3 fw-bold">
                                                     {duration} hour
-                                                    {duration > 1 ? "s" : ""}
+                                                    {duration !== 1 ? "s" : ""}
                                                 </span>
                                                 <button
                                                     className="btn btn-outline-secondary"
                                                     onClick={() =>
                                                         handleDurationChange(
-                                                            duration + 1
+                                                            duration + 0.5
                                                         )
                                                     }
                                                 >
@@ -177,12 +166,12 @@ const ServiceSelection = ({
                                             <div className="duration-price">
                                                 <div className="fw-bold text-purple">
                                                     Rs.{" "}
-                                                    {service.price * duration}
+                                                    {servicePrice * duration}
                                                 </div>
                                                 <small className="text-muted">
-                                                    Rs. {service.price} ×{" "}
+                                                    Rs. {servicePrice} ×{" "}
                                                     {duration} hour
-                                                    {duration > 1 ? "s" : ""}
+                                                    {duration !== 1 ? "s" : ""}
                                                 </small>
                                             </div>
                                         </div>
@@ -258,10 +247,12 @@ const ServiceSelection = ({
                                     className="form-control"
                                     rows="3"
                                     placeholder="Any special requirements or notes for the provider..."
-                                    value={bookingData.requirements}
+                                    value={bookingData.requirements || ""}
                                     onChange={(e) =>
                                         updateBookingData({
                                             requirements: e.target.value,
+                                            special_instructions:
+                                                e.target.value,
                                         })
                                     }
                                 ></textarea>
@@ -291,19 +282,22 @@ const ServiceSelection = ({
                                 <div className="summary-item d-flex justify-content-between mb-2">
                                     <span>{service.title}</span>
                                     <span className="fw-semibold">
-                                        Rs. {service.price}
+                                        Rs. {servicePrice}
+                                        {service.pricing_type === "hourly" &&
+                                            duration > 1 &&
+                                            ` × ${duration}`}
                                     </span>
                                 </div>
 
-                                {/* Duration Multiplier */}
-                                {service.pricing_type === "hour" &&
+                                {/* Duration Multiplier for hourly services */}
+                                {service.pricing_type === "hourly" &&
                                     duration > 1 && (
                                         <div className="summary-item d-flex justify-content-between mb-2">
                                             <span className="text-muted small">
-                                                × {duration} hours
+                                                Subtotal ({duration} hours)
                                             </span>
                                             <span className="fw-semibold">
-                                                Rs. {service.price * duration}
+                                                Rs. {servicePrice * duration}
                                             </span>
                                         </div>
                                     )}
@@ -331,7 +325,7 @@ const ServiceSelection = ({
                                     <span className="fw-bold text-purple h5 mb-0">
                                         Rs.{" "}
                                         {bookingData.total_price ||
-                                            service.price}
+                                            servicePrice}
                                     </span>
                                 </div>
 
@@ -345,7 +339,7 @@ const ServiceSelection = ({
                             </div>
                         </div>
 
-                        {/* Provider Info */}
+                        {/* Provider Info Card */}
                         <div className="card border-0 shadow-sm mt-3">
                             <div className="card-body">
                                 <h6 className="fw-bold mb-3">Your Provider</h6>
@@ -410,15 +404,9 @@ const ServiceSelection = ({
             </div>
 
             <style>{`
-                .border-purple {
-                    border-color: #6f42c1 !important;
-                }
-                .text-purple {
-                    color: #6f42c1 !important;
-                }
-                .bg-purple {
-                    background-color: #6f42c1 !important;
-                }
+                .border-purple { border-color: #6f42c1 !important; }
+                .text-purple { color: #6f42c1 !important; }
+                .bg-purple { background-color: #6f42c1 !important; }
                 .btn-purple {
                     background-color: #6f42c1;
                     border-color: #6f42c1;
