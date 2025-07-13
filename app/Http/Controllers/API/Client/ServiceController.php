@@ -79,6 +79,40 @@ class ServiceController extends Controller
     /**
      * Get service details with provider information
      */
+    // public function show(Service $service)
+    // {
+    //     try {
+    //         // Increment view count
+    //         $service->incrementViews();
+
+    //         // Load related data
+    //         $service->load([
+    //             'category',
+    //             'provider.providerProfile',
+    //             'appointments' => function ($query) {
+    //                 $query->completed()
+    //                     ->whereNotNull('provider_rating')
+    //                     ->with('client:id,first_name,last_name')
+    //                     ->latest()
+    //                     ->limit(5);
+    //             }
+    //         ]);
+
+    //         $serviceData = $this->formatServiceDetailForClient($service);
+
+    //         return response()->json([
+    //             'success' => true,
+    //             'data' => $serviceData
+    //         ]);
+    //     } catch (\Exception $e) {
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'Failed to fetch service details',
+    //             'error' => $e->getMessage()
+    //         ], 500);
+    //     }
+    // }
+
     public function show(Service $service)
     {
         try {
@@ -98,16 +132,82 @@ class ServiceController extends Controller
                 }
             ]);
 
-            $serviceData = $this->formatServiceDetailForClient($service);
+            // Format service data
+            $serviceData = [
+                'id' => $service->id,
+                'title' => $service->title,
+                'description' => $service->description,
+                'base_price' => $service->base_price,
+                'formatted_price' => $service->formatted_price,
+                'pricing_type' => $service->pricing_type,
+                'duration_hours' => $service->duration_hours,
+                'service_image_urls' => $service->service_image_urls,
+                'first_image_url' => $service->first_image_url,
+                'average_rating' => $service->average_rating,
+                'reviews_count' => $service->appointments()->completed()->whereNotNull('provider_rating')->count(),
+                'includes' => $service->includes,
+                'requirements' => $service->requirements,
+                'category' => [
+                    'id' => $service->category->id,
+                    'name' => $service->category->name,
+                    'icon' => $service->category->icon,
+                    'color' => $service->category->color,
+                ],
+                'location' => $service->location,
+                'distance' => $service->distance ?? null,
+            ];
+
+            // Format provider data
+            $provider = $service->provider;
+            $providerProfile = $provider->providerProfile;
+
+            $providerData = [
+                'id' => $provider->id,
+                'first_name' => $provider->first_name,
+                'last_name' => $provider->last_name,
+                'business_name' => $providerProfile->business_name ?? null,
+                'profile_image_url' => $provider->profile_picture ? \Storage::url($provider->profile_picture) : null,
+                'bio' => $providerProfile->bio ?? null,
+                'is_verified' => $providerProfile->isVerified() ?? false,
+                'city' => $provider->address ?? null, // Adjust based on your User model structure
+                'province' => 'Western Province', // Default or get from profile
+                'service_radius' => $providerProfile->service_area_radius ?? 25,
+                'travel_fee' => 0, // Add if you have this field
+                'average_rating' => $providerProfile->average_rating ?? 0,
+                'reviews_count' => $providerProfile->total_reviews ?? 0,
+                'years_experience' => $providerProfile->years_of_experience ?? 0,
+                'response_time' => '2 hours', // Default or calculate
+                'total_services' => $provider->services()->where('is_active', true)->count(),
+                'completed_bookings' => $provider->providerAppointments()->where('status', 'completed')->count(),
+                'other_services' => $provider->services()
+                    ->where('is_active', true)
+                    ->where('id', '!=', $service->id)
+                    ->with('category')
+                    ->limit(3)
+                    ->get()
+                    ->map(function ($otherService) {
+                        return [
+                            'id' => $otherService->id,
+                            'title' => $otherService->title,
+                            'formatted_price' => $otherService->formatted_price,
+                            'category' => [
+                                'name' => $otherService->category->name
+                            ]
+                        ];
+                    })
+            ];
 
             return response()->json([
                 'success' => true,
-                'data' => $serviceData
+                'data' => $serviceData,
+                'provider' => $providerData,
+                'is_favorite' => false, // TODO: Check if user favorited this service
+                'message' => 'Service details retrieved successfully'
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to fetch service details',
+                'message' => 'Failed to retrieve service details',
                 'error' => $e->getMessage()
             ], 500);
         }

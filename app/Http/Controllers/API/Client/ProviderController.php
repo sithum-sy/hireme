@@ -6,6 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Service;
 use Illuminate\Http\Request;
+use App\Models\ProviderAvailability;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class ProviderController extends Controller
 {
@@ -81,7 +85,7 @@ class ProviderController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $providers->through(function ($provider) use ($request) {
+            'data' => collect($providers->items())->map(function ($provider) use ($request) {
                 return $this->formatProviderForClient($provider, $request);
             }),
             'meta' => [
@@ -137,7 +141,7 @@ class ProviderController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $providers->through(function ($provider) use ($request) {
+            'data' => collect($providers->items())->map(function ($provider) use ($request) {
                 return $this->formatProviderForClient($provider, $request);
             }),
             'meta' => [
@@ -301,6 +305,214 @@ class ProviderController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Get provider's weekly availability schedule
+     */
+    public function getWeeklyAvailability(User $provider)
+    {
+        if ($provider->role !== 'service_provider') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Provider not found'
+            ], 404);
+        }
+
+        try {
+            $availability = ProviderAvailability::where('provider_id', $provider->id)
+                ->orderBy('day_of_week')
+                ->get();
+
+            $weeklySchedule = [];
+            for ($day = 0; $day <= 6; $day++) {
+                $dayAvailability = $availability->where('day_of_week', $day)->first();
+
+                $weeklySchedule[] = [
+                    'day_of_week' => $day,
+                    'day_name' => $this->getDayName($day),
+                    'is_available' => $dayAvailability ? $dayAvailability->is_available : false,
+                    'start_time' => $dayAvailability && $dayAvailability->is_available ?
+                        $dayAvailability->start_time->format('H:i') : null,
+                    'end_time' => $dayAvailability && $dayAvailability->is_available ?
+                        $dayAvailability->end_time->format('H:i') : null,
+                    'formatted_time_range' => $dayAvailability && $dayAvailability->is_available ?
+                        $dayAvailability->formatted_time_range : 'Unavailable'
+                ];
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => $weeklySchedule,
+                'message' => 'Weekly availability retrieved successfully'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve availability',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get available time slots for a specific date
+     */
+    public function getAvailableSlots(Request $request, User $provider)
+    {
+        if ($provider->role !== 'service_provider') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Provider not found'
+            ], 404);
+        }
+
+        $request->validate([
+            'date' => 'required|date|after_or_equal:today',
+            'service_id' => 'nullable|exists:services,id',
+            'duration' => 'nullable|numeric|min:0.5|max:8',
+        ]);
+
+        try {
+            $date = $request->input('date');
+            $duration = $request->input('duration', 1);
+
+            $requestDate = Carbon::parse($date);
+            $dayOfWeek = $requestDate->dayOfWeek;
+
+            // Get provider's availability for this day
+            $dayAvailability = ProviderAvailability::where('provider_id', $provider->id)
+                ->where('day_of_week', $dayOfWeek)
+                ->where('is_available', true)
+                ->first();
+
+            if (!$dayAvailability) {
+                return response()->json([
+                    'success' => true,
+                    'data' => [],
+                    'message' => 'Provider not available on this day'
+                ]);
+            }
+
+            // Generate time slots
+            $slots = $this->generateTimeSlots(
+                $dayAvailability->start_time,
+                $dayAvailability->end_time,
+                $duration
+            );
+
+            // TODO: Filter out already booked slots from appointments table
+            // For now, return all generated slots
+
+            return response()->json([
+                'success' => true,
+                'data' => $slots,
+                'message' => 'Available slots retrieved successfully'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve available slots',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Check if provider is available at specific time
+     */
+    public function checkAvailability(Request $request, User $provider)
+    {
+        if ($provider->role !== 'service_provider') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Provider not found'
+            ], 404);
+        }
+
+        $request->validate([
+            'date' => 'required|date|after_or_equal:today',
+            'duration' => 'nullable|numeric|min:0.5|max:8',
+        ]);
+
+        try {
+            $date = $request->input('date');
+            $duration = $request->input('duration', 1);
+
+            $requestDate = Carbon::parse($date);
+            $dayOfWeek = $requestDate->dayOfWeek;
+
+            $dayAvailability = ProviderAvailability::where('provider_id', $provider->id)
+                ->where('day_of_week', $dayOfWeek)
+                ->where('is_available', true)
+                ->first();
+
+            $available = $dayAvailability !== null;
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'available' => $available,
+                    'day_of_week' => $dayOfWeek,
+                    'availability_window' => $available ? [
+                        'start_time' => $dayAvailability->start_time->format('H:i'),
+                        'end_time' => $dayAvailability->end_time->format('H:i')
+                    ] : null
+                ],
+                'message' => $available ? 'Provider is available' : 'Provider is not available'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to check availability',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Generate time slots between start and end time
+     */
+    private function generateTimeSlots($startTime, $endTime, $duration)
+    {
+        $slots = [];
+        $current = Carbon::parse($startTime);
+        $end = Carbon::parse($endTime);
+
+        while ($current->copy()->addHours($duration)->lte($end)) {
+            $slotStart = $current->copy();
+            $slotEnd = $current->copy()->addHours($duration);
+
+            $slots[] = [
+                'time' => $slotStart->format('H:i'),
+                'end_time' => $slotEnd->format('H:i'),
+                'formatted_time' => $slotStart->format('g:i A'),
+                'is_popular' => in_array($slotStart->hour, [10, 14]), // Mark 10 AM and 2 PM as popular
+                'is_available' => true
+            ];
+
+            $current->addHour(); // Move to next hour slot
+        }
+
+        return $slots;
+    }
+
+    /**
+     * Get day name from day number
+     */
+    private function getDayName($dayOfWeek)
+    {
+        $days = [
+            0 => 'Sunday',
+            1 => 'Monday',
+            2 => 'Tuesday',
+            3 => 'Wednesday',
+            4 => 'Thursday',
+            5 => 'Friday',
+            6 => 'Saturday'
+        ];
+
+        return $days[$dayOfWeek] ?? 'Unknown';
     }
 
     /**

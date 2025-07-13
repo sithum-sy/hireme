@@ -82,6 +82,94 @@ class ClientService {
         return response.data;
     }
 
+    // async getServiceDetail(serviceId) {
+    //     try {
+    //         const response = await axios.get(
+    //             `${API_BASE}/services/${serviceId}`
+    //         );
+
+    //         // console.log("Raw API response:", response.data);
+
+    //         // Check if the response has the expected structure
+    //         if (response.data && response.data.success !== false) {
+    //             return {
+    //                 success: true,
+    //                 data: {
+    //                     service: response.data.data || response.data, // Handle both structures
+    //                     provider:
+    //                         response.data.provider ||
+    //                         this.getFallbackProvider(),
+    //                     is_favorite: response.data.is_favorite || false,
+    //                 },
+    //                 message:
+    //                     response.data.message || "Service loaded successfully",
+    //             };
+    //         } else {
+    //             throw new Error(response.data.message || "Service not found");
+    //         }
+    //     } catch (error) {
+    //         console.warn("Service detail endpoint error:", error);
+    //         console.log("Using fallback data for service ID:", serviceId);
+
+    //         // Return fallback service detail for development
+    //         return {
+    //             success: true,
+    //             data: {
+    //                 service: this.getFallbackServiceDetail(serviceId),
+    //                 provider: this.getFallbackProvider(),
+    //                 is_favorite: false,
+    //             },
+    //             message: "Service loaded (fallback mode)",
+    //             fallback: true,
+    //         };
+    //     }
+    // }
+
+    // async getServiceDetail(serviceId) {
+    //     try {
+    //         const response = await axios.get(
+    //             `${API_BASE}/services/${serviceId}`
+    //         );
+
+    //         console.log("Raw API response:", response.data);
+
+    //         if (response.data && response.data.success !== false) {
+    //             // Handle the response structure from your Laravel backend
+    //             const serviceData = response.data.data || response.data;
+
+    //             return {
+    //                 success: true,
+    //                 data: {
+    //                     service: this.formatServiceData(serviceData),
+    //                     provider: this.formatProviderData(
+    //                         serviceData.provider || serviceData.provider_profile
+    //                     ),
+    //                     is_favorite: response.data.is_favorite || false,
+    //                 },
+    //                 message:
+    //                     response.data.message || "Service loaded successfully",
+    //             };
+    //         } else {
+    //             throw new Error(response.data.message || "Service not found");
+    //         }
+    //     } catch (error) {
+    //         console.warn("Service detail endpoint error:", error);
+    //         console.log("Using fallback data for service ID:", serviceId);
+
+    //         // Return fallback only in development
+    //         return {
+    //             success: true,
+    //             data: {
+    //                 service: this.getFallbackServiceDetail(serviceId),
+    //                 provider: this.getFallbackProvider(),
+    //                 is_favorite: false,
+    //             },
+    //             message: "Service loaded (fallback mode)",
+    //             fallback: true,
+    //         };
+    //     }
+    // }
+
     async getServiceDetail(serviceId) {
         try {
             const response = await axios.get(
@@ -90,19 +178,15 @@ class ClientService {
 
             // console.log("Raw API response:", response.data);
 
-            // Check if the response has the expected structure
-            if (response.data && response.data.success !== false) {
+            if (response.data && response.data.success) {
                 return {
                     success: true,
                     data: {
-                        service: response.data.data || response.data, // Handle both structures
-                        provider:
-                            response.data.provider ||
-                            this.getFallbackProvider(),
+                        service: response.data.data,
+                        provider: response.data.provider,
                         is_favorite: response.data.is_favorite || false,
                     },
-                    message:
-                        response.data.message || "Service loaded successfully",
+                    message: response.data.message,
                 };
             } else {
                 throw new Error(response.data.message || "Service not found");
@@ -111,7 +195,7 @@ class ClientService {
             console.warn("Service detail endpoint error:", error);
             console.log("Using fallback data for service ID:", serviceId);
 
-            // Return fallback service detail for development
+            // Return fallback only in development
             return {
                 success: true,
                 data: {
@@ -122,6 +206,112 @@ class ClientService {
                 message: "Service loaded (fallback mode)",
                 fallback: true,
             };
+        }
+    }
+
+    // Add method to format service data from Laravel backend
+    formatServiceData(serviceData) {
+        return {
+            id: serviceData.id,
+            title: serviceData.title,
+            description: serviceData.description,
+            price: serviceData.base_price,
+            formatted_price:
+                serviceData.formatted_price || `Rs. ${serviceData.base_price}`,
+            pricing_type: serviceData.pricing_type,
+            duration: serviceData.duration_hours
+                ? `${serviceData.duration_hours} hours`
+                : "Varies",
+            service_location: "At your location", // Default, can be dynamic
+            cancellation_policy: "Free cancellation up to 24 hours",
+            languages: ["English", "Sinhala"], // Default, can be from provider profile
+
+            // Category data
+            category: {
+                id: serviceData.category?.id,
+                name: serviceData.category?.name,
+                color: serviceData.category?.color || "primary",
+                icon: serviceData.category?.icon || "fas fa-cog",
+            },
+
+            // Images
+            images: serviceData.service_image_urls || [],
+            first_image_url: serviceData.first_image_url,
+
+            // Features and requirements from JSON fields
+            features: this.parseJsonField(serviceData.includes) || [
+                "Professional service",
+                "Quality guaranteed",
+                "Experienced provider",
+            ],
+            requirements: this.parseJsonField(serviceData.requirements) || [
+                "Access to service area",
+                "Someone present during service",
+            ],
+
+            // Ratings and availability
+            average_rating: serviceData.average_rating || 0,
+            reviews_count: serviceData.reviews_count || 0,
+            availability_status: "available", // This should come from provider availability
+            next_available: "Today",
+            default_duration: serviceData.duration_hours || 1,
+
+            // Location data
+            distance: serviceData.distance, // If calculated by backend
+            location: serviceData.location, // From your Service model's getLocationAttribute
+        };
+    }
+
+    // Add method to format provider data from Laravel backend
+    formatProviderData(providerData) {
+        if (!providerData) return this.getFallbackProvider();
+
+        return {
+            id: providerData.id || providerData.user_id,
+            name:
+                providerData.business_name ||
+                `${providerData.first_name || ""} ${
+                    providerData.last_name || ""
+                }`.trim() ||
+                "Service Provider",
+            profile_image_url: providerData.profile_image_url,
+            bio:
+                providerData.bio ||
+                providerData.description ||
+                "Professional service provider",
+            is_verified: providerData.is_verified || false,
+
+            // Location data
+            city: providerData.city || "Colombo",
+            province: providerData.province || "Western Province",
+            service_radius: providerData.service_radius || 25,
+            travel_fee: providerData.travel_fee || 0,
+
+            // Stats
+            average_rating: providerData.average_rating || 0,
+            reviews_count: providerData.reviews_count || 0,
+            total_services: providerData.total_services || 0,
+            completed_bookings: providerData.completed_bookings || 0,
+            years_experience: providerData.years_experience || 0,
+            response_time: providerData.response_time || "2 hours",
+
+            // Other services (if provided by backend)
+            other_services: providerData.other_services || [],
+        };
+    }
+
+    // Helper method to parse JSON fields
+    parseJsonField(jsonString) {
+        if (!jsonString) return null;
+
+        try {
+            if (typeof jsonString === "string") {
+                return JSON.parse(jsonString);
+            }
+            return Array.isArray(jsonString) ? jsonString : null;
+        } catch (error) {
+            console.warn("Failed to parse JSON field:", jsonString);
+            return null;
         }
     }
 
@@ -164,33 +354,67 @@ class ClientService {
         }
     }
 
+    // async getSimilarServices(params = {}) {
+    //     try {
+    //         // Use the regular services endpoint with category filter
+    //         const searchParams = {
+    //             category_id: params.category_id,
+    //             limit: params.limit || 8,
+    //             exclude_id: params.exclude_service_id, // Changed from exclude_service_id
+    //             sort_by: "popularity",
+    //         };
+
+    //         // Add location if provided
+    //         if (params.latitude && params.longitude) {
+    //             searchParams.latitude = params.latitude;
+    //             searchParams.longitude = params.longitude;
+    //             searchParams.radius = params.radius || 25;
+    //         }
+
+    //         // Remove undefined values
+    //         Object.keys(searchParams).forEach((key) => {
+    //             if (searchParams[key] === undefined) {
+    //                 delete searchParams[key];
+    //             }
+    //         });
+
+    //         const response = await axios.get(`${API_BASE}/services`, {
+    //             params: searchParams,
+    //         });
+
+    //         return {
+    //             success: true,
+    //             data: response.data.data || response.data,
+    //             message: response.data.message || "Similar services loaded",
+    //         };
+    //     } catch (error) {
+    //         console.warn(
+    //             "Services endpoint not available for similar services, using fallback"
+    //         );
+
+    //         return {
+    //             success: true,
+    //             data: this.getFallbackSimilarServices(),
+    //             message: "Similar services loaded (fallback mode)",
+    //             fallback: true,
+    //         };
+    //     }
+    // }
+
     async getSimilarServices(params = {}) {
         try {
-            // Use the regular services endpoint with category filter
-            const searchParams = {
-                category_id: params.category_id,
-                limit: params.limit || 8,
-                exclude_id: params.exclude_service_id, // Changed from exclude_service_id
-                sort_by: "popularity",
-            };
-
-            // Add location if provided
-            if (params.latitude && params.longitude) {
-                searchParams.latitude = params.latitude;
-                searchParams.longitude = params.longitude;
-                searchParams.radius = params.radius || 25;
-            }
-
-            // Remove undefined values
-            Object.keys(searchParams).forEach((key) => {
-                if (searchParams[key] === undefined) {
-                    delete searchParams[key];
+            // Use the existing similar services endpoint
+            const response = await axios.get(
+                `${API_BASE}/services/${params.exclude_service_id}/similar`,
+                {
+                    params: {
+                        latitude: params.latitude,
+                        longitude: params.longitude,
+                        radius: params.radius,
+                        limit: params.limit,
+                    },
                 }
-            });
-
-            const response = await axios.get(`${API_BASE}/services`, {
-                params: searchParams,
-            });
+            );
 
             return {
                 success: true,
@@ -199,7 +423,7 @@ class ClientService {
             };
         } catch (error) {
             console.warn(
-                "Services endpoint not available for similar services, using fallback"
+                "Similar services endpoint not available, using fallback"
             );
 
             return {

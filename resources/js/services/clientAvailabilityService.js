@@ -5,17 +5,27 @@ const API_BASE = "/api/client";
 class ClientAvailabilityService {
     async getAvailableSlots(params) {
         try {
-            const response = await axios.get(`${API_BASE}/availability/slots`, {
-                params,
-            });
+            const response = await axios.get(
+                `${API_BASE}/providers/${params.provider_id}/availability/slots`,
+                {
+                    params: {
+                        date: params.date,
+                        service_id: params.service_id,
+                        duration: params.duration || 1,
+                    },
+                }
+            );
+
             return {
                 success: true,
-                data: response.data.data || response.data,
+                data: this.formatAvailabilitySlots(
+                    response.data.data || response.data
+                ),
                 message: response.data.message,
             };
         } catch (error) {
             console.warn(
-                "Client availability slots endpoint not available, using fallback"
+                "Provider availability slots endpoint not available, using fallback"
             );
 
             // Return fallback available slots for development
@@ -28,11 +38,42 @@ class ClientAvailabilityService {
         }
     }
 
+    async getProviderWeeklyAvailability(providerId) {
+        try {
+            const response = await axios.get(
+                `${API_BASE}/providers/${providerId}/availability/weekly`
+            );
+
+            return {
+                success: true,
+                data: this.formatWeeklyAvailability(
+                    response.data.data || response.data
+                ),
+                message: response.data.message,
+            };
+        } catch (error) {
+            console.warn(
+                "Provider weekly availability endpoint not available, using fallback"
+            );
+
+            return {
+                success: true,
+                data: this.getFallbackProviderAvailability(),
+                message: "Weekly availability (fallback mode)",
+                fallback: true,
+            };
+        }
+    }
+
     async checkAvailability(providerId, date, duration) {
         try {
-            const response = await axios.get(`${API_BASE}/availability/check`, {
-                params: { provider_id: providerId, date, duration },
-            });
+            const response = await axios.get(
+                `${API_BASE}/providers/${providerId}/availability/check`,
+                {
+                    params: { date, duration },
+                }
+            );
+
             return {
                 success: true,
                 data: response.data.data || response.data,
@@ -40,7 +81,7 @@ class ClientAvailabilityService {
             };
         } catch (error) {
             console.warn(
-                "Client availability check endpoint not available, using fallback"
+                "Provider availability check endpoint not available, using fallback"
             );
 
             return {
@@ -52,31 +93,39 @@ class ClientAvailabilityService {
         }
     }
 
-    async getProviderAvailability(providerId, startDate, endDate) {
-        try {
-            const response = await axios.get(
-                `${API_BASE}/providers/${providerId}/availability`,
-                {
-                    params: { start_date: startDate, end_date: endDate },
-                }
-            );
-            return {
-                success: true,
-                data: response.data.data || response.data,
-                message: response.data.message,
-            };
-        } catch (error) {
-            console.warn(
-                "Provider availability endpoint not available, using fallback"
-            );
-
-            return {
-                success: true,
-                data: this.getFallbackProviderAvailability(),
-                message: "Provider availability (fallback mode)",
-                fallback: true,
-            };
+    // Format availability slots from Laravel backend
+    formatAvailabilitySlots(slotsData) {
+        if (!Array.isArray(slotsData)) {
+            return [];
         }
+
+        return slotsData.map((slot) => ({
+            time: slot.start_time || slot.time,
+            end_time: slot.end_time,
+            formatted_time:
+                slot.formatted_time ||
+                this.formatTimeForDisplay(slot.start_time || slot.time),
+            is_popular: slot.is_popular || false,
+            is_available: slot.is_available !== false, // Default to true unless explicitly false
+        }));
+    }
+
+    // Format weekly availability from Laravel backend
+    formatWeeklyAvailability(weeklyData) {
+        if (!Array.isArray(weeklyData)) {
+            return this.getFallbackProviderAvailability().weekly_schedule;
+        }
+
+        return weeklyData.map((day) => ({
+            day: day.day_of_week,
+            day_name: day.day_name,
+            available: day.is_available,
+            start_time: day.start_time,
+            end_time: day.end_time,
+            formatted_time_range:
+                day.formatted_time_range ||
+                this.formatTimeRange(day.start_time, day.end_time),
+        }));
     }
 
     // Fallback data methods for development
@@ -103,38 +152,55 @@ class ClientAvailabilityService {
     getFallbackProviderAvailability() {
         return {
             weekly_schedule: [
-                { day: 0, available: false, start_time: null, end_time: null },
+                {
+                    day: 0,
+                    day_name: "Sunday",
+                    available: false,
+                    start_time: null,
+                    end_time: null,
+                },
                 {
                     day: 1,
+                    day_name: "Monday",
                     available: true,
                     start_time: "09:00",
                     end_time: "17:00",
                 },
                 {
                     day: 2,
+                    day_name: "Tuesday",
                     available: true,
                     start_time: "09:00",
                     end_time: "17:00",
                 },
                 {
                     day: 3,
+                    day_name: "Wednesday",
                     available: true,
                     start_time: "09:00",
                     end_time: "17:00",
                 },
                 {
                     day: 4,
+                    day_name: "Thursday",
                     available: true,
                     start_time: "09:00",
                     end_time: "17:00",
                 },
                 {
                     day: 5,
+                    day_name: "Friday",
                     available: true,
                     start_time: "09:00",
                     end_time: "17:00",
                 },
-                { day: 6, available: false, start_time: null, end_time: null },
+                {
+                    day: 6,
+                    day_name: "Saturday",
+                    available: false,
+                    start_time: null,
+                    end_time: null,
+                },
             ],
             blocked_dates: ["2025-07-20", "2025-07-25"],
         };
@@ -148,6 +214,13 @@ class ClientAvailabilityService {
         const ampm = hour >= 12 ? "PM" : "AM";
         const displayHour = hour % 12 || 12;
         return `${displayHour}:${minutes} ${ampm}`;
+    }
+
+    formatTimeRange(startTime, endTime) {
+        if (!startTime || !endTime) return "Unavailable";
+        return `${this.formatTimeForDisplay(
+            startTime
+        )} - ${this.formatTimeForDisplay(endTime)}`;
     }
 
     isTimeSlotAvailable(slot, existingBookings = []) {

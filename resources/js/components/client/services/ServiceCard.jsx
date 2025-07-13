@@ -123,7 +123,9 @@ const ServiceCard = ({ service, showDistance = true }) => {
                             <div className="price">
                                 <span className="fw-bold text-purple">
                                     {service.formatted_price ||
-                                        `Rs. ${service.price}`}
+                                        `Rs. ${
+                                            service.base_price || service.price
+                                        }`}
                                 </span>
                                 {service.pricing_type && (
                                     <small className="text-muted">

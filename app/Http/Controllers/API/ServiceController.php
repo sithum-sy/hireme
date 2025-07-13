@@ -135,26 +135,319 @@ class ServiceController extends Controller
     /**
      * Display the specified service (Public)
      */
+    // public function show(Service $service)
+    // {
+    //     try {
+    //         // Increment view count
+    //         $service->incrementViews();
+
+    //         $service->load(['category', 'provider.providerProfile', 'appointments' => function ($query) {
+    //             $query->completed()->with('client:id,first_name,last_name');
+    //         }]);
+
+    //         $formattedService = $this->formatServiceResponse($service, true);
+
+    //         return response()->json([
+    //             'success' => true,
+    //             'data' => $formattedService
+    //         ], 200);
+    //     } catch (\Exception $e) {
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'Failed to fetch service',
+    //             'error' => $e->getMessage()
+    //         ], 500);
+    //     }
+    // }
+
+    // public function show(Service $service)
+    // {
+    //     try {
+    //         // Increment view count
+    //         $service->incrementViews();
+
+    //         // Load related data
+    //         $service->load([
+    //             'category',
+    //             'provider.providerProfile',
+    //             'appointments' => function ($query) {
+    //                 $query->completed()
+    //                     ->whereNotNull('provider_rating')
+    //                     ->with('client:id,first_name,last_name')
+    //                     ->latest()
+    //                     ->limit(5);
+    //             }
+    //         ]);
+
+    //         // Format service data with ALL details
+    //         $serviceData = [
+    //             'id' => $service->id,
+    //             'title' => $service->title,
+    //             'description' => $service->description,
+
+    //             // Pricing information
+    //             'base_price' => $service->base_price,
+    //             'formatted_price' => $service->formatted_price,
+    //             'pricing_type' => $service->pricing_type,
+
+    //             // Service details
+    //             'duration_hours' => $service->duration_hours,
+    //             'duration' => $service->duration_hours ? ($service->duration_hours . ' hours') : 'Flexible duration',
+
+    //             // Service content
+    //             'includes' => $service->includes, // What's included in the service
+    //             'requirements' => $service->requirements, // Client requirements
+    //             'service_areas' => $service->service_areas, // Areas served
+
+    //             // Images
+    //             'service_images' => $service->service_image_urls,
+    //             'service_image_urls' => $service->service_image_urls,
+    //             'first_image_url' => $service->first_image_url,
+    //             'images' => collect($service->service_image_urls)->map(function ($url) {
+    //                 return ['url' => $url, 'alt' => 'Service image'];
+    //             })->toArray(),
+
+    //             // Ratings and reviews
+    //             'average_rating' => $service->average_rating,
+    //             'reviews_count' => $service->appointments()->completed()->whereNotNull('provider_rating')->count(),
+
+    //             // Category
+    //             'category' => [
+    //                 'id' => $service->category->id,
+    //                 'name' => $service->category->name,
+    //                 'icon' => $service->category->icon,
+    //                 'color' => $service->category->color,
+    //             ],
+
+    //             // Location and availability
+    //             'location' => $service->location,
+    //             'distance' => $service->distance ?? null,
+    //             'availability_status' => 'available', // Default, can be dynamic
+    //             'next_available' => 'Today',
+
+    //             // Additional service info
+    //             'service_location' => 'At your location', // Default
+    //             'cancellation_policy' => 'Free cancellation up to 24 hours before service',
+    //             'languages' => ['English', 'Sinhala'], // Default or from provider
+
+    //             // Stats
+    //             'views_count' => $service->views_count,
+    //             'bookings_count' => $service->bookings_count,
+    //         ];
+
+    //         // Format provider data (without personal address)
+    //         $provider = $service->provider;
+    //         $providerProfile = $provider->providerProfile;
+
+    //         $providerData = [
+    //             'id' => $provider->id,
+    //             'first_name' => $provider->first_name,
+    //             'last_name' => $provider->last_name,
+    //             'name' => $provider->first_name . ' ' . $provider->last_name,
+    //             'business_name' => $providerProfile->business_name ?? null,
+    //             'profile_image_url' => $provider->profile_picture ? \Storage::url($provider->profile_picture) : null,
+    //             'bio' => $providerProfile->bio ?? 'Professional service provider with experience.',
+    //             'is_verified' => $providerProfile->isVerified() ?? false,
+
+    //             // Service area (not personal address)
+    //             'city' => $providerProfile->city ?? 'Colombo',
+    //             'province' => $providerProfile->province ?? 'Western Province',
+    //             'service_radius' => $providerProfile->service_area_radius ?? 25,
+    //             'travel_fee' => 0, // Add if you have this field
+
+    //             // Performance stats
+    //             'average_rating' => $providerProfile->average_rating ?? 0,
+    //             'reviews_count' => $providerProfile->total_reviews ?? 0,
+    //             'years_experience' => $providerProfile->years_of_experience ?? 0,
+    //             'response_time' => $this->calculateAverageResponseTime($service) ?? '2 hours',
+    //             'total_services' => $provider->services()->where('is_active', true)->count(),
+    //             'completed_bookings' => $provider->providerAppointments()->where('status', 'completed')->count(),
+
+    //             // Other services by this provider
+    //             'other_services' => $provider->services()
+    //                 ->where('is_active', true)
+    //                 ->where('id', '!=', $service->id)
+    //                 ->with('category')
+    //                 ->limit(3)
+    //                 ->get()
+    //                 ->map(function ($otherService) {
+    //                     return [
+    //                         'id' => $otherService->id,
+    //                         'title' => $otherService->title,
+    //                         'formatted_price' => $otherService->formatted_price,
+    //                         'category' => [
+    //                             'name' => $otherService->category->name
+    //                         ]
+    //                     ];
+    //                 })
+    //         ];
+
+    //         return response()->json([
+    //             'success' => true,
+    //             'data' => $serviceData,
+    //             'provider' => $providerData,
+    //             'is_favorite' => false, // TODO: Check if user favorited this service
+    //             'message' => 'Service details retrieved successfully'
+    //         ]);
+    //     } catch (\Exception $e) {
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'Failed to retrieve service details',
+    //             'error' => $e->getMessage()
+    //         ], 500);
+    //     }
+    // }
+
+
     public function show(Service $service)
     {
         try {
             // Increment view count
             $service->incrementViews();
 
-            $service->load(['category', 'provider.providerProfile', 'appointments' => function ($query) {
-                $query->completed()->with('client:id,first_name,last_name');
-            }]);
+            // Load related data
+            $service->load([
+                'category',
+                'provider.providerProfile',
+                'appointments' => function ($query) {
+                    $query->completed()
+                        ->whereNotNull('provider_rating')
+                        ->with('client:id,first_name,last_name')
+                        ->latest()
+                        ->limit(5);
+                }
+            ]);
 
-            $formattedService = $this->formatServiceResponse($service, true);
+            // Helper function to safely parse JSON fields
+            $parseJsonField = function ($field) {
+                if (is_null($field)) return null;
+                if (is_array($field)) return $field;
+                if (is_string($field)) {
+                    try {
+                        $decoded = json_decode($field, true);
+                        return is_array($decoded) ? $decoded : [$field];
+                    } catch (\Exception $e) {
+                        // If not valid JSON, split by common delimiters
+                        return array_map('trim', preg_split('/[,\n;]/', $field));
+                    }
+                }
+                return null;
+            };
+
+            // Format service data with ALL details
+            $serviceData = [
+                'id' => $service->id,
+                'title' => $service->title,
+                'description' => $service->description,
+
+                // Pricing information
+                'base_price' => $service->base_price,
+                'formatted_price' => $service->formatted_price,
+                'pricing_type' => $service->pricing_type,
+
+                // Service details
+                'duration_hours' => $service->duration_hours,
+                'duration' => $service->duration_hours ? ($service->duration_hours . ' hours') : 'Flexible duration',
+
+                // Service content - safely parsed JSON fields
+                'includes' => $parseJsonField($service->includes),
+                'requirements' => $parseJsonField($service->requirements),
+                'service_areas' => $parseJsonField($service->service_areas),
+
+                // Images
+                'service_images' => $service->service_image_urls,
+                'service_image_urls' => $service->service_image_urls,
+                'first_image_url' => $service->first_image_url,
+                'images' => collect($service->service_image_urls)->map(function ($url) {
+                    return ['url' => $url, 'alt' => 'Service image'];
+                })->toArray(),
+
+                // Ratings and reviews
+                'average_rating' => $service->average_rating,
+                'reviews_count' => $service->appointments()->completed()->whereNotNull('provider_rating')->count(),
+
+                // Category
+                'category' => [
+                    'id' => $service->category->id,
+                    'name' => $service->category->name,
+                    'icon' => $service->category->icon,
+                    'color' => $service->category->color,
+                ],
+
+                // Location and availability
+                'location' => $service->location,
+                'distance' => $service->distance ?? null,
+                'availability_status' => 'available', // Default, can be dynamic
+                'next_available' => 'Today',
+
+                // Additional service info
+                'service_location' => 'At your location', // Default
+                'cancellation_policy' => 'Free cancellation up to 24 hours before service',
+                'languages' => ['English', 'Sinhala'], // Default or from provider
+
+                // Stats
+                'views_count' => $service->views_count,
+                'bookings_count' => $service->bookings_count,
+            ];
+
+            // Format provider data (same as before)
+            $provider = $service->provider;
+            $providerProfile = $provider->providerProfile;
+
+            $providerData = [
+                'id' => $provider->id,
+                'first_name' => $provider->first_name,
+                'last_name' => $provider->last_name,
+                'name' => $provider->first_name . ' ' . $provider->last_name,
+                'business_name' => $providerProfile->business_name ?? null,
+                'profile_image_url' => $provider->profile_picture ? \Storage::url($provider->profile_picture) : null,
+                'bio' => $providerProfile->bio ?? 'Professional service provider with experience.',
+                'is_verified' => $providerProfile->isVerified() ?? false,
+
+                // Service area (not personal address)
+                'city' => $providerProfile->city ?? 'Colombo',
+                'province' => $providerProfile->province ?? 'Western Province',
+                'service_radius' => $providerProfile->service_area_radius ?? 25,
+                'travel_fee' => 0, // Add if you have this field
+
+                // Performance stats
+                'average_rating' => $providerProfile->average_rating ?? 0,
+                'reviews_count' => $providerProfile->total_reviews ?? 0,
+                'years_experience' => $providerProfile->years_of_experience ?? 0,
+                'response_time' => $this->calculateAverageResponseTime($service) ?? '2 hours',
+                'total_services' => $provider->services()->where('is_active', true)->count(),
+                'completed_bookings' => $provider->providerAppointments()->where('status', 'completed')->count(),
+
+                // Other services by this provider
+                'other_services' => $provider->services()
+                    ->where('is_active', true)
+                    ->where('id', '!=', $service->id)
+                    ->with('category')
+                    ->limit(3)
+                    ->get()
+                    ->map(function ($otherService) {
+                        return [
+                            'id' => $otherService->id,
+                            'title' => $otherService->title,
+                            'formatted_price' => $otherService->formatted_price,
+                            'category' => [
+                                'name' => $otherService->category->name
+                            ]
+                        ];
+                    })
+            ];
 
             return response()->json([
                 'success' => true,
-                'data' => $formattedService
-            ], 200);
+                'data' => $serviceData,
+                'provider' => $providerData,
+                'is_favorite' => false, // TODO: Check if user favorited this service
+                'message' => 'Service details retrieved successfully'
+            ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to fetch service',
+                'message' => 'Failed to retrieve service details',
                 'error' => $e->getMessage()
             ], 500);
         }

@@ -199,6 +199,35 @@ const ServiceDetail = () => {
         console.log("Contact provider:", provider.id);
     };
 
+    const safeParseJson = (field) => {
+        if (!field) return [];
+
+        // If it's already an array, return it
+        if (Array.isArray(field)) return field;
+
+        // If it's an object, return its values
+        if (typeof field === "object") return Object.values(field);
+
+        // If it's a string, try to parse it
+        if (typeof field === "string") {
+            try {
+                const parsed = JSON.parse(field);
+                return Array.isArray(parsed)
+                    ? parsed
+                    : Object.values(parsed || {});
+            } catch (error) {
+                // console.warn("Failed to parse JSON field:", field);
+                // If parsing fails, split by common delimiters
+                return field
+                    .split(/[,\n;]/)
+                    .map((item) => item.trim())
+                    .filter((item) => item.length > 0);
+            }
+        }
+
+        return [];
+    };
+
     if (loading) {
         return (
             <ClientLayout>
@@ -414,122 +443,85 @@ const ServiceDetail = () => {
                                     </div>
 
                                     {/* Service Features */}
-                                    {service.features &&
-                                        service.features.length > 0 && (
-                                            <div className="card border-0 shadow-sm mb-4">
-                                                <div className="card-body">
-                                                    <h5 className="fw-bold mb-3">
-                                                        What's Included
-                                                    </h5>
-                                                    <div className="row">
-                                                        {service.features.map(
-                                                            (
-                                                                feature,
-                                                                index
-                                                            ) => (
-                                                                <div
-                                                                    key={index}
-                                                                    className="col-md-6 mb-2"
-                                                                >
-                                                                    <div className="d-flex align-items-center">
-                                                                        <i className="fas fa-check-circle text-success me-2"></i>
-                                                                        <span>
-                                                                            {
-                                                                                feature
-                                                                            }
-                                                                        </span>
-                                                                    </div>
-                                                                </div>
-                                                            )
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        )}
-
-                                    {/* Service Requirements */}
-                                    {service.requirements &&
-                                        service.requirements.length > 0 && (
-                                            <div className="card border-0 shadow-sm mb-4">
-                                                <div className="card-body">
-                                                    <h5 className="fw-bold mb-3">
-                                                        Requirements
-                                                    </h5>
-                                                    <ul className="list-unstyled">
-                                                        {service.requirements.map(
-                                                            (
-                                                                requirement,
-                                                                index
-                                                            ) => (
-                                                                <li
-                                                                    key={index}
-                                                                    className="mb-2"
-                                                                >
-                                                                    <i className="fas fa-info-circle text-info me-2"></i>
-                                                                    {
-                                                                        requirement
-                                                                    }
-                                                                </li>
-                                                            )
-                                                        )}
-                                                    </ul>
-                                                </div>
-                                            </div>
-                                        )}
-
-                                    {/* Service Area */}
-                                    <div className="card border-0 shadow-sm mb-4">
-                                        <div className="card-body">
-                                            <h5 className="fw-bold mb-3">
-                                                Service Area
-                                            </h5>
-                                            <div className="service-area">
+                                    {service.includes && (
+                                        <div className="card border-0 shadow-sm mb-4">
+                                            <div className="card-body">
+                                                <h5 className="fw-bold mb-3">
+                                                    What's Included
+                                                </h5>
                                                 <div className="row">
-                                                    <div className="col-md-6">
-                                                        <div className="d-flex align-items-center mb-2">
-                                                            <i className="fas fa-map-marker-alt text-purple me-2"></i>
-                                                            <span>
-                                                                Primary
-                                                                Location:{" "}
-                                                                {provider.city},{" "}
-                                                                {
-                                                                    provider.province
-                                                                }
-                                                            </span>
-                                                        </div>
-                                                        <div className="d-flex align-items-center">
-                                                            <i className="fas fa-globe text-purple me-2"></i>
-                                                            <span>
-                                                                Service Radius:{" "}
-                                                                {provider.service_radius ||
-                                                                    25}
-                                                                km
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                    <div className="col-md-6">
-                                                        {provider.travel_fee >
-                                                            0 && (
-                                                            <div className="travel-fee">
-                                                                <small className="text-muted">
-                                                                    Travel
-                                                                    charges may
-                                                                    apply
-                                                                </small>
-                                                                <div className="fw-semibold">
-                                                                    Rs.{" "}
-                                                                    {
-                                                                        provider.travel_fee
-                                                                    }
-                                                                    /km
-                                                                </div>
+                                                    {safeParseJson(
+                                                        service.includes
+                                                    ).map((feature, index) => (
+                                                        <div
+                                                            key={index}
+                                                            className="col-md-6 mb-2"
+                                                        >
+                                                            <div className="d-flex align-items-center">
+                                                                <i className="fas fa-check-circle text-success me-2"></i>
+                                                                <span>
+                                                                    {feature}
+                                                                </span>
                                                             </div>
-                                                        )}
-                                                    </div>
+                                                        </div>
+                                                    ))}
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
+                                    )}
+
+                                    {/* Service Requirements */}
+                                    {service.requirements && (
+                                        <div className="card border-0 shadow-sm mb-4">
+                                            <div className="card-body">
+                                                <h5 className="fw-bold mb-3">
+                                                    Requirements
+                                                </h5>
+                                                <ul className="list-unstyled">
+                                                    {safeParseJson(
+                                                        service.requirements
+                                                    ).map(
+                                                        (
+                                                            requirement,
+                                                            index
+                                                        ) => (
+                                                            <li
+                                                                key={index}
+                                                                className="mb-2"
+                                                            >
+                                                                <i className="fas fa-info-circle text-info me-2"></i>
+                                                                {requirement}
+                                                            </li>
+                                                        )
+                                                    )}
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Service Area */}
+                                    {service.service_areas && (
+                                        <div className="card border-0 shadow-sm mb-4">
+                                            <div className="card-body">
+                                                <h5 className="fw-bold mb-3">
+                                                    Service Areas
+                                                </h5>
+                                                <div className="service-areas">
+                                                    {safeParseJson(
+                                                        service.service_areas
+                                                    ).map((area, index) => (
+                                                        <span
+                                                            key={index}
+                                                            className="badge bg-light text-dark me-2 mb-2"
+                                                        >
+                                                            <i className="fas fa-map-marker-alt me-1"></i>
+                                                            {area}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             )}
 
@@ -718,18 +710,35 @@ const ServiceDetail = () => {
                                     <div className="pricing-info mb-4">
                                         <div className="price d-flex align-items-baseline mb-2">
                                             <span className="price-amount fw-bold h4 text-purple mb-0">
-                                                Rs. {service.price}
+                                                {service.formatted_price ||
+                                                    `Rs. ${service.base_price}`}
                                             </span>
-                                            {service.pricing_type && (
+                                            {/* {service.pricing_type && (
                                                 <span className="price-unit text-muted ms-1">
                                                     /{service.pricing_type}
                                                 </span>
-                                            )}
+                                            )} */}
+                                        </div>
+
+                                        {/* Pricing Type Info */}
+                                        <div className="pricing-details mb-3">
+                                            <small className="text-muted">
+                                                {service.pricing_type ===
+                                                    "hourly" && "Hourly rate"}
+                                                {service.pricing_type ===
+                                                    "fixed" &&
+                                                    "Fixed price for complete service"}
+                                                {service.pricing_type ===
+                                                    "custom" &&
+                                                    "Custom pricing based on requirements"}
+                                                {!service.pricing_type &&
+                                                    "Service pricing"}
+                                            </small>
                                         </div>
 
                                         {service.original_price &&
                                             service.original_price >
-                                                service.price && (
+                                                service.base_price && (
                                                 <div className="discount-info">
                                                     <span className="original-price text-muted text-decoration-line-through me-2">
                                                         Rs.{" "}
@@ -738,7 +747,7 @@ const ServiceDetail = () => {
                                                     <span className="discount badge bg-success">
                                                         {Math.round(
                                                             (1 -
-                                                                service.price /
+                                                                service.base_price /
                                                                     service.original_price) *
                                                                 100
                                                         )}
@@ -998,7 +1007,26 @@ const ServiceDetail = () => {
                                             Duration:
                                         </span>
                                         <span className="fw-semibold">
-                                            {service.duration || "Varies"}
+                                            {service.duration ||
+                                                (service.duration_hours
+                                                    ? `${service.duration_hours} hours`
+                                                    : "Flexible")}
+                                        </span>
+                                    </div>
+
+                                    <div className="info-item d-flex justify-content-between mb-2">
+                                        <span className="text-muted">
+                                            Pricing Type:
+                                        </span>
+                                        <span className="fw-semibold">
+                                            {service.pricing_type ===
+                                                "hourly" && "Per Hour"}
+                                            {service.pricing_type === "fixed" &&
+                                                "Fixed Price"}
+                                            {service.pricing_type ===
+                                                "custom" && "Custom Quote"}
+                                            {!service.pricing_type &&
+                                                "Standard"}
                                         </span>
                                     </div>
 
@@ -1023,15 +1051,42 @@ const ServiceDetail = () => {
                                     </div>
 
                                     {service.languages && (
-                                        <div className="info-item d-flex justify-content-between">
+                                        <div className="info-item d-flex justify-content-between mb-2">
                                             <span className="text-muted">
                                                 Languages:
                                             </span>
                                             <span className="fw-semibold">
-                                                {service.languages.join(", ")}
+                                                {Array.isArray(
+                                                    service.languages
+                                                )
+                                                    ? service.languages.join(
+                                                          ", "
+                                                      )
+                                                    : service.languages}
                                             </span>
                                         </div>
                                     )}
+
+                                    {/* Service Stats */}
+                                    <hr className="my-3" />
+                                    <div className="service-stats">
+                                        <div className="stat-item d-flex justify-content-between mb-1">
+                                            <small className="text-muted">
+                                                Views:
+                                            </small>
+                                            <small className="fw-semibold">
+                                                {service.views_count || 0}
+                                            </small>
+                                        </div>
+                                        <div className="stat-item d-flex justify-content-between">
+                                            <small className="text-muted">
+                                                Bookings:
+                                            </small>
+                                            <small className="fw-semibold">
+                                                {service.bookings_count || 0}
+                                            </small>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>

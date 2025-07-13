@@ -34,6 +34,9 @@ Route::prefix('providers')->group(function () {
     Route::get('/{provider}/services', [ProviderController::class, 'getServices']);
     Route::get('/{provider}/availability', [ProviderController::class, 'getAvailability']);
     Route::get('/providers/{provider}/reviews', [ProviderController::class, 'getReviews']);
+    Route::get('/{provider}/availability/slots', [ProviderController::class, 'getAvailableSlots']);
+    Route::get('/{provider}/availability/weekly', [ProviderController::class, 'getWeeklyAvailability']);
+    Route::get('/{provider}/availability/check', [ProviderController::class, 'checkAvailability']);
 });
 
 // Search Analytics & Suggestions
