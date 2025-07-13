@@ -24,6 +24,8 @@ import ServicesBrowse from "./pages/client/services/ServicesBrowse";
 import ServiceSearch from "./pages/client/services/ServiceSearch";
 import ServiceDetail from "./pages/client/services/ServiceDetail";
 import QuotesList from "./pages/client/quotes/QuotesList";
+import AppointmentsList from "./pages/client/bookings/AppointmentsList";
+import AppointmentDetail from "./pages/client/bookings/AppointmentDetail";
 
 // Provider Pages
 import ProviderDashboard from "./pages/provider/Dashboard";
@@ -275,104 +277,27 @@ function App() {
                                             {/* Appointment Management */}
                                             <Route
                                                 path="appointments"
-                                                element={
-                                                    <DashboardLayout>
-                                                        <div className="container-fluid">
-                                                            <div className="d-flex justify-content-between align-items-center mb-4">
-                                                                <h2 className="fw-bold">
-                                                                    My
-                                                                    Appointments
-                                                                </h2>
-                                                                <div className="d-flex gap-2">
-                                                                    <button className="btn btn-outline-secondary">
-                                                                        <i className="fas fa-calendar me-2"></i>
-                                                                        Calendar
-                                                                        View
-                                                                    </button>
-                                                                    <button className="btn btn-primary">
-                                                                        <i className="fas fa-plus me-2"></i>
-                                                                        Book New
-                                                                    </button>
-                                                                </div>
-                                                            </div>
-
-                                                            <div className="card border-0 shadow-sm">
-                                                                <div className="card-header bg-white">
-                                                                    <ul className="nav nav-tabs card-header-tabs">
-                                                                        <li className="nav-item">
-                                                                            <button className="nav-link active">
-                                                                                Upcoming
-                                                                            </button>
-                                                                        </li>
-                                                                        <li className="nav-item">
-                                                                            <button className="nav-link">
-                                                                                Completed
-                                                                            </button>
-                                                                        </li>
-                                                                        <li className="nav-item">
-                                                                            <button className="nav-link">
-                                                                                Cancelled
-                                                                            </button>
-                                                                        </li>
-                                                                    </ul>
-                                                                </div>
-                                                                <div className="card-body text-center py-5">
-                                                                    <i className="fas fa-calendar-check fa-4x text-muted mb-3"></i>
-                                                                    <h4>
-                                                                        Appointment
-                                                                        management
-                                                                        coming
-                                                                        soon
-                                                                    </h4>
-                                                                    <p className="text-muted">
-                                                                        Full
-                                                                        appointment
-                                                                        tracking
-                                                                        and
-                                                                        management
-                                                                        features
-                                                                        are
-                                                                        being
-                                                                        developed.
-                                                                    </p>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </DashboardLayout>
-                                                }
+                                                element={<AppointmentsList />}
                                             />
 
                                             <Route
                                                 path="appointments/:id"
-                                                element={
-                                                    <DashboardLayout>
-                                                        <div className="container-fluid">
-                                                            <h2 className="fw-bold mb-4">
-                                                                Appointment
-                                                                Details
-                                                            </h2>
-                                                            <div className="card border-0 shadow-sm">
-                                                                <div className="card-body text-center py-5">
-                                                                    <i className="fas fa-calendar-alt fa-4x text-muted mb-3"></i>
-                                                                    <h4>
-                                                                        Appointment
-                                                                        details
-                                                                        page
-                                                                        coming
-                                                                        soon
-                                                                    </h4>
-                                                                    <p className="text-muted">
-                                                                        View and
-                                                                        manage
-                                                                        your
-                                                                        appointment
-                                                                        details.
-                                                                    </p>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </DashboardLayout>
-                                                }
+                                                element={<AppointmentDetail />}
+                                            />
+
+                                            <Route
+                                                path="appointments/upcoming"
+                                                element={<AppointmentsList />} // Will use URL params to filter
+                                            />
+
+                                            <Route
+                                                path="appointments/past"
+                                                element={<AppointmentsList />}
+                                            />
+
+                                            <Route
+                                                path="appointments/cancelled"
+                                                element={<AppointmentsList />}
                                             />
 
                                             {/* Other client routes */}
