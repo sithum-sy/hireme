@@ -2,6 +2,9 @@ import React, { useState, useEffect } from "react";
 import { Link, useSearchParams, useLocation } from "react-router-dom";
 import ClientLayout from "../../../components/layouts/ClientLayout";
 import LoadingSpinner from "../../../components/LoadingSpinner";
+import CancelAppointmentModal from "../../../components/client/appointments/CancelAppointmentModal";
+import RescheduleModal from "../../../components/client/appointments/RescheduleModal";
+import ReviewModal from "../../../components/client/appointments/ReviewModal";
 
 const AppointmentsList = () => {
     const [searchParams, setSearchParams] = useSearchParams();
@@ -22,6 +25,10 @@ const AppointmentsList = () => {
         total: 0,
         per_page: 15,
     });
+    const [showCancelModal, setShowCancelModal] = useState(false);
+    const [showRescheduleModal, setShowRescheduleModal] = useState(false);
+    const [showReviewModal, setShowReviewModal] = useState(false);
+    const [selectedAppointment, setSelectedAppointment] = useState(null);
 
     // Load appointments on component mount and filter changes
     useEffect(() => {
@@ -90,6 +97,42 @@ const AppointmentsList = () => {
             if (v && v !== "all") newParams.set(k, v);
         });
         setSearchParams(newParams);
+    };
+
+    // Check if appointment can be cancelled (24 hour policy)
+    const canCancelAppointment = (appointmentDate, appointmentTime, status) => {
+        if (!["pending", "confirmed"].includes(status)) return false;
+        if (!appointmentDate || !appointmentTime) return false;
+
+        try {
+            let dateObj;
+
+            if (appointmentDate.includes("-")) {
+                const [year, month, day] = appointmentDate.split("-");
+                const [hours, minutes] = appointmentTime.split(":");
+                dateObj = new Date(
+                    parseInt(year),
+                    parseInt(month) - 1,
+                    parseInt(day),
+                    parseInt(hours),
+                    parseInt(minutes)
+                );
+            } else {
+                dateObj = new Date(`${appointmentDate}T${appointmentTime}`);
+            }
+
+            if (isNaN(dateObj.getTime())) {
+                return false;
+            }
+
+            const now = new Date();
+            const hoursUntilAppointment = (dateObj - now) / (1000 * 60 * 60);
+
+            return hoursUntilAppointment > 24;
+        } catch (error) {
+            console.warn("Error checking cancellation policy:", error);
+            return false;
+        }
     };
 
     // Get status badge styling
@@ -185,6 +228,54 @@ const AppointmentsList = () => {
                 time: time ? time.toString() : "Invalid time",
             };
         }
+    };
+
+    const handleCancelClick = (appointment) => {
+        setSelectedAppointment(appointment);
+        setShowCancelModal(true);
+    };
+
+    const handleRescheduleClick = (appointment) => {
+        setSelectedAppointment(appointment);
+        setShowRescheduleModal(true);
+    };
+
+    const handleReviewClick = (appointment) => {
+        setSelectedAppointment(appointment);
+        setShowReviewModal(true);
+    };
+
+    const handleCancellationSuccess = (updatedAppointment) => {
+        // Update the appointment in the list
+        setAppointments((prev) =>
+            prev.map((apt) =>
+                apt.id === updatedAppointment.id ? updatedAppointment : apt
+            )
+        );
+        setShowCancelModal(false);
+        setSelectedAppointment(null);
+    };
+
+    const handleRescheduleSuccess = (updatedAppointment) => {
+        // Update the appointment in the list
+        setAppointments((prev) =>
+            prev.map((apt) =>
+                apt.id === updatedAppointment.id ? updatedAppointment : apt
+            )
+        );
+        setShowRescheduleModal(false);
+        setSelectedAppointment(null);
+    };
+
+    const handleReviewSuccess = (updatedAppointment) => {
+        // Update the appointment in the list
+        setAppointments((prev) =>
+            prev.map((apt) =>
+                apt.id === updatedAppointment.id ? updatedAppointment : apt
+            )
+        );
+        setShowReviewModal(false);
+        setSelectedAppointment(null);
     };
 
     return (
@@ -305,6 +396,13 @@ const AppointmentsList = () => {
                                     const dateTime = formatDateTime(
                                         appointment.appointment_date,
                                         appointment.appointment_time
+                                    );
+
+                                    // Check if this appointment can be cancelled
+                                    const canCancel = canCancelAppointment(
+                                        appointment.appointment_date,
+                                        appointment.appointment_time,
+                                        appointment.status
                                     );
 
                                     return (
@@ -436,23 +534,60 @@ const AppointmentsList = () => {
 
                                                             {/* Status-specific actions */}
                                                             {appointment.status ===
-                                                                "pending" && (
-                                                                <button className="btn btn-outline-danger btn-sm">
-                                                                    <i className="fas fa-times me-1"></i>
-                                                                    Cancel
-                                                                </button>
-                                                            )}
+                                                                "pending" &&
+                                                                canCancel && (
+                                                                    <button
+                                                                        className="btn btn-outline-danger btn-sm"
+                                                                        onClick={() =>
+                                                                            handleCancelClick(
+                                                                                appointment
+                                                                            )
+                                                                        }
+                                                                    >
+                                                                        <i className="fas fa-times me-1"></i>
+                                                                        Cancel
+                                                                    </button>
+                                                                )}
                                                             {appointment.status ===
                                                                 "confirmed" && (
-                                                                <button className="btn btn-outline-warning btn-sm">
-                                                                    <i className="fas fa-edit me-1"></i>
-                                                                    Reschedule
-                                                                </button>
+                                                                <>
+                                                                    <button
+                                                                        className="btn btn-outline-warning btn-sm me-2"
+                                                                        onClick={() =>
+                                                                            handleRescheduleClick(
+                                                                                appointment
+                                                                            )
+                                                                        }
+                                                                    >
+                                                                        <i className="fas fa-edit me-1"></i>
+                                                                        Reschedule
+                                                                    </button>
+                                                                    {canCancel && (
+                                                                        <button
+                                                                            className="btn btn-outline-danger btn-sm"
+                                                                            onClick={() =>
+                                                                                handleCancelClick(
+                                                                                    appointment
+                                                                                )
+                                                                            }
+                                                                        >
+                                                                            <i className="fas fa-times me-1"></i>
+                                                                            Cancel
+                                                                        </button>
+                                                                    )}
+                                                                </>
                                                             )}
                                                             {appointment.status ===
                                                                 "completed" &&
                                                                 !appointment.provider_rating && (
-                                                                    <button className="btn btn-outline-success btn-sm">
+                                                                    <button
+                                                                        className="btn btn-outline-success btn-sm"
+                                                                        onClick={() =>
+                                                                            handleReviewClick(
+                                                                                appointment
+                                                                            )
+                                                                        }
+                                                                    >
                                                                         <i className="fas fa-star me-1"></i>
                                                                         Review
                                                                     </button>
@@ -678,6 +813,41 @@ const AppointmentsList = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Modals */}
+            {selectedAppointment && (
+                <>
+                    <CancelAppointmentModal
+                        show={showCancelModal}
+                        onHide={() => {
+                            setShowCancelModal(false);
+                            setSelectedAppointment(null);
+                        }}
+                        appointment={selectedAppointment}
+                        onCancellationSuccess={handleCancellationSuccess}
+                    />
+
+                    <RescheduleModal
+                        show={showRescheduleModal}
+                        onHide={() => {
+                            setShowRescheduleModal(false);
+                            setSelectedAppointment(null);
+                        }}
+                        appointment={selectedAppointment}
+                        onRescheduleSuccess={handleRescheduleSuccess}
+                    />
+
+                    <ReviewModal
+                        show={showReviewModal}
+                        onHide={() => {
+                            setShowReviewModal(false);
+                            setSelectedAppointment(null);
+                        }}
+                        appointment={selectedAppointment}
+                        onReviewSuccess={handleReviewSuccess}
+                    />
+                </>
+            )}
 
             {/* Custom Styles */}
             <style>{`

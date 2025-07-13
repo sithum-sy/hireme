@@ -2,6 +2,10 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import ClientLayout from "../../../components/layouts/ClientLayout";
 import LoadingSpinner from "../../../components/LoadingSpinner";
+import CancelAppointmentModal from "../../../components/client/appointments/CancelAppointmentModal";
+import RescheduleModal from "../../../components/client/appointments/RescheduleModal";
+import ReviewModal from "../../../components/client/appointments/ReviewModal";
+import ContactProvider from "../../../components/client/appointments/ContactProvider";
 
 const AppointmentDetail = () => {
     const { id } = useParams();
@@ -12,6 +16,10 @@ const AppointmentDetail = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [actionLoading, setActionLoading] = useState(false);
+    const [showCancelModal, setShowCancelModal] = useState(false);
+    const [showRescheduleModal, setShowRescheduleModal] = useState(false);
+    const [showReviewModal, setShowReviewModal] = useState(false);
+    const [showContactPanel, setShowContactPanel] = useState(false);
 
     // Load appointment details on component mount
     useEffect(() => {
@@ -298,43 +306,50 @@ const AppointmentDetail = () => {
                         {appointment.status === "pending" && canCancel && (
                             <button
                                 className="btn btn-outline-danger me-2"
-                                onClick={handleCancelAppointment}
+                                onClick={() => setShowCancelModal(true)}
                                 disabled={actionLoading}
                             >
-                                {actionLoading ? (
-                                    <>
-                                        <span className="spinner-border spinner-border-sm me-2"></span>
-                                        Cancelling...
-                                    </>
-                                ) : (
-                                    <>
-                                        <i className="fas fa-times me-2"></i>
-                                        Cancel Appointment
-                                    </>
-                                )}
+                                <i className="fas fa-times me-2"></i>
+                                Cancel Appointment
                             </button>
                         )}
 
-                        {appointment.status === "confirmed" && canCancel && (
+                        {appointment.status === "confirmed" && (
                             <>
-                                <button className="btn btn-outline-warning me-2">
+                                <button
+                                    className="btn btn-outline-warning me-2"
+                                    onClick={() => setShowRescheduleModal(true)}
+                                >
                                     <i className="fas fa-edit me-2"></i>
                                     Request Reschedule
                                 </button>
                                 <button
-                                    className="btn btn-outline-danger me-2"
-                                    onClick={handleCancelAppointment}
-                                    disabled={actionLoading}
+                                    className="btn btn-outline-info me-2"
+                                    onClick={() =>
+                                        setShowContactPanel(!showContactPanel)
+                                    }
                                 >
-                                    <i className="fas fa-times me-2"></i>
-                                    Cancel
+                                    <i className="fas fa-comments me-2"></i>
+                                    Contact Provider
                                 </button>
+                                {canCancel && (
+                                    <button
+                                        className="btn btn-outline-danger me-2"
+                                        onClick={() => setShowCancelModal(true)}
+                                    >
+                                        <i className="fas fa-times me-2"></i>
+                                        Cancel
+                                    </button>
+                                )}
                             </>
                         )}
 
                         {appointment.status === "completed" &&
                             !appointment.provider_rating && (
-                                <button className="btn btn-outline-success me-2">
+                                <button
+                                    className="btn btn-outline-success me-2"
+                                    onClick={() => setShowReviewModal(true)}
+                                >
                                     <i className="fas fa-star me-2"></i>
                                     Write Review
                                 </button>
@@ -813,6 +828,39 @@ const AppointmentDetail = () => {
                     </div>
                 </div>
 
+                {/* Contact Provider Panel */}
+                {showContactPanel && appointment.status === "confirmed" && (
+                    <div className="contact-provider-section mt-4">
+                        <div className="card border-0 shadow-sm">
+                            <div className="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
+                                <h6 className="fw-bold mb-0">
+                                    <i className="fas fa-comments me-2 text-primary"></i>
+                                    Contact Provider
+                                </h6>
+                                <button
+                                    className="btn btn-sm btn-outline-secondary"
+                                    onClick={() => setShowContactPanel(false)}
+                                >
+                                    <i className="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <div className="card-body">
+                                <ContactProvider
+                                    appointment={appointment}
+                                    onClose={() => setShowContactPanel(false)}
+                                    onMessageSent={(messageData) => {
+                                        console.log(
+                                            "Message sent:",
+                                            messageData
+                                        );
+                                        // You can add message to appointment history here
+                                    }}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {/* Back Button */}
                 <div className="mt-4">
                     <Link
@@ -824,6 +872,37 @@ const AppointmentDetail = () => {
                     </Link>
                 </div>
             </div>
+
+            {/* Modals */}
+            <CancelAppointmentModal
+                show={showCancelModal}
+                onHide={() => setShowCancelModal(false)}
+                appointment={appointment}
+                onCancellationSuccess={(updatedAppointment) => {
+                    setAppointment(updatedAppointment);
+                    setShowCancelModal(false);
+                }}
+            />
+
+            <RescheduleModal
+                show={showRescheduleModal}
+                onHide={() => setShowRescheduleModal(false)}
+                appointment={appointment}
+                onRescheduleSuccess={(updatedAppointment) => {
+                    setAppointment(updatedAppointment);
+                    setShowRescheduleModal(false);
+                }}
+            />
+
+            <ReviewModal
+                show={showReviewModal}
+                onHide={() => setShowReviewModal(false)}
+                appointment={appointment}
+                onReviewSuccess={(updatedAppointment) => {
+                    setAppointment(updatedAppointment);
+                    setShowReviewModal(false);
+                }}
+            />
 
             {/* Custom Styles */}
             <style>{`
