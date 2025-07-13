@@ -639,9 +639,9 @@ class ClientService {
             const cleanedData = {
                 service_id: parseInt(quoteData.service_id),
                 provider_id: parseInt(quoteData.provider_id),
+                message: quoteData.message || "",
                 requested_date: quoteData.requested_date,
                 requested_time: quoteData.requested_time,
-                message: quoteData.message || "",
                 location_type: quoteData.location_type || "client_address",
                 address: quoteData.address || "",
                 city: quoteData.city || "",
@@ -650,6 +650,7 @@ class ClientService {
                 email: quoteData.email || "",
                 special_requirements: quoteData.special_requirements || "",
                 urgency: quoteData.urgency || "normal",
+                quote_type: quoteData.quote_type || "standard",
             };
 
             const response = await axios.post(
@@ -702,6 +703,60 @@ class ClientService {
                     errors: {},
                 };
             }
+        }
+    }
+
+    async acceptQuote(quoteId, options = {}) {
+        try {
+            const response = await axios.patch(
+                `${API_BASE}/quotes/${quoteId}/accept`,
+                {
+                    notes: options.notes || "",
+                    appointment_date: options.appointment_date || null,
+                    appointment_time: options.appointment_time || null,
+                    create_appointment: options.create_appointment || false,
+                }
+            );
+
+            return {
+                success: true,
+                data: response.data.data || response.data,
+                message: response.data.message || "Quote accepted successfully",
+            };
+        } catch (error) {
+            console.error("ClientService - Accept quote error:", error);
+            return {
+                success: false,
+                message:
+                    error.response?.data?.message || "Failed to accept quote",
+                errors: error.response?.data?.errors || {},
+            };
+        }
+    }
+
+    async declineQuote(quoteId, options = {}) {
+        try {
+            const response = await axios.patch(
+                `${API_BASE}/quotes/${quoteId}/decline`,
+                {
+                    notes: options.notes || "",
+                    reason: options.reason || null,
+                }
+            );
+
+            return {
+                success: true,
+                data: response.data.data || response.data,
+                message: response.data.message || "Quote declined",
+            };
+        } catch (error) {
+            console.error("ClientService - Decline quote error:", error);
+            return {
+                success: false,
+                message:
+                    error.response?.data?.message || "Failed to decline quote",
+                errors: error.response?.data?.errors || {},
+            };
         }
     }
 

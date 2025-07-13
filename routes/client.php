@@ -7,6 +7,7 @@ use App\Http\Controllers\API\Client\ServiceController;
 use App\Http\Controllers\API\Client\ProviderController;
 use App\Http\Controllers\API\Client\DashboardController;
 use App\Http\Controllers\API\Client\BookingController;
+use App\Http\Controllers\API\Client\QuoteController;
 
 /*
 |--------------------------------------------------------------------------

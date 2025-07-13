@@ -310,6 +310,37 @@ const DashboardSidebar = ({
                     path: "/client/book",
                 },
                 {
+                    id: "quotes",
+                    icon: "fas fa-quote-left",
+                    label: "My Quotes",
+                    path: "/client/quotes",
+                    // badge: "2", // You can dynamically set this based on pending quotes
+                    children: [
+                        {
+                            label: "All Quotes",
+                            path: "/client/quotes",
+                        },
+                        {
+                            label: "Pending",
+                            path: "/client/quotes?status=pending",
+                            badge: "1",
+                        },
+                        {
+                            label: "Received",
+                            path: "/client/quotes?status=quoted",
+                            badge: "1",
+                        },
+                        {
+                            label: "Accepted",
+                            path: "/client/quotes?status=accepted",
+                        },
+                        {
+                            label: "Declined",
+                            path: "/client/quotes?status=rejected",
+                        },
+                    ],
+                },
+                {
                     id: "messages",
                     icon: "fas fa-comments",
                     label: "Messages",
