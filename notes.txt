@@ -50,4 +50,5 @@ php artisan hireme:create-admin \
   --first-name="Super" \
   --last-name="Admin"
 
-  
+# See log files
+tail -f storage/logs/laravel.log

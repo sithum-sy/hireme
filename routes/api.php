@@ -8,6 +8,7 @@ use App\Http\Controllers\API\ServiceController;
 use App\Http\Controllers\API\AvailabilityController;
 use App\Http\Controllers\API\ProfileController;
 use App\Http\Controllers\API\AppointmentController;
+use App\Http\Controllers\API\LocationController;
 
 /*
 |--------------------------------------------------------------------------
@@ -77,6 +78,12 @@ Route::middleware('auth:sanctum')->group(function () {
     // Staff routes
     Route::prefix('staff')->middleware('role:staff')->group(function () {
         require __DIR__ . '/staff.php';
+    });
+
+
+    Route::prefix('location')->group(function () {
+        Route::get('/service-areas', [LocationController::class, 'getAllServiceAreas']);
+        Route::post('/nearby-areas', [LocationController::class, 'getNearbyServiceAreas']);
     });
 
     // Utility routes

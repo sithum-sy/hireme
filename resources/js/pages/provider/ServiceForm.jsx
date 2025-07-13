@@ -4,6 +4,9 @@ import { useServices } from "../../context/ServicesContext";
 import { useProvider } from "../../context/ProviderContext";
 import ProviderLayout from "../../components/layouts/ProviderLayout";
 import LocationSelector from "../../components/map/LocationSelector";
+import { useLocation } from "../../context/LocationContext";
+// import EnhancedLocationSelector from "../../components/map/EnhancedLocationSelector";
+import { useDynamicAreas } from "../../context/DynamicAreasContext";
 
 const ServiceForm = () => {
     const navigate = useNavigate();
@@ -12,6 +15,19 @@ const ServiceForm = () => {
     const { createService, updateService, getServiceCategories, loading } =
         useServices();
     const { businessStats } = useProvider();
+
+    const {
+        nearbyAreas,
+        loading: locationLoading,
+        getNearbyServiceAreas,
+        getAllServiceAreas,
+    } = useLocation();
+
+    // const { nearbyAreas, loadAreasFromMap } = useDynamicAreas();
+    // const [dynamicAreas, setDynamicAreas] = useState([]);
+
+    const [showAllAreas, setShowAllAreas] = useState(false);
+    const [dynamicAreas, setDynamicAreas] = useState([]);
 
     const [currentStep, setCurrentStep] = useState(1);
     const [formData, setFormData] = useState({
@@ -110,6 +126,20 @@ const ServiceForm = () => {
         }
     }, [isEdit, id]);
 
+    // Watch for location changes to update service areas
+    useEffect(() => {
+        if (formData.latitude && formData.longitude && currentStep === 3) {
+            loadNearbyAreas();
+        }
+    }, [formData.latitude, formData.longitude, currentStep]);
+
+    // Initialize dynamic areas when component mounts
+    useEffect(() => {
+        if (currentStep === 3 && dynamicAreas.length === 0) {
+            loadInitialAreas();
+        }
+    }, [currentStep]);
+
     const loadCategories = async () => {
         const result = await getServiceCategories();
         if (result.success) {
@@ -149,6 +179,36 @@ const ServiceForm = () => {
             location_address: "",
         }));
     };
+
+    // const handleLocationChange = async (location) => {
+    //     setFormData((prev) => ({
+    //         ...prev,
+    //         latitude: location.lat,
+    //         longitude: location.lng,
+    //         location_address: location.address,
+    //         location_city: location.city,
+    //         location_neighborhood: location.neighborhood || "",
+    //         service_radius: location.radius || prev.service_radius,
+    //     }));
+
+    //     // Load nearby areas when location changes
+    //     if (location.lat && location.lng) {
+    //         const areas = await loadAreasFromMap(
+    //             location.lat,
+    //             location.lng,
+    //             location.radius || 30
+    //         );
+    //         setDynamicAreas(areas);
+    //     }
+
+    //     // Clear location errors
+    //     setErrors((prev) => ({
+    //         ...prev,
+    //         latitude: "",
+    //         longitude: "",
+    //         location_address: "",
+    //     }));
+    // };
 
     const handleServiceAreasChange = (area) => {
         setFormData((prev) => ({
@@ -215,6 +275,73 @@ const ServiceForm = () => {
             service_images: prev.service_images.filter((_, i) => i !== index),
         }));
         setImagesPreviews((prev) => prev.filter((_, i) => i !== index));
+    };
+
+    const loadNearbyAreas = async () => {
+        try {
+            console.log(
+                "Loading nearby areas for:",
+                formData.latitude,
+                formData.longitude
+            );
+            const areas = await getNearbyServiceAreas(
+                formData.latitude,
+                formData.longitude,
+                formData.service_radius || 50
+            );
+
+            if (areas && areas.nearby_areas) {
+                // console.log("Nearby areas loaded:", areas.nearby_areas);
+                setDynamicAreas(areas.nearby_areas);
+            } else {
+                // Fallback to hardcoded areas if API fails
+                console.log("No nearby areas found, using fallback");
+                setDynamicAreas(sriLankanAreas.map((area) => ({ name: area })));
+            }
+        } catch (error) {
+            console.error("Error loading nearby areas:", error);
+            // Fallback to hardcoded areas if API fails
+            setDynamicAreas(sriLankanAreas.map((area) => ({ name: area })));
+        }
+    };
+
+    const loadInitialAreas = async () => {
+        if (formData.latitude && formData.longitude) {
+            await loadNearbyAreas();
+        } else {
+            // Load all areas if no location is set
+            const allAreas = await getAllServiceAreas();
+            if (allAreas) {
+                setDynamicAreas(allAreas.map((area) => ({ name: area })));
+            } else {
+                // Final fallback to hardcoded areas
+                setDynamicAreas(sriLankanAreas.map((area) => ({ name: area })));
+            }
+        }
+    };
+
+    const handleShowAllAreas = async () => {
+        try {
+            if (!showAllAreas) {
+                console.log("Loading all service areas...");
+                const allAreas = await getAllServiceAreas();
+                if (allAreas) {
+                    setDynamicAreas(allAreas.map((area) => ({ name: area })));
+                } else {
+                    setDynamicAreas(
+                        sriLankanAreas.map((area) => ({ name: area }))
+                    );
+                }
+            } else {
+                console.log("Loading nearby areas...");
+                await loadNearbyAreas();
+            }
+            setShowAllAreas(!showAllAreas);
+        } catch (error) {
+            console.error("Error toggling areas:", error);
+            // Fallback to hardcoded areas
+            setDynamicAreas(sriLankanAreas.map((area) => ({ name: area })));
+        }
     };
 
     const validateStep = (stepNumber) => {
@@ -395,6 +522,86 @@ const ServiceForm = () => {
     //     }
     // };
 
+    // const handleSubmit = async (e) => {
+    //     e.preventDefault();
+    //     setIsSubmitting(true);
+
+    //     if (!validateStep(currentStep)) {
+    //         setIsSubmitting(false);
+    //         return;
+    //     }
+
+    //     const submitData = new FormData();
+
+    //     // Required fields
+    //     submitData.append("title", formData.title || "");
+    //     submitData.append("description", formData.description || "");
+    //     submitData.append("category_id", formData.category_id || "");
+    //     submitData.append("pricing_type", formData.pricing_type || "fixed");
+    //     submitData.append("base_price", formData.base_price || "0");
+    //     submitData.append("duration_hours", formData.duration_hours || "1");
+
+    //     // Location fields
+    //     submitData.append("latitude", formData.latitude || "");
+    //     submitData.append("longitude", formData.longitude || "");
+    //     submitData.append("location_address", formData.location_address || "");
+    //     submitData.append("service_radius", formData.service_radius || "15");
+
+    //     // Optional fields - always include with empty string if not set
+    //     submitData.append(
+    //         "custom_pricing_description",
+    //         formData.custom_pricing_description || ""
+    //     );
+    //     submitData.append("location_city", formData.location_city || "");
+    //     submitData.append(
+    //         "location_neighborhood",
+    //         formData.location_neighborhood || ""
+    //     );
+    //     submitData.append("includes", formData.includes || ""); // This was missing!
+    //     submitData.append("requirements", formData.requirements || ""); // This was missing!
+
+    //     // Service areas as JSON string
+    //     submitData.append(
+    //         "service_areas",
+    //         JSON.stringify(formData.service_areas || [])
+    //     );
+
+    //     // Images
+    //     if (formData.service_images && formData.service_images.length > 0) {
+    //         formData.service_images.forEach((image, index) => {
+    //             submitData.append(`service_images[]`, image);
+    //         });
+    //     }
+
+    //     // Debug log
+    //     // console.log("=== COMPLETE FORM DATA ===");
+    //     for (let [key, value] of submitData.entries()) {
+    //         // console.log(`${key}:`, value);
+    //     }
+
+    //     try {
+    //         const result = await createService(submitData);
+    //         if (result.success) {
+    //             navigate("/provider/services", {
+    //                 state: {
+    //                     message: "Service created successfully!",
+    //                     type: "success",
+    //                 },
+    //             });
+    //         } else {
+    //             setErrors(result.errors || { general: result.message });
+    //             // Handle step navigation for errors...
+    //         }
+    //     } catch (error) {
+    //         console.error("Form submission error:", error);
+    //         setErrors({
+    //             general: "An unexpected error occurred. Please try again.",
+    //         });
+    //     } finally {
+    //         setIsSubmitting(false);
+    //     }
+    // };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsSubmitting(true);
@@ -414,24 +621,30 @@ const ServiceForm = () => {
         submitData.append("base_price", formData.base_price || "0");
         submitData.append("duration_hours", formData.duration_hours || "1");
 
-        // Location fields
-        submitData.append("latitude", formData.latitude || "");
-        submitData.append("longitude", formData.longitude || "");
-        submitData.append("location_address", formData.location_address || "");
-        submitData.append("service_radius", formData.service_radius || "15");
-
-        // Optional fields - always include with empty string if not set
+        // Location fields - ENSURE THESE ARE ALWAYS INCLUDED
         submitData.append(
-            "custom_pricing_description",
-            formData.custom_pricing_description || ""
+            "latitude",
+            formData.latitude !== null ? formData.latitude : ""
         );
+        submitData.append(
+            "longitude",
+            formData.longitude !== null ? formData.longitude : ""
+        );
+        submitData.append("location_address", formData.location_address || "");
         submitData.append("location_city", formData.location_city || "");
         submitData.append(
             "location_neighborhood",
             formData.location_neighborhood || ""
         );
-        submitData.append("includes", formData.includes || ""); // This was missing!
-        submitData.append("requirements", formData.requirements || ""); // This was missing!
+        submitData.append("service_radius", formData.service_radius || "15");
+
+        // Optional fields
+        submitData.append(
+            "custom_pricing_description",
+            formData.custom_pricing_description || ""
+        );
+        submitData.append("includes", formData.includes || "");
+        submitData.append("requirements", formData.requirements || "");
 
         // Service areas as JSON string
         submitData.append(
@@ -441,16 +654,17 @@ const ServiceForm = () => {
 
         // Images
         if (formData.service_images && formData.service_images.length > 0) {
-            formData.service_images.forEach((image, index) => {
+            formData.service_images.forEach((image) => {
                 submitData.append(`service_images[]`, image);
             });
         }
 
-        // Debug log
-        // console.log("=== COMPLETE FORM DATA ===");
-        for (let [key, value] of submitData.entries()) {
-            // console.log(`${key}:`, value);
-        }
+        // Debug log to verify location data
+        console.log("=== LOCATION DATA BEING SENT ===");
+        console.log("Latitude:", formData.latitude);
+        console.log("Longitude:", formData.longitude);
+        console.log("Address:", formData.location_address);
+        console.log("City:", formData.location_city);
 
         try {
             const result = await createService(submitData);
@@ -924,6 +1138,40 @@ const ServiceForm = () => {
                                             )}
                                         </div>
                                     )}
+                                    {/* {currentStep === 2 && (
+                                        <div className="step-content">
+                                            <div className="mb-4">
+                                                <h6 className="fw-semibold mb-3">
+                                                    <i className="fas fa-map-marker-alt text-orange me-2"></i>
+                                                    Where do you provide this
+                                                    service?
+                                                </h6>
+                                                <p className="text-muted mb-3">
+                                                    Search for your location or
+                                                    click on the map to select
+                                                    your service location.
+                                                </p>
+                                            </div>
+
+                                            <EnhancedLocationSelector
+                                                value={{
+                                                    lat: formData.latitude,
+                                                    lng: formData.longitude,
+                                                    address:
+                                                        formData.location_address,
+                                                    city: formData.location_city,
+                                                    neighborhood:
+                                                        formData.location_neighborhood,
+                                                    radius: formData.service_radius,
+                                                }}
+                                                onChange={handleLocationChange}
+                                                error={
+                                                    errors.location ||
+                                                    errors.location_address
+                                                }
+                                            />
+                                        </div>
+                                    )} */}
 
                                     {/* Step 3: Service Areas */}
                                     {currentStep === 3 && (
@@ -931,58 +1179,197 @@ const ServiceForm = () => {
                                             <div className="mb-4">
                                                 <h6 className="fw-semibold mb-3">
                                                     <i className="fas fa-map text-orange me-2"></i>
-                                                    Which areas do you serve?
+                                                    Select service areas
                                                 </h6>
                                                 <p className="text-muted mb-3">
-                                                    Select all areas where you
-                                                    provide your services. This
-                                                    helps clients know if you're
-                                                    available in their location.
+                                                    {formData.location_city ? (
+                                                        <>
+                                                            Based on your
+                                                            location in{" "}
+                                                            <strong>
+                                                                {
+                                                                    formData.location_city
+                                                                }
+                                                            </strong>
+                                                            , here are the
+                                                            recommended service
+                                                            areas. You can also
+                                                            view all available
+                                                            areas.
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            Select all areas
+                                                            where you provide
+                                                            your services. This
+                                                            helps clients know
+                                                            if you're available
+                                                            in their location.
+                                                        </>
+                                                    )}
                                                 </p>
                                             </div>
 
-                                            <div className="service-areas-grid">
-                                                <div className="row">
-                                                    {sriLankanAreas.map(
-                                                        (area) => (
-                                                            <div
-                                                                key={area}
-                                                                className="col-md-4 col-6 mb-2"
-                                                            >
-                                                                <div className="form-check">
-                                                                    <input
-                                                                        className="form-check-input"
-                                                                        type="checkbox"
-                                                                        id={`area-${area}`}
-                                                                        checked={formData.service_areas.includes(
-                                                                            area
-                                                                        )}
-                                                                        onChange={() =>
-                                                                            handleServiceAreasChange(
-                                                                                area
-                                                                            )
-                                                                        }
-                                                                    />
-                                                                    <label
-                                                                        className="form-check-label"
-                                                                        htmlFor={`area-${area}`}
-                                                                    >
-                                                                        {area}
-                                                                    </label>
-                                                                </div>
-                                                            </div>
-                                                        )
-                                                    )}
+                                            {/* Location-based areas header */}
+                                            <div className="d-flex justify-content-between align-items-center mb-3">
+                                                <div>
+                                                    <h6 className="mb-1">
+                                                        {showAllAreas
+                                                            ? "All Available Areas"
+                                                            : formData.location_city
+                                                            ? `Areas near ${formData.location_city}`
+                                                            : "Available Service Areas"}
+                                                    </h6>
+                                                    {!showAllAreas &&
+                                                        dynamicAreas.length >
+                                                            0 &&
+                                                        formData.location_city && (
+                                                            <small className="text-muted">
+                                                                Showing{" "}
+                                                                {
+                                                                    dynamicAreas.length
+                                                                }{" "}
+                                                                areas within{" "}
+                                                                {formData.service_radius ||
+                                                                    50}
+                                                                km
+                                                            </small>
+                                                        )}
                                                 </div>
+                                                {formData.location_city && (
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-outline-primary btn-sm"
+                                                        onClick={
+                                                            handleShowAllAreas
+                                                        }
+                                                        disabled={
+                                                            locationLoading
+                                                        }
+                                                    >
+                                                        {locationLoading ? (
+                                                            <span className="spinner-border spinner-border-sm me-2"></span>
+                                                        ) : (
+                                                            <i
+                                                                className={`fas fa-${
+                                                                    showAllAreas
+                                                                        ? "location-arrow"
+                                                                        : "list"
+                                                                } me-2`}
+                                                            ></i>
+                                                        )}
+                                                        {showAllAreas
+                                                            ? "Show Nearby Areas"
+                                                            : "Show All Areas"}
+                                                    </button>
+                                                )}
                                             </div>
 
-                                            {errors.service_areas && (
-                                                <div className="alert alert-danger mt-3">
-                                                    <i className="fas fa-exclamation-circle me-2"></i>
-                                                    {errors.service_areas}
+                                            {/* Service areas grid */}
+                                            {locationLoading ? (
+                                                <div className="text-center py-4">
+                                                    <div className="spinner-border text-primary mb-3"></div>
+                                                    <p className="text-muted">
+                                                        Loading service areas...
+                                                    </p>
+                                                </div>
+                                            ) : (
+                                                <div className="service-areas-grid">
+                                                    <div className="row">
+                                                        {dynamicAreas.map(
+                                                            (area, index) => (
+                                                                <div
+                                                                    key={`${area.name}-${index}`}
+                                                                    className="col-md-4 col-6 mb-2"
+                                                                >
+                                                                    <div className="form-check">
+                                                                        <input
+                                                                            className="form-check-input"
+                                                                            type="checkbox"
+                                                                            id={`area-${area.name
+                                                                                .replace(
+                                                                                    /\s+/g,
+                                                                                    "-"
+                                                                                )
+                                                                                .toLowerCase()}`}
+                                                                            checked={formData.service_areas.includes(
+                                                                                area.name
+                                                                            )}
+                                                                            onChange={(
+                                                                                e
+                                                                            ) => {
+                                                                                e.stopPropagation();
+                                                                                handleServiceAreasChange(
+                                                                                    area.name
+                                                                                );
+                                                                            }}
+                                                                        />
+                                                                        <label
+                                                                            className="form-check-label d-flex justify-content-between align-items-center"
+                                                                            htmlFor={`area-${area.name
+                                                                                .replace(
+                                                                                    /\s+/g,
+                                                                                    "-"
+                                                                                )
+                                                                                .toLowerCase()}`}
+                                                                            onClick={(
+                                                                                e
+                                                                            ) =>
+                                                                                e.stopPropagation()
+                                                                            }
+                                                                        >
+                                                                            <span className="flex-grow-1">
+                                                                                {
+                                                                                    area.name
+                                                                                }
+                                                                            </span>
+                                                                            {area.distance && (
+                                                                                <small className="text-muted ms-2 badge bg-light">
+                                                                                    {
+                                                                                        area.distance
+                                                                                    }
+                                                                                    km
+                                                                                </small>
+                                                                            )}
+                                                                        </label>
+                                                                    </div>
+                                                                </div>
+                                                            )
+                                                        )}
+                                                    </div>
+
+                                                    {dynamicAreas.length ===
+                                                        0 &&
+                                                        !locationLoading && (
+                                                            <div className="text-center py-4">
+                                                                <i className="fas fa-map-marker-alt fa-2x text-muted mb-3"></i>
+                                                                <p className="text-muted">
+                                                                    No service
+                                                                    areas found
+                                                                    for your
+                                                                    location.
+                                                                    <br />
+                                                                    {formData.location_city && (
+                                                                        <button
+                                                                            type="button"
+                                                                            className="btn btn-link p-0 mt-2"
+                                                                            onClick={
+                                                                                handleShowAllAreas
+                                                                            }
+                                                                        >
+                                                                            View
+                                                                            all
+                                                                            available
+                                                                            areas
+                                                                        </button>
+                                                                    )}
+                                                                </p>
+                                                            </div>
+                                                        )}
                                                 </div>
                                             )}
 
+                                            {/* Selected areas display */}
                                             {formData.service_areas.length >
                                                 0 && (
                                                 <div className="selected-areas mt-4">
@@ -997,25 +1384,75 @@ const ServiceForm = () => {
                                                     </h6>
                                                     <div className="d-flex flex-wrap gap-2">
                                                         {formData.service_areas.map(
-                                                            (area) => (
-                                                                <span
-                                                                    key={area}
-                                                                    className="badge bg-orange bg-opacity-10 text-orange px-3 py-2"
-                                                                >
-                                                                    {area}
-                                                                    <button
-                                                                        type="button"
-                                                                        className="btn-close btn-close-sm ms-2"
-                                                                        onClick={() =>
-                                                                            handleServiceAreasChange(
-                                                                                area
-                                                                            )
+                                                            (area) => {
+                                                                const areaData =
+                                                                    dynamicAreas.find(
+                                                                        (a) =>
+                                                                            a.name ===
+                                                                            area
+                                                                    );
+                                                                return (
+                                                                    <span
+                                                                        key={
+                                                                            area
                                                                         }
-                                                                    ></button>
-                                                                </span>
-                                                            )
+                                                                        className="badge bg-orange bg-opacity-10 text-orange px-3 py-2 d-flex align-items-center"
+                                                                    >
+                                                                        <span>
+                                                                            {
+                                                                                area
+                                                                            }
+                                                                        </span>
+                                                                        {areaData?.distance && (
+                                                                            <small className="ms-1 opacity-75">
+                                                                                (
+                                                                                {
+                                                                                    areaData.distance
+                                                                                }
+                                                                                km)
+                                                                            </small>
+                                                                        )}
+                                                                        <button
+                                                                            type="button"
+                                                                            className="btn-close btn-close-sm ms-2"
+                                                                            onClick={(
+                                                                                e
+                                                                            ) => {
+                                                                                e.preventDefault();
+                                                                                e.stopPropagation();
+                                                                                handleServiceAreasChange(
+                                                                                    area
+                                                                                );
+                                                                            }}
+                                                                            style={{
+                                                                                fontSize:
+                                                                                    "0.6rem",
+                                                                            }}
+                                                                        ></button>
+                                                                    </span>
+                                                                );
+                                                            }
                                                         )}
                                                     </div>
+                                                </div>
+                                            )}
+
+                                            {/* Location hint */}
+                                            {!formData.location_city && (
+                                                <div className="alert alert-info mt-3">
+                                                    <i className="fas fa-info-circle me-2"></i>
+                                                    <strong>Tip:</strong> Select
+                                                    your service location in
+                                                    Step 2 to see areas near you
+                                                    automatically.
+                                                </div>
+                                            )}
+
+                                            {/* Error display */}
+                                            {errors.service_areas && (
+                                                <div className="alert alert-danger mt-3">
+                                                    <i className="fas fa-exclamation-circle me-2"></i>
+                                                    {errors.service_areas}
                                                 </div>
                                             )}
                                         </div>
@@ -1828,7 +2265,6 @@ const ServiceForm = () => {
                     }
                 }
 
-                /* Enhanced form validation styles */
                 .is-invalid {
                     border-color: #dc3545;
                 }
@@ -1848,13 +2284,11 @@ const ServiceForm = () => {
                     box-shadow: 0 0 0 0.2rem rgba(25, 135, 84, 0.25);
                 }
 
-                /* Loading states */
                 .spinner-border-sm {
                     width: 1rem;
                     height: 1rem;
                 }
 
-                /* Card enhancements */
                 .card {
                     transition: box-shadow 0.15s ease-in-out;
                 }
@@ -1863,7 +2297,6 @@ const ServiceForm = () => {
                     box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1) !important;
                 }
 
-                /* Button enhancements */
                 .btn {
                     transition: all 0.15s ease-in-out;
                 }
@@ -1874,6 +2307,254 @@ const ServiceForm = () => {
 
                 .btn:active {
                     transform: translateY(0);
+                }
+
+                .service-areas-grid .form-check {
+                    padding: 0.75rem;
+                    border-radius: 0.5rem;
+                    transition: all 0.2s ease;
+                    border: 1px solid transparent;
+                }
+
+                .service-areas-grid .form-check:hover {
+                    background-color: #fff3e0;
+                    border-color: #fd7e14;
+                    transform: translateY(-1px);
+                }
+
+                .service-areas-grid
+                    .form-check-input:checked
+                    + .form-check-label {
+                    color: #fd7e14;
+                    font-weight: 600;
+                }
+
+                .service-areas-grid .form-check-label {
+                    cursor: pointer;
+                    margin-bottom: 0;
+                    width: 100%;
+                    line-height: 1.3;
+                }
+
+                /* Distance badges */
+                .service-areas-grid .badge {
+                    font-size: 0.65rem;
+                    padding: 0.25rem 0.5rem;
+                    border-radius: 1rem;
+                    white-space: nowrap;
+                }
+
+                /* Selected areas badges */
+                .selected-areas .badge {
+                    font-size: 0.8rem;
+                    padding: 0.6rem 0.8rem;
+                    border-radius: 1.5rem;
+                    border: 1px solid rgba(253, 126, 20, 0.3);
+                    transition: all 0.2s ease;
+                }
+
+                .selected-areas .badge:hover {
+                    background-color: rgba(253, 126, 20, 0.2) !important;
+                    transform: scale(1.02);
+                }
+
+                .selected-areas .btn-close {
+                    background: none;
+                    opacity: 0.7;
+                    transition: opacity 0.2s ease;
+                }
+
+                .selected-areas .btn-close:hover {
+                    opacity: 1;
+                    transform: scale(1.1);
+                }
+
+                /* Loading states */
+                .spinner-border.text-primary {
+                    color: #fd7e14 !important;
+                }
+
+                /* Info alert styling */
+                .alert-info {
+                    background-color: rgba(13, 110, 253, 0.1);
+                    border-color: rgba(13, 110, 253, 0.2);
+                    color: #084298;
+                }
+
+                /* Enhanced checkbox styling */
+                .service-areas-grid .form-check-input {
+                    width: 1.2em;
+                    height: 1.2em;
+                    margin-top: 0.1em;
+                    border-radius: 0.25em;
+                    border: 2px solid #dee2e6;
+                    transition: all 0.15s ease-in-out;
+                }
+
+                .service-areas-grid .form-check-input:focus {
+                    border-color: #fd7e14;
+                    box-shadow: 0 0 0 0.25rem rgba(253, 126, 20, 0.25);
+                }
+
+                .service-areas-grid .form-check-input:checked {
+                    background-color: #fd7e14;
+                    border-color: #fd7e14;
+                }
+
+                .service-areas-grid .form-check-input:checked:focus {
+                    box-shadow: 0 0 0 0.25rem rgba(253, 126, 20, 0.25);
+                }
+
+                /* Button enhancements */
+                .btn-outline-primary.btn-sm {
+                    padding: 0.375rem 0.75rem;
+                    font-size: 0.875rem;
+                    border-radius: 0.375rem;
+                    transition: all 0.15s ease;
+                }
+
+                .btn-outline-primary:hover {
+                    background-color: #fd7e14;
+                    border-color: #fd7e14;
+                    color: white;
+                    transform: translateY(-1px);
+                }
+
+                /* Empty state styling */
+                .text-center.py-4 {
+                    padding: 2rem 1rem !important;
+                }
+
+                .text-center.py-4 .fa-map-marker-alt {
+                    opacity: 0.5;
+                }
+
+                .btn-link {
+                    color: #fd7e14;
+                    text-decoration: none;
+                }
+
+                .btn-link:hover {
+                    color: #e55100;
+                    text-decoration: underline;
+                }
+
+                /* Responsive improvements */
+                @media (max-width: 768px) {
+                    .service-areas-grid .form-check {
+                        padding: 0.5rem;
+                        margin-bottom: 0.5rem;
+                    }
+
+                    .service-areas-grid .form-check-label {
+                        font-size: 0.9rem;
+                    }
+
+                    .service-areas-grid .badge {
+                        font-size: 0.6rem;
+                        padding: 0.2rem 0.4rem;
+                    }
+
+                    .selected-areas .badge {
+                        font-size: 0.75rem;
+                        padding: 0.4rem 0.6rem;
+                        margin-bottom: 0.5rem;
+                    }
+
+                    .d-flex.justify-content-between {
+                        flex-direction: column;
+                        align-items: flex-start !important;
+                        gap: 0.5rem;
+                    }
+
+                    .btn-outline-primary.btn-sm {
+                        width: 100%;
+                        margin-top: 0.5rem;
+                    }
+                }
+
+                /* Animation for loading areas */
+                @keyframes fadeInUp {
+                    from {
+                        opacity: 0;
+                        transform: translateY(10px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+
+                .service-areas-grid .form-check {
+                    animation: fadeInUp 0.3s ease forwards;
+                }
+
+                .service-areas-grid .form-check:nth-child(1) {
+                    animation-delay: 0.05s;
+                }
+                .service-areas-grid .form-check:nth-child(2) {
+                    animation-delay: 0.1s;
+                }
+                .service-areas-grid .form-check:nth-child(3) {
+                    animation-delay: 0.15s;
+                }
+                .service-areas-grid .form-check:nth-child(4) {
+                    animation-delay: 0.2s;
+                }
+                .service-areas-grid .form-check:nth-child(5) {
+                    animation-delay: 0.25s;
+                }
+                .service-areas-grid .form-check:nth-child(6) {
+                    animation-delay: 0.3s;
+                }
+
+                /* Improved spacing */
+                .selected-areas {
+                    background-color: #f8f9fa;
+                    padding: 1rem;
+                    border-radius: 0.5rem;
+                    border-left: 4px solid #fd7e14;
+                }
+
+                .alert-info {
+                    border-left: 4px solid #0d6efd;
+                }
+
+                .enhanced-location-selector .search-results {
+                    max-height: 200px;
+                    overflow-y: auto;
+                    z-index: 1000;
+                    background: white;
+                }
+
+                .search-result-item:hover {
+                    background-color: #f8f9fa;
+                }
+
+                .search-result-item:last-child {
+                    border-bottom: none !important;
+                }
+
+                .nearby-place-item {
+                    transition: all 0.2s ease;
+                }
+
+                .nearby-place-item:hover {
+                    background-color: #e9ecef !important;
+                    transform: translateY(-1px);
+                }
+
+                .leaflet-container {
+                    border-radius: 0.375rem;
+                }
+
+                /* Override Leaflet popup styles */
+                .leaflet-popup-content-wrapper {
+                    border-radius: 0.375rem;
+                }
+
+                .leaflet-popup-tip {
+                    background: white;
                 }
             `}</style>
         </ProviderLayout>

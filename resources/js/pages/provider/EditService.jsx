@@ -4,6 +4,7 @@ import { useServices } from "../../context/ServicesContext";
 import { useProvider } from "../../context/ProviderContext";
 import ProviderLayout from "../../components/layouts/ProviderLayout";
 import LocationSelector from "../../components/map/LocationSelector";
+import { useLocation } from "../../context/LocationContext";
 
 const EditService = () => {
     const navigate = useNavigate();
@@ -106,10 +107,34 @@ const EditService = () => {
         },
     ];
 
+    const {
+        nearbyAreas,
+        loading: locationLoading,
+        getNearbyServiceAreas,
+        getAllServiceAreas,
+    } = useLocation();
+
+    const [showAllAreas, setShowAllAreas] = useState(false);
+    const [dynamicAreas, setDynamicAreas] = useState([]);
+
     useEffect(() => {
         loadCategories();
         loadServiceData();
     }, [id]);
+
+    // Watch for location changes to update service areas
+    useEffect(() => {
+        if (formData.latitude && formData.longitude && currentStep === 3) {
+            loadNearbyAreas();
+        }
+    }, [formData.latitude, formData.longitude, currentStep]);
+
+    // Initialize dynamic areas when stepping into step 3
+    useEffect(() => {
+        if (currentStep === 3 && dynamicAreas.length === 0) {
+            loadInitialAreas();
+        }
+    }, [currentStep]);
 
     const loadCategories = async () => {
         const result = await getServiceCategories();
@@ -414,7 +439,7 @@ const EditService = () => {
         // DEBUG: Log the FormData
         // console.log("=== UPDATE FORM DATA BEING SENT ===");
         for (let [key, value] of submitData.entries()) {
-            console.log(`${key}:`, value);
+            // console.log(`${key}:`, value);
         }
         // console.log("=== END UPDATE FORM DATA ===");
 
@@ -457,6 +482,80 @@ const EditService = () => {
             });
         } finally {
             setIsSubmitting(false);
+        }
+    };
+
+    const loadNearbyAreas = async () => {
+        try {
+            console.log(
+                "Loading nearby areas for:",
+                formData.latitude,
+                formData.longitude
+            );
+            const areas = await getNearbyServiceAreas(
+                formData.latitude,
+                formData.longitude,
+                formData.service_radius || 50
+            );
+
+            if (areas && areas.nearby_areas) {
+                console.log("Nearby areas loaded:", areas.nearby_areas);
+                setDynamicAreas(areas.nearby_areas);
+            } else {
+                // Fallback to hardcoded areas if API fails
+                console.log("No nearby areas found, using fallback");
+                setDynamicAreas(sriLankanAreas.map((area) => ({ name: area })));
+            }
+        } catch (error) {
+            console.error("Error loading nearby areas:", error);
+            // Fallback to hardcoded areas if API fails
+            setDynamicAreas(sriLankanAreas.map((area) => ({ name: area })));
+        }
+    };
+
+    const loadInitialAreas = async () => {
+        if (formData.latitude && formData.longitude) {
+            await loadNearbyAreas();
+        } else {
+            // Load all areas if no location is set
+            try {
+                const allAreas = await getAllServiceAreas();
+                if (allAreas) {
+                    setDynamicAreas(allAreas.map((area) => ({ name: area })));
+                } else {
+                    // Final fallback to hardcoded areas
+                    setDynamicAreas(
+                        sriLankanAreas.map((area) => ({ name: area }))
+                    );
+                }
+            } catch (error) {
+                console.error("Error loading all areas:", error);
+                setDynamicAreas(sriLankanAreas.map((area) => ({ name: area })));
+            }
+        }
+    };
+
+    const handleShowAllAreas = async () => {
+        try {
+            if (!showAllAreas) {
+                console.log("Loading all service areas...");
+                const allAreas = await getAllServiceAreas();
+                if (allAreas) {
+                    setDynamicAreas(allAreas.map((area) => ({ name: area })));
+                } else {
+                    setDynamicAreas(
+                        sriLankanAreas.map((area) => ({ name: area }))
+                    );
+                }
+            } else {
+                console.log("Loading nearby areas...");
+                await loadNearbyAreas();
+            }
+            setShowAllAreas(!showAllAreas);
+        } catch (error) {
+            console.error("Error toggling areas:", error);
+            // Fallback to hardcoded areas
+            setDynamicAreas(sriLankanAreas.map((area) => ({ name: area })));
         }
     };
 
@@ -1019,7 +1118,7 @@ const EditService = () => {
                                     )}
 
                                     {/* Step 3: Service Areas */}
-                                    {currentStep === 3 && (
+                                    {/* {currentStep === 3 && (
                                         <div className="step-content">
                                             <div className="mb-4">
                                                 <h6 className="fw-semibold mb-3">
@@ -1121,6 +1220,294 @@ const EditService = () => {
                                                             )
                                                         )}
                                                     </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )} */}
+                                    {currentStep === 3 && (
+                                        <div className="step-content">
+                                            <div className="mb-4">
+                                                <h6 className="fw-semibold mb-3">
+                                                    <i className="fas fa-map text-orange me-2"></i>
+                                                    Update service areas
+                                                </h6>
+                                                <p className="text-muted mb-3">
+                                                    {formData.location_city ? (
+                                                        <>
+                                                            Based on your
+                                                            location in{" "}
+                                                            <strong>
+                                                                {
+                                                                    formData.location_city
+                                                                }
+                                                            </strong>
+                                                            , here are the
+                                                            recommended service
+                                                            areas. You can also
+                                                            view all available
+                                                            areas.
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            Select all areas
+                                                            where you provide
+                                                            your services. This
+                                                            helps clients know
+                                                            if you're available
+                                                            in their location.
+                                                        </>
+                                                    )}
+                                                </p>
+                                            </div>
+
+                                            {/* Location-based areas header */}
+                                            <div className="d-flex justify-content-between align-items-center mb-3">
+                                                <div>
+                                                    <h6 className="mb-1">
+                                                        {showAllAreas
+                                                            ? "All Available Areas"
+                                                            : formData.location_city
+                                                            ? `Areas near ${formData.location_city}`
+                                                            : "Available Service Areas"}
+                                                    </h6>
+                                                    {!showAllAreas &&
+                                                        dynamicAreas.length >
+                                                            0 &&
+                                                        formData.location_city && (
+                                                            <small className="text-muted">
+                                                                Showing{" "}
+                                                                {
+                                                                    dynamicAreas.length
+                                                                }{" "}
+                                                                areas within{" "}
+                                                                {formData.service_radius ||
+                                                                    50}
+                                                                km
+                                                            </small>
+                                                        )}
+                                                </div>
+                                                {formData.location_city && (
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-outline-primary btn-sm"
+                                                        onClick={
+                                                            handleShowAllAreas
+                                                        }
+                                                        disabled={
+                                                            locationLoading
+                                                        }
+                                                    >
+                                                        {locationLoading ? (
+                                                            <span className="spinner-border spinner-border-sm me-2"></span>
+                                                        ) : (
+                                                            <i
+                                                                className={`fas fa-${
+                                                                    showAllAreas
+                                                                        ? "location-arrow"
+                                                                        : "list"
+                                                                } me-2`}
+                                                            ></i>
+                                                        )}
+                                                        {showAllAreas
+                                                            ? "Show Nearby Areas"
+                                                            : "Show All Areas"}
+                                                    </button>
+                                                )}
+                                            </div>
+
+                                            {/* Service areas grid */}
+                                            {locationLoading ? (
+                                                <div className="text-center py-4">
+                                                    <div className="spinner-border text-primary mb-3"></div>
+                                                    <p className="text-muted">
+                                                        Loading service areas...
+                                                    </p>
+                                                </div>
+                                            ) : (
+                                                <div className="service-areas-grid">
+                                                    <div className="row">
+                                                        {(dynamicAreas.length >
+                                                        0
+                                                            ? dynamicAreas
+                                                            : sriLankanAreas.map(
+                                                                  (area) => ({
+                                                                      name: area,
+                                                                  })
+                                                              )
+                                                        ).map((area, index) => (
+                                                            <div
+                                                                key={`${area.name}-${index}`}
+                                                                className="col-md-4 col-6 mb-2"
+                                                            >
+                                                                <div className="form-check">
+                                                                    <input
+                                                                        className="form-check-input"
+                                                                        type="checkbox"
+                                                                        id={`area-${area.name
+                                                                            .replace(
+                                                                                /\s+/g,
+                                                                                "-"
+                                                                            )
+                                                                            .toLowerCase()}`}
+                                                                        checked={formData.service_areas.includes(
+                                                                            area.name
+                                                                        )}
+                                                                        onChange={(
+                                                                            e
+                                                                        ) => {
+                                                                            e.stopPropagation();
+                                                                            handleServiceAreasChange(
+                                                                                area.name
+                                                                            );
+                                                                        }}
+                                                                    />
+                                                                    <label
+                                                                        className="form-check-label d-flex justify-content-between align-items-center"
+                                                                        htmlFor={`area-${area.name
+                                                                            .replace(
+                                                                                /\s+/g,
+                                                                                "-"
+                                                                            )
+                                                                            .toLowerCase()}`}
+                                                                        onClick={(
+                                                                            e
+                                                                        ) =>
+                                                                            e.stopPropagation()
+                                                                        }
+                                                                    >
+                                                                        <span className="flex-grow-1">
+                                                                            {
+                                                                                area.name
+                                                                            }
+                                                                        </span>
+                                                                        {area.distance && (
+                                                                            <small className="text-muted ms-2 badge bg-light">
+                                                                                {
+                                                                                    area.distance
+                                                                                }
+                                                                                km
+                                                                            </small>
+                                                                        )}
+                                                                    </label>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+
+                                                    {dynamicAreas.length ===
+                                                        0 &&
+                                                        !locationLoading && (
+                                                            <div className="text-center py-4">
+                                                                <i className="fas fa-map-marker-alt fa-2x text-muted mb-3"></i>
+                                                                <p className="text-muted">
+                                                                    No service
+                                                                    areas found
+                                                                    for your
+                                                                    location.
+                                                                    <br />
+                                                                    {formData.location_city && (
+                                                                        <button
+                                                                            type="button"
+                                                                            className="btn btn-link p-0 mt-2"
+                                                                            onClick={
+                                                                                handleShowAllAreas
+                                                                            }
+                                                                        >
+                                                                            View
+                                                                            all
+                                                                            available
+                                                                            areas
+                                                                        </button>
+                                                                    )}
+                                                                </p>
+                                                            </div>
+                                                        )}
+                                                </div>
+                                            )}
+
+                                            {/* Selected areas display */}
+                                            {formData.service_areas.length >
+                                                0 && (
+                                                <div className="selected-areas mt-4">
+                                                    <h6 className="fw-semibold mb-2">
+                                                        Selected Areas (
+                                                        {
+                                                            formData
+                                                                .service_areas
+                                                                .length
+                                                        }
+                                                        ):
+                                                    </h6>
+                                                    <div className="d-flex flex-wrap gap-2">
+                                                        {formData.service_areas.map(
+                                                            (area) => {
+                                                                const areaData =
+                                                                    dynamicAreas.find(
+                                                                        (a) =>
+                                                                            a.name ===
+                                                                            area
+                                                                    );
+                                                                return (
+                                                                    <span
+                                                                        key={
+                                                                            area
+                                                                        }
+                                                                        className="badge bg-orange bg-opacity-10 text-orange px-3 py-2 d-flex align-items-center"
+                                                                    >
+                                                                        <span>
+                                                                            {
+                                                                                area
+                                                                            }
+                                                                        </span>
+                                                                        {areaData?.distance && (
+                                                                            <small className="ms-1 opacity-75">
+                                                                                (
+                                                                                {
+                                                                                    areaData.distance
+                                                                                }
+                                                                                km)
+                                                                            </small>
+                                                                        )}
+                                                                        <button
+                                                                            type="button"
+                                                                            className="btn-close btn-close-sm ms-2"
+                                                                            onClick={(
+                                                                                e
+                                                                            ) => {
+                                                                                e.preventDefault();
+                                                                                e.stopPropagation();
+                                                                                handleServiceAreasChange(
+                                                                                    area
+                                                                                );
+                                                                            }}
+                                                                            style={{
+                                                                                fontSize:
+                                                                                    "0.6rem",
+                                                                            }}
+                                                                        ></button>
+                                                                    </span>
+                                                                );
+                                                            }
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* Location hint */}
+                                            {!formData.location_city && (
+                                                <div className="alert alert-info mt-3">
+                                                    <i className="fas fa-info-circle me-2"></i>
+                                                    <strong>Tip:</strong> Your
+                                                    service location determines
+                                                    nearby areas automatically.
+                                                </div>
+                                            )}
+
+                                            {/* Error display */}
+                                            {errors.service_areas && (
+                                                <div className="alert alert-danger mt-3">
+                                                    <i className="fas fa-exclamation-circle me-2"></i>
+                                                    {errors.service_areas}
                                                 </div>
                                             )}
                                         </div>
