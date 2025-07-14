@@ -66,6 +66,9 @@ Route::prefix('quotes')->group(function () {
     Route::get('/{quote}', [App\Http\Controllers\API\Provider\QuoteController::class, 'show']);
     Route::post('/', [App\Http\Controllers\API\Provider\QuoteController::class, 'store']);
     Route::delete('/{quote}', [App\Http\Controllers\API\Provider\QuoteController::class, 'withdraw']);
+    Route::patch('/quotes/{quote}', [App\Http\Controllers\API\Provider\QuoteController::class, 'update']);
+    Route::get('/requests/available', [App\Http\Controllers\API\Provider\QuoteController::class, 'getAvailableRequests']);
+    Route::patch('/quotes/{quote}/send', [App\Http\Controllers\API\Provider\QuoteController::class, 'send']);
 });
 
 // Provider Dashboard & Analytics

@@ -39,6 +39,10 @@ import BlockedTimes from "./pages/provider/availability/BlockedTimes";
 import ProviderAppointmentsList from "./pages/provider/appointments/AppointmentsList";
 import TodaysSchedule from "./pages/provider/appointments/TodaysSchedule";
 import ProviderAppointmentDetail from "./pages/provider/appointments/AppointmentDetail";
+import ProviderQuotesList from "./pages/provider/quotes/QuotesList";
+import CreateQuote from "./pages/provider/quotes/CreateQuote";
+import QuoteDetail from "./pages/provider/quotes/QuoteDetail";
+import EditQuote from "./pages/provider/quotes/EditQuote";
 
 // Admin Pages
 import AdminDashboard from "./pages/admin/Dashboard";
@@ -527,7 +531,6 @@ function App() {
                                                     element={<BlockedTimes />}
                                                 />
                                                 {/* Provider Appointment Management */}
-
                                                 <Route
                                                     path="appointments"
                                                     element={
@@ -543,6 +546,25 @@ function App() {
                                                     element={
                                                         <ProviderAppointmentDetail />
                                                     }
+                                                />
+                                                {/* Provider quote routes */}
+                                                <Route
+                                                    path="quotes"
+                                                    element={
+                                                        <ProviderQuotesList />
+                                                    }
+                                                />
+                                                <Route
+                                                    path="quotes/create"
+                                                    element={<CreateQuote />}
+                                                />
+                                                <Route
+                                                    path="quotes/:id"
+                                                    element={<QuoteDetail />}
+                                                />
+                                                <Route
+                                                    path="quotes/:id/edit"
+                                                    element={<EditQuote />}
                                                 />
                                             </Routes>
                                         </ServicesProvider>

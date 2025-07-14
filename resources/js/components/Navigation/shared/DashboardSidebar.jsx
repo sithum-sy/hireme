@@ -407,26 +407,7 @@ const DashboardSidebar = ({
                     label: "Dashboard",
                     path: "/provider/dashboard",
                 },
-                {
-                    id: "profile",
-                    icon: "fas fa-user",
-                    label: "My Profile",
-                    path: "/provider/profile",
-                    children: [
-                        {
-                            label: "Business Profile",
-                            path: "/provider/profile/business",
-                        },
-                        {
-                            label: "Personal Info",
-                            path: "/provider/profile/personal",
-                        },
-                        {
-                            label: "Verification",
-                            path: "/provider/profile/verification",
-                        },
-                    ],
-                },
+
                 {
                     id: "services",
                     icon: "fas fa-concierge-bell",
@@ -472,27 +453,41 @@ const DashboardSidebar = ({
                     ],
                 },
                 {
-                    id: "requests",
+                    id: "quotes",
                     icon: "fas fa-bell",
-                    label: "Service Requests",
-                    path: "/provider/requests",
-                    badge: "12",
+                    label: "Quote Requests",
+                    path: "/provider/quotes",
+                    badge: "",
                     children: [
                         {
-                            label: "New Requests",
-                            path: "/provider/requests/new",
-                            badge: "7",
-                        },
-                        {
-                            label: "Quotes Sent",
-                            path: "/provider/requests/quotes",
-                        },
-                        {
-                            label: "Accepted",
-                            path: "/provider/requests/accepted",
+                            label: "Quotes List",
+                            path: "/provider/quotes",
+                            badge: "",
                         },
                     ],
                 },
+                // {
+                //     id: "requests",
+                //     icon: "fas fa-bell",
+                //     label: "Service Requests",
+                //     path: "/provider/requests",
+                //     badge: "12",
+                //     children: [
+                //         {
+                //             label: "New Requests",
+                //             path: "/provider/requests/new",
+                //             badge: "7",
+                //         },
+                //         {
+                //             label: "Quotes Sent",
+                //             path: "/provider/requests/quotes",
+                //         },
+                //         {
+                //             label: "Accepted",
+                //             path: "/provider/requests/accepted",
+                //         },
+                //     ],
+                // },
                 {
                     id: "availability",
                     icon: "fas fa-calendar-alt",
@@ -510,6 +505,26 @@ const DashboardSidebar = ({
                         {
                             label: "Overview",
                             path: "/provider/availability",
+                        },
+                    ],
+                },
+                {
+                    id: "profile",
+                    icon: "fas fa-user",
+                    label: "My Profile",
+                    path: "/provider/profile",
+                    children: [
+                        {
+                            label: "Business Profile",
+                            path: "/provider/profile/business",
+                        },
+                        {
+                            label: "Personal Info",
+                            path: "/provider/profile/personal",
+                        },
+                        {
+                            label: "Verification",
+                            path: "/provider/profile/verification",
                         },
                     ],
                 },
