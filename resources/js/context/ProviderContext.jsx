@@ -66,6 +66,14 @@ export const ProviderProvider = ({ children }) => {
     const [availabilityData, setAvailabilityData] = useState(null);
     const [availabilityLoading, setAvailabilityLoading] = useState(false);
 
+    const [appointmentStats, setAppointmentStats] = useState({
+        today: 0,
+        pending: 0,
+        confirmed: 0,
+        thisWeek: 0,
+        totalEarnings: 0,
+    });
+
     // Initialize provider data on mount
     useEffect(() => {
         loadProviderData();
@@ -170,6 +178,42 @@ export const ProviderProvider = ({ children }) => {
                 success: false,
                 message: errorMessage,
             };
+        }
+    };
+
+    const getAppointmentStatistics = async () => {
+        try {
+            const result = await providerAppointmentService.getAppointments({});
+            if (result.success) {
+                const appointments = result.data.data || [];
+                const today = new Date().toDateString();
+                const weekStart = new Date();
+                weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+
+                const stats = {
+                    today: appointments.filter(
+                        (apt) =>
+                            new Date(apt.appointment_date).toDateString() ===
+                            today
+                    ).length,
+                    pending: appointments.filter(
+                        (apt) => apt.status === "pending"
+                    ).length,
+                    confirmed: appointments.filter(
+                        (apt) => apt.status === "confirmed"
+                    ).length,
+                    thisWeek: appointments.filter(
+                        (apt) => new Date(apt.appointment_date) >= weekStart
+                    ).length,
+                    totalEarnings: appointments
+                        .filter((apt) => apt.status === "completed")
+                        .reduce((sum, apt) => sum + (apt.earnings || 0), 0),
+                };
+
+                setAppointmentStats(stats);
+            }
+        } catch (error) {
+            console.error("Failed to load appointment stats:", error);
         }
     };
 

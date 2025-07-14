@@ -36,6 +36,9 @@ import EditService from "./pages/provider/EditService";
 import AvailabilityDashboard from "./pages/provider/availability/AvailabilityDashboard";
 import WeeklySchedule from "./pages/provider/availability/WeeklySchedule";
 import BlockedTimes from "./pages/provider/availability/BlockedTimes";
+import ProviderAppointmentsList from "./pages/provider/appointments/AppointmentsList";
+import TodaysSchedule from "./pages/provider/appointments/TodaysSchedule";
+import ProviderAppointmentDetail from "./pages/provider/appointments/AppointmentDetail";
 
 // Admin Pages
 import AdminDashboard from "./pages/admin/Dashboard";
@@ -522,6 +525,24 @@ function App() {
                                                 <Route
                                                     path="availability/blocked"
                                                     element={<BlockedTimes />}
+                                                />
+                                                {/* Provider Appointment Management */}
+
+                                                <Route
+                                                    path="appointments"
+                                                    element={
+                                                        <ProviderAppointmentsList />
+                                                    }
+                                                />
+                                                <Route
+                                                    path="appointments/today"
+                                                    element={<TodaysSchedule />}
+                                                />
+                                                <Route
+                                                    path="appointments/:id"
+                                                    element={
+                                                        <ProviderAppointmentDetail />
+                                                    }
                                                 />
                                             </Routes>
                                         </ServicesProvider>

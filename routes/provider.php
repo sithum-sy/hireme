@@ -52,14 +52,20 @@ Route::prefix('profile')->group(function () {
     Route::get('/provider/statistics', [ProfileController::class, 'getProviderStatistics']);
 });
 
-// Appointment & Quote Management
+// Appointment Management
 Route::prefix('appointments')->group(function () {
-    Route::post('/{appointment}/respond', [AppointmentController::class, 'respondToAppointment']);
+    Route::get('/', [App\Http\Controllers\API\Provider\AppointmentController::class, 'index']);
+    Route::get('/today', [App\Http\Controllers\API\Provider\AppointmentController::class, 'today']);
+    Route::get('/{appointment}', [App\Http\Controllers\API\Provider\AppointmentController::class, 'show']);
+    Route::patch('/{appointment}/status', [App\Http\Controllers\API\Provider\AppointmentController::class, 'updateStatus']);
 });
 
+// Quote Management
 Route::prefix('quotes')->group(function () {
-    Route::post('/', [AppointmentController::class, 'createQuote']);
-    Route::post('/{quote}/withdraw', [AppointmentController::class, 'withdrawQuote']);
+    Route::get('/', [App\Http\Controllers\API\Provider\QuoteController::class, 'index']);
+    Route::get('/{quote}', [App\Http\Controllers\API\Provider\QuoteController::class, 'show']);
+    Route::post('/', [App\Http\Controllers\API\Provider\QuoteController::class, 'store']);
+    Route::delete('/{quote}', [App\Http\Controllers\API\Provider\QuoteController::class, 'withdraw']);
 });
 
 // Provider Dashboard & Analytics
