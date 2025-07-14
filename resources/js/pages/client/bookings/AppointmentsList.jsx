@@ -39,7 +39,7 @@ const AppointmentsList = () => {
     useEffect(() => {
         if (location.state?.message) {
             // Show toast notification (you can implement your preferred notification system)
-            console.log(location.state.message);
+            // console.log(location.state.message);
         }
     }, [location.state]);
 

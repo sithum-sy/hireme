@@ -79,7 +79,13 @@ class User extends Authenticatable
     // Accessors
     public function getFullNameAttribute()
     {
-        return $this->first_name . ' ' . $this->last_name;
+        // Handle cases where first_name and last_name might not exist
+        if (isset($this->attributes['first_name']) && isset($this->attributes['last_name'])) {
+            return trim($this->first_name . ' ' . $this->last_name);
+        }
+
+        // Fallback to name field
+        return $this->name ?? 'Unknown User';
     }
 
     public function getAgeAttribute()
@@ -153,6 +159,11 @@ class User extends Authenticatable
     public function createdUsers()
     {
         return $this->hasMany(User::class, 'created_by');
+    }
+
+    public function provider_profile()
+    {
+        return $this->hasOne(ProviderProfile::class, 'user_id');
     }
 
     // Helper methods

@@ -134,7 +134,7 @@ const ClientLayout = ({ children }) => {
             // console.log("Viewing appointments");
         } else if (item.id === "bookings") {
             // console.log("New booking started");
-            addNotification("Ready to book a service!", "info");
+            // addNotification("Ready to book a service!", "info");
         }
 
         // Close sidebar on mobile after clicking
@@ -143,29 +143,29 @@ const ClientLayout = ({ children }) => {
         }
     };
 
-    // Add notification helper
-    const addNotification = (message, type = "info") => {
-        const newNotification = {
-            id: Date.now(),
-            type: type,
-            title: type.charAt(0).toUpperCase() + type.slice(1),
-            message: message,
-            time: "Just now",
-            read: false,
-        };
+    // // Add notification helper
+    // const addNotification = (message, type = "info") => {
+    //     const newNotification = {
+    //         id: Date.now(),
+    //         type: type,
+    //         title: type.charAt(0).toUpperCase() + type.slice(1),
+    //         message: message,
+    //         time: "Just now",
+    //         read: false,
+    //     };
 
-        setNotifications((prev) => [newNotification, ...prev]);
+    //     setNotifications((prev) => [newNotification, ...prev]);
 
-        // Auto-remove after 5 seconds
-        setTimeout(() => {
-            removeNotification(newNotification.id);
-        }, 5000);
-    };
+    //     // Auto-remove after 5 seconds
+    //     setTimeout(() => {
+    //         removeNotification(newNotification.id);
+    //     }, 5000);
+    // };
 
-    // Remove notification
-    const removeNotification = (notificationId) => {
-        setNotifications((prev) => prev.filter((n) => n.id !== notificationId));
-    };
+    // // Remove notification
+    // const removeNotification = (notificationId) => {
+    //     setNotifications((prev) => prev.filter((n) => n.id !== notificationId));
+    // };
 
     // Generate breadcrumbs from current path
     const generateBreadcrumbs = () => {
@@ -451,7 +451,7 @@ const ClientLayout = ({ children }) => {
                         )}
 
                         {/* Notification Summary */}
-                        {unreadNotifications > 0 && (
+                        {/* {unreadNotifications > 0 && (
                             <div
                                 className="alert alert-light border-start border-purple border-4 mb-4"
                                 role="alert"
@@ -500,10 +500,10 @@ const ClientLayout = ({ children }) => {
                                     </div>
                                 </div>
                             </div>
-                        )}
+                        )} */}
 
                         {/* Upcoming Appointments Alert */}
-                        {appointmentSummary.today > 0 && (
+                        {/* {appointmentSummary.today > 0 && (
                             <div
                                 className="alert alert-warning border-0 shadow-sm mb-4"
                                 role="alert"
@@ -532,10 +532,10 @@ const ClientLayout = ({ children }) => {
                                     </Link>
                                 </div>
                             </div>
-                        )}
+                        )} */}
 
                         {/* Notifications Display */}
-                        {notifications.length > 0 && (
+                        {/* {notifications.length > 0 && (
                             <div className="notifications-container mb-4">
                                 {notifications
                                     .slice(0, 3)
@@ -593,7 +593,7 @@ const ClientLayout = ({ children }) => {
                                         </div>
                                     ))}
                             </div>
-                        )}
+                        )} */}
 
                         {/* Main Page Content */}
                         <div className="page-content">{children}</div>

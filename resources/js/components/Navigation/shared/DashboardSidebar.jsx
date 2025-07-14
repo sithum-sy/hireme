@@ -270,6 +270,12 @@ const DashboardSidebar = ({
                     path: "/client/dashboard",
                 },
                 {
+                    id: "bookings",
+                    icon: "fas fa-plus-circle",
+                    label: "Book A Service",
+                    path: "/client/book",
+                },
+                {
                     id: "services",
                     icon: "fas fa-search",
                     label: "Browse Services",
@@ -277,8 +283,8 @@ const DashboardSidebar = ({
                     children: [
                         { label: "All Services", path: "/client/services" },
                         { label: "Categories", path: "/client/categories" },
-                        { label: "Favorites", path: "/client/favorites" },
-                        { label: "Recently Viewed", path: "/client/recent" },
+                        // { label: "Favorites", path: "/client/favorites" },
+                        // { label: "Recently Viewed", path: "/client/recent" },
                     ],
                 },
                 {
@@ -286,12 +292,16 @@ const DashboardSidebar = ({
                     icon: "fas fa-calendar-alt",
                     label: "My Appointments",
                     path: "/client/appointments",
-                    badge: "3",
+                    badge: "",
                     children: [
+                        {
+                            label: "Today's Schedule",
+                            path: "/client/appointments/today",
+                        },
                         {
                             label: "Upcoming",
                             path: "/client/appointments/upcoming",
-                            badge: "2",
+                            badge: "",
                         },
                         {
                             label: "Past Appointments",
@@ -303,12 +313,7 @@ const DashboardSidebar = ({
                         },
                     ],
                 },
-                {
-                    id: "bookings",
-                    icon: "fas fa-plus-circle",
-                    label: "Book Service",
-                    path: "/client/book",
-                },
+
                 {
                     id: "quotes",
                     icon: "fas fa-quote-left",
@@ -323,12 +328,12 @@ const DashboardSidebar = ({
                         {
                             label: "Pending",
                             path: "/client/quotes?status=pending",
-                            badge: "1",
+                            badge: "",
                         },
                         {
                             label: "Received",
                             path: "/client/quotes?status=quoted",
-                            badge: "1",
+                            badge: "",
                         },
                         {
                             label: "Accepted",
@@ -340,13 +345,13 @@ const DashboardSidebar = ({
                         },
                     ],
                 },
-                {
-                    id: "messages",
-                    icon: "fas fa-comments",
-                    label: "Messages",
-                    path: "/client/messages",
-                    badge: "2",
-                },
+                // {
+                //     id: "messages",
+                //     icon: "fas fa-comments",
+                //     label: "Messages",
+                //     path: "/client/messages",
+                //     badge: "2",
+                // },
                 {
                     id: "payments",
                     icon: "fas fa-credit-card",
@@ -357,10 +362,10 @@ const DashboardSidebar = ({
                             label: "Payment History",
                             path: "/client/payments/history",
                         },
-                        {
-                            label: "Payment Methods",
-                            path: "/client/payments/methods",
-                        },
+                        // {
+                        //     label: "Payment Methods",
+                        //     path: "/client/payments/methods",
+                        // },
                         {
                             label: "Invoices",
                             path: "/client/payments/invoices",
@@ -381,16 +386,16 @@ const DashboardSidebar = ({
                     children: [
                         {
                             label: "Personal Info",
-                            path: "/client/profile/personal",
+                            path: "/client/profile",
                         },
                         {
-                            label: "Address Book",
-                            path: "/client/profile/addresses",
+                            label: "Edit Profile",
+                            path: "/client/profile/edit",
                         },
-                        {
-                            label: "Preferences",
-                            path: "/client/profile/preferences",
-                        },
+                        // {
+                        //     label: "Preferences",
+                        //     path: "/client/profile/preferences",
+                        // },
                     ],
                 },
                 {
@@ -500,16 +505,16 @@ const DashboardSidebar = ({
                     path: "/provider/availability",
                     children: [
                         {
+                            label: "Overview",
+                            path: "/provider/availability",
+                        },
+                        {
                             label: "Weekly Schedule",
                             path: "/provider/availability/schedule",
                         },
                         {
                             label: "Blocked Times",
                             path: "/provider/availability/blocked",
-                        },
-                        {
-                            label: "Overview",
-                            path: "/provider/availability",
                         },
                     ],
                 },

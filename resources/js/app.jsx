@@ -26,6 +26,7 @@ import ServiceDetail from "./pages/client/services/ServiceDetail";
 import QuotesList from "./pages/client/quotes/QuotesList";
 import AppointmentsList from "./pages/client/bookings/AppointmentsList";
 import AppointmentDetail from "./pages/client/bookings/AppointmentDetail";
+import ClientQuoteDetail from "./pages/client/quotes/QuoteDetail";
 
 // Provider Pages
 import ProviderDashboard from "./pages/provider/Dashboard";
@@ -120,6 +121,11 @@ function App() {
                                             <Route
                                                 path="quotes"
                                                 element={<QuotesList />}
+                                            />
+
+                                            <Route
+                                                path="quotes/:id"
+                                                element={<ClientQuoteDetail />}
                                             />
 
                                             <Route

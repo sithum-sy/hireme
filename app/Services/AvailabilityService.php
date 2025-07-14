@@ -6,6 +6,7 @@ namespace App\Services;
 use App\Models\User;
 use App\Models\ProviderAvailability;
 use App\Models\BlockedTime;
+use App\Models\Appointment;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -248,5 +249,325 @@ class AvailabilityService
             6 => 'Saturday'
         ];
         return $days[$dayOfWeek] ?? 'Unknown';
+    }
+
+    // Add these methods to your existing App/Services/AvailabilityService.php:
+
+    /**
+     * Get available time slots for a specific date with proper conflict checking
+     */
+    public function getAvailableSlots(User $provider, $date, $serviceDuration = 1): array
+    {
+        try {
+            Log::info("Getting available slots for provider {$provider->id} on {$date} with duration {$serviceDuration}h");
+
+            $checkDate = Carbon::parse($date);
+            $dayOfWeek = $checkDate->dayOfWeek;
+
+            // Add more detailed logging
+            Log::info("Date details - Date: {$date}, Carbon date: {$checkDate->toDateString()}, Day of week: {$dayOfWeek}, Day name: {$checkDate->format('l')}");
+
+            // Check if provider works on this day
+            $weeklyAvailability = ProviderAvailability::where('provider_id', $provider->id)
+                ->where('day_of_week', $dayOfWeek)
+                ->where('is_available', true)
+                ->first();
+
+            if (!$weeklyAvailability || !$weeklyAvailability->start_time || !$weeklyAvailability->end_time) {
+                Log::info("Provider {$provider->id} not available on day {$dayOfWeek}");
+
+
+                // Also log what days ARE available
+                $availableDays = ProviderAvailability::where('provider_id', $provider->id)
+                    ->where('is_available', true)
+                    ->pluck('day_of_week')
+                    ->toArray();
+                Log::info("Provider {$provider->id} IS available on days: " . implode(', ', $availableDays));
+
+                return [];
+            }
+
+            $workingStart = Carbon::parse($weeklyAvailability->start_time);
+            $workingEnd = Carbon::parse($weeklyAvailability->end_time);
+
+            Log::info("Working hours: {$workingStart->format('H:i')} - {$workingEnd->format('H:i')}");
+
+            // Get blocked times for this date
+            $blockedTimes = BlockedTime::where('provider_id', $provider->id)
+                ->forDate($date)
+                ->get();
+
+            Log::info("Found " . $blockedTimes->count() . " blocked times for {$date}");
+
+            // Get existing appointments for this date
+            $existingAppointments = $this->getExistingAppointments($provider, $date);
+
+            Log::info("Found " . $existingAppointments->count() . " existing appointments for {$date}");
+
+            // Generate time slots (30-minute intervals)
+            $slots = [];
+            $current = $workingStart->copy();
+            $slotInterval = 60; // minutes
+            $serviceDurationMinutes = $serviceDuration * 60;
+
+            while ($current->copy()->addMinutes($serviceDurationMinutes)->lte($workingEnd)) {
+                $slotEnd = $current->copy()->addMinutes($serviceDurationMinutes);
+
+                // Check if this slot conflicts with blocked times
+                $isBlocked = $this->isTimeSlotBlocked($current, $slotEnd, $blockedTimes, $date);
+
+                // Check if this slot conflicts with existing appointments
+                $hasAppointmentConflict = $this->hasAppointmentConflict($current, $slotEnd, $existingAppointments);
+
+                if (!$isBlocked && !$hasAppointmentConflict) {
+                    $slots[] = [
+                        'start_time' => $current->format('H:i'),
+                        'end_time' => $slotEnd->format('H:i'),
+                        'time' => $current->format('H:i'), // For compatibility
+                        'formatted_time' => $current->format('g:i A'),
+                        'is_popular' => $this->isPopularTimeSlot($current),
+                        'is_available' => true,
+                        'duration_minutes' => $serviceDurationMinutes
+                    ];
+                }
+
+                $current->addMinutes($slotInterval);
+            }
+
+            Log::info("Generated " . count($slots) . " available slots");
+            return $slots;
+        } catch (\Exception $e) {
+            Log::error('Error getting available slots: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
+            return [];
+        }
+    }
+
+    /**
+     * Check if a time slot is blocked
+     */
+    private function isTimeSlotBlocked($startTime, $endTime, $blockedTimes, $date)
+    {
+        foreach ($blockedTimes as $blocked) {
+            // If it's an all-day block, the entire day is blocked
+            if ($blocked->all_day) {
+                return true;
+            }
+
+            // If blocked time has no specific times, treat as all day
+            if (!$blocked->start_time || !$blocked->end_time) {
+                return true;
+            }
+
+            // Check for time overlap
+            $blockedStart = Carbon::parse($blocked->start_time);
+            $blockedEnd = Carbon::parse($blocked->end_time);
+
+            // Times overlap if: start < blocked_end AND end > blocked_start
+            $overlaps = $startTime->lt($blockedEnd) && $endTime->gt($blockedStart);
+
+            if ($overlaps) {
+                Log::info("Slot {$startTime->format('H:i')}-{$endTime->format('H:i')} blocked by: {$blocked->reason}");
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if a time slot conflicts with existing appointments
+     */
+    private function hasAppointmentConflict($startTime, $endTime, $existingAppointments)
+    {
+        foreach ($existingAppointments as $appointment) {
+            $appointmentStart = Carbon::parse($appointment->appointment_time);
+            $appointmentEnd = $appointmentStart->copy()->addHours($appointment->duration_hours);
+
+            // Times overlap if: start < appointment_end AND end > appointment_start
+            $overlaps = $startTime->lt($appointmentEnd) && $endTime->gt($appointmentStart);
+
+            if ($overlaps) {
+                Log::info("Slot {$startTime->format('H:i')}-{$endTime->format('H:i')} conflicts with appointment #{$appointment->id}");
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Get existing appointments for conflict checking
+     */
+    private function getExistingAppointments(User $provider, $date)
+    {
+        try {
+            // Check if Appointment model exists and get appointments
+            if (class_exists('\App\Models\Appointment')) {
+                return \App\Models\Appointment::where('provider_id', $provider->id)
+                    ->where('appointment_date', $date)
+                    ->whereIn('status', ['pending', 'confirmed', 'in_progress'])
+                    ->get();
+            }
+
+            return collect();
+        } catch (\Exception $e) {
+            Log::warning('Could not check existing appointments: ' . $e->getMessage());
+            return collect();
+        }
+    }
+
+    /**
+     * Enhanced availability checking with detailed logging
+     */
+    public function isAvailableAt(User $provider, $date, $startTime, $endTime): array
+    {
+        try {
+            Log::info("Checking availability for provider {$provider->id} on {$date} from {$startTime} to {$endTime}");
+
+            $checkDate = Carbon::parse($date);
+            $dayOfWeek = $checkDate->dayOfWeek;
+
+            // Check weekly schedule
+            $weeklyAvailability = ProviderAvailability::where('provider_id', $provider->id)
+                ->where('day_of_week', $dayOfWeek)
+                ->where('is_available', true)
+                ->first();
+
+            if (!$weeklyAvailability) {
+                Log::info("Provider not available on day {$dayOfWeek}");
+                return [
+                    'available' => false,
+                    'reason' => 'Provider not available on this day of week',
+                    'day_of_week' => $dayOfWeek,
+                    'day_name' => $this->getDayName($dayOfWeek)
+                ];
+            }
+
+            // Check if working hours are set
+            if (!$weeklyAvailability->start_time || !$weeklyAvailability->end_time) {
+                Log::info("Provider working hours not set for day {$dayOfWeek}");
+                return [
+                    'available' => false,
+                    'reason' => 'Working hours not configured for this day'
+                ];
+            }
+
+            // Check if time falls within working hours
+            $requestedStart = Carbon::parse($startTime);
+            $requestedEnd = Carbon::parse($endTime);
+            $workingStart = Carbon::parse($weeklyAvailability->start_time);
+            $workingEnd = Carbon::parse($weeklyAvailability->end_time);
+
+            if ($requestedStart->lt($workingStart) || $requestedEnd->gt($workingEnd)) {
+                Log::info("Requested time outside working hours");
+                return [
+                    'available' => false,
+                    'reason' => 'Requested time outside working hours',
+                    'working_hours' => [
+                        'start' => $workingStart->format('H:i'),
+                        'end' => $workingEnd->format('H:i')
+                    ],
+                    'requested_time' => [
+                        'start' => $requestedStart->format('H:i'),
+                        'end' => $requestedEnd->format('H:i')
+                    ]
+                ];
+            }
+
+            // Check for blocked times
+            $blockedTimes = BlockedTime::where('provider_id', $provider->id)
+                ->forDate($date)
+                ->get();
+
+            foreach ($blockedTimes as $blocked) {
+                if ($blocked->conflictsWith($date, $date, $startTime, $endTime)) {
+                    Log::info("Time conflicts with blocked period: {$blocked->reason}");
+                    return [
+                        'available' => false,
+                        'reason' => 'Time slot is blocked',
+                        'blocked_reason' => $blocked->reason,
+                        'blocked_time' => $blocked->formatted_time_range
+                    ];
+                }
+            }
+
+            // Check for existing appointments
+            $existingAppointments = $this->getExistingAppointments($provider, $date);
+
+            foreach ($existingAppointments as $appointment) {
+                $appointmentStart = Carbon::parse($appointment->appointment_time);
+                $appointmentEnd = $appointmentStart->copy()->addHours($appointment->duration_hours);
+
+                if ($requestedStart->lt($appointmentEnd) && $requestedEnd->gt($appointmentStart)) {
+                    Log::info("Time conflicts with existing appointment #{$appointment->id}");
+                    return [
+                        'available' => false,
+                        'reason' => 'Time slot already booked',
+                        'conflicting_appointment' => $appointment->id
+                    ];
+                }
+            }
+
+            return [
+                'available' => true,
+                'working_hours' => [
+                    'start' => $workingStart->format('H:i'),
+                    'end' => $workingEnd->format('H:i')
+                ],
+                'checked_at' => now()->toISOString()
+            ];
+        } catch (\Exception $e) {
+            Log::error('Error checking availability: ' . $e->getMessage());
+            return [
+                'available' => false,
+                'reason' => 'Error checking availability',
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Get provider's working hours for a specific day
+     */
+    public function getWorkingHours(User $provider, $date): ?array
+    {
+        $dayOfWeek = Carbon::parse($date)->dayOfWeek;
+
+        $weeklyAvailability = ProviderAvailability::where('provider_id', $provider->id)
+            ->where('day_of_week', $dayOfWeek)
+            ->where('is_available', true)
+            ->first();
+
+        if (!$weeklyAvailability || !$weeklyAvailability->start_time || !$weeklyAvailability->end_time) {
+            return null;
+        }
+
+        return [
+            'start' => $weeklyAvailability->start_time->format('H:i'),
+            'end' => $weeklyAvailability->end_time->format('H:i'),
+            'formatted' => $weeklyAvailability->formatted_time_range,
+            'day_name' => $this->getDayName($dayOfWeek)
+        ];
+    }
+
+    /**
+     * Determine if a time slot is popular (peak hours)
+     */
+    private function isPopularTimeSlot(Carbon $time): bool
+    {
+        $hour = $time->hour;
+
+        // Consider 9 AM - 12 PM and 2 PM - 5 PM as popular times
+        return ($hour >= 9 && $hour < 12) || ($hour >= 14 && $hour < 17);
+    }
+
+    /**
+     * Check if provider has any availability on a given date
+     */
+    public function hasAvailabilityOnDate(User $provider, $date): bool
+    {
+        $slots = $this->getAvailableSlots($provider, $date, 1);
+        return count($slots) > 0;
     }
 }

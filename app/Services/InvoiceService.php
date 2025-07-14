@@ -9,6 +9,8 @@ use App\Notifications\InvoiceSent;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Log;
+
 
 class InvoiceService
 {
@@ -255,10 +257,10 @@ class InvoiceService
                 // $client->notify(new InvoiceCreated($invoice));
 
                 // For now, log it
-                \Log::info("New invoice notification sent to client {$client->email} for invoice {$invoice->id}");
+                Log::info("New invoice notification sent to client {$client->email} for invoice {$invoice->id}");
             }
         } catch (\Exception $e) {
-            \Log::error("Failed to notify client about new invoice: " . $e->getMessage());
+            Log::error("Failed to notify client about new invoice: " . $e->getMessage());
         }
     }
 
@@ -272,10 +274,10 @@ class InvoiceService
             if ($client && $client->email) {
                 // $client->notify(new InvoiceSent($invoice));
 
-                \Log::info("Invoice sent notification to client {$client->email} for invoice {$invoice->id}");
+                Log::info("Invoice sent notification to client {$client->email} for invoice {$invoice->id}");
             }
         } catch (\Exception $e) {
-            \Log::error("Failed to notify client about sent invoice: " . $e->getMessage());
+            Log::error("Failed to notify client about sent invoice: " . $e->getMessage());
         }
     }
 }

@@ -8,9 +8,13 @@ use App\Http\Requests\QuoteRequest;
 use App\Http\Requests\QuoteResponseRequest;
 use App\Models\Appointment;
 use App\Models\Quote;
+use App\Models\User;
 use App\Services\AppointmentService;
+use App\Services\AvailabilityService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class AppointmentController extends Controller
 {
@@ -539,6 +543,49 @@ class AppointmentController extends Controller
         }
     }
 
+    /**
+     * Check availability before booking (can be called from frontend)
+     */
+    public function checkAvailability(Request $request)
+    {
+        try {
+            $request->validate([
+                'provider_id' => 'required|exists:users,id',
+                'appointment_date' => 'required|date|after_or_equal:today',
+                'appointment_time' => 'required|date_format:H:i',
+                'duration_hours' => 'required|numeric|min:0.5|max:8',
+            ]);
+
+            $provider = User::findOrFail($request->provider_id);
+            $availabilityService = app(AvailabilityService::class);
+
+            $endTime = Carbon::parse($request->appointment_time)
+                ->addHours($request->duration_hours)
+                ->format('H:i');
+
+            $availability = $availabilityService->isAvailableAt(
+                $provider,
+                $request->appointment_date,
+                $request->appointment_time,
+                $endTime
+            );
+
+            return response()->json([
+                'success' => true,
+                'data' => $availability,
+                'message' => $availability['available']
+                    ? 'Time slot is available'
+                    : $availability['reason']
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to check availability',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
     // Helper Methods
 
     /**
@@ -578,7 +625,7 @@ class AppointmentController extends Controller
                 'email' => $appointment->client->email,
                 'contact_number' => $appointment->client->contact_number,
                 'profile_picture' => $appointment->client->profile_picture
-                    ? \Storage::url($appointment->client->profile_picture)
+                    ? Storage::url($appointment->client->profile_picture)
                     : null,
             ];
         }
@@ -591,7 +638,7 @@ class AppointmentController extends Controller
                 'email' => $appointment->provider->email,
                 'contact_number' => $appointment->provider->contact_number,
                 'profile_picture' => $appointment->provider->profile_picture
-                    ? \Storage::url($appointment->provider->profile_picture)
+                    ? Storage::url($appointment->provider->profile_picture)
                     : null,
             ];
 

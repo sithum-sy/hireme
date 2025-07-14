@@ -12,7 +12,9 @@ const ServiceSelection = ({
         bookingData.additional_services || []
     );
     const [duration, setDuration] = useState(
-        bookingData.duration || service.duration_hours || 1
+        parseFloat(bookingData.duration) ||
+            parseFloat(service.duration_hours) ||
+            1
     );
 
     const handleAddOnToggle = (addOn) => {
@@ -30,10 +32,12 @@ const ServiceSelection = ({
     };
 
     const handleDurationChange = (newDuration) => {
-        setDuration(newDuration);
+        // Ensure we're working with a number, not a string
+        const numericDuration = parseFloat(newDuration);
+        setDuration(numericDuration);
         updateBookingData({
-            duration: newDuration,
-            duration_hours: newDuration,
+            duration: numericDuration,
+            duration_hours: numericDuration,
         });
     };
 
@@ -136,13 +140,17 @@ const ServiceSelection = ({
                                             <div className="duration-controls d-flex align-items-center">
                                                 <button
                                                     className="btn btn-outline-secondary"
-                                                    onClick={() =>
-                                                        duration > 0.5 &&
+                                                    onClick={() => {
+                                                        const newDuration =
+                                                            Math.max(
+                                                                1,
+                                                                duration - 1
+                                                            );
                                                         handleDurationChange(
-                                                            duration - 0.5
-                                                        )
-                                                    }
-                                                    disabled={duration <= 0.5}
+                                                            newDuration
+                                                        );
+                                                    }}
+                                                    disabled={duration <= 1}
                                                 >
                                                     <i className="fas fa-minus"></i>
                                                 </button>
@@ -152,11 +160,13 @@ const ServiceSelection = ({
                                                 </span>
                                                 <button
                                                     className="btn btn-outline-secondary"
-                                                    onClick={() =>
+                                                    onClick={() => {
+                                                        const newDuration =
+                                                            duration + 1;
                                                         handleDurationChange(
-                                                            duration + 0.5
-                                                        )
-                                                    }
+                                                            newDuration
+                                                        );
+                                                    }}
                                                 >
                                                     <i className="fas fa-plus"></i>
                                                 </button>
@@ -324,8 +334,23 @@ const ServiceSelection = ({
                                     <span className="fw-bold">Total</span>
                                     <span className="fw-bold text-purple h5 mb-0">
                                         Rs.{" "}
-                                        {bookingData.total_price ||
-                                            servicePrice}
+                                        {(() => {
+                                            const baseTotal =
+                                                service.pricing_type ===
+                                                "hourly"
+                                                    ? servicePrice * duration
+                                                    : servicePrice;
+                                            const addOnsTotal =
+                                                selectedAddOns.reduce(
+                                                    (sum, addOn) =>
+                                                        sum +
+                                                        parseInt(
+                                                            addOn.price || 0
+                                                        ),
+                                                    0
+                                                );
+                                            return baseTotal + addOnsTotal;
+                                        })()}
                                     </span>
                                 </div>
 

@@ -7,6 +7,8 @@ use App\Models\Service;
 use App\Models\ServiceCategory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class ServiceController extends Controller
 {
@@ -166,7 +168,7 @@ class ServiceController extends Controller
                 'first_name' => $provider->first_name,
                 'last_name' => $provider->last_name,
                 'business_name' => $providerProfile->business_name ?? null,
-                'profile_image_url' => $provider->profile_picture ? \Storage::url($provider->profile_picture) : null,
+                'profile_image_url' => $provider->profile_picture ? Storage::url($provider->profile_picture) : null,
                 'bio' => $providerProfile->bio ?? null,
                 'is_verified' => $providerProfile->isVerified() ?? false,
                 'city' => $provider->address ?? null, // Adjust based on your User model structure
@@ -413,7 +415,7 @@ class ServiceController extends Controller
         return [
             'id' => $service->id,
             'title' => $service->title,
-            'description' => \Str::limit($service->description, 150),
+            'description' => Str::limit($service->description, 150),
             'category' => [
                 'id' => $service->category->id,
                 'name' => $service->category->name,
@@ -470,7 +472,7 @@ class ServiceController extends Controller
                 'is_available' => $service->provider->providerProfile?->is_available ?? true,
                 'service_area_radius' => $service->provider->providerProfile?->service_area_radius,
                 'profile_picture' => $service->provider->profile_picture
-                    ? \Storage::url($service->provider->profile_picture)
+                    ? Storage::url($service->provider->profile_picture)
                     : null,
             ],
             'recent_reviews' => $service->appointments->map(function ($appointment) {

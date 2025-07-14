@@ -42,11 +42,27 @@ const ProviderAvailabilitySlots = ({
     const getWeekDates = (startDate) => {
         const dates = [];
         const start = new Date(startDate);
-        start.setDate(start.getDate() - start.getDay()); // Start from Sunday
+
+        // Fix timezone issues by setting to noon
+        start.setHours(12, 0, 0, 0);
+
+        // Go to the start of the week (Sunday)
+        start.setDate(start.getDate() - start.getDay());
+
+        // console.log("🔍 Frontend: Generating week starting from:", start);
 
         for (let i = 0; i < 7; i++) {
+            // Create new date for each day, avoiding timezone issues
             const date = new Date(start);
             date.setDate(start.getDate() + i);
+            date.setHours(12, 0, 0, 0); // Set to noon to avoid timezone issues
+
+            // console.log(
+            //     `Day ${i}: ${
+            //         date.toISOString().split("T")[0]
+            //     } (${date.toLocaleDateString("en-US", { weekday: "long" })})`
+            // );
+
             dates.push(date);
         }
         return dates;

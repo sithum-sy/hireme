@@ -79,7 +79,7 @@ const ClientDashboard = () => {
             icon: "fas fa-users",
             title: "Find Providers",
             description: "Browse service providers",
-            path: "/client/providers",
+            path: "/client/services",
             color: "warning",
         },
     ];
@@ -500,7 +500,7 @@ const ClientDashboard = () => {
                     {/* Sidebar */}
                     <div className="col-lg-4">
                         {/* Recent Activity */}
-                        <div className="card border-0 shadow-sm mb-4">
+                        {/* <div className="card border-0 shadow-sm mb-4">
                             <div className="card-header bg-white border-bottom">
                                 <h6 className="fw-bold mb-0">
                                     Recent Activity
@@ -548,7 +548,7 @@ const ClientDashboard = () => {
                                     </p>
                                 )}
                             </div>
-                        </div>
+                        </div> */}
 
                         {/* Quick Links */}
                         <div className="card border-0 shadow-sm">
@@ -564,20 +564,20 @@ const ClientDashboard = () => {
                                         <i className="fas fa-user-edit text-muted me-3"></i>
                                         <span>Edit Profile</span>
                                     </Link>
-                                    <Link
+                                    {/* <Link
                                         to="/client/payments/methods"
                                         className="quick-link d-flex align-items-center text-decoration-none p-2 rounded mb-2"
                                     >
                                         <i className="fas fa-credit-card text-muted me-3"></i>
                                         <span>Payment Methods</span>
-                                    </Link>
-                                    <Link
+                                    </Link> */}
+                                    {/* <Link
                                         to="/client/favorites"
                                         className="quick-link d-flex align-items-center text-decoration-none p-2 rounded mb-2"
                                     >
                                         <i className="fas fa-heart text-muted me-3"></i>
                                         <span>Favorite Providers</span>
-                                    </Link>
+                                    </Link> */}
                                     <Link
                                         to="/client/support"
                                         className="quick-link d-flex align-items-center text-decoration-none p-2 rounded"

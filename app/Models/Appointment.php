@@ -111,6 +111,16 @@ class Appointment extends Model
         return $query->where('appointment_date', now()->toDateString());
     }
 
+    public function scopeForDate($query, $date)
+    {
+        return $query->where('appointment_date', $date);
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->whereIn('status', ['pending_confirmation', 'confirmed', 'in_progress']);
+    }
+
     // Accessors
     public function getFullAppointmentDateTimeAttribute()
     {
@@ -120,6 +130,14 @@ class Appointment extends Model
     public function getFormattedDateTimeAttribute()
     {
         return $this->appointment_date->format('M j, Y') . ' at ' . $this->appointment_time->format('g:i A');
+    }
+
+    public function getFormattedTimeRangeAttribute()
+    {
+        $start = Carbon::parse($this->appointment_time);
+        $end = $start->copy()->addHours($this->duration_hours);
+
+        return $start->format('g:i A') . ' - ' . $end->format('g:i A');
     }
 
     public function getStatusBadgeAttribute()

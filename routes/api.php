@@ -47,6 +47,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Appointment Management (all authenticated users)
     Route::prefix('appointments')->group(function () {
         Route::get('/', [AppointmentController::class, 'getAppointments']);
+        Route::post('/check-availability', [AppointmentController::class, 'checkAvailability']);
         Route::get('/upcoming', [AppointmentController::class, 'getUpcomingAppointments']);
         Route::get('/statistics', [AppointmentController::class, 'getStatistics']);
         Route::get('/{appointment}', [AppointmentController::class, 'getAppointment']);

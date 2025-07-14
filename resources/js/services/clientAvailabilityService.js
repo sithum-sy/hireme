@@ -6,12 +6,11 @@ class ClientAvailabilityService {
     async getAvailableSlots(params) {
         try {
             const response = await axios.get(
-                `${API_BASE}/providers/${params.provider_id}/availability/slots`,
+                `/api/client/providers/${params.provider_id}/availability/slots`,
                 {
                     params: {
                         date: params.date,
-                        service_id: params.service_id,
-                        duration: params.duration || 1,
+                        service_duration: params.duration || 1,
                     },
                 }
             );
@@ -19,20 +18,19 @@ class ClientAvailabilityService {
             return {
                 success: true,
                 data: this.formatAvailabilitySlots(
-                    response.data.data || response.data
+                    response.data.data?.available_slots || []
                 ),
+                working_hours: response.data.data?.working_hours,
                 message: response.data.message,
             };
         } catch (error) {
-            console.warn(
-                "Provider availability slots endpoint not available, using fallback"
-            );
+            console.warn("Provider availability slots endpoint error:", error);
 
-            // Return fallback available slots for development
+            // Return empty slots for safety rather than fake data
             return {
-                success: true,
-                data: this.getFallbackAvailableSlots(params.date),
-                message: "Available slots (fallback mode)",
+                success: false,
+                data: [],
+                message: "Unable to load available times",
                 fallback: true,
             };
         }
@@ -65,12 +63,16 @@ class ClientAvailabilityService {
         }
     }
 
-    async checkAvailability(providerId, date, duration) {
+    async checkAvailability(providerId, date, startTime, endTime) {
         try {
             const response = await axios.get(
-                `${API_BASE}/providers/${providerId}/availability/check`,
+                `/api/client/providers/${providerId}/availability/check`,
                 {
-                    params: { date, duration },
+                    params: {
+                        date,
+                        start_time: startTime,
+                        end_time: endTime,
+                    },
                 }
             );
 
@@ -80,14 +82,16 @@ class ClientAvailabilityService {
                 message: response.data.message,
             };
         } catch (error) {
-            console.warn(
-                "Provider availability check endpoint not available, using fallback"
-            );
+            console.warn("Provider availability check endpoint error:", error);
 
+            // Return realistic fallback that assumes unavailable for safety
             return {
-                success: true,
-                data: { available: true },
-                message: "Available (fallback mode)",
+                success: false,
+                data: {
+                    available: false,
+                    reason: "Unable to verify availability - please contact provider directly",
+                },
+                message: "Availability check failed",
                 fallback: true,
             };
         }

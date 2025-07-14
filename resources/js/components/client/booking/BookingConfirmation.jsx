@@ -98,7 +98,7 @@ const BookingConfirmation = ({
                 timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
             };
 
-            console.log("Submitting booking payload:", bookingPayload);
+            // console.log("Submitting booking payload:", bookingPayload);
 
             const response = await clientService.createBooking(bookingPayload);
 

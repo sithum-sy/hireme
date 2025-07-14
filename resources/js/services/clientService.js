@@ -209,6 +209,120 @@ class ClientService {
         }
     }
 
+    async getQuoteDetail(quoteId) {
+        try {
+            const response = await axios.get(`${API_BASE}/quotes/${quoteId}`);
+
+            if (response.data && response.data.success) {
+                return {
+                    success: true,
+                    data: this.formatQuoteData(response.data.data),
+                    message:
+                        response.data.message ||
+                        "Quote details loaded successfully",
+                };
+            } else {
+                throw new Error(response.data.message || "Quote not found");
+            }
+        } catch (error) {
+            console.error("Failed to fetch quote detail:", error);
+
+            if (error.response?.status === 404) {
+                return {
+                    success: false,
+                    message: "Quote not found",
+                    status: 404,
+                };
+            }
+
+            // Return fallback quote detail for development
+            return {
+                success: true,
+                data: this.getFallbackQuoteDetail(quoteId),
+                message: "Quote details loaded (fallback mode)",
+                fallback: true,
+            };
+        }
+    }
+
+    // Helper method to format quote data consistently
+    formatQuoteData(quoteData) {
+        return {
+            id: quoteData.id,
+            quote_number: quoteData.quote_number,
+            status: quoteData.status,
+            service_title: quoteData.service?.title || quoteData.service_title,
+            service_description:
+                quoteData.service?.description ||
+                "Service description not available",
+            service_image: quoteData.service?.first_image_url,
+            provider_id: quoteData.provider_id,
+            provider_name: quoteData.provider?.name || quoteData.provider_name,
+            provider_image: quoteData.provider?.profile_image_url,
+            provider_rating: quoteData.provider?.average_rating || 0,
+            provider_reviews: quoteData.provider?.reviews_count || 0,
+            message: quoteData.message,
+            special_requirements: quoteData.special_requirements,
+            location_summary:
+                quoteData.location_summary ||
+                `${quoteData.city || "Not specified"}`,
+            urgency: quoteData.urgency,
+            requested_date: quoteData.requested_date,
+            requested_time: quoteData.requested_time,
+            quoted_price: quoteData.quoted_price,
+            travel_fee: quoteData.travel_fee || 0,
+            estimated_duration: quoteData.estimated_duration,
+            provider_response: quoteData.provider_response,
+            quote_notes: quoteData.quote_notes,
+            validity_days: quoteData.validity_days,
+            expires_at: quoteData.expires_at,
+            created_at: quoteData.created_at,
+            updated_at: quoteData.updated_at,
+            quoted_at: quoteData.quoted_at,
+            accepted_at: quoteData.accepted_at,
+            declined_at: quoteData.declined_at,
+            withdrawn_at: quoteData.withdrawn_at,
+        };
+    }
+
+    // Fallback data for development
+    getFallbackQuoteDetail(quoteId) {
+        return {
+            id: quoteId,
+            quote_number: `Q${String(quoteId).padStart(6, "0")}`,
+            status: "quoted",
+            service_title: "Professional House Cleaning Service",
+            service_description:
+                "Complete house cleaning including all rooms, kitchen, and bathrooms",
+            service_image: null,
+            provider_id: 1,
+            provider_name: "Clean Masters",
+            provider_image: null,
+            provider_rating: 4.8,
+            provider_reviews: 45,
+            message:
+                "I need a thorough cleaning of my 3-bedroom house. Kitchen needs deep cleaning and bathrooms need sanitization.",
+            special_requirements:
+                "Please use eco-friendly products. I have a pet cat.",
+            location_summary: "Colombo 07",
+            urgency: "normal",
+            requested_date: "2025-07-20",
+            requested_time: "10:00 AM",
+            quoted_price: 4500,
+            travel_fee: 300,
+            estimated_duration: 3,
+            provider_response:
+                "Thank you for your request. I can provide a comprehensive cleaning service for your 3-bedroom house using eco-friendly products that are safe for pets.",
+            quote_notes:
+                "I will bring all necessary equipment and eco-friendly cleaning supplies.",
+            validity_days: 7,
+            expires_at: "2025-07-25T23:59:59Z",
+            created_at: "2025-07-12T10:00:00Z",
+            updated_at: "2025-07-13T14:30:00Z",
+            quoted_at: "2025-07-13T14:30:00Z",
+        };
+    }
+
     // Add method to format service data from Laravel backend
     formatServiceData(serviceData) {
         return {
@@ -460,139 +574,140 @@ class ClientService {
     }
 
     // Enhanced booking creation with proper error handling and field mapping
+    // async createBooking(bookingData) {
+    //     try {
+    //         // Check availability before booking if it's a direct appointment
+    //         if (
+    //             bookingData.appointment_date &&
+    //             bookingData.appointment_time &&
+    //             !bookingData.request_quote
+    //         ) {
+    //             console.log("Checking availability before booking...");
+
+    //             // Use the existing provider availability endpoint instead
+    //             const endTime = this.calculateEndTime(
+    //                 bookingData.appointment_time,
+    //                 bookingData.duration_hours || 1
+    //             );
+
+    //             const availabilityCheck = await axios.post(
+    //                 "/api/appointments/check-availability",
+    //                 {
+    //                     provider_id: bookingData.provider_id,
+    //                     appointment_date: bookingData.appointment_date,
+    //                     appointment_time: bookingData.appointment_time,
+    //                     duration_hours: bookingData.duration_hours || 1,
+    //                 }
+    //             );
+
+    //             if (
+    //                 !availabilityCheck.data.success ||
+    //                 !availabilityCheck.data.data.available
+    //             ) {
+    //                 return {
+    //                     success: false,
+    //                     message:
+    //                         "Selected time slot is no longer available. Please choose a different time.",
+    //                     availability_info: availabilityCheck.data.data,
+    //                 };
+    //             }
+    //         }
+
+    //         // Proceed with booking
+    //         const response = await axios.post(
+    //             `${API_BASE}/appointments`,
+    //             bookingData
+    //         );
+
+    //         return {
+    //             success: true,
+    //             data: response.data.data || response.data,
+    //             message:
+    //                 response.data.message || "Booking created successfully",
+    //         };
+    //     } catch (error) {
+    //         console.error("ClientService - Create booking error:", error);
+    //         return {
+    //             success: false,
+    //             message:
+    //                 error.response?.data?.message || "Failed to create booking",
+    //             errors: error.response?.data?.errors || {},
+    //         };
+    //     }
+    // }
     async createBooking(bookingData) {
         try {
-            console.log(
-                "ClientService - Creating booking with data:",
+            // Check availability before booking if it's a direct appointment
+            if (
+                bookingData.appointment_date &&
+                bookingData.appointment_time &&
+                !bookingData.request_quote
+            ) {
+                // console.log("Checking availability before booking...");
+
+                // Use the existing provider availability endpoint instead
+                const endTime = this.calculateEndTime(
+                    bookingData.appointment_time,
+                    bookingData.duration_hours || 1
+                );
+
+                const availabilityCheck = await axios.get(
+                    `/api/client/providers/${bookingData.provider_id}/availability/check`,
+                    {
+                        params: {
+                            date: bookingData.appointment_date,
+                            start_time: bookingData.appointment_time,
+                            end_time: endTime,
+                        },
+                    }
+                );
+
+                if (
+                    !availabilityCheck.data.success ||
+                    !availabilityCheck.data.data.available
+                ) {
+                    return {
+                        success: false,
+                        message:
+                            "Selected time slot is no longer available. Please choose a different time.",
+                        availability_info: availabilityCheck.data.data,
+                    };
+                }
+            }
+
+            // Proceed with booking
+            const response = await axios.post(
+                `${API_BASE}/bookings`,
                 bookingData
             );
 
-            // Validate required fields before sending
-            const requiredFields = [
-                "service_id",
-                "provider_id",
-                "appointment_date",
-                "appointment_time",
-            ];
-            const missingFields = requiredFields.filter(
-                (field) => !bookingData[field]
-            );
-
-            if (missingFields.length > 0) {
-                throw new Error(
-                    `Missing required fields: ${missingFields.join(", ")}`
-                );
-            }
-
-            // Clean and format the booking data for Laravel backend
-            const cleanedData = {
-                // Core booking info
-                service_id: parseInt(bookingData.service_id),
-                provider_id: parseInt(bookingData.provider_id),
-
-                // Date and time
-                appointment_date: bookingData.appointment_date,
-                appointment_time: bookingData.appointment_time,
-
-                // Duration and pricing
-                duration_hours: parseFloat(bookingData.duration_hours || 1),
-                total_price: parseFloat(bookingData.total_price || 0),
-                base_price: parseFloat(bookingData.base_price || 0),
-                travel_fee: parseFloat(bookingData.travel_fee || 0),
-
-                // Location
-                location_type: bookingData.location_type || "client_address",
-                client_address: bookingData.client_address || "",
-                client_city: bookingData.client_city || "",
-                client_postal_code: bookingData.client_postal_code || "",
-                location_instructions: bookingData.location_instructions || "",
-
-                // Contact info
-                client_phone: bookingData.client_phone || "",
-                client_email: bookingData.client_email || "",
-                contact_preference: bookingData.contact_preference || "phone",
-                emergency_contact: bookingData.emergency_contact || "",
-
-                // Service details
-                client_notes: bookingData.client_notes || "",
-                special_instructions: bookingData.special_instructions || "",
-                additional_services: Array.isArray(
-                    bookingData.additional_services
-                )
-                    ? bookingData.additional_services
-                    : [],
-
-                // Payment and terms
-                payment_method: bookingData.payment_method || "cash",
-                agreed_to_terms: Boolean(bookingData.agreed_to_terms),
-                booking_type: bookingData.booking_type || "standard",
-                status: "pending_confirmation",
-
-                // Metadata
-                booking_source: "web_app",
-                timezone:
-                    bookingData.timezone ||
-                    Intl.DateTimeFormat().resolvedOptions().timeZone,
+            return {
+                success: true,
+                data: response.data.data || response.data,
+                message:
+                    response.data.message || "Booking created successfully",
             };
-
-            console.log("ClientService - Sending cleaned data:", cleanedData);
-
-            const response = await axios.post(
-                `${API_BASE}/bookings`,
-                cleanedData,
-                {
-                    headers: {
-                        "Content-Type": "application/json",
-                        Accept: "application/json",
-                    },
-                    timeout: 30000, // 30 second timeout
-                }
-            );
-
-            console.log("ClientService - Booking response:", response.data);
-
-            if (response.data && response.data.success !== false) {
-                return {
-                    success: true,
-                    data: response.data.data || response.data,
-                    message:
-                        response.data.message || "Booking created successfully",
-                };
-            } else {
-                throw new Error(
-                    response.data.message || "Booking creation failed"
-                );
-            }
         } catch (error) {
-            console.error("ClientService - Booking creation error:", error);
-
-            // Handle different types of errors
-            if (error.response) {
-                // Server responded with error status
-                const serverError = error.response.data;
-                return {
-                    success: false,
-                    message: serverError.message || "Server error occurred",
-                    errors: serverError.errors || {},
-                    status: error.response.status,
-                };
-            } else if (error.request) {
-                // Network error
-                return {
-                    success: false,
-                    message:
-                        "Network error. Please check your connection and try again.",
-                    errors: {},
-                };
-            } else {
-                // Other error
-                return {
-                    success: false,
-                    message: error.message || "An unexpected error occurred",
-                    errors: {},
-                };
-            }
+            console.error("ClientService - Create booking error:", error);
+            return {
+                success: false,
+                message:
+                    error.response?.data?.message || "Failed to create booking",
+                errors: error.response?.data?.errors || {},
+            };
         }
+    }
+
+    // Helper method
+    calculateEndTime(startTime, duration) {
+        const [hours, minutes] = startTime.split(":").map(Number);
+        const totalMinutes = hours * 60 + minutes + duration * 60;
+        const endHours = Math.floor(totalMinutes / 60);
+        const endMinutes = totalMinutes % 60;
+
+        return `${String(endHours).padStart(2, "0")}:${String(
+            endMinutes
+        ).padStart(2, "0")}`;
     }
 
     // async requestQuote(quoteData) {
@@ -708,14 +823,25 @@ class ClientService {
 
     async acceptQuote(quoteId, options = {}) {
         try {
+            const requestData = {
+                notes: options.notes || "",
+                create_appointment: options.create_appointment || false,
+            };
+
+            // Add appointment details if creating appointment
+            if (options.create_appointment && options.appointment_details) {
+                requestData.appointment_details = {
+                    date: options.appointment_details.date,
+                    time: options.appointment_details.time,
+                    duration: options.appointment_details.duration || 1,
+                    provider_id: options.appointment_details.provider_id,
+                    service_id: options.appointment_details.service_id,
+                };
+            }
+
             const response = await axios.patch(
                 `${API_BASE}/quotes/${quoteId}/accept`,
-                {
-                    notes: options.notes || "",
-                    appointment_date: options.appointment_date || null,
-                    appointment_time: options.appointment_time || null,
-                    create_appointment: options.create_appointment || false,
-                }
+                requestData
             );
 
             return {
@@ -739,15 +865,15 @@ class ClientService {
             const response = await axios.patch(
                 `${API_BASE}/quotes/${quoteId}/decline`,
                 {
+                    reason: options.reason || "",
                     notes: options.notes || "",
-                    reason: options.reason || null,
                 }
             );
 
             return {
                 success: true,
                 data: response.data.data || response.data,
-                message: response.data.message || "Quote declined",
+                message: response.data.message || "Quote declined successfully",
             };
         } catch (error) {
             console.error("ClientService - Decline quote error:", error);
@@ -763,6 +889,18 @@ class ClientService {
     async getQuotes(params = {}) {
         try {
             const response = await axios.get(`${API_BASE}/quotes`, { params });
+
+            // Handle count-only requests
+            if (params.count_only) {
+                return {
+                    success: true,
+                    count:
+                        response.data.total || response.data.data?.length || 0,
+                    data: response.data.data || [],
+                    message: "Quote count loaded",
+                };
+            }
+
             return {
                 success: true,
                 data: response.data.data || response.data,
@@ -771,9 +909,13 @@ class ClientService {
         } catch (error) {
             console.warn("Quotes endpoint not available, using fallback");
 
+            // Enhanced fallback data based on status
+            const fallbackData = this.getFallbackQuotes(params.status);
+
             return {
                 success: true,
-                data: this.getFallbackQuotes(params.status),
+                data: fallbackData,
+                count: fallbackData.length,
                 message: "Quotes loaded (fallback mode)",
                 fallback: true,
             };

@@ -7,53 +7,78 @@ use App\Models\Service;
 use App\Models\Appointment;
 use App\Models\Quote;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
 class AppointmentService
 {
+    protected $availabilityService;
+
+    public function __construct(AvailabilityService $availabilityService)
+    {
+        $this->availabilityService = $availabilityService;
+    }
     /**
      * Create a booking request (direct booking or quote request)
      */
     public function createBooking(User $client, array $data): array
     {
-        $service = Service::findOrFail($data['service_id']);
-        $provider = $service->provider;
-
-        // Check if provider is available
-        $availabilityCheck = app(AvailabilityService::class)->isAvailableAt(
-            $provider,
-            $data['appointment_date'],
-            $data['appointment_time'],
-            Carbon::parse($data['appointment_time'])->addHours($service->duration_hours)->format('H:i')
-        );
-
-        if (!$availabilityCheck['available']) {
-            throw new \Exception($availabilityCheck['reason']);
-        }
-
         DB::beginTransaction();
 
         try {
-            if ($data['request_quote'] ?? false) {
-                // Create quote request instead of direct booking
-                $result = $this->createQuoteRequest($client, $service, $data);
-                $type = 'quote_request';
-            } else {
-                // Create direct appointment
-                $appointment = $this->createDirectAppointment($client, $service, $data);
-                $result = $appointment;
-                $type = 'appointment';
+            // Get provider and service
+            $provider = User::findOrFail($data['provider_id']);
+            $service = Service::findOrFail($data['service_id']);
+
+            // If it's a direct appointment (not quote request), check availability
+            if (!($data['request_quote'] ?? false)) {
+                // Check availability before creating appointment
+                if (isset($data['appointment_date']) && isset($data['appointment_time'])) {
+                    $availabilityService = app(AvailabilityService::class);
+
+                    $duration = $data['duration_hours'] ?? 1;
+                    $endTime = Carbon::parse($data['appointment_time'])->addHours($duration)->format('H:i');
+
+                    $availabilityCheck = $availabilityService->isAvailableAt(
+                        $provider,
+                        $data['appointment_date'],
+                        $data['appointment_time'],
+                        $endTime
+                    );
+
+                    if (!$availabilityCheck['available']) {
+                        throw new \Exception(
+                            "Selected time slot is no longer available: " . $availabilityCheck['reason']
+                        );
+                    }
+                }
             }
 
-            DB::commit();
+            try {
+                if ($data['request_quote'] ?? false) {
+                    // Create quote request instead of direct booking
+                    $result = $this->createQuoteRequest($client, $service, $data);
+                    $type = 'quote_request';
+                } else {
+                    // Create direct appointment
+                    $appointment = $this->createDirectAppointment($client, $service, $data);
+                    $result = $appointment;
+                    $type = 'appointment';
+                }
 
-            return [
-                'type' => $type,
-                'data' => $result,
-            ];
+                DB::commit();
+
+                return [
+                    'type' => $type,
+                    'data' => $result,
+                ];
+            } catch (\Exception $e) {
+                DB::rollBack();
+                throw $e;
+            }
         } catch (\Exception $e) {
             DB::rollBack();
-            throw $e;
+            throw new \Exception('Failed to create booking: ' . $e->getMessage());
         }
     }
 
@@ -251,7 +276,7 @@ class AppointmentService
 
         // Apply filters
         if (isset($filters['status']) && $filters['status']) {
-            \Log::info('Filtering by status:', ['status' => $filters['status']]);
+            Log::info('Filtering by status:', ['status' => $filters['status']]);
             $query->where('status', $filters['status']);
         }
         if (isset($filters['date_from'])) {

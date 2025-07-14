@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use App\Models\ProviderAvailability;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class ProviderController extends Controller
@@ -227,7 +228,7 @@ class ProviderController extends Controller
                 return [
                     'id' => $service->id,
                     'title' => $service->title,
-                    'description' => \Str::limit($service->description, 150),
+                    'description' => Str::limit($service->description, 150),
                     'category' => [
                         'id' => $service->category->id,
                         'name' => $service->category->name,
@@ -358,6 +359,65 @@ class ProviderController extends Controller
     /**
      * Get available time slots for a specific date
      */
+    // public function getAvailableSlots(Request $request, User $provider)
+    // {
+    //     if ($provider->role !== 'service_provider') {
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'Provider not found'
+    //         ], 404);
+    //     }
+
+    //     $request->validate([
+    //         'date' => 'required|date|after_or_equal:today',
+    //         'service_id' => 'nullable|exists:services,id',
+    //         'duration' => 'nullable|numeric|min:0.5|max:8',
+    //     ]);
+
+    //     try {
+    //         $date = $request->input('date');
+    //         $duration = $request->input('duration', 1);
+
+    //         $requestDate = Carbon::parse($date);
+    //         $dayOfWeek = $requestDate->dayOfWeek;
+
+    //         // Get provider's availability for this day
+    //         $dayAvailability = ProviderAvailability::where('provider_id', $provider->id)
+    //             ->where('day_of_week', $dayOfWeek)
+    //             ->where('is_available', true)
+    //             ->first();
+
+    //         if (!$dayAvailability) {
+    //             return response()->json([
+    //                 'success' => true,
+    //                 'data' => [],
+    //                 'message' => 'Provider not available on this day'
+    //             ]);
+    //         }
+
+    //         // Generate time slots
+    //         $slots = $this->generateTimeSlots(
+    //             $dayAvailability->start_time,
+    //             $dayAvailability->end_time,
+    //             $duration
+    //         );
+
+    //         // TODO: Filter out already booked slots from appointments table
+    //         // For now, return all generated slots
+
+    //         return response()->json([
+    //             'success' => true,
+    //             'data' => $slots,
+    //             'message' => 'Available slots retrieved successfully'
+    //         ]);
+    //     } catch (\Exception $e) {
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'Failed to retrieve available slots',
+    //             'error' => $e->getMessage()
+    //         ], 500);
+    //     }
+    // }
     public function getAvailableSlots(Request $request, User $provider)
     {
         if ($provider->role !== 'service_provider') {
@@ -377,43 +437,39 @@ class ProviderController extends Controller
             $date = $request->input('date');
             $duration = $request->input('duration', 1);
 
-            $requestDate = Carbon::parse($date);
-            $dayOfWeek = $requestDate->dayOfWeek;
+            // Use the AvailabilityService for proper availability checking
+            $availabilityService = app(\App\Services\AvailabilityService::class);
 
-            // Get provider's availability for this day
-            $dayAvailability = ProviderAvailability::where('provider_id', $provider->id)
-                ->where('day_of_week', $dayOfWeek)
-                ->where('is_available', true)
-                ->first();
-
-            if (!$dayAvailability) {
-                return response()->json([
-                    'success' => true,
-                    'data' => [],
-                    'message' => 'Provider not available on this day'
-                ]);
-            }
-
-            // Generate time slots
-            $slots = $this->generateTimeSlots(
-                $dayAvailability->start_time,
-                $dayAvailability->end_time,
+            $slots = $availabilityService->getAvailableSlots(
+                $provider,
+                $date,
                 $duration
             );
 
-            // TODO: Filter out already booked slots from appointments table
-            // For now, return all generated slots
+            // Also get working hours for context
+            $workingHours = $availabilityService->getWorkingHours($provider, $date);
 
             return response()->json([
                 'success' => true,
-                'data' => $slots,
-                'message' => 'Available slots retrieved successfully'
+                'data' => [
+                    'date' => $date,
+                    'available_slots' => $slots,
+                    'total_slots' => count($slots),
+                    'service_duration_hours' => $duration,
+                    'working_hours' => $workingHours,
+                    'provider_id' => $provider->id,
+                    'day_of_week' => Carbon::parse($date)->dayOfWeek
+                ],
+                'message' => count($slots) > 0
+                    ? 'Available slots found'
+                    : 'No available slots for this date'
             ]);
         } catch (\Exception $e) {
+            Log::error('Error getting available slots in ProviderController: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to retrieve available slots',
-                'error' => $e->getMessage()
+                'error' => config('app.debug') ? $e->getMessage() : 'Server error'
             ], 500);
         }
     }
@@ -432,70 +488,43 @@ class ProviderController extends Controller
 
         $request->validate([
             'date' => 'required|date|after_or_equal:today',
-            'duration' => 'nullable|numeric|min:0.5|max:8',
+            'start_time' => 'required|date_format:H:i',
+            'end_time' => 'required|date_format:H:i|after:start_time',
         ]);
 
         try {
             $date = $request->input('date');
-            $duration = $request->input('duration', 1);
+            $startTime = $request->input('start_time');
+            $endTime = $request->input('end_time');
 
-            $requestDate = Carbon::parse($date);
-            $dayOfWeek = $requestDate->dayOfWeek;
+            // Use the AvailabilityService for proper availability checking
+            $availabilityService = app(\App\Services\AvailabilityService::class);
 
-            $dayAvailability = ProviderAvailability::where('provider_id', $provider->id)
-                ->where('day_of_week', $dayOfWeek)
-                ->where('is_available', true)
-                ->first();
-
-            $available = $dayAvailability !== null;
+            $availability = $availabilityService->isAvailableAt(
+                $provider,
+                $date,
+                $startTime,
+                $endTime
+            );
 
             return response()->json([
                 'success' => true,
-                'data' => [
-                    'available' => $available,
-                    'day_of_week' => $dayOfWeek,
-                    'availability_window' => $available ? [
-                        'start_time' => $dayAvailability->start_time->format('H:i'),
-                        'end_time' => $dayAvailability->end_time->format('H:i')
-                    ] : null
-                ],
-                'message' => $available ? 'Provider is available' : 'Provider is not available'
+                'data' => $availability,
+                'message' => $availability['available']
+                    ? 'Time slot is available'
+                    : ($availability['reason'] ?? 'Time slot not available')
             ]);
         } catch (\Exception $e) {
+            Log::error('Error checking availability in ProviderController: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to check availability',
-                'error' => $e->getMessage()
+                'error' => config('app.debug') ? $e->getMessage() : 'Server error'
             ], 500);
         }
     }
 
-    /**
-     * Generate time slots between start and end time
-     */
-    private function generateTimeSlots($startTime, $endTime, $duration)
-    {
-        $slots = [];
-        $current = Carbon::parse($startTime);
-        $end = Carbon::parse($endTime);
 
-        while ($current->copy()->addHours($duration)->lte($end)) {
-            $slotStart = $current->copy();
-            $slotEnd = $current->copy()->addHours($duration);
-
-            $slots[] = [
-                'time' => $slotStart->format('H:i'),
-                'end_time' => $slotEnd->format('H:i'),
-                'formatted_time' => $slotStart->format('g:i A'),
-                'is_popular' => in_array($slotStart->hour, [10, 14]), // Mark 10 AM and 2 PM as popular
-                'is_available' => true
-            ];
-
-            $current->addHour(); // Move to next hour slot
-        }
-
-        return $slots;
-    }
 
     /**
      * Get day name from day number
@@ -527,7 +556,7 @@ class ProviderController extends Controller
             'id' => $provider->id,
             'name' => $provider->full_name,
             'business_name' => $profile?->business_name,
-            'bio' => \Str::limit($profile?->bio, 150),
+            'bio' => Str::limit($profile?->bio, 150),
             'average_rating' => $profile?->average_rating ?? 0,
             'total_reviews' => $profile?->total_reviews ?? 0,
             'years_of_experience' => $profile?->years_of_experience,
@@ -535,7 +564,7 @@ class ProviderController extends Controller
             'verification_status' => $profile?->verification_status,
             'is_available' => $profile?->is_available ?? true,
             'profile_picture' => $provider->profile_picture
-                ? \Storage::url($provider->profile_picture)
+                ? Storage::url($provider->profile_picture)
                 : null,
             'services_count' => $activeServices->count(),
             'categories' => $activeServices->pluck('category.name')->unique()->values(),
@@ -562,7 +591,7 @@ class ProviderController extends Controller
             'contact_number' => $provider->contact_number,
             'address' => $provider->address,
             'profile_picture' => $provider->profile_picture
-                ? \Storage::url($provider->profile_picture)
+                ? Storage::url($provider->profile_picture)
                 : null,
             'business_details' => [
                 'business_name' => $profile?->business_name,

@@ -69,6 +69,11 @@ class Quote extends Model
 
     public function provider()
     {
+        return $this->belongsTo(ProviderProfile::class, 'provider_id');
+    }
+
+    public function providerUser()
+    {
         return $this->belongsTo(User::class, 'provider_id');
     }
 
@@ -82,10 +87,6 @@ class Quote extends Model
         return $this->belongsTo(Appointment::class);
     }
 
-    public function quoteRequest()
-    {
-        return $this->belongsTo(QuoteRequest::class);
-    }
 
     // Scopes
     public function scopePending($query)

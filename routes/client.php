@@ -1,6 +1,8 @@
 <?php
 // routes/client.php
 
+use App\Http\Controllers\API\AppointmentController;
+use App\Http\Controllers\API\AvailabilityController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\Client\SearchController;
 use App\Http\Controllers\API\Client\ServiceController;

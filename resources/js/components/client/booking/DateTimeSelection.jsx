@@ -28,6 +28,14 @@ const DateTimeSelection = ({
     }, [selectedDate, provider.id, service.id, bookingData.duration]);
 
     const loadAvailableSlots = async (date) => {
+        // console.log("🔍 Frontend: Loading slots for date:", date);
+        // console.log("🔍 Frontend: Date object:", new Date(date));
+        // console.log("🔍 Frontend: Day of week:", new Date(date).getDay());
+        // console.log(
+        //     "🔍 Frontend: Day name:",
+        //     new Date(date).toLocaleDateString("en-US", { weekday: "long" })
+        // );
+
         setLoading(true);
         setError("");
 
@@ -40,7 +48,10 @@ const DateTimeSelection = ({
                     bookingData.duration || bookingData.duration_hours || 1,
             });
 
+            // console.log("🔍 Frontend: API response:", response);
+
             if (response.success) {
+                // console.log("🔍 Frontend: Available slots:", response.data);
                 setAvailableSlots(
                     response.data.available_slots || response.data || []
                 );
@@ -61,6 +72,7 @@ const DateTimeSelection = ({
                 setAvailableSlots([]);
             }
         } catch (error) {
+            console.error("🔍 Frontend: API error:", error);
             console.error("Failed to load available slots:", error);
             setError("Unable to load available times. Please try again.");
             setAvailableSlots([]);
@@ -72,18 +84,42 @@ const DateTimeSelection = ({
     const getWeekDates = (startDate) => {
         const dates = [];
         const start = new Date(startDate);
-        start.setDate(start.getDate() - start.getDay()); // Start from Sunday
+
+        // Fix timezone issues by setting to noon
+        start.setHours(12, 0, 0, 0);
+
+        // Go to the start of the week (Sunday)
+        start.setDate(start.getDate() - start.getDay());
+
+        // console.log("🔍 Frontend: Generating week starting from:", start);
 
         for (let i = 0; i < 7; i++) {
+            // Create new date for each day, avoiding timezone issues
             const date = new Date(start);
             date.setDate(start.getDate() + i);
+            date.setHours(12, 0, 0, 0); // Set to noon to avoid timezone issues
+
+            // console.log(
+            //     `Day ${i}: ${
+            //         date.toISOString().split("T")[0]
+            //     } (${date.toLocaleDateString("en-US", { weekday: "long" })})`
+            // );
+
             dates.push(date);
         }
         return dates;
     };
 
     const formatDate = (date) => {
-        return date.toISOString().split("T")[0];
+        // Create a new date and set to noon to avoid timezone issues
+        const localDate = new Date(date);
+        localDate.setHours(12, 0, 0, 0);
+
+        const year = localDate.getFullYear();
+        const month = String(localDate.getMonth() + 1).padStart(2, "0");
+        const day = String(localDate.getDate()).padStart(2, "0");
+
+        return `${year}-${month}-${day}`;
     };
 
     const isDateDisabled = (date) => {
@@ -102,7 +138,20 @@ const DateTimeSelection = ({
     };
 
     const handleDateSelect = (date) => {
-        const dateString = formatDate(date);
+        // Ensure we're working with a proper date object
+        const selectedDate = new Date(date);
+        selectedDate.setHours(12, 0, 0, 0); // Set to noon
+
+        const dateString = formatDate(selectedDate);
+
+        // console.log("🔍 Frontend: User clicked on date:", selectedDate);
+        // console.log("🔍 Frontend: Formatted date string:", dateString);
+        // console.log("🔍 Frontend: Day of week:", selectedDate.getDay());
+        // console.log(
+        //     "🔍 Frontend: Day name:",
+        //     selectedDate.toLocaleDateString("en-US", { weekday: "long" })
+        // );
+
         setSelectedDate(dateString);
         setSelectedTime(""); // Reset time when date changes
 
@@ -114,7 +163,6 @@ const DateTimeSelection = ({
             appointment_time: "",
         });
     };
-
     const handleTimeSelect = (timeSlot) => {
         const timeString = timeSlot.time || timeSlot.start_time;
         setSelectedTime(timeString);
@@ -155,6 +203,19 @@ const DateTimeSelection = ({
         }
 
         setCurrentWeek(newWeek);
+    };
+
+    const formatTime = (timeString) => {
+        if (!timeString) return "";
+        try {
+            const [hours, minutes] = timeString.split(":");
+            const hour = parseInt(hours);
+            const ampm = hour >= 12 ? "PM" : "AM";
+            const displayHour = hour % 12 || 12;
+            return `${displayHour}:${minutes} ${ampm}`;
+        } catch (error) {
+            return timeString; // Return original if parsing fails
+        }
     };
 
     const weekDates = getWeekDates(currentWeek);
@@ -221,6 +282,23 @@ const DateTimeSelection = ({
                                     const isToday =
                                         date.toDateString() ===
                                         today.toDateString();
+
+                                    // Add this logging
+                                    {
+                                        /* console.log(
+                                        `🔍 Frontend: Rendering calendar day ${index}:`,
+                                        {
+                                            date: dateString,
+                                            dayName: date.toLocaleDateString(
+                                                "en-US",
+                                                { weekday: "long" }
+                                            ),
+                                            isSelected,
+                                            selectedDate,
+                                            hasSlots: availableSlots.length > 0,
+                                        }
+                                    ); */
+                                    }
 
                                     return (
                                         <div key={index} className="col">
@@ -330,12 +408,16 @@ const DateTimeSelection = ({
                                                                     }
                                                                     title={`Book at ${
                                                                         slot.formatted_time ||
-                                                                        timeString
+                                                                        formatTime(
+                                                                            timeString
+                                                                        )
                                                                     }`}
                                                                 >
                                                                     <div className="slot-time fw-semibold">
                                                                         {slot.formatted_time ||
-                                                                            timeString}
+                                                                            formatTime(
+                                                                                timeString
+                                                                            )}
                                                                     </div>
                                                                     {slot.is_popular && (
                                                                         <small className="badge bg-warning mt-1">
@@ -345,9 +427,9 @@ const DateTimeSelection = ({
                                                                     {slot.end_time && (
                                                                         <small className="text-muted d-block">
                                                                             to{" "}
-                                                                            {
+                                                                            {formatTime(
                                                                                 slot.end_time
-                                                                            }
+                                                                            )}
                                                                         </small>
                                                                     )}
                                                                 </button>
