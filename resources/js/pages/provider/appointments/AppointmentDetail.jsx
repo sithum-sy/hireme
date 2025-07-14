@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import ProviderLayout from "../../../components/layouts/ProviderLayout";
 import LoadingSpinner from "../../../components/LoadingSpinner";
+import CompleteServiceModal from "../../../components/provider/appointments/CompleteServiceModal";
 import providerAppointmentService from "../../../services/providerAppointmentService";
 
 const AppointmentDetail = () => {
@@ -13,6 +14,7 @@ const AppointmentDetail = () => {
     const [actionLoading, setActionLoading] = useState(false);
     const [notes, setNotes] = useState("");
     const [showNotesModal, setShowNotesModal] = useState(false);
+    const [showCompleteModal, setShowCompleteModal] = useState(false);
     const [pendingAction, setPendingAction] = useState(null);
 
     useEffect(() => {
@@ -61,6 +63,44 @@ const AppointmentDetail = () => {
             }
         } catch (error) {
             console.error("Status update failed:", error);
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
+    const handleCompleteService = async (options) => {
+        setActionLoading(true);
+        try {
+            setShowCompleteModal(false); // Close modal immediately
+
+            const result = await providerAppointmentService.completeService(
+                appointment.id,
+                options
+            );
+
+            if (result.success) {
+                setAppointment(result.data);
+
+                if (result.invoice) {
+                    const action = options.send_invoice
+                        ? "created and sent"
+                        : "created";
+                    setTimeout(() => {
+                        alert(
+                            `Service completed! Invoice #${result.invoice.invoice_number} has been ${action}.`
+                        );
+                    }, 100);
+                } else {
+                    setTimeout(() => {
+                        alert("Service completed successfully!");
+                    }, 100);
+                }
+            } else {
+                alert(result.message || "Failed to complete service");
+            }
+        } catch (error) {
+            console.error("Error completing service:", error);
+            alert("Error completing service");
         } finally {
             setActionLoading(false);
         }
@@ -285,14 +325,14 @@ const AppointmentDetail = () => {
                         {appointment.status === "in_progress" && (
                             <div className="d-flex gap-2">
                                 <button
-                                    className="btn btn-info"
-                                    onClick={() =>
-                                        handleStatusUpdate("completed", true)
-                                    }
+                                    className="btn btn-success"
+                                    onClick={() => setShowCompleteModal(true)}
                                     disabled={actionLoading}
                                 >
                                     <i className="fas fa-check-double me-2"></i>
-                                    Mark Complete
+                                    {actionLoading
+                                        ? "Processing..."
+                                        : "Complete Service"}
                                 </button>
                                 <button
                                     className="btn btn-outline-secondary"
@@ -636,6 +676,18 @@ const AppointmentDetail = () => {
                             </div>
                         </div>
                     </>
+                )}
+
+                {/* Complete Service Modal */}
+                {showCompleteModal && (
+                    <CompleteServiceModal
+                        appointment={appointment}
+                        isOpen={showCompleteModal}
+                        onClose={() =>
+                            !actionLoading && setShowCompleteModal(false)
+                        }
+                        onComplete={handleCompleteService}
+                    />
                 )}
             </div>
 

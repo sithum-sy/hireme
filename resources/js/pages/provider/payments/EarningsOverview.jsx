@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import ProviderLayout from "../../../components/layouts/ProviderLayout"; // Add this import
 import invoiceService from "../../../services/invoiceService";
-import EarningsChart from "../../../components/provider/payments/EarningsChart";
-import InvoiceStatistics from "../../../components/provider/payments/InvoiceStatistics";
+import EarningsChart from "../../../components/provider/invoices/EarningsChart";
+import InvoiceStatistics from "../../../components/provider/invoices/InvoiceStatistics";
 
 const EarningsOverview = () => {
     const [statistics, setStatistics] = useState({});

@@ -59,6 +59,9 @@ Route::prefix('appointments')->group(function () {
     Route::get('/today', [App\Http\Controllers\API\Provider\AppointmentController::class, 'today']);
     Route::get('/{appointment}', [App\Http\Controllers\API\Provider\AppointmentController::class, 'show']);
     Route::patch('/{appointment}/status', [App\Http\Controllers\API\Provider\AppointmentController::class, 'updateStatus']);
+    Route::post('/{appointment}/complete', [App\Http\Controllers\API\Provider\AppointmentController::class, 'completeService']); // Add this
+    Route::post('/{appointment}/start', [App\Http\Controllers\API\Provider\AppointmentController::class, 'startService']);
+    Route::post('/{appointment}/cancel', [App\Http\Controllers\API\Provider\AppointmentController::class, 'cancelAppointment']);
 });
 
 // Quote Management

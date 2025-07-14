@@ -104,11 +104,36 @@ class ProviderAppointmentService {
         );
     }
 
+    // /**
+    //  * Complete service
+    //  */
+    // async completeService(appointmentId, notes = "") {
+    //     return this.updateAppointmentStatus(appointmentId, "completed", notes);
+    // }
     /**
-     * Complete service
+     * Complete service with invoice options
      */
-    async completeService(appointmentId, notes = "") {
-        return this.updateAppointmentStatus(appointmentId, "completed", notes);
+    async completeService(appointmentId, options = {}) {
+        try {
+            const response = await axios.post(
+                `${API_BASE}/appointments/${appointmentId}/complete`,
+                {
+                    notes: options.notes || "",
+                    create_invoice: options.create_invoice !== false, // Default true
+                    send_invoice: options.send_invoice || false, // Default false
+                }
+            );
+
+            return {
+                success: true,
+                data: response.data.data,
+                invoice: response.data.invoice, // Include invoice data if created
+                message:
+                    response.data.message || "Service completed successfully",
+            };
+        } catch (error) {
+            return this.handleError(error, "Failed to complete service");
+        }
     }
 
     /**
@@ -146,6 +171,32 @@ class ProviderAppointmentService {
             message: error.message || defaultMessage,
             errors: {},
         };
+    }
+
+    /**
+     * Complete service with invoice options
+     */
+    async completeService(appointmentId, options = {}) {
+        try {
+            const response = await axios.post(
+                `${API_BASE}/appointments/${appointmentId}/complete`,
+                {
+                    notes: options.notes || "",
+                    create_invoice: options.create_invoice !== false, // Default true
+                    send_invoice: options.send_invoice || false, // Default false
+                }
+            );
+
+            return {
+                success: true,
+                data: response.data.data,
+                invoice: response.data.invoice, // Include invoice data if created
+                message:
+                    response.data.message || "Service completed successfully",
+            };
+        } catch (error) {
+            return this.handleError(error, "Failed to complete service");
+        }
     }
 }
 

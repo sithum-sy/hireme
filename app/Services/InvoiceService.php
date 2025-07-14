@@ -4,8 +4,11 @@ namespace App\Services;
 
 use App\Models\Invoice;
 use App\Models\Appointment;
+use App\Notifications\InvoiceCreated;
+use App\Notifications\InvoiceSent;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 
 class InvoiceService
 {
@@ -26,7 +29,7 @@ class InvoiceService
                 'provider_id' => $appointment->provider_id,
                 'client_id' => $appointment->client_id,
                 'subtotal' => $subtotal,
-                'tax_amount' => 0, // Add tax calculation if needed
+                'tax_amount' => 0,
                 'platform_fee' => $platformFee,
                 'total_amount' => $subtotal,
                 'provider_earnings' => $providerEarnings,
@@ -34,8 +37,14 @@ class InvoiceService
                 'due_date' => now()->addDays($options['due_days'] ?? 7),
                 'notes' => $options['notes'] ?? null,
                 'line_items' => $this->generateLineItems($appointment, $options['line_items'] ?? []),
-                'issued_at' => now()
+                'issued_at' => now(),
+                'status' => 'draft' // Start as draft
             ]);
+
+            // Send notification to client about new invoice
+            if (isset($options['auto_created']) && $options['auto_created']) {
+                $this->notifyClientOfNewInvoice($invoice);
+            }
 
             return $invoice;
         });
@@ -64,12 +73,17 @@ class InvoiceService
      */
     public function sendInvoice(Invoice $invoice)
     {
+        if (!$invoice->canBeSent()) {
+            throw new \Exception('Invoice cannot be sent in current status');
+        }
+
         $invoice->markAsSent();
 
         // Here you would:
         // 1. Send email to client
         // 2. Send notification
         // 3. Generate PDF if needed
+        $this->notifyClientInvoiceSent($invoice);
 
         return $invoice;
     }
@@ -227,5 +241,41 @@ class InvoiceService
             'data' => $yearlyEarnings,
             'total' => $yearlyEarnings->sum('earnings')
         ];
+    }
+
+    /*
+     * Notify client about new invoice
+     */
+    private function notifyClientOfNewInvoice(Invoice $invoice)
+    {
+        try {
+            $client = $invoice->client;
+            if ($client && $client->email) {
+                // You can use Laravel notifications or send email directly
+                // $client->notify(new InvoiceCreated($invoice));
+
+                // For now, log it
+                \Log::info("New invoice notification sent to client {$client->email} for invoice {$invoice->id}");
+            }
+        } catch (\Exception $e) {
+            \Log::error("Failed to notify client about new invoice: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Notify client that invoice was sent
+     */
+    private function notifyClientInvoiceSent(Invoice $invoice)
+    {
+        try {
+            $client = $invoice->client;
+            if ($client && $client->email) {
+                // $client->notify(new InvoiceSent($invoice));
+
+                \Log::info("Invoice sent notification to client {$client->email} for invoice {$invoice->id}");
+            }
+        } catch (\Exception $e) {
+            \Log::error("Failed to notify client about sent invoice: " . $e->getMessage());
+        }
     }
 }
