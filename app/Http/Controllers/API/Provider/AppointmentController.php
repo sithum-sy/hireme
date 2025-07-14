@@ -26,6 +26,8 @@ class AppointmentController extends Controller
      */
     public function index(Request $request)
     {
+        \Log::info('Appointment filters received:', $request->all());
+
         $request->validate([
             'status' => 'nullable|in:pending,confirmed,in_progress,completed,cancelled_by_client,cancelled_by_provider,no_show,disputed',
             'date_from' => 'nullable|date',
@@ -37,9 +39,15 @@ class AppointmentController extends Controller
             $user = Auth::user();
             $filters = $request->only(['status', 'date_from', 'date_to']);
 
+            \Log::info('Processed filters:', $filters);
+
             $query = $this->appointmentService->getAppointments($user, $filters);
             $perPage = $request->get('per_page', 15);
             $appointments = $query->paginate($perPage);
+
+            // Debug the query and results
+            \Log::info('SQL Query:', [$query->toSql()]);
+            \Log::info('Appointments found:', ['count' => $appointments->total()]);
 
             // Transform for provider view
             $appointments->through(function ($appointment) {
@@ -225,11 +233,224 @@ class AppointmentController extends Controller
 
             return response()->json($response);
         } catch (\Exception $e) {
-            \Log::error('Failed to complete service: ' . $e->getMessage());
+            Log::error('Failed to complete service: ' . $e->getMessage());
 
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to complete service'
+            ], 500);
+        }
+    }
+
+    /**
+     * Get today's appointments for dashboard
+     */
+    public function todayForDashboard()
+    {
+        try {
+            $user = Auth::user();
+            $today = now()->toDateString();
+
+            $appointments = Appointment::where('provider_id', $user->id)
+                ->where('appointment_date', $today)
+                ->whereIn('status', ['pending', 'confirmed', 'in_progress'])
+                ->with(['client', 'service'])
+                ->orderBy('appointment_time')
+                ->limit(5)
+                ->get();
+
+            $transformedAppointments = $appointments->map(function ($appointment) {
+                return $this->transformAppointmentForProvider($appointment);
+            });
+
+            return response()->json([
+                'success' => true,
+                'data' => $transformedAppointments
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Today appointments error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch today\'s appointments',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get upcoming appointments for dashboard
+     */
+    public function upcomingForDashboard()
+    {
+        try {
+            $user = Auth::user();
+            $today = now()->toDateString();
+            $nextWeek = now()->addWeek()->toDateString();
+
+            $appointments = Appointment::where('provider_id', $user->id)
+                ->where('appointment_date', '>', $today)
+                ->where('appointment_date', '<=', $nextWeek)
+                ->whereIn('status', ['pending', 'confirmed'])
+                ->with(['client', 'service'])
+                ->orderBy('appointment_date')
+                ->orderBy('appointment_time')
+                ->limit(5)
+                ->get();
+
+            $transformedAppointments = $appointments->map(function ($appointment) {
+                return $this->transformAppointmentForProvider($appointment);
+            });
+
+            return response()->json([
+                'success' => true,
+                'data' => $transformedAppointments
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Upcoming appointments error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch upcoming appointments',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get recent past appointments for dashboard
+     */
+    public function pastForDashboard()
+    {
+        try {
+            $user = Auth::user();
+            $lastWeek = now()->subWeek()->toDateString();
+
+            $appointments = Appointment::where('provider_id', $user->id)
+                ->where('appointment_date', '<', now()->toDateString())
+                ->where('appointment_date', '>=', $lastWeek)
+                ->where('status', 'completed')
+                ->with(['client', 'service'])
+                ->orderBy('appointment_date', 'desc')
+                ->orderBy('appointment_time', 'desc')
+                ->limit(5)
+                ->get();
+
+            $transformedAppointments = $appointments->map(function ($appointment) {
+                return $this->transformAppointmentForProvider($appointment);
+            });
+
+            return response()->json([
+                'success' => true,
+                'data' => $transformedAppointments
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Past appointments error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch past appointments',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get cancelled appointments for dashboard
+     */
+    public function cancelledForDashboard()
+    {
+        try {
+            $user = Auth::user();
+            $lastMonth = now()->subMonth()->toDateString();
+
+            $appointments = Appointment::where('provider_id', $user->id)
+                ->where('appointment_date', '>=', $lastMonth)
+                ->whereIn('status', ['cancelled_by_client', 'cancelled_by_provider', 'no_show'])
+                ->with(['client', 'service'])
+                ->orderBy('appointment_date', 'desc')
+                ->limit(5)
+                ->get();
+
+            $transformedAppointments = $appointments->map(function ($appointment) {
+                return $this->transformAppointmentForProvider($appointment);
+            });
+
+            return response()->json([
+                'success' => true,
+                'data' => $transformedAppointments
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Cancelled appointments error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch cancelled appointments',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get dashboard appointment stats
+     */
+    public function dashboardStats()
+    {
+        try {
+            $user = Auth::user();
+            $today = now()->toDateString();
+
+            $stats = [
+                'today_total' => Appointment::where('provider_id', $user->id)
+                    ->where('appointment_date', $today)
+                    ->count(),
+
+                'today_pending' => Appointment::where('provider_id', $user->id)
+                    ->where('appointment_date', $today)
+                    ->where('status', 'pending')
+                    ->count(),
+
+                'today_confirmed' => Appointment::where('provider_id', $user->id)
+                    ->where('appointment_date', $today)
+                    ->where('status', 'confirmed')
+                    ->count(),
+
+                'today_completed' => Appointment::where('provider_id', $user->id)
+                    ->where('appointment_date', $today)
+                    ->where('status', 'completed')
+                    ->count(),
+
+                'upcoming_count' => Appointment::where('provider_id', $user->id)
+                    ->where('appointment_date', '>', $today)
+                    ->whereIn('status', ['pending', 'confirmed'])
+                    ->count(),
+
+                'this_week_completed' => Appointment::where('provider_id', $user->id)
+                    ->whereBetween('appointment_date', [
+                        now()->startOfWeek()->toDateString(),
+                        now()->endOfWeek()->toDateString()
+                    ])
+                    ->where('status', 'completed')
+                    ->count(),
+
+                'this_month_earnings' => Appointment::where('provider_id', $user->id)
+                    ->whereMonth('appointment_date', now()->month)
+                    ->whereYear('appointment_date', now()->year)
+                    ->where('status', 'completed')
+                    ->sum('total_price'),
+
+                'recent_cancellations' => Appointment::where('provider_id', $user->id)
+                    ->where('appointment_date', '>=', now()->subWeek()->toDateString())
+                    ->whereIn('status', ['cancelled_by_client', 'cancelled_by_provider', 'no_show'])
+                    ->count(),
+            ];
+
+            return response()->json([
+                'success' => true,
+                'data' => $stats
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Dashboard stats error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch appointment stats',
+                'error' => $e->getMessage()
             ], 500);
         }
     }

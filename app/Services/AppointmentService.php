@@ -250,10 +250,10 @@ class AppointmentService
         }
 
         // Apply filters
-        if (isset($filters['status'])) {
+        if (isset($filters['status']) && $filters['status']) {
+            \Log::info('Filtering by status:', ['status' => $filters['status']]);
             $query->where('status', $filters['status']);
         }
-
         if (isset($filters['date_from'])) {
             $query->where('appointment_date', '>=', $filters['date_from']);
         }

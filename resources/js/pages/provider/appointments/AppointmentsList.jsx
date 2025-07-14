@@ -39,6 +39,22 @@ const AppointmentsList = () => {
         calculateStats();
     }, [appointments]);
 
+    useEffect(() => {
+        const statusFromUrl = searchParams.get("status");
+        if (statusFromUrl && statusFromUrl !== filters.status) {
+            setFilters((prev) => ({
+                ...prev,
+                status: statusFromUrl,
+            }));
+        }
+    }, [searchParams]);
+
+    useEffect(() => {
+        console.log("URL search params:", searchParams.toString());
+        console.log("Current filters:", filters);
+        console.log("Status from URL:", searchParams.get("status"));
+    }, [searchParams, filters]);
+
     const loadAppointments = async () => {
         setLoading(true);
         try {

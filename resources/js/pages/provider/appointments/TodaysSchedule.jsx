@@ -251,16 +251,31 @@ const TodaysSchedule = () => {
                                                                 }}
                                                             >
                                                                 <div
-                                                                    className={`fw-bold ${
-                                                                        appointment.timeSlot <=
-                                                                        currentTime
-                                                                            ? "text-success"
-                                                                            : "text-muted"
-                                                                    }`}
+                                                                    className="timeline-time me-3 text-center"
+                                                                    style={{
+                                                                        minWidth:
+                                                                            "60px",
+                                                                    }}
                                                                 >
-                                                                    {
-                                                                        appointment.timeSlot
-                                                                    }
+                                                                    <div
+                                                                        className={`fw-bold ${
+                                                                            appointment.timeSlot <=
+                                                                            currentTime
+                                                                                ? "text-success"
+                                                                                : "text-muted"
+                                                                        }`}
+                                                                    >
+                                                                        {
+                                                                            appointment.formattedTime
+                                                                        }{" "}
+                                                                        {/* ✅ Shows "2:30 PM" instead of "14:30" */}
+                                                                    </div>
+                                                                    {appointment.timeSlot <=
+                                                                        currentTime && (
+                                                                        <small className="text-success">
+                                                                            Past
+                                                                        </small>
+                                                                    )}
                                                                 </div>
                                                                 {appointment.timeSlot <=
                                                                     currentTime &&

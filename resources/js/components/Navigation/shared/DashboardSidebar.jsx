@@ -412,24 +412,29 @@ const DashboardSidebar = ({
                     icon: "fas fa-calendar-alt",
                     label: "Appointments",
                     path: "/provider/appointments",
-                    badge: "5",
+                    badge: "",
                     children: [
+                        {
+                            label: "All Appointments",
+                            path: "/provider/appointments",
+                            badge: "",
+                        },
                         {
                             label: "Today's Schedule",
                             path: "/provider/appointments/today",
                         },
                         {
                             label: "Upcoming",
-                            path: "/provider/appointments/upcoming",
-                            badge: "3",
+                            path: "/provider/appointments?status=confirmed",
+                            badge: "",
                         },
                         {
                             label: "Past Appointments",
-                            path: "/provider/appointments/past",
+                            path: "/provider/appointments?status=completed",
                         },
                         {
                             label: "Cancelled",
-                            path: "/provider/appointments/cancelled",
+                            path: "/provider/appointments?status=cancelled_by_client",
                         },
                     ],
                 },
@@ -438,7 +443,7 @@ const DashboardSidebar = ({
                     icon: "fas fa-concierge-bell",
                     label: "My Services",
                     path: "/provider/services",
-                    badge: "8",
+                    badge: "",
                     children: [
                         { label: "All Services", path: "/provider/services" },
                         {

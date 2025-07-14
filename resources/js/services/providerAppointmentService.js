@@ -198,6 +198,137 @@ class ProviderAppointmentService {
             return this.handleError(error, "Failed to complete service");
         }
     }
+
+    /**
+     * Get dashboard appointment data
+     */
+    async getDashboardAppointments() {
+        try {
+            const [
+                todayResult,
+                upcomingResult,
+                pastResult,
+                cancelledResult,
+                statsResult,
+            ] = await Promise.all([
+                axios.get(`${API_BASE}/appointments/dashboard/today`),
+                axios.get(`${API_BASE}/appointments/dashboard/upcoming`),
+                axios.get(`${API_BASE}/appointments/dashboard/past`),
+                axios.get(`${API_BASE}/appointments/dashboard/cancelled`),
+                axios.get(`${API_BASE}/appointments/dashboard/stats`),
+            ]);
+
+            return {
+                success: true,
+                data: {
+                    today: todayResult.data.data || [],
+                    upcoming: upcomingResult.data.data || [],
+                    past: pastResult.data.data || [],
+                    cancelled: cancelledResult.data.data || [],
+                    stats: statsResult.data.data || {},
+                },
+            };
+        } catch (error) {
+            return this.handleError(
+                error,
+                "Failed to load dashboard appointments"
+            );
+        }
+    }
+
+    /**
+     * Get today's appointments for dashboard
+     */
+    async getTodayAppointmentsForDashboard() {
+        try {
+            const response = await axios.get(
+                `${API_BASE}/appointments/dashboard/today`
+            );
+            return {
+                success: true,
+                data: response.data.data || [],
+            };
+        } catch (error) {
+            return this.handleError(
+                error,
+                "Failed to load today's appointments"
+            );
+        }
+    }
+
+    /**
+     * Get upcoming appointments for dashboard
+     */
+    async getUpcomingAppointmentsForDashboard() {
+        try {
+            const response = await axios.get(
+                `${API_BASE}/appointments/dashboard/upcoming`
+            );
+            return {
+                success: true,
+                data: response.data.data || [],
+            };
+        } catch (error) {
+            return this.handleError(
+                error,
+                "Failed to load upcoming appointments"
+            );
+        }
+    }
+
+    /**
+     * Get past appointments for dashboard
+     */
+    async getPastAppointmentsForDashboard() {
+        try {
+            const response = await axios.get(
+                `${API_BASE}/appointments/dashboard/past`
+            );
+            return {
+                success: true,
+                data: response.data.data || [],
+            };
+        } catch (error) {
+            return this.handleError(error, "Failed to load past appointments");
+        }
+    }
+
+    /**
+     * Get cancelled appointments for dashboard
+     */
+    async getCancelledAppointmentsForDashboard() {
+        try {
+            const response = await axios.get(
+                `${API_BASE}/appointments/dashboard/cancelled`
+            );
+            return {
+                success: true,
+                data: response.data.data || [],
+            };
+        } catch (error) {
+            return this.handleError(
+                error,
+                "Failed to load cancelled appointments"
+            );
+        }
+    }
+
+    /**
+     * Get appointment stats for dashboard
+     */
+    async getAppointmentStats() {
+        try {
+            const response = await axios.get(
+                `${API_BASE}/appointments/dashboard/stats`
+            );
+            return {
+                success: true,
+                data: response.data.data || {},
+            };
+        } catch (error) {
+            return this.handleError(error, "Failed to load appointment stats");
+        }
+    }
 }
 
 export default new ProviderAppointmentService();
