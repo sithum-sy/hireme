@@ -2196,7 +2196,6 @@
     color: #856404;
 }
 
-
 /* Staff Layout Styles */
 .staff-layout {
     min-height: 100vh;
@@ -2299,8 +2298,14 @@
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* Activity Timeline */
@@ -2309,7 +2314,7 @@
 }
 
 .activity-timeline::before {
-    content: '';
+    content: "";
     position: absolute;
     left: 16px;
     top: 40px;
@@ -2326,13 +2331,13 @@
 .card {
     border: 1px solid #dee2e6;
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 /* Task Lists */
@@ -2370,7 +2375,7 @@
 
 .quick-action-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 /* Responsive Design */
@@ -2378,20 +2383,20 @@
     .staff-main {
         margin-left: 0 !important;
     }
-    
+
     .sidebar {
         transform: translateX(-100%);
         transition: transform 0.3s ease;
     }
-    
+
     .sidebar.sidebar-open {
         transform: translateX(0);
     }
-    
+
     .staff-main-content {
         padding: 15px;
     }
-    
+
     .row.mb-4 {
         margin-bottom: 1rem !important;
     }
@@ -2401,11 +2406,11 @@
     .staff-main-content {
         padding: 10px;
     }
-    
+
     .card-body {
         padding: 1rem;
     }
-    
+
     .btn-sm {
         padding: 0.25rem 0.5rem;
         font-size: 0.875rem;
@@ -2427,8 +2432,12 @@
 }
 
 @keyframes skeleton-loading {
-    0% { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
 }
 
 /* Toast Notifications */
@@ -2499,15 +2508,15 @@
     .toast-container {
         display: none !important;
     }
-    
+
     .staff-main {
         margin-left: 0 !important;
     }
-    
+
     .staff-main-content {
         padding: 0 !important;
     }
-    
+
     .card {
         border: 1px solid #000 !important;
         box-shadow: none !important;
@@ -2524,8 +2533,14 @@
 }
 
 @keyframes slideUp {
-    from { transform: translateY(20px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
 }
 
 .bounce-in {
@@ -2533,10 +2548,20 @@
 }
 
 @keyframes bounceIn {
-    0% { transform: scale(0.3); opacity: 0; }
-    50% { transform: scale(1.05); opacity: 1; }
-    70% { transform: scale(0.9); }
-    100% { transform: scale(1); }
+    0% {
+        transform: scale(0.3);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.05);
+        opacity: 1;
+    }
+    70% {
+        transform: scale(0.9);
+    }
+    100% {
+        transform: scale(1);
+    }
 }
 
 /* Utility Classes */
@@ -2573,4 +2598,48 @@
 
 .bg-light-danger {
     background-color: rgba(220, 53, 69, 0.1) !important;
+}
+/* Provider Invoice Pages Theme */
+.btn-orange {
+    background-color: #fd7e14;
+    border-color: #fd7e14;
+    color: white;
+}
+
+.btn-orange:hover {
+    background-color: #e55100;
+    border-color: #e55100;
+    color: white;
+}
+
+.btn-outline-orange {
+    color: #fd7e14;
+    border-color: #fd7e14;
+}
+
+.btn-outline-orange:hover {
+    background-color: #fd7e14;
+    border-color: #fd7e14;
+    color: white;
+}
+
+.text-orange {
+    color: #fd7e14 !important;
+}
+
+.bg-orange {
+    background-color: #fd7e14 !important;
+}
+
+.spinner-border.text-orange {
+    color: #fd7e14 !important;
+}
+
+.pagination .page-link {
+    color: #fd7e14;
+}
+
+.pagination .page-item.active .page-link {
+    background-color: #fd7e14;
+    border-color: #fd7e14;
 }

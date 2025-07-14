@@ -6,6 +6,7 @@ use App\Http\Controllers\API\AvailabilityController;
 use App\Http\Controllers\API\ProfileController;
 use App\Http\Controllers\API\AppointmentController;
 use App\Http\Controllers\API\staff\ServiceCategoryController;
+use App\Http\Controllers\API\Provider\InvoiceController;
 
 /*
 |--------------------------------------------------------------------------
@@ -69,6 +70,18 @@ Route::prefix('quotes')->group(function () {
     Route::patch('/quotes/{quote}', [App\Http\Controllers\API\Provider\QuoteController::class, 'update']);
     Route::get('/requests/available', [App\Http\Controllers\API\Provider\QuoteController::class, 'getAvailableRequests']);
     Route::patch('/quotes/{quote}/send', [App\Http\Controllers\API\Provider\QuoteController::class, 'send']);
+});
+
+// Invoice Management
+Route::prefix('invoices')->group(function () {
+    Route::get('/', [InvoiceController::class, 'index']);
+    Route::get('/statistics', [InvoiceController::class, 'statistics']);
+    Route::get('/earnings', [InvoiceController::class, 'earnings']);
+    Route::get('/{invoice}', [InvoiceController::class, 'show']);
+    Route::post('/', [InvoiceController::class, 'store']);
+    Route::patch('/{invoice}', [InvoiceController::class, 'update']);
+    Route::patch('/{invoice}/send', [InvoiceController::class, 'send']);
+    Route::patch('/{invoice}/mark-paid', [InvoiceController::class, 'markPaid']);
 });
 
 // Provider Dashboard & Analytics

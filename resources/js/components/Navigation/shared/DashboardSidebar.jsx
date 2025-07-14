@@ -509,6 +509,14 @@ const DashboardSidebar = ({
                     ],
                 },
                 {
+                    id: "invoices",
+                    icon: "fas fa-file-invoice",
+                    label: "Invoices",
+                    path: "/provider/invoices",
+                    // badge:
+                    //     pendingInvoicesCount > 0 ? pendingInvoicesCount : null,
+                },
+                {
                     id: "profile",
                     icon: "fas fa-user",
                     label: "My Profile",
@@ -530,7 +538,7 @@ const DashboardSidebar = ({
                 },
                 {
                     id: "earnings",
-                    icon: "fas fa-chart-line",
+                    icon: "fas fa-dollar-sign",
                     label: "Earnings",
                     path: "/provider/earnings",
                     children: [
@@ -538,14 +546,14 @@ const DashboardSidebar = ({
                             label: "Overview",
                             path: "/provider/earnings/overview",
                         },
-                        {
-                            label: "Payment History",
-                            path: "/provider/earnings/history",
-                        },
-                        {
-                            label: "Tax Documents",
-                            path: "/provider/earnings/tax",
-                        },
+                        // {
+                        //     label: "Payment History",
+                        //     path: "/provider/earnings/history",
+                        // },
+                        // {
+                        //     label: "Tax Documents",
+                        //     path: "/provider/earnings/tax",
+                        // },
                     ],
                 },
                 {

@@ -43,6 +43,10 @@ import ProviderQuotesList from "./pages/provider/quotes/QuotesList";
 import CreateQuote from "./pages/provider/quotes/CreateQuote";
 import QuoteDetail from "./pages/provider/quotes/QuoteDetail";
 import EditQuote from "./pages/provider/quotes/EditQuote";
+import InvoicesList from "./pages/provider/payments/InvoicesList";
+import CreateInvoice from "./pages/provider/payments/CreateInvoice";
+import InvoiceDetail from "./pages/provider/payments/InvoiceDetail";
+import EarningsOverview from "./pages/provider/payments/EarningsOverview";
 
 // Admin Pages
 import AdminDashboard from "./pages/admin/Dashboard";
@@ -565,6 +569,26 @@ function App() {
                                                 <Route
                                                     path="quotes/:id/edit"
                                                     element={<EditQuote />}
+                                                />
+
+                                                {/* Provider Invoice Management */}
+                                                <Route
+                                                    path="invoices"
+                                                    element={<InvoicesList />}
+                                                />
+                                                <Route
+                                                    path="invoices/create"
+                                                    element={<CreateInvoice />}
+                                                />
+                                                <Route
+                                                    path="invoices/:invoiceId"
+                                                    element={<InvoiceDetail />}
+                                                />
+                                                <Route
+                                                    path="earnings"
+                                                    element={
+                                                        <EarningsOverview />
+                                                    }
                                                 />
                                             </Routes>
                                         </ServicesProvider>
