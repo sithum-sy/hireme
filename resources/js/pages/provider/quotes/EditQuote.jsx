@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import ProviderLayout from "../../../components/layouts/ProviderLayout";
 import LoadingSpinner from "../../../components/LoadingSpinner";
 import providerQuoteService from "../../../services/providerQuoteService";
@@ -134,28 +134,20 @@ const EditQuote = () => {
 
         setSubmitLoading(true);
         try {
-            // Update quote first
+            // Only update the quote - the updateQuote endpoint already sets status to 'quoted'
             const updateResult = await providerQuoteService.updateQuote(
                 quote.id,
                 quoteData
             );
 
             if (updateResult.success) {
-                // Then send the quote (you'll need to implement this endpoint)
-                const sendResult = await providerQuoteService.sendQuote(
-                    quote.id
-                );
-
-                if (sendResult.success) {
-                    navigate("/provider/quotes", {
-                        state: {
-                            message:
-                                "Quote updated and sent successfully! The client will be notified.",
-                        },
-                    });
-                } else {
-                    setErrors({ general: sendResult.message });
-                }
+                // Don't call sendQuote - just navigate after successful update
+                navigate("/provider/quotes", {
+                    state: {
+                        message:
+                            "Quote updated and sent successfully! The client will be notified.",
+                    },
+                });
             } else {
                 setErrors(
                     updateResult.errors || { general: updateResult.message }
@@ -248,58 +240,85 @@ const EditQuote = () => {
                                 <div className="card-body">
                                     <div className="request-details bg-light rounded p-3">
                                         <h6 className="fw-bold">
-                                            {quote.service_title}
+                                            {quote.service?.title ||
+                                                quote.title}
                                         </h6>
                                         <div className="row">
                                             <div className="col-md-6">
                                                 <div className="mb-2">
                                                     <i className="fas fa-user text-muted me-2"></i>
                                                     <strong>Client:</strong>{" "}
-                                                    {quote.client_name}
+                                                    {quote.client?.first_name}{" "}
+                                                    {quote.client?.last_name}
                                                 </div>
                                                 <div className="mb-2">
                                                     <i className="fas fa-map-marker-alt text-muted me-2"></i>
                                                     <strong>Location:</strong>{" "}
-                                                    {quote.location_area}
+                                                    {quote.quote_request_data
+                                                        ?.city ||
+                                                        "Not specified"}
+                                                </div>
+                                                <div className="mb-2">
+                                                    <i className="fas fa-phone text-muted me-2"></i>
+                                                    <strong>Phone:</strong>{" "}
+                                                    {quote.quote_request_data
+                                                        ?.phone ||
+                                                        quote.client
+                                                            ?.contact_number}
                                                 </div>
                                             </div>
                                             <div className="col-md-6">
-                                                {quote.client_budget_min &&
-                                                    quote.client_budget_max && (
-                                                        <div className="mb-2">
-                                                            <i className="fas fa-dollar-sign text-muted me-2"></i>
-                                                            <strong>
-                                                                Client Budget:
-                                                            </strong>{" "}
-                                                            Rs.{" "}
-                                                            {
-                                                                quote.client_budget_min
-                                                            }{" "}
-                                                            -{" "}
-                                                            {
-                                                                quote.client_budget_max
-                                                            }
-                                                        </div>
-                                                    )}
-                                                {quote.preferred_date && (
+                                                {quote.quote_request_data
+                                                    ?.requested_date && (
                                                     <div className="mb-2">
                                                         <i className="fas fa-calendar text-muted me-2"></i>
                                                         <strong>
                                                             Preferred Date:
                                                         </strong>{" "}
-                                                        {quote.preferred_date}
+                                                        {new Date(
+                                                            quote.quote_request_data.requested_date
+                                                        ).toLocaleDateString()}
                                                     </div>
                                                 )}
+                                                {quote.quote_request_data
+                                                    ?.requested_time && (
+                                                    <div className="mb-2">
+                                                        <i className="fas fa-clock text-muted me-2"></i>
+                                                        <strong>
+                                                            Preferred Time:
+                                                        </strong>{" "}
+                                                        {
+                                                            quote
+                                                                .quote_request_data
+                                                                .requested_time
+                                                        }
+                                                    </div>
+                                                )}
+                                                <div className="mb-2">
+                                                    <i className="fas fa-exclamation-circle text-muted me-2"></i>
+                                                    <strong>Urgency:</strong>{" "}
+                                                    <span className="text-capitalize">
+                                                        {quote
+                                                            .quote_request_data
+                                                            ?.urgency ||
+                                                            "normal"}
+                                                    </span>
+                                                </div>
                                             </div>
                                         </div>
-                                        {quote.request_description && (
-                                            <div className="mt-2">
-                                                <strong>Description:</strong>
-                                                <p className="text-muted mb-0 mt-1">
-                                                    {quote.request_description}
-                                                </p>
-                                            </div>
-                                        )}
+                                        <div className="mt-2">
+                                            <strong>
+                                                Client Requirements:
+                                            </strong>
+                                            <p className="text-muted mb-0 mt-1">
+                                                "
+                                                {quote.client_requirements ||
+                                                    quote.quote_request_data
+                                                        ?.message ||
+                                                    "No specific requirements"}
+                                                "
+                                            </p>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

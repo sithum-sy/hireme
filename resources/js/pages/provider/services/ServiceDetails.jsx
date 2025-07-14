@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { useServices } from "../../context/ServicesContext";
-import { useProvider } from "../../context/ProviderContext";
-import ProviderLayout from "../../components/layouts/ProviderLayout";
+import { useServices } from "../../../context/ServicesContext";
+import { useProvider } from "../../../context/ProviderContext";
+import ProviderLayout from "../../../components/layouts/ProviderLayout";
 
 const ServiceDetails = () => {
     const { id } = useParams();

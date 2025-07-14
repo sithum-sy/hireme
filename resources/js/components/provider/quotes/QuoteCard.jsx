@@ -90,6 +90,34 @@ const QuoteCard = ({ quote, onQuoteUpdate, loading = false }) => {
 
     const daysUntilExpiry = getDaysUntilExpiry();
 
+    const getClientInfo = (quote) => {
+        const requestData = quote.quote_request_data || {};
+
+        return {
+            name:
+                quote.client?.first_name + " " + quote.client?.last_name ||
+                "Unknown Client",
+            requirements:
+                quote.client_requirements ||
+                requestData.message ||
+                "No requirements specified",
+            requested_date: requestData.requested_date,
+            requested_time: requestData.requested_time,
+            location_type: requestData.location_type || "client_address",
+            city: requestData.city,
+            phone: requestData.phone || quote.client?.contact_number,
+            urgency: requestData.urgency || "normal",
+        };
+    };
+
+    console.log("Quote data in card:", quote);
+    console.log("Service data:", quote.service);
+    console.log("Title options:", {
+        serviceTitle: quote.service?.title,
+        title: quote.title,
+        serviceTitleDirect: quote.service_title,
+    });
+
     return (
         <>
             <div
@@ -105,13 +133,15 @@ const QuoteCard = ({ quote, onQuoteUpdate, loading = false }) => {
                                 <div className="quote-info">
                                     <h6 className="fw-bold mb-1">
                                         Quote #{quote.id}
-                                        <span className="badge bg-orange bg-opacity-10 text-orange ms-2">
-                                            {quote.service_title || "Service"}
+                                        <span className="badge bg-primary text-white ms-2">
+                                            {quote.service?.title ||
+                                                quote.title ||
+                                                "Service"}
                                         </span>
                                     </h6>
                                     <div className="text-muted small mb-1">
                                         <i className="fas fa-user me-1"></i>
-                                        Client: {quote.client_name}
+                                        Client: {getClientInfo(quote).name}
                                     </div>
                                     <div className="text-muted small mb-2">
                                         <i className="fas fa-calendar me-1"></i>
@@ -128,25 +158,79 @@ const QuoteCard = ({ quote, onQuoteUpdate, loading = false }) => {
                                 </span>
                             </div>
 
-                            {/* Quote Description Preview */}
-                            {quote.quote_description && (
-                                <div className="quote-description mb-2">
-                                    <p className="text-muted small mb-0">
-                                        {quote.quote_description.length > 100
-                                            ? quote.quote_description.substring(
-                                                  0,
-                                                  100
-                                              ) + "..."
-                                            : quote.quote_description}
+                            {/* Client Requirements Preview */}
+                            <div className="client-requirements mb-2">
+                                <div className="bg-light rounded p-2">
+                                    <small className="text-muted">
+                                        <strong>Client needs:</strong>
+                                    </small>
+                                    <p className="small mb-1 text-dark">
+                                        "
+                                        {getClientInfo(quote).requirements
+                                            .length > 80
+                                            ? getClientInfo(
+                                                  quote
+                                              ).requirements.substring(0, 80) +
+                                              "..."
+                                            : getClientInfo(quote).requirements}
+                                        "
                                     </p>
+                                    {getClientInfo(quote).requested_date && (
+                                        <small className="text-muted">
+                                            <i className="fas fa-calendar me-1"></i>
+                                            Wants:{" "}
+                                            {new Date(
+                                                getClientInfo(
+                                                    quote
+                                                ).requested_date
+                                            ).toLocaleDateString()}
+                                            {getClientInfo(quote)
+                                                .requested_time &&
+                                                ` at ${
+                                                    getClientInfo(quote)
+                                                        .requested_time
+                                                }`}
+                                        </small>
+                                    )}
                                 </div>
-                            )}
+                            </div>
 
-                            {/* Expiry Warning */}
+                            {/* Location & Urgency Info */}
+                            <div className="request-details small text-muted">
+                                <span className="me-3">
+                                    <i className="fas fa-map-marker-alt me-1"></i>
+                                    {getClientInfo(quote).location_type ===
+                                    "client_address"
+                                        ? `Client location${
+                                              getClientInfo(quote).city
+                                                  ? ` (${
+                                                        getClientInfo(quote)
+                                                            .city
+                                                    })`
+                                                  : ""
+                                          }`
+                                        : "Provider location"}
+                                </span>
+                                <span
+                                    className={`badge badge-sm ${
+                                        getClientInfo(quote).urgency ===
+                                        "urgent"
+                                            ? "bg-danger"
+                                            : getClientInfo(quote).urgency ===
+                                              "high"
+                                            ? "bg-warning"
+                                            : "bg-secondary"
+                                    }`}
+                                >
+                                    {getClientInfo(quote).urgency}
+                                </span>
+                            </div>
+
+                            {/* Expiry Warning - keep your existing code */}
                             {quote.status === "quoted" &&
                                 daysUntilExpiry !== null && (
                                     <div
-                                        className={`expiry-warning small ${
+                                        className={`expiry-warning small mt-2 ${
                                             daysUntilExpiry <= 1
                                                 ? "text-danger"
                                                 : daysUntilExpiry <= 3

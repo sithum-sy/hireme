@@ -46,6 +46,7 @@ const QuotesList = () => {
             const params = { ...filters };
             if (filters.status === "all") delete params.status;
             params.page = pagination.current_page;
+            params.with = "client,service";
 
             const result = await providerQuoteService.getQuotes(params);
 

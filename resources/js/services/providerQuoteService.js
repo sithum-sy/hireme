@@ -36,23 +36,7 @@ class ProviderQuoteService {
     }
 
     /**
-     * Create new quote
-     */
-    async createQuote(quoteData) {
-        try {
-            const response = await axios.post(`${API_BASE}/quotes`, quoteData);
-            return {
-                success: true,
-                data: response.data.data,
-                message: response.data.message || "Quote sent successfully",
-            };
-        } catch (error) {
-            return this.handleError(error, "Failed to create quote");
-        }
-    }
-
-    /**
-     * Update existing quote
+     * Update quote with provider response
      */
     async updateQuote(quoteId, quoteData) {
         try {
@@ -63,7 +47,7 @@ class ProviderQuoteService {
             return {
                 success: true,
                 data: response.data.data,
-                message: response.data.message || "Quote updated successfully",
+                message: response.data.message || "Quote sent successfully",
             };
         } catch (error) {
             return this.handleError(error, "Failed to update quote");
@@ -93,40 +77,6 @@ class ProviderQuoteService {
     }
 
     /**
-     * Get quote statistics
-     */
-    async getQuoteStats() {
-        try {
-            const response = await axios.get(`${API_BASE}/quotes/statistics`);
-            return {
-                success: true,
-                data: response.data.data,
-                message: "Quote statistics loaded",
-            };
-        } catch (error) {
-            return this.handleError(error, "Failed to load quote statistics");
-        }
-    }
-
-    /**
-     * Search available service requests to quote on
-     */
-    async getAvailableRequests(params = {}) {
-        try {
-            const response = await axios.get(`${API_BASE}/requests/available`, {
-                params,
-            });
-            return {
-                success: true,
-                data: response.data.data || response.data,
-                message: "Available requests loaded",
-            };
-        } catch (error) {
-            return this.handleError(error, "Failed to load available requests");
-        }
-    }
-
-    /**
      * Send a quote (change status from pending to quoted)
      */
     async sendQuote(quoteId) {
@@ -145,28 +95,49 @@ class ProviderQuoteService {
     }
 
     /**
+     * Get quotes awaiting provider response (pending quotes)
+     */
+    async getAvailableRequests(params = {}) {
+        try {
+            const response = await axios.get(`${API_BASE}/quotes/available`, {
+                params,
+            });
+            return {
+                success: true,
+                data: response.data.data || response.data,
+                message: "Pending quotes loaded",
+            };
+        } catch (error) {
+            return this.handleError(error, "Failed to load pending quotes");
+        }
+    }
+
+    /**
      * Validate quote data before submission
      */
     validateQuoteData(quoteData) {
         const errors = {};
 
-        if (!quoteData.quote_request_id) {
-            errors.quote_request_id = "Quote request is required";
-        }
-
-        if (!quoteData.quoted_price || quoteData.quoted_price <= 0) {
+        if (
+            !quoteData.quoted_price ||
+            parseFloat(quoteData.quoted_price) <= 0
+        ) {
             errors.quoted_price = "Valid quoted price is required";
         }
 
-        if (quoteData.quoted_price > 100000) {
-            errors.quoted_price = "Quoted price cannot exceed Rs. 100,000";
+        if (parseFloat(quoteData.quoted_price) > 1000000) {
+            errors.quoted_price = "Quoted price cannot exceed Rs. 1,000,000";
         }
 
         if (
             !quoteData.estimated_duration ||
-            quoteData.estimated_duration <= 0
+            parseFloat(quoteData.estimated_duration) <= 0
         ) {
             errors.estimated_duration = "Estimated duration is required";
+        }
+
+        if (parseFloat(quoteData.estimated_duration) > 24) {
+            errors.estimated_duration = "Duration cannot exceed 24 hours";
         }
 
         if (
@@ -187,7 +158,8 @@ class ProviderQuoteService {
 
         if (
             quoteData.validity_days &&
-            (quoteData.validity_days < 1 || quoteData.validity_days > 30)
+            (parseInt(quoteData.validity_days) < 1 ||
+                parseInt(quoteData.validity_days) > 30)
         ) {
             errors.validity_days = "Validity must be between 1 and 30 days";
         }
@@ -199,18 +171,32 @@ class ProviderQuoteService {
     }
 
     /**
-     * Calculate quote pricing suggestions
+     * Calculate quote pricing suggestions based on client request data
      */
-    calculatePricingSuggestions(serviceData, duration) {
-        // Mock pricing calculation - replace with actual business logic
+    calculatePricingSuggestions(quote, duration) {
+        // Extract client budget from quote_request_data
+        const requestData = quote.quote_request_data || {};
+        const clientBudgetMin = requestData.budget_min;
+        const clientBudgetMax = requestData.budget_max;
+
+        // Calculate base rate suggestions
         const baseRate = 1500; // Rs. per hour
         const suggested = Math.round(baseRate * duration);
 
+        let competitive = Math.round(suggested * 0.9);
+        let premium = Math.round(suggested * 1.2);
+
+        // Adjust based on client budget if available
+        if (clientBudgetMin && clientBudgetMax) {
+            const budgetMid = (clientBudgetMin + clientBudgetMax) / 2;
+            competitive = Math.min(competitive, Math.round(budgetMid * 0.95));
+            premium = Math.max(premium, Math.round(budgetMid * 1.1));
+        }
+
         return {
+            competitive: competitive,
             suggested: suggested,
-            minimum: Math.round(suggested * 0.8),
-            competitive: Math.round(suggested * 0.9),
-            premium: Math.round(suggested * 1.2),
+            premium: premium,
         };
     }
 
@@ -218,6 +204,8 @@ class ProviderQuoteService {
      * Error handler
      */
     handleError(error, defaultMessage) {
+        console.error("ProviderQuoteService Error:", error);
+
         if (error.response) {
             return {
                 success: false,

@@ -407,25 +407,6 @@ const DashboardSidebar = ({
                     label: "Dashboard",
                     path: "/provider/dashboard",
                 },
-
-                {
-                    id: "services",
-                    icon: "fas fa-concierge-bell",
-                    label: "My Services",
-                    path: "/provider/services",
-                    badge: "8",
-                    children: [
-                        { label: "All Services", path: "/provider/services" },
-                        {
-                            label: "Add Service",
-                            path: "/provider/services/create",
-                        },
-                        {
-                            label: "Service Analytics",
-                            path: "/provider/services/analytics",
-                        },
-                    ],
-                },
                 {
                     id: "appointments",
                     icon: "fas fa-calendar-alt",
@@ -453,18 +434,37 @@ const DashboardSidebar = ({
                     ],
                 },
                 {
+                    id: "services",
+                    icon: "fas fa-concierge-bell",
+                    label: "My Services",
+                    path: "/provider/services",
+                    badge: "8",
+                    children: [
+                        { label: "All Services", path: "/provider/services" },
+                        {
+                            label: "Add Service",
+                            path: "/provider/services/create",
+                        },
+                        // {
+                        //     label: "Service Analytics",
+                        //     path: "/provider/services/analytics",
+                        // },
+                    ],
+                },
+
+                {
                     id: "quotes",
                     icon: "fas fa-bell",
                     label: "Quote Requests",
                     path: "/provider/quotes",
                     badge: "",
-                    children: [
-                        {
-                            label: "Quotes List",
-                            path: "/provider/quotes",
-                            badge: "",
-                        },
-                    ],
+                    // children: [
+                    //     {
+                    //         label: "Quotes List",
+                    //         path: "/provider/quotes",
+                    //         badge: "",
+                    //     },
+                    // ],
                 },
                 // {
                 //     id: "requests",
@@ -516,26 +516,7 @@ const DashboardSidebar = ({
                     // badge:
                     //     pendingInvoicesCount > 0 ? pendingInvoicesCount : null,
                 },
-                {
-                    id: "profile",
-                    icon: "fas fa-user",
-                    label: "My Profile",
-                    path: "/provider/profile",
-                    children: [
-                        {
-                            label: "Business Profile",
-                            path: "/provider/profile/business",
-                        },
-                        {
-                            label: "Personal Info",
-                            path: "/provider/profile/personal",
-                        },
-                        {
-                            label: "Verification",
-                            path: "/provider/profile/verification",
-                        },
-                    ],
-                },
+
                 {
                     id: "earnings",
                     icon: "fas fa-dollar-sign",
@@ -563,12 +544,32 @@ const DashboardSidebar = ({
                     path: "/provider/reviews",
                 },
                 {
-                    id: "messages",
-                    icon: "fas fa-comments",
-                    label: "Messages",
-                    path: "/provider/messages",
-                    badge: "4",
+                    id: "profile",
+                    icon: "fas fa-user",
+                    label: "My Profile",
+                    path: "/provider/profile",
+                    children: [
+                        {
+                            label: "Business Profile",
+                            path: "/provider/profile/business",
+                        },
+                        {
+                            label: "Personal Info",
+                            path: "/provider/profile/personal",
+                        },
+                        {
+                            label: "Verification",
+                            path: "/provider/profile/verification",
+                        },
+                    ],
                 },
+                // {
+                //     id: "messages",
+                //     icon: "fas fa-comments",
+                //     label: "Messages",
+                //     path: "/provider/messages",
+                //     badge: "4",
+                // },
                 {
                     id: "analytics",
                     icon: "fas fa-chart-bar",
@@ -589,26 +590,26 @@ const DashboardSidebar = ({
                         },
                     ],
                 },
-                {
-                    id: "settings",
-                    icon: "fas fa-cog",
-                    label: "Settings",
-                    path: "/provider/settings",
-                    children: [
-                        {
-                            label: "Business Settings",
-                            path: "/provider/settings/business",
-                        },
-                        {
-                            label: "Notification Preferences",
-                            path: "/provider/settings/notifications",
-                        },
-                        {
-                            label: "Payment Settings",
-                            path: "/provider/settings/payments",
-                        },
-                    ],
-                },
+                // {
+                //     id: "settings",
+                //     icon: "fas fa-cog",
+                //     label: "Settings",
+                //     path: "/provider/settings",
+                //     children: [
+                //         {
+                //             label: "Business Settings",
+                //             path: "/provider/settings/business",
+                //         },
+                //         {
+                //             label: "Notification Preferences",
+                //             path: "/provider/settings/notifications",
+                //         },
+                //         {
+                //             label: "Payment Settings",
+                //             path: "/provider/settings/payments",
+                //         },
+                //     ],
+                // },
             ],
         };
 

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useProvider } from "../../context/ProviderContext";
-import { useServices } from "../../context/ServicesContext";
-import ProviderLayout from "../../components/layouts/ProviderLayout";
+import { useProvider } from "../../../context/ProviderContext";
+import { useServices } from "../../../context/ServicesContext";
+import ProviderLayout from "../../../components/layouts/ProviderLayout";
 
 const ProviderServices = () => {
     const navigate = useNavigate();

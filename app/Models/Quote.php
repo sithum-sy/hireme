@@ -82,6 +82,11 @@ class Quote extends Model
         return $this->belongsTo(Appointment::class);
     }
 
+    public function quoteRequest()
+    {
+        return $this->belongsTo(QuoteRequest::class);
+    }
+
     // Scopes
     public function scopePending($query)
     {

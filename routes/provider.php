@@ -67,13 +67,13 @@ Route::prefix('appointments')->group(function () {
 // Quote Management
 Route::prefix('quotes')->group(function () {
     Route::get('/', [App\Http\Controllers\API\Provider\QuoteController::class, 'index']);
+    Route::get('/available', [App\Http\Controllers\API\Provider\QuoteController::class, 'getAvailableRequests']); // Changed from /requests/available
     Route::get('/{quote}', [App\Http\Controllers\API\Provider\QuoteController::class, 'show']);
-    Route::post('/', [App\Http\Controllers\API\Provider\QuoteController::class, 'store']);
+    Route::patch('/{quote}', [App\Http\Controllers\API\Provider\QuoteController::class, 'update']);
     Route::delete('/{quote}', [App\Http\Controllers\API\Provider\QuoteController::class, 'withdraw']);
-    Route::patch('/quotes/{quote}', [App\Http\Controllers\API\Provider\QuoteController::class, 'update']);
-    Route::get('/requests/available', [App\Http\Controllers\API\Provider\QuoteController::class, 'getAvailableRequests']);
-    Route::patch('/quotes/{quote}/send', [App\Http\Controllers\API\Provider\QuoteController::class, 'send']);
+    Route::patch('/{quote}/send', [App\Http\Controllers\API\Provider\QuoteController::class, 'send']);
 });
+
 
 // Invoice Management
 Route::prefix('invoices')->group(function () {

@@ -29,10 +29,10 @@ import AppointmentDetail from "./pages/client/bookings/AppointmentDetail";
 
 // Provider Pages
 import ProviderDashboard from "./pages/provider/Dashboard";
-import ProviderServices from "./pages/provider/Services";
-import ServiceForm from "./pages/provider/ServiceForm";
-import ServiceDetails from "./pages/provider/ServiceDetails";
-import EditService from "./pages/provider/EditService";
+import ProviderServices from "./pages/provider/services/Services";
+import ServiceForm from "./pages/provider/services/ServiceForm";
+import ServiceDetails from "./pages/provider/services/ServiceDetails";
+import EditService from "./pages/provider/services/EditService";
 import AvailabilityDashboard from "./pages/provider/availability/AvailabilityDashboard";
 import WeeklySchedule from "./pages/provider/availability/WeeklySchedule";
 import BlockedTimes from "./pages/provider/availability/BlockedTimes";

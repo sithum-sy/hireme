@@ -210,12 +210,12 @@ const ProviderLayout = ({ children }) => {
     const todaysEarnings = getTodaysPotentialEarnings();
 
     // Get high priority notifications
-    const highPriorityNotifications = providerNotifications.filter(
-        (n) => !n.read && n.priority === "high"
-    ).length;
+    // const highPriorityNotifications = providerNotifications.filter(
+    //     (n) => !n.read && n.priority === "high"
+    // ).length;
 
     // Get business insights from context
-    const businessInsights = getBusinessInsights();
+    // const businessInsights = getBusinessInsights();
 
     // Get performance indicators
     const performanceIndicators = getPerformanceIndicators();
@@ -434,7 +434,7 @@ const ProviderLayout = ({ children }) => {
                         )}
 
                         {/* Business Insights (Replaces Business Alerts) */}
-                        {businessInsights.length > 0 && (
+                        {/* {businessInsights.length > 0 && (
                             <div className="business-alerts mb-4">
                                 {businessInsights.map((insight, index) => (
                                     <div
@@ -494,10 +494,10 @@ const ProviderLayout = ({ children }) => {
                                     </div>
                                 ))}
                             </div>
-                        )}
+                        )} */}
 
                         {/* High Priority Notifications */}
-                        {highPriorityNotifications > 0 && (
+                        {/* {highPriorityNotifications > 0 && (
                             <div
                                 className="alert alert-danger border-0 shadow-sm mb-4"
                                 role="alert"
@@ -534,7 +534,7 @@ const ProviderLayout = ({ children }) => {
                                     </Link>
                                 </div>
                             </div>
-                        )}
+                        )} */}
 
                         {/* Performance Summary */}
                         {location.pathname === "/provider/dashboard" && (
@@ -620,7 +620,7 @@ const ProviderLayout = ({ children }) => {
                         )}
 
                         {/* Notifications Display */}
-                        {providerNotifications.length > 0 && (
+                        {/* {providerNotifications.length > 0 && (
                             <div className="notifications-container mb-4">
                                 {providerNotifications
                                     .slice(0, 2)
@@ -694,7 +694,7 @@ const ProviderLayout = ({ children }) => {
                                         </div>
                                     ))}
                             </div>
-                        )}
+                        )} */}
 
                         {/* Loading Indicator */}
                         {providerLoading && (
