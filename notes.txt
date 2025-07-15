@@ -65,3 +65,19 @@ Copy mysql/data_old/ibdata1 file into mysql/data folder
 Start MySQL from XAMPP control panel
 And, voilà!
 
+
+# Stripe
+# Check if it's working
+stripe --version
+
+# Login to your Stripe account
+stripe login
+
+# Start webhook forwarding for your Laravel app
+stripe listen --forward-to localhost:8000/stripe/webhook
+
+# Test webhook events
+stripe trigger payment_intent.succeeded
+
+# Check your account info
+stripe config --list

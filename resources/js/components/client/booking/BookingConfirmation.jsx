@@ -488,7 +488,7 @@ const BookingConfirmation = ({
                                                         e.target.value
                                                     )
                                                 }
-                                                disabled
+                                                // disabled
                                             />
                                             <label
                                                 className="form-check-label w-100"
@@ -513,7 +513,7 @@ const BookingConfirmation = ({
                                                             </div>
                                                             <div className="ms-auto">
                                                                 <span className="badge bg-warning bg-opacity-10 text-warning">
-                                                                    Coming Soon
+                                                                    {/* Coming Soon */}
                                                                 </span>
                                                             </div>
                                                         </div>

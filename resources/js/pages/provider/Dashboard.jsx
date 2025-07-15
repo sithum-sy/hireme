@@ -284,9 +284,9 @@ const ProviderDashboard = () => {
                                     <i className="fas fa-bolt text-orange me-2"></i>
                                     Quick Actions
                                 </h5>
-                                <p className="text-muted small mb-0">
+                                {/* <p className="text-muted small mb-0">
                                     Get things done faster
-                                </p>
+                                </p> */}
                             </div>
                             <div className="section-content">
                                 <div className="row">

@@ -30,7 +30,11 @@ class Invoice extends Model
         'sent_at',
         'notes',
         'line_items',
-        'payment_details'
+        'payment_details',
+        'stripe_payment_intent_id',
+        'service_fee',
+        'payment_details',
+        'client_viewed_at'
     ];
 
     protected $casts = [
@@ -44,7 +48,8 @@ class Invoice extends Model
         'tax_amount' => 'decimal:2',
         'platform_fee' => 'decimal:2',
         'total_amount' => 'decimal:2',
-        'provider_earnings' => 'decimal:2'
+        'provider_earnings' => 'decimal:2',
+        'client_viewed_at' => 'datetime'
     ];
 
     // Relationships
@@ -61,6 +66,16 @@ class Invoice extends Model
     public function client()
     {
         return $this->belongsTo(User::class, 'client_id');
+    }
+
+    public function payment()
+    {
+        return $this->hasOne(Payment::class);
+    }
+
+    public function payments()
+    {
+        return $this->hasMany(Payment::class);
     }
 
     // Accessors
@@ -104,6 +119,18 @@ class Invoice extends Model
         };
     }
 
+    public function markAsViewed()
+    {
+        $this->update([
+            'client_viewed_at' => now()
+        ]);
+    }
+
+    public function hasBeenViewed()
+    {
+        return !is_null($this->client_viewed_at);
+    }
+
     // Methods
     public function generateInvoiceNumber()
     {
@@ -138,6 +165,27 @@ class Invoice extends Model
             'paid_at' => now(),
             'payment_details' => array_merge($this->payment_details ?? [], $paymentDetails)
         ]);
+
+        // Update related appointment status
+        if ($this->appointment) {
+            $this->appointment->markPaymentReceived();
+        }
+    }
+
+    // public function canBepaid()
+    // {
+    //     return in_array($this->status, ['sent']) && $this->payment_status === 'pending';
+    // }
+
+    public function canBePaid()
+    {
+        return $this->payment_status === 'pending' &&
+            in_array($this->status, ['sent', 'viewed']);
+    }
+
+    public function isAwaitingPayment()
+    {
+        return $this->status === 'sent' && $this->payment_status === 'pending';
     }
 
     public function canBeEdited()
@@ -150,10 +198,6 @@ class Invoice extends Model
         return in_array($this->status, ['draft']);
     }
 
-    public function canBePaid()
-    {
-        return in_array($this->status, ['sent']) && $this->payment_status === 'pending';
-    }
 
     // Scopes
     public function scopeForProvider($query, $providerId)
@@ -175,5 +219,19 @@ class Invoice extends Model
     public function scopePending($query)
     {
         return $query->where('payment_status', 'pending');
+    }
+
+    public function createPayment($method, $amount, $additionalData = [])
+    {
+        return $this->payments()->create([
+            'appointment_id' => $this->appointment_id,
+            'client_id' => $this->client_id,
+            'provider_id' => $this->provider_id,
+            'method' => $method,
+            'amount' => $amount,
+            'currency' => 'LKR',
+            'status' => Payment::STATUS_PENDING,
+            ...$additionalData
+        ]);
     }
 }

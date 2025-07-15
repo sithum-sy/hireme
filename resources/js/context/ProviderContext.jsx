@@ -243,7 +243,7 @@ export const ProviderProvider = ({ children }) => {
                 todaysEarnings: 450.0,
                 totalAppointments: 156,
                 todaysAppointments: 3,
-                pendingRequests: 7,
+                pendingRequests: 5,
                 averageRating: 4.8,
                 responseRate: 95,
                 completedJobs: 142,

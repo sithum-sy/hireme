@@ -1,14 +1,14 @@
 <?php
 // routes/client.php
 
-use App\Http\Controllers\API\AppointmentController;
+// use App\Http\Controllers\API\AppointmentController;
 use App\Http\Controllers\API\AvailabilityController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\Client\SearchController;
 use App\Http\Controllers\API\Client\ServiceController;
 use App\Http\Controllers\API\Client\ProviderController;
 use App\Http\Controllers\API\Client\DashboardController;
-use App\Http\Controllers\API\Client\BookingController;
+use App\Http\Controllers\API\Client\AppointmentController;
 use App\Http\Controllers\API\Client\QuoteController;
 
 /*
@@ -43,13 +43,29 @@ Route::prefix('providers')->group(function () {
     Route::get('/{provider}/availability/check', [ProviderController::class, 'checkAvailability']);
 });
 
+// Booking/Appointment Management
+Route::prefix('appointments')->group(function () {
+    Route::post('/', [AppointmentController::class, 'store']); // Create appointment (your existing)
+    Route::get('/', [AppointmentController::class, 'index']); // List appointments (enhanced)
+    Route::get('/{appointment}', [AppointmentController::class, 'show']); // Get appointment details (enhanced)
+    Route::patch('/{appointment}/cancel', [AppointmentController::class, 'cancel']); // Cancel appointment (enhanced)
+
+    // NEW payment and review endpoints
+    Route::post('/{appointment}/pay', [AppointmentController::class, 'payInvoice']); // Pay invoice
+    Route::post('/{appointment}/review', [AppointmentController::class, 'submitReview']); // Submit review
+
+    Route::post('/{appointment}/create-invoice', [AppointmentController::class, 'createInvoice']);
+});
+
 // Booking Management
 Route::prefix('bookings')->group(function () {
-    Route::post('/', [BookingController::class, 'store']); // Create new booking
-    Route::get('/', [BookingController::class, 'index']); // List user's bookings
-    Route::get('/{booking}', [BookingController::class, 'show']); // Get booking details
-    Route::patch('/{booking}/cancel', [BookingController::class, 'cancel']); // Cancel booking
+    Route::post('/', [AppointmentController::class, 'store']); // Create new booking
+    Route::get('/', [AppointmentController::class, 'index']); // List user's bookings
+    Route::get('/{booking}', [AppointmentController::class, 'show']); // Get booking details
+    Route::patch('/{booking}/cancel', [AppointmentController::class, 'cancel']); // Cancel booking
 });
+
+
 
 // Quote Management
 Route::prefix('quotes')->group(function () {

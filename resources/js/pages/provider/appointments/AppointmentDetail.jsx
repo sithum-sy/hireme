@@ -136,8 +136,8 @@ const AppointmentDetail = () => {
         );
     }
 
-    const formatDateTime = (date, time) => {
-        if (!date || !time) {
+    const formatDateTime = (dateString, timeString) => {
+        if (!dateString || !timeString) {
             return {
                 fullDate: "Date not available",
                 time: "Time not available",
@@ -146,33 +146,62 @@ const AppointmentDetail = () => {
         }
 
         try {
-            // Handle Laravel date format (YYYY-MM-DD)
+            // Extract date from dateString (handles both YYYY-MM-DD and ISO format)
             let appointmentDate;
 
-            if (typeof date === "string") {
-                // Split the date string and create date in local timezone
-                const dateParts = date.split("-");
-                if (dateParts.length === 3) {
-                    const year = parseInt(dateParts[0]);
-                    const month = parseInt(dateParts[1]) - 1; // Month is 0-indexed
-                    const day = parseInt(dateParts[2]);
-                    appointmentDate = new Date(year, month, day);
+            if (typeof dateString === "string") {
+                if (dateString.includes("T")) {
+                    // Handle ISO datetime format - extract just the date part
+                    const datePart = dateString.split("T")[0];
+                    const dateParts = datePart.split("-");
+                    if (dateParts.length === 3) {
+                        const year = parseInt(dateParts[0]);
+                        const month = parseInt(dateParts[1]) - 1; // Month is 0-indexed
+                        const day = parseInt(dateParts[2]);
+                        appointmentDate = new Date(year, month, day);
+                    }
                 } else {
-                    appointmentDate = new Date(date);
+                    // Handle simple date format (YYYY-MM-DD)
+                    const dateParts = dateString.split("-");
+                    if (dateParts.length === 3) {
+                        const year = parseInt(dateParts[0]);
+                        const month = parseInt(dateParts[1]) - 1; // Month is 0-indexed
+                        const day = parseInt(dateParts[2]);
+                        appointmentDate = new Date(year, month, day);
+                    } else {
+                        appointmentDate = new Date(dateString);
+                    }
                 }
             } else {
-                appointmentDate = new Date(date);
+                appointmentDate = new Date(dateString);
             }
 
-            // Handle time format (HH:MM or HH:MM:SS)
+            // Extract time from timeString (handles both HH:MM and ISO format)
             let formattedTime = "Time not available";
-            if (time) {
-                const timeParts = time.toString().split(":");
+            if (timeString) {
+                let timeToUse;
+
+                if (
+                    typeof timeString === "string" &&
+                    timeString.includes("T")
+                ) {
+                    // Extract time part from ISO datetime format
+                    const timePart = timeString.split("T")[1];
+                    timeToUse = timePart.split(".")[0]; // Remove milliseconds and Z
+                } else {
+                    timeToUse = timeString.toString();
+                }
+
+                const timeParts = timeToUse.split(":");
                 if (timeParts.length >= 2) {
                     const hours = parseInt(timeParts[0]);
                     const minutes = timeParts[1];
+
+                    // Fix: Correct AM/PM logic
                     const ampm = hours >= 12 ? "PM" : "AM";
-                    const displayHour = hours % 12 || 12;
+                    const displayHour =
+                        hours === 0 ? 12 : hours > 12 ? hours - 12 : hours;
+
                     formattedTime = `${displayHour}:${minutes} ${ampm}`;
                 }
             }
@@ -197,11 +226,14 @@ const AppointmentDetail = () => {
                 }),
             };
         } catch (error) {
-            console.warn("Date formatting error:", error, { date, time });
+            console.warn("Date formatting error:", error, {
+                dateString,
+                timeString,
+            });
             return {
-                fullDate: `${date}`,
-                time: `${time}`,
-                shortDate: `${date}`,
+                fullDate: `${dateString}`,
+                time: `${timeString}`,
+                shortDate: `${dateString}`,
             };
         }
     };
@@ -223,6 +255,10 @@ const AppointmentDetail = () => {
         appointment.appointment_date,
         appointment.appointment_time
     );
+
+    const pluralize = (count, singular, plural = singular + "s") => {
+        return count === 1 ? singular : plural;
+    };
 
     return (
         <ProviderLayout>
@@ -540,7 +576,11 @@ const AppointmentDetail = () => {
                                         Duration
                                     </div>
                                     <div className="summary-value fw-semibold">
-                                        {appointment.duration_hours} hour(s)
+                                        {appointment.duration_hours}{" "}
+                                        {pluralize(
+                                            appointment.duration_hours,
+                                            "hour"
+                                        )}
                                     </div>
                                 </div>
 

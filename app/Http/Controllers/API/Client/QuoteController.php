@@ -21,7 +21,7 @@ class QuoteController extends Controller
     public function store(ClientQuoteRequest $request)
     {
         try {
-            Log::info('Quote request received', ['data' => $request->validated(), 'user_id' => Auth::id()]);
+            // Log::info('Quote request received', ['data' => $request->validated(), 'user_id' => Auth::id()]);
 
             $validatedData = $request->validated();
 
@@ -52,7 +52,7 @@ class QuoteController extends Controller
 
             DB::commit();
 
-            Log::info('Quote request created successfully', ['quote_id' => $quote->id, 'client_id' => Auth::id()]);
+            // Log::info('Quote request created successfully', ['quote_id' => $quote->id, 'client_id' => Auth::id()]);
 
             return response()->json([
                 'success' => true,
@@ -127,7 +127,7 @@ class QuoteController extends Controller
 
             $quotes = $query->get();
 
-            Log::info("Found {$quotes->count()} quotes for user {$user->id}");
+            // Log::info("Found {$quotes->count()} quotes for user {$user->id}");
 
             // Transform the data to match frontend expectations
             $transformedQuotes = $quotes->map(function ($quote) {
@@ -453,7 +453,7 @@ class QuoteController extends Controller
     public function show(Request $request, Quote $quote)
     {
         try {
-            Log::info('Loading quote: ' . $quote->id);
+            // Log::info('Loading quote: ' . $quote->id);
 
             if ($quote->client_id !== auth()->id()) {
                 return response()->json([
@@ -462,14 +462,14 @@ class QuoteController extends Controller
                 ], 404);
             }
 
-            Log::info('Loading relationships');
+            // Log::info('Loading relationships');
             // Load relationships step by step to see which one fails
             $quote->load([
                 'service.category',
                 'provider' // This is the User model
             ]);
 
-            Log::info('All relationships loaded successfully');
+            // Log::info('All relationships loaded successfully');
 
             // Get provider profile safely
             $providerProfile = null;
@@ -478,7 +478,7 @@ class QuoteController extends Controller
             if ($providerUser) {
                 try {
                     $providerProfile = $providerUser->provider_profile;
-                    Log::info('Provider profile loaded: ' . ($providerProfile ? 'Yes' : 'No'));
+                    // Log::info('Provider profile loaded: ' . ($providerProfile ? 'Yes' : 'No'));
                 } catch (\Exception $e) {
                     Log::warning('Provider profile not found for user: ' . $providerUser->id);
                 }
@@ -550,7 +550,7 @@ class QuoteController extends Controller
                 'declined_at' => $quote->client_responded_at && $quote->status === 'rejected' ? $quote->client_responded_at : null,
             ];
 
-            Log::info('Quote data transformed successfully');
+            // Log::info('Quote data transformed successfully');
 
             return response()->json([
                 'success' => true,
@@ -801,7 +801,7 @@ class QuoteController extends Controller
             $validatedData = $request->validate([
                 'appointment_date' => 'required|date|after_or_equal:today',
                 'appointment_time' => 'required|string',
-                'duration_hours' => 'required|numeric|min:0.5|max:24',
+                'duration_hours' => 'required|numeric|min:1|max:24',
                 'client_phone' => 'nullable|string|max:20',
                 'client_email' => 'nullable|email',
                 'client_address' => 'nullable|string|max:255',
@@ -901,11 +901,11 @@ class QuoteController extends Controller
 
                 DB::commit();
 
-                Log::info('Appointment created from quote', [
-                    'appointment_id' => $appointment->id,
-                    'quote_id' => $quote->id,
-                    'client_id' => auth()->id()
-                ]);
+                // Log::info('Appointment created from quote', [
+                //     'appointment_id' => $appointment->id,
+                //     'quote_id' => $quote->id,
+                //     'client_id' => auth()->id()
+                // ]);
 
                 return response()->json([
                     'success' => true,

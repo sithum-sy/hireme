@@ -24,8 +24,8 @@ import ServicesBrowse from "./pages/client/services/ServicesBrowse";
 import ServiceSearch from "./pages/client/services/ServiceSearch";
 import ServiceDetail from "./pages/client/services/ServiceDetail";
 import QuotesList from "./pages/client/quotes/QuotesList";
-import AppointmentsList from "./pages/client/bookings/AppointmentsList";
-import AppointmentDetail from "./pages/client/bookings/AppointmentDetail";
+import AppointmentsList from "./pages/client/appointments/AppointmentsList";
+import AppointmentDetail from "./pages/client/appointments/AppointmentDetail";
 import ClientQuoteDetail from "./pages/client/quotes/QuoteDetail";
 import QuoteAcceptanceBooking from "./components/client/booking/QuoteAcceptanceBooking";
 

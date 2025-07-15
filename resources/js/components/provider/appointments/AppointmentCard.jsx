@@ -9,7 +9,11 @@ const AppointmentCard = ({ appointment, onStatusUpdate }) => {
     const [showCompleteModal, setShowCompleteModal] = useState(false);
 
     // Debug: Log the appointment object to see its structure
-    // console.log("Appointment data:", appointment);
+    // console.log(
+    //     "Appointment data:",
+    //     // appointment.appointment_date,
+    //     appointment.appointment_time
+    // );
 
     // Helper function to safely get client name
     const getClientName = () => {
@@ -52,8 +56,8 @@ const AppointmentCard = ({ appointment, onStatusUpdate }) => {
     };
 
     // Format date and time
-    const formatDateTime = (date, time) => {
-        if (!date || !time) {
+    const formatDateTime = (dateString, timeString) => {
+        if (!dateString || !timeString) {
             return {
                 date: "Date not available",
                 time: "Time not available",
@@ -62,33 +66,59 @@ const AppointmentCard = ({ appointment, onStatusUpdate }) => {
         }
 
         try {
-            // Handle Laravel date format (YYYY-MM-DD)
+            // Extract date from dateString (YYYY-MM-DDTHH:MM:SS.sssZ format)
             let appointmentDate;
-
-            if (typeof date === "string") {
-                // Split the date string and create date in local timezone
-                const dateParts = date.split("-");
-                if (dateParts.length === 3) {
-                    const year = parseInt(dateParts[0]);
-                    const month = parseInt(dateParts[1]) - 1; // Month is 0-indexed
-                    const day = parseInt(dateParts[2]);
-                    appointmentDate = new Date(year, month, day);
+            if (typeof dateString === "string") {
+                if (dateString.includes("T")) {
+                    // Handle ISO datetime format - extract just the date part
+                    const datePart = dateString.split("T")[0];
+                    const dateParts = datePart.split("-");
+                    if (dateParts.length === 3) {
+                        const year = parseInt(dateParts[0]);
+                        const month = parseInt(dateParts[1]) - 1; // Month is 0-indexed
+                        const day = parseInt(dateParts[2]);
+                        appointmentDate = new Date(year, month, day);
+                    }
                 } else {
-                    appointmentDate = new Date(date);
+                    // Handle simple date format (YYYY-MM-DD)
+                    const dateParts = dateString.split("-");
+                    if (dateParts.length === 3) {
+                        const year = parseInt(dateParts[0]);
+                        const month = parseInt(dateParts[1]) - 1;
+                        const day = parseInt(dateParts[2]);
+                        appointmentDate = new Date(year, month, day);
+                    }
                 }
             } else {
-                appointmentDate = new Date(date);
+                appointmentDate = new Date(dateString);
             }
 
-            // Handle time format (HH:MM or HH:MM:SS)
+            // Extract time from timeString (YYYY-MM-DDTHH:MM:SS.sssZ format)
             let formattedTime = "Time not available";
-            if (time) {
-                const timeParts = time.toString().split(":");
+            if (timeString) {
+                let timeToUse;
+
+                if (
+                    typeof timeString === "string" &&
+                    timeString.includes("T")
+                ) {
+                    // Extract time part from ISO datetime format
+                    const timePart = timeString.split("T")[1];
+                    timeToUse = timePart.split(".")[0]; // Remove milliseconds and Z
+                } else {
+                    timeToUse = timeString.toString();
+                }
+
+                const timeParts = timeToUse.split(":");
                 if (timeParts.length >= 2) {
                     const hours = parseInt(timeParts[0]);
                     const minutes = timeParts[1];
+
+                    // Correct AM/PM logic
                     const ampm = hours >= 12 ? "PM" : "AM";
-                    const displayHour = hours % 12 || 12;
+                    const displayHour =
+                        hours === 0 ? 12 : hours > 12 ? hours - 12 : hours;
+
                     formattedTime = `${displayHour}:${minutes} ${ampm}`;
                 }
             }
@@ -116,14 +146,78 @@ const AppointmentCard = ({ appointment, onStatusUpdate }) => {
                 isToday: isToday,
             };
         } catch (error) {
-            console.warn("Date formatting error:", error, { date, time });
+            console.warn("Date formatting error:", error, {
+                dateString,
+                timeString,
+            });
             return {
-                date: `${date}`,
-                time: `${time}`,
+                date: `${dateString}`,
+                time: `${timeString}`,
                 isToday: false,
             };
         }
     };
+    // const formatDateTime = (date, time) => {
+    //     if (!date || !time) {
+    //         return {
+    //             date: "Date not set",
+    //             time: "Time not set",
+    //         };
+    //     }
+
+    //     try {
+    //         let dateObj;
+    //         if (date instanceof Date) {
+    //             dateObj = date;
+    //         } else if (typeof date === "string" && date.includes("-")) {
+    //             const [year, month, day] = date.split("-");
+    //             dateObj = new Date(
+    //                 parseInt(year),
+    //                 parseInt(month) - 1,
+    //                 parseInt(day)
+    //             );
+    //         } else {
+    //             dateObj = new Date(date);
+    //         }
+
+    //         if (isNaN(dateObj.getTime())) {
+    //             throw new Error("Invalid date");
+    //         }
+
+    //         let formattedTime = "Time not set";
+    //         if (time) {
+    //             try {
+    //                 const timeParts = time.toString().split(":");
+    //                 if (timeParts.length >= 2) {
+    //                     const hours = parseInt(timeParts[0]);
+    //                     const minutes = timeParts[1];
+    //                     const ampm = hours >= 12 ? "PM" : "AM";
+    //                     const displayHour = hours % 12 || 12;
+    //                     formattedTime = `${displayHour}:${minutes} ${ampm}`;
+    //                 }
+    //             } catch (timeError) {
+    //                 console.warn("Time parsing error:", timeError);
+    //                 formattedTime = time.toString();
+    //             }
+    //         }
+
+    //         return {
+    //             date: dateObj.toLocaleDateString("en-US", {
+    //                 weekday: "short",
+    //                 month: "short",
+    //                 day: "numeric",
+    //                 year: "numeric",
+    //             }),
+    //             time: formattedTime,
+    //         };
+    //     } catch (error) {
+    //         console.warn("Date formatting error:", error, { date, time });
+    //         return {
+    //             date: date ? date.toString() : "Invalid date",
+    //             time: time ? time.toString() : "Invalid time",
+    //         };
+    //     }
+    // };
 
     // Handle status updates
     const handleStatusUpdate = async (status, notes = "") => {
@@ -145,37 +239,6 @@ const AppointmentCard = ({ appointment, onStatusUpdate }) => {
             setActionLoading(false);
         }
     };
-
-    // const handleCompleteService = async (options) => {
-    //     setLoading(true);
-    //     try {
-    //         const result = await providerAppointmentService.completeService(
-    //             appointment.id,
-    //             options
-    //         );
-
-    //         if (result.success) {
-    //             onStatusUpdate(result.data);
-
-    //             if (result.invoice) {
-    //                 const action = options.send_invoice
-    //                     ? "created and sent"
-    //                     : "created";
-    //                 alert(
-    //                     `Service completed! Invoice #${result.invoice.invoice_number} has been ${action}.`
-    //                 );
-    //             } else {
-    //                 alert("Service completed successfully!");
-    //             }
-    //         } else {
-    //             alert(result.message || "Failed to complete service");
-    //         }
-    //     } catch (error) {
-    //         alert("Error completing service");
-    //         console.error("Error:", error);
-    //     }
-    //     setLoading(false);
-    // };
 
     const handleCompleteService = async (options) => {
         // Prevent multiple calls
@@ -236,6 +299,10 @@ const AppointmentCard = ({ appointment, onStatusUpdate }) => {
         appointment.appointment_time
     );
 
+    const pluralize = (count, singular, plural = singular + "s") => {
+        return count === 1 ? singular : plural;
+    };
+
     const clientName = getClientName();
     const serviceName = getServiceName();
     const clientInitials = getClientInitials();
@@ -275,7 +342,7 @@ const AppointmentCard = ({ appointment, onStatusUpdate }) => {
                                 <i className="fas fa-clock me-2"></i>
                                 Duration: {appointment.duration_hours ||
                                     "N/A"}{" "}
-                                hour(s)
+                                {pluralize(appointment.duration_hours, "hour")}
                             </div>
                             <div>
                                 <i className="fas fa-map-marker-alt me-2"></i>

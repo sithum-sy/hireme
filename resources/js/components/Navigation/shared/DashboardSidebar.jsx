@@ -420,9 +420,8 @@ const DashboardSidebar = ({
                     badge: "",
                     children: [
                         {
-                            label: "All Appointments",
-                            path: "/provider/appointments",
-                            badge: "",
+                            label: "Pending Requests",
+                            path: "/provider/appointments?status=pending",
                         },
                         {
                             label: "Today's Schedule",
@@ -440,6 +439,11 @@ const DashboardSidebar = ({
                         {
                             label: "Cancelled",
                             path: "/provider/appointments?status=cancelled_by_client",
+                        },
+                        {
+                            label: "All Appointments",
+                            path: "/provider/appointments",
+                            badge: "",
                         },
                     ],
                 },

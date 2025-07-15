@@ -8,6 +8,7 @@ use App\Models\ServiceSearch;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 
 class DashboardController extends Controller
 {
@@ -328,7 +329,7 @@ class DashboardController extends Controller
         return [
             'id' => $service->id,
             'title' => $service->title,
-            'description' => \Str::limit($service->description, 100),
+            'description' => Str::limit($service->description, 100),
             'category' => $service->category->name,
             'provider_name' => $service->provider->full_name,
             'business_name' => $service->provider->providerProfile?->business_name,

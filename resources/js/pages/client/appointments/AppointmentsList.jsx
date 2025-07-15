@@ -5,6 +5,8 @@ import LoadingSpinner from "../../../components/LoadingSpinner";
 import CancelAppointmentModal from "../../../components/client/appointments/CancelAppointmentModal";
 import RescheduleModal from "../../../components/client/appointments/RescheduleModal";
 import ReviewModal from "../../../components/client/appointments/ReviewModal";
+import PaymentModal from "../../../components/client/appointments/PaymentModal";
+import clientAppointmentService from "../../../services/clientAppointmentService";
 
 const AppointmentsList = () => {
     const [searchParams, setSearchParams] = useSearchParams();
@@ -13,6 +15,7 @@ const AppointmentsList = () => {
     // State management
     const [appointments, setAppointments] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [actionLoading, setActionLoading] = useState(false);
     const [filters, setFilters] = useState({
         status: searchParams.get("status") || "all",
         date_from: searchParams.get("date_from") || "",
@@ -25,9 +28,12 @@ const AppointmentsList = () => {
         total: 0,
         per_page: 15,
     });
+
+    // Modal states
     const [showCancelModal, setShowCancelModal] = useState(false);
     const [showRescheduleModal, setShowRescheduleModal] = useState(false);
     const [showReviewModal, setShowReviewModal] = useState(false);
+    const [showPaymentModal, setShowPaymentModal] = useState(false);
     const [selectedAppointment, setSelectedAppointment] = useState(null);
 
     // Load appointments on component mount and filter changes
@@ -39,12 +45,52 @@ const AppointmentsList = () => {
     useEffect(() => {
         if (location.state?.message) {
             // Show toast notification (you can implement your preferred notification system)
-            // console.log(location.state.message);
+            console.log(location.state.message);
         }
     }, [location.state]);
 
     const loadAppointments = async () => {
         setLoading(true);
+        try {
+            // Use enhanced appointment service with payment data
+            const params = {
+                status: filters.status !== "all" ? filters.status : undefined,
+                date_from: filters.date_from || undefined,
+                date_to: filters.date_to || undefined,
+                service_type: filters.service_type || undefined,
+                per_page: pagination.per_page,
+                page: pagination.current_page,
+            };
+
+            const result = await clientAppointmentService.getAppointments(
+                params
+            );
+
+            if (result.success) {
+                const responseData = result.data;
+                setAppointments(responseData.data || responseData);
+
+                // Update pagination info
+                if (responseData.meta) {
+                    setPagination((prev) => ({
+                        ...prev,
+                        current_page: responseData.meta.current_page,
+                        last_page: responseData.meta.last_page,
+                        total: responseData.meta.total,
+                    }));
+                }
+            }
+        } catch (error) {
+            console.error("Failed to load appointments:", error);
+            // Fallback to your existing API if new service fails
+            await loadAppointmentsFallback();
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Fallback to your existing API method
+    const loadAppointmentsFallback = async () => {
         try {
             // Build query parameters
             const params = new URLSearchParams();
@@ -57,7 +103,6 @@ const AppointmentsList = () => {
                 params.append("service_type", filters.service_type);
             params.append("page", pagination.current_page);
 
-            // Use your existing API endpoint
             const response = await fetch(`/api/client/bookings?${params}`, {
                 headers: {
                     Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -69,7 +114,6 @@ const AppointmentsList = () => {
                 const data = await response.json();
                 setAppointments(data.data?.data || data.data || []);
 
-                // Update pagination info
                 if (data.data?.meta) {
                     setPagination((prev) => ({
                         ...prev,
@@ -80,9 +124,7 @@ const AppointmentsList = () => {
                 }
             }
         } catch (error) {
-            console.error("Failed to load appointments:", error);
-        } finally {
-            setLoading(false);
+            console.error("Fallback API also failed:", error);
         }
     };
 
@@ -97,6 +139,9 @@ const AppointmentsList = () => {
             if (v && v !== "all") newParams.set(k, v);
         });
         setSearchParams(newParams);
+
+        // Reset to first page when filters change
+        setPagination((prev) => ({ ...prev, current_page: 1 }));
     };
 
     // Check if appointment can be cancelled (24 hour policy)
@@ -106,7 +151,6 @@ const AppointmentsList = () => {
 
         try {
             let dateObj;
-
             if (appointmentDate.includes("-")) {
                 const [year, month, day] = appointmentDate.split("-");
                 const [hours, minutes] = appointmentTime.split(":");
@@ -127,7 +171,6 @@ const AppointmentsList = () => {
 
             const now = new Date();
             const hoursUntilAppointment = (dateObj - now) / (1000 * 60 * 60);
-
             return hoursUntilAppointment > 24;
         } catch (error) {
             console.warn("Error checking cancellation policy:", error);
@@ -135,13 +178,34 @@ const AppointmentsList = () => {
         }
     };
 
-    // Get status badge styling
+    // Check if appointment can be paid
+    const canBePaid = (appointment) => {
+        return (
+            appointment.invoice &&
+            appointment.invoice.payment_status === "pending" &&
+            ["completed", "invoice_sent", "payment_pending"].includes(
+                appointment.status
+            )
+        );
+    };
+
+    // Check if appointment can be reviewed
+    const canBeReviewed = (appointment) => {
+        return appointment.status === "paid" && !appointment.client_review;
+    };
+
+    // Get status badge styling - Enhanced with payment statuses
     const getStatusBadge = (status) => {
         const badges = {
             pending: "bg-warning text-dark",
             confirmed: "bg-success text-white",
             in_progress: "bg-primary text-white",
             completed: "bg-info text-white",
+            invoice_sent: "bg-info text-white",
+            payment_pending: "bg-warning text-dark",
+            paid: "bg-success text-white",
+            reviewed: "bg-success text-white",
+            closed: "bg-secondary text-white",
             cancelled_by_client: "bg-danger text-white",
             cancelled_by_provider: "bg-danger text-white",
             no_show: "bg-secondary text-white",
@@ -149,13 +213,18 @@ const AppointmentsList = () => {
         return badges[status] || "bg-secondary text-white";
     };
 
-    // Get status text for display
+    // Get status text for display - Enhanced with payment statuses
     const getStatusText = (status) => {
         const statusTexts = {
             pending: "Awaiting Confirmation",
             confirmed: "Confirmed",
             in_progress: "In Progress",
             completed: "Completed",
+            invoice_sent: "Invoice Sent",
+            payment_pending: "Payment Pending",
+            paid: "Paid",
+            reviewed: "Reviewed",
+            closed: "Closed",
             cancelled_by_client: "Cancelled by You",
             cancelled_by_provider: "Cancelled by Provider",
             no_show: "No Show",
@@ -163,23 +232,17 @@ const AppointmentsList = () => {
         return statusTexts[status] || status.replace("_", " ");
     };
 
-    // Format appointment date/time
+    // Format appointment date/time (your existing function)
     const formatDateTime = (date, time) => {
         if (!date || !time) {
-            return {
-                date: "Date not set",
-                time: "Time not set",
-            };
+            return { date: "Date not set", time: "Time not set" };
         }
 
         try {
-            // Handle different date formats from Laravel
             let dateObj;
-
             if (date instanceof Date) {
                 dateObj = date;
             } else if (typeof date === "string" && date.includes("-")) {
-                // Create date in local timezone to avoid timezone issues
                 const [year, month, day] = date.split("-");
                 dateObj = new Date(
                     parseInt(year),
@@ -190,12 +253,10 @@ const AppointmentsList = () => {
                 dateObj = new Date(date);
             }
 
-            // Validate the date
             if (isNaN(dateObj.getTime())) {
                 throw new Error("Invalid date");
             }
 
-            // Format time - handle both HH:MM and HH:MM:SS formats
             let formattedTime = "Time not set";
             if (time) {
                 try {
@@ -208,7 +269,6 @@ const AppointmentsList = () => {
                         formattedTime = `${displayHour}:${minutes} ${ampm}`;
                     }
                 } catch (timeError) {
-                    console.warn("Time parsing error:", timeError);
                     formattedTime = time.toString();
                 }
             }
@@ -230,6 +290,7 @@ const AppointmentsList = () => {
         }
     };
 
+    // Modal handlers
     const handleCancelClick = (appointment) => {
         setSelectedAppointment(appointment);
         setShowCancelModal(true);
@@ -245,8 +306,13 @@ const AppointmentsList = () => {
         setShowReviewModal(true);
     };
 
+    const handlePaymentClick = (appointment) => {
+        setSelectedAppointment(appointment);
+        setShowPaymentModal(true);
+    };
+
+    // Success handlers
     const handleCancellationSuccess = (updatedAppointment) => {
-        // Update the appointment in the list
         setAppointments((prev) =>
             prev.map((apt) =>
                 apt.id === updatedAppointment.id ? updatedAppointment : apt
@@ -257,7 +323,6 @@ const AppointmentsList = () => {
     };
 
     const handleRescheduleSuccess = (updatedAppointment) => {
-        // Update the appointment in the list
         setAppointments((prev) =>
             prev.map((apt) =>
                 apt.id === updatedAppointment.id ? updatedAppointment : apt
@@ -268,13 +333,22 @@ const AppointmentsList = () => {
     };
 
     const handleReviewSuccess = (updatedAppointment) => {
-        // Update the appointment in the list
         setAppointments((prev) =>
             prev.map((apt) =>
                 apt.id === updatedAppointment.id ? updatedAppointment : apt
             )
         );
         setShowReviewModal(false);
+        setSelectedAppointment(null);
+    };
+
+    const handlePaymentSuccess = (updatedAppointment) => {
+        setAppointments((prev) =>
+            prev.map((apt) =>
+                apt.id === updatedAppointment.id ? updatedAppointment : apt
+            )
+        );
+        setShowPaymentModal(false);
         setSelectedAppointment(null);
     };
 
@@ -295,10 +369,9 @@ const AppointmentsList = () => {
                     </Link>
                 </div>
 
-                {/* Filters Section */}
+                {/* Filters Section - Enhanced with payment statuses */}
                 <div className="filters-section bg-white rounded-4 shadow-sm p-3 mb-4">
                     <div className="row g-3 align-items-end">
-                        {/* Status Filter */}
                         <div className="col-md-3">
                             <label className="form-label small fw-semibold">
                                 Status
@@ -315,13 +388,20 @@ const AppointmentsList = () => {
                                 <option value="confirmed">Confirmed</option>
                                 <option value="in_progress">In Progress</option>
                                 <option value="completed">Completed</option>
+                                <option value="invoice_sent">
+                                    Invoice Sent
+                                </option>
+                                <option value="payment_pending">
+                                    Payment Pending
+                                </option>
+                                <option value="paid">Paid</option>
+                                <option value="reviewed">Reviewed</option>
                                 <option value="cancelled_by_client">
                                     Cancelled
                                 </option>
                             </select>
                         </div>
 
-                        {/* Date Range Filters */}
                         <div className="col-md-3">
                             <label className="form-label small fw-semibold">
                                 From Date
@@ -355,7 +435,6 @@ const AppointmentsList = () => {
                             />
                         </div>
 
-                        {/* Clear Filters */}
                         <div className="col-md-3">
                             <button
                                 className="btn btn-outline-secondary w-100"
@@ -383,7 +462,6 @@ const AppointmentsList = () => {
                     <div className="appointments-list">
                         {appointments.length > 0 ? (
                             <>
-                                {/* Results Summary */}
                                 <div className="results-summary mb-3">
                                     <small className="text-muted">
                                         Showing {appointments.length} of{" "}
@@ -391,14 +469,12 @@ const AppointmentsList = () => {
                                     </small>
                                 </div>
 
-                                {/* Appointment Cards */}
+                                {/* Enhanced Appointment Cards */}
                                 {appointments.map((appointment) => {
                                     const dateTime = formatDateTime(
                                         appointment.appointment_date,
                                         appointment.appointment_time
                                     );
-
-                                    // Check if this appointment can be cancelled
                                     const canCancel = canCancelAppointment(
                                         appointment.appointment_date,
                                         appointment.appointment_time,
@@ -451,15 +527,45 @@ const AppointmentsList = () => {
                                                                     )}
                                                                 </div>
                                                             </div>
-                                                            <span
-                                                                className={`badge ${getStatusBadge(
-                                                                    appointment.status
-                                                                )}`}
-                                                            >
-                                                                {getStatusText(
-                                                                    appointment.status
+
+                                                            {/* Enhanced Status Badges */}
+                                                            <div className="status-badges text-end">
+                                                                <span
+                                                                    className={`badge ${getStatusBadge(
+                                                                        appointment.status
+                                                                    )} px-2 py-1 mb-1 d-block`}
+                                                                >
+                                                                    {getStatusText(
+                                                                        appointment.status
+                                                                    )}
+                                                                </span>
+
+                                                                {/* Payment Status Badge */}
+                                                                {appointment.invoice && (
+                                                                    <span
+                                                                        className={`badge ${
+                                                                            appointment
+                                                                                .invoice
+                                                                                .payment_status ===
+                                                                            "pending"
+                                                                                ? "bg-warning text-dark"
+                                                                                : appointment
+                                                                                      .invoice
+                                                                                      .payment_status ===
+                                                                                  "completed"
+                                                                                ? "bg-success text-white"
+                                                                                : "bg-secondary text-white"
+                                                                        } px-2 py-1 d-block small`}
+                                                                    >
+                                                                        <i className="fas fa-credit-card me-1"></i>
+                                                                        {
+                                                                            appointment
+                                                                                .invoice
+                                                                                .payment_status
+                                                                        }
+                                                                    </span>
                                                                 )}
-                                                            </span>
+                                                            </div>
                                                         </div>
 
                                                         {/* Date, Time, Location */}
@@ -520,9 +626,38 @@ const AppointmentsList = () => {
                                                                         : ""}
                                                                 </small>
                                                             )}
+
+                                                            {/* Payment Info */}
+                                                            {appointment.invoice && (
+                                                                <div className="payment-info mt-1">
+                                                                    <small className="text-muted d-block">
+                                                                        Invoice:
+                                                                        Rs.{" "}
+                                                                        {
+                                                                            appointment
+                                                                                .invoice
+                                                                                .total_amount
+                                                                        }
+                                                                    </small>
+                                                                    {appointment
+                                                                        .invoice
+                                                                        .is_overdue && (
+                                                                        <small className="text-danger">
+                                                                            <i className="fas fa-exclamation-triangle me-1"></i>
+                                                                            {
+                                                                                appointment
+                                                                                    .invoice
+                                                                                    .days_overdue
+                                                                            }{" "}
+                                                                            days
+                                                                            overdue
+                                                                        </small>
+                                                                    )}
+                                                                </div>
+                                                            )}
                                                         </div>
 
-                                                        {/* Action Buttons */}
+                                                        {/* Action Buttons - Enhanced */}
                                                         <div className="appointment-actions">
                                                             <Link
                                                                 to={`/client/appointments/${appointment.id}`}
@@ -532,7 +667,47 @@ const AppointmentsList = () => {
                                                                 View Details
                                                             </Link>
 
-                                                            {/* Status-specific actions */}
+                                                            {/* Payment Button */}
+                                                            {canBePaid(
+                                                                appointment
+                                                            ) && (
+                                                                <button
+                                                                    className="btn btn-success btn-sm me-2"
+                                                                    onClick={() =>
+                                                                        handlePaymentClick(
+                                                                            appointment
+                                                                        )
+                                                                    }
+                                                                    disabled={
+                                                                        actionLoading
+                                                                    }
+                                                                >
+                                                                    <i className="fas fa-credit-card me-1"></i>
+                                                                    Pay Now
+                                                                </button>
+                                                            )}
+
+                                                            {/* Review Button */}
+                                                            {canBeReviewed(
+                                                                appointment
+                                                            ) && (
+                                                                <button
+                                                                    className="btn btn-warning btn-sm me-2"
+                                                                    onClick={() =>
+                                                                        handleReviewClick(
+                                                                            appointment
+                                                                        )
+                                                                    }
+                                                                    disabled={
+                                                                        actionLoading
+                                                                    }
+                                                                >
+                                                                    <i className="fas fa-star me-1"></i>
+                                                                    Review
+                                                                </button>
+                                                            )}
+
+                                                            {/* Existing Status-specific Actions */}
                                                             {appointment.status ===
                                                                 "pending" &&
                                                                 canCancel && (
@@ -548,6 +723,7 @@ const AppointmentsList = () => {
                                                                         Cancel
                                                                     </button>
                                                                 )}
+
                                                             {appointment.status ===
                                                                 "confirmed" && (
                                                                 <>
@@ -577,9 +753,13 @@ const AppointmentsList = () => {
                                                                     )}
                                                                 </>
                                                             )}
+
                                                             {appointment.status ===
                                                                 "completed" &&
-                                                                !appointment.provider_rating && (
+                                                                !appointment.provider_rating &&
+                                                                !canBeReviewed(
+                                                                    appointment
+                                                                ) && (
                                                                     <button
                                                                         className="btn btn-outline-success btn-sm"
                                                                         onClick={() =>
@@ -596,7 +776,7 @@ const AppointmentsList = () => {
                                                     </div>
                                                 </div>
 
-                                                {/* Show quote origin if applicable */}
+                                                {/* Quote Origin */}
                                                 {appointment.quote_id && (
                                                     <div className="mt-2 pt-2 border-top">
                                                         <small className="text-info">
@@ -608,12 +788,29 @@ const AppointmentsList = () => {
                                                         </small>
                                                     </div>
                                                 )}
+
+                                                {/* Payment Warning */}
+                                                {appointment.invoice
+                                                    ?.is_overdue && (
+                                                    <div className="payment-warning mt-2 pt-2 border-top bg-danger bg-opacity-10 rounded p-2">
+                                                        <small className="text-danger fw-semibold">
+                                                            <i className="fas fa-exclamation-circle me-1"></i>
+                                                            Payment overdue by{" "}
+                                                            {
+                                                                appointment
+                                                                    .invoice
+                                                                    .days_overdue
+                                                            }{" "}
+                                                            days
+                                                        </small>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     );
                                 })}
 
-                                {/* Pagination */}
+                                {/* Pagination - Your existing pagination code */}
                                 {pagination.last_page > 1 && (
                                     <div className="pagination-wrapper d-flex justify-content-center mt-4">
                                         <nav>
@@ -647,7 +844,6 @@ const AppointmentsList = () => {
                                                     </button>
                                                 </li>
 
-                                                {/* Page numbers */}
                                                 {Array.from(
                                                     {
                                                         length: Math.min(
@@ -763,7 +959,7 @@ const AppointmentsList = () => {
                     </div>
                 )}
 
-                {/* Quick Actions Footer */}
+                {/* Quick Actions Footer - Your existing code */}
                 <div className="quick-actions mt-5 p-4 bg-light rounded-4">
                     <div className="row text-center">
                         <div className="col-md-3">
@@ -814,7 +1010,7 @@ const AppointmentsList = () => {
                 </div>
             </div>
 
-            {/* Modals */}
+            {/* Enhanced Modals */}
             {selectedAppointment && (
                 <>
                     <CancelAppointmentModal
@@ -846,49 +1042,62 @@ const AppointmentsList = () => {
                         appointment={selectedAppointment}
                         onReviewSuccess={handleReviewSuccess}
                     />
+
+                    <PaymentModal
+                        show={showPaymentModal}
+                        onHide={() => {
+                            setShowPaymentModal(false);
+                            setSelectedAppointment(null);
+                        }}
+                        appointment={selectedAppointment}
+                        onPaymentSuccess={handlePaymentSuccess}
+                    />
                 </>
             )}
 
             {/* Custom Styles */}
             <style>{`
-                .text-purple { color: #6f42c1 !important; }
-                .btn-purple {
-                    background-color: #6f42c1;
-                    border-color: #6f42c1;
-                    color: white;
-                }
-                .btn-purple:hover {
-                    background-color: #5a2d91;
-                    border-color: #5a2d91;
-                    color: white;
-                }
-                .btn-outline-purple {
-                    color: #6f42c1;
-                    border-color: #6f42c1;
-                }
-                .btn-outline-purple:hover {
-                    background-color: #6f42c1;
-                    border-color: #6f42c1;
-                    color: white;
-                }
-                .appointment-card {
-                    transition: transform 0.2s ease, box-shadow 0.2s ease;
-                }
-                .appointment-card:hover {
-                    transform: translateY(-2px);
-                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
-                }
-                .text-sm {
-                    font-size: 0.875rem;
-                }
-                .pagination .page-link {
-                    color: #6f42c1;
-                }
-                .pagination .page-item.active .page-link {
-                    background-color: #6f42c1;
-                    border-color: #6f42c1;
-                }
-            `}</style>
+               .text-purple { color: #6f42c1 !important; }
+               .btn-purple {
+                   background-color: #6f42c1;
+                   border-color: #6f42c1;
+                   color: white;
+               }
+               .btn-purple:hover {
+                   background-color: #5a2d91;
+                   border-color: #5a2d91;
+                   color: white;
+               }
+               .btn-outline-purple {
+                   color: #6f42c1;
+                   border-color: #6f42c1;
+               }
+               .btn-outline-purple:hover {
+                   background-color: #6f42c1;
+                   border-color: #6f42c1;
+                   color: white;
+               }
+               .appointment-card {
+                   transition: transform 0.2s ease, box-shadow 0.2s ease;
+               }
+               .appointment-card:hover {
+                   transform: translateY(-2px);
+                   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+               }
+               .text-sm {
+                   font-size: 0.875rem;
+               }
+               .pagination .page-link {
+                   color: #6f42c1;
+               }
+               .pagination .page-item.active .page-link {
+                   background-color: #6f42c1;
+                   border-color: #6f42c1;
+               }
+               .status-badges .badge {
+                   font-size: 0.75rem;
+               }
+           `}</style>
         </ClientLayout>
     );
 };

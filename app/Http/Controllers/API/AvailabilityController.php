@@ -29,7 +29,7 @@ class AvailabilityController extends Controller
     public function getWeeklyAvailability()
     {
         try {
-            Log::info('getWeeklyAvailability called for user: ' . Auth::id());
+            // Log::info('getWeeklyAvailability called for user: ' . Auth::id());
 
             $user = Auth::user();
 
@@ -64,8 +64,8 @@ class AvailabilityController extends Controller
     public function saveWeeklyAvailability(AvailabilityRequest $request)
     {
         try {
-            Log::info('saveWeeklyAvailability called for user: ' . Auth::id());
-            Log::info('Request data: ' . json_encode($request->all()));
+            // Log::info('saveWeeklyAvailability called for user: ' . Auth::id());
+            // Log::info('Request data: ' . json_encode($request->all()));
 
             $user = Auth::user();
 
@@ -112,7 +112,7 @@ class AvailabilityController extends Controller
     public function getAvailabilitySummary()
     {
         try {
-            Log::info('getAvailabilitySummary called for user: ' . Auth::id());
+            // Log::info('getAvailabilitySummary called for user: ' . Auth::id());
 
             $user = Auth::user();
 
@@ -147,8 +147,8 @@ class AvailabilityController extends Controller
     public function testSave(Request $request)
     {
         try {
-            Log::info('Test endpoint called');
-            Log::info('User: ' . Auth::id());
+            // Log::info('Test endpoint called');
+            // Log::info('User: ' . Auth::id());
 
             return response()->json([
                 'success' => true,
@@ -174,8 +174,8 @@ class AvailabilityController extends Controller
     public function createBlockedTime(BlockTimeRequest $request)
     {
         try {
-            Log::info('createBlockedTime called for user: ' . Auth::id());
-            Log::info('Request data: ' . json_encode($request->all()));
+            // Log::info('createBlockedTime called for user: ' . Auth::id());
+            // Log::info('Request data: ' . json_encode($request->all()));
 
             $user = Auth::user();
 
@@ -223,7 +223,7 @@ class AvailabilityController extends Controller
     public function getBlockedTimes(Request $request)
     {
         try {
-            Log::info('getBlockedTimes called for user: ' . Auth::id());
+            // Log::info('getBlockedTimes called for user: ' . Auth::id());
 
             $user = Auth::user();
 
@@ -277,7 +277,7 @@ class AvailabilityController extends Controller
     public function deleteBlockedTime(BlockedTime $blockedTime)
     {
         try {
-            Log::info('deleteBlockedTime called for user: ' . Auth::id() . ', blocked time: ' . $blockedTime->id);
+            // Log::info('deleteBlockedTime called for user: ' . Auth::id() . ', blocked time: ' . $blockedTime->id);
 
             $user = Auth::user();
 

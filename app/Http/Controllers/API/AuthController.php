@@ -313,6 +313,7 @@ class AuthController extends Controller
                 'last_login_at' => $user->last_login_at?->format('Y-m-d H:i:s'),
                 'last_login_human' => $user->last_login_human,
                 'created_by' => $user->created_by,
+                'created_at' => $user->created_at,
                 'was_created_by_admin' => $user->wasCreatedByAdmin(),
             ]
         ];

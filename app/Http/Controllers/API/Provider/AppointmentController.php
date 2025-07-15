@@ -26,7 +26,7 @@ class AppointmentController extends Controller
      */
     public function index(Request $request)
     {
-        \Log::info('Appointment filters received:', $request->all());
+        // Log::info('Appointment filters received:', $request->all());
 
         $request->validate([
             'status' => 'nullable|in:pending,confirmed,in_progress,completed,cancelled_by_client,cancelled_by_provider,no_show,disputed',
@@ -39,15 +39,15 @@ class AppointmentController extends Controller
             $user = Auth::user();
             $filters = $request->only(['status', 'date_from', 'date_to']);
 
-            \Log::info('Processed filters:', $filters);
+            // Log::info('Processed filters:', $filters);
 
             $query = $this->appointmentService->getAppointments($user, $filters);
             $perPage = $request->get('per_page', 15);
             $appointments = $query->paginate($perPage);
 
             // Debug the query and results
-            \Log::info('SQL Query:', [$query->toSql()]);
-            \Log::info('Appointments found:', ['count' => $appointments->total()]);
+            // Log::info('SQL Query:', [$query->toSql()]);
+            // Log::info('Appointments found:', ['count' => $appointments->total()]);
 
             // Transform for provider view
             $appointments->through(function ($appointment) {
@@ -179,7 +179,7 @@ class AppointmentController extends Controller
                 'message' => 'Appointment status updated successfully'
             ]);
         } catch (\Exception $e) {
-            \Log::error('Failed to update appointment status: ' . $e->getMessage());
+            Log::error('Failed to update appointment status: ' . $e->getMessage());
 
             return response()->json([
                 'success' => false,
@@ -463,7 +463,7 @@ class AppointmentController extends Controller
         try {
             // Check if invoice already exists
             if ($appointment->invoices()->exists()) {
-                \Log::info("Invoice already exists for appointment {$appointment->id}");
+                Log::info("Invoice already exists for appointment {$appointment->id}");
                 return $appointment->invoices()->first();
             }
 
@@ -478,14 +478,14 @@ class AppointmentController extends Controller
             // Auto-send if requested
             if ($autoSend && $invoice) {
                 $this->invoiceService->sendInvoice($invoice);
-                \Log::info("Invoice {$invoice->id} auto-sent for appointment {$appointment->id}");
+                Log::info("Invoice {$invoice->id} auto-sent for appointment {$appointment->id}");
             }
 
-            \Log::info("Invoice {$invoice->id} created for completed appointment {$appointment->id}");
+            Log::info("Invoice {$invoice->id} created for completed appointment {$appointment->id}");
 
             return $invoice;
         } catch (\Exception $e) {
-            \Log::error("Failed to create invoice for appointment {$appointment->id}: " . $e->getMessage());
+            Log::error("Failed to create invoice for appointment {$appointment->id}: " . $e->getMessage());
             return null;
         }
     }

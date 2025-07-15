@@ -1,4 +1,7 @@
 import axios from "axios";
+import clientAppointmentService from "./clientAppointmentService";
+import paymentService from "./paymentService";
+import reviewService from "./reviewService";
 
 const API_BASE = "/api/client";
 
@@ -1213,6 +1216,55 @@ class ClientService {
                 count: fallbackData.length,
                 message: "Quotes loaded (fallback mode)",
                 fallback: true,
+            };
+        }
+    }
+
+    /**
+     * Get appointment with payment and review data
+     */
+    async getAppointmentDetails(appointmentId) {
+        return await clientAppointmentService.getAppointment(appointmentId);
+    }
+
+    /**
+     * Process payment for appointment
+     */
+    async payAppointmentInvoice(appointmentId, paymentData) {
+        return await paymentService.processAppointmentPayment(
+            appointmentId,
+            paymentData
+        );
+    }
+
+    /**
+     * Submit appointment review
+     */
+    async submitAppointmentReview(appointmentId, reviewData) {
+        return await reviewService.submitReview(appointmentId, reviewData);
+    }
+
+    /**
+     * Get dashboard data with payment info
+     */
+    async getEnhancedDashboardStats() {
+        try {
+            const [statsResponse, appointmentsResponse] = await Promise.all([
+                this.getDashboardStats(),
+                clientAppointmentService.getAppointments({ per_page: 5 }),
+            ]);
+
+            return {
+                success: true,
+                data: {
+                    stats: statsResponse.data,
+                    recent_appointments: appointmentsResponse.data?.data || [],
+                },
+            };
+        } catch (error) {
+            return {
+                success: false,
+                message: "Failed to load dashboard data",
             };
         }
     }

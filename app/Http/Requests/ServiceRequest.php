@@ -23,7 +23,7 @@ class ServiceRequest extends FormRequest
             'category_id' => 'required|exists:service_categories,id',
             'pricing_type' => 'required|in:fixed,hourly,custom',
             'base_price' => 'required|numeric|min:0|max:99999.99',
-            'duration_hours' => 'required|numeric|min:0.5|max:24',
+            'duration_hours' => 'required|numeric|min:1|max:24',
             'custom_pricing_description' => 'nullable|string|max:500',
 
             // Location fields
@@ -63,7 +63,7 @@ class ServiceRequest extends FormRequest
             'base_price.min' => 'Price cannot be negative',
             'base_price.max' => 'Price cannot exceed Rs. 99,999.99',
             'duration_hours.required' => 'Service duration is required',
-            'duration_hours.min' => 'Minimum duration is 0.5 hours',
+            'duration_hours.min' => 'Minimum duration is 1 hour',
             'duration_hours.max' => 'Maximum duration is 24 hours',
             'latitude.required' => 'Service location is required',
             'longitude.required' => 'Service location is required',

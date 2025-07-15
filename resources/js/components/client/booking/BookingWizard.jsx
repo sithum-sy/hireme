@@ -126,7 +126,7 @@ const BookingWizard = ({
             additional_services: [],
             client_notes: "",
             special_instructions: "",
-            payment_method: "cash",
+            payment_method: "",
             agreed_to_terms: false,
             booking_source: "web_app",
             booking_type: "standard",

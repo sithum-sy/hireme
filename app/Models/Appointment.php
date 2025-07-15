@@ -36,12 +36,15 @@ class Appointment extends Model
         'cancelled_at',
         'cancellation_reason',
         'provider_notes',
+        'invoice_sent_at',
+        'payment_received_at',
+        'reviews_completed_at'
     ];
 
     protected $casts = [
         'appointment_date' => 'date',
         'appointment_time' => 'datetime:H:i',
-        'duration_hours' => 'decimal:2',
+        'duration_hours' => 'integer',
         'total_price' => 'decimal:2',
         'base_price' => 'decimal:2',
         'travel_fee' => 'decimal:2',
@@ -51,7 +54,10 @@ class Appointment extends Model
         'confirmed_at' => 'datetime',
         'started_at' => 'datetime',
         'completed_at' => 'datetime',
-        'cancelled_at' => 'datetime'
+        'cancelled_at' => 'datetime',
+        'invoice_sent_at' => 'datetime',
+        'payment_received_at' => 'datetime',
+        'reviews_completed_at' => 'datetime'
     ];
 
     // Status constants to match migration
@@ -59,6 +65,11 @@ class Appointment extends Model
     public const STATUS_CONFIRMED = 'confirmed';
     public const STATUS_IN_PROGRESS = 'in_progress';
     public const STATUS_COMPLETED = 'completed';
+    public const STATUS_INVOICE_SENT = 'invoice_sent';
+    public const STATUS_PAYMENT_PENDING = 'payment_pending';
+    public const STATUS_PAID = 'paid';
+    public const STATUS_REVIEWED = 'reviewed';
+    public const STATUS_CLOSED = 'closed';
     public const STATUS_CANCELLED_BY_CLIENT = 'cancelled_by_client';
     public const STATUS_CANCELLED_BY_PROVIDER = 'cancelled_by_provider';
     public const STATUS_NO_SHOW = 'no_show';
@@ -83,6 +94,33 @@ class Appointment extends Model
     public function quote()
     {
         return $this->belongsTo(Quote::class);
+    }
+
+    public function reviews()
+    {
+        return $this->hasMany(Review::class);
+    }
+
+    public function clientReview()
+    {
+        return $this->hasOne(Review::class)
+            ->where('review_type', Review::TYPE_CLIENT_TO_PROVIDER);
+    }
+
+    public function providerReview()
+    {
+        return $this->hasOne(Review::class)
+            ->where('review_type', Review::TYPE_PROVIDER_TO_CLIENT);
+    }
+
+    public function payment()
+    {
+        return $this->hasOne(Payment::class);
+    }
+
+    public function payments()
+    {
+        return $this->hasMany(Payment::class);
     }
 
     // Scopes
@@ -148,6 +186,11 @@ class Appointment extends Model
             self::STATUS_CONFIRMED => 'badge bg-success',
             self::STATUS_IN_PROGRESS => 'badge bg-primary',
             self::STATUS_COMPLETED => 'badge bg-info',
+            self::STATUS_INVOICE_SENT => 'badge bg-info',
+            self::STATUS_PAYMENT_PENDING => 'badge bg-warning',
+            self::STATUS_PAID => 'badge bg-success',
+            self::STATUS_REVIEWED => 'badge bg-success',
+            self::STATUS_CLOSED => 'badge bg-secondary',
             self::STATUS_CANCELLED_BY_CLIENT => 'badge bg-danger',
             self::STATUS_CANCELLED_BY_PROVIDER => 'badge bg-danger',
             self::STATUS_NO_SHOW => 'badge bg-dark',
@@ -164,6 +207,11 @@ class Appointment extends Model
             self::STATUS_CONFIRMED => 'Confirmed',
             self::STATUS_IN_PROGRESS => 'In Progress',
             self::STATUS_COMPLETED => 'Completed',
+            self::STATUS_INVOICE_SENT => 'Invoice Sent',
+            self::STATUS_PAYMENT_PENDING => 'Payment Pending',
+            self::STATUS_PAID => 'Paid',
+            self::STATUS_REVIEWED => 'Reviewed',
+            self::STATUS_CLOSED => 'Closed',
             self::STATUS_CANCELLED_BY_CLIENT => 'Cancelled by Client',
             self::STATUS_CANCELLED_BY_PROVIDER => 'Cancelled by Provider',
             self::STATUS_NO_SHOW => 'No Show',
@@ -197,6 +245,31 @@ class Appointment extends Model
         ]);
     }
 
+    public function isInvoiceSent()
+    {
+        return $this->status === self::STATUS_INVOICE_SENT;
+    }
+
+    public function isPaymentPending()
+    {
+        return $this->status === self::STATUS_PAYMENT_PENDING;
+    }
+
+    public function isPaid()
+    {
+        return $this->status === self::STATUS_PAID;
+    }
+
+    public function isReviewed()
+    {
+        return $this->status === self::STATUS_REVIEWED;
+    }
+
+    public function isClosed()
+    {
+        return $this->status === self::STATUS_CLOSED;
+    }
+
     public function canBeConfirmed()
     {
         return $this->isPending();
@@ -205,6 +278,44 @@ class Appointment extends Model
     public function canBeCancelled()
     {
         return in_array($this->status, [self::STATUS_PENDING, self::STATUS_CONFIRMED]);
+    }
+
+    public function markInvoiceSent()
+    {
+        $this->update([
+            'status' => self::STATUS_INVOICE_SENT,
+            'invoice_sent_at' => now()
+        ]);
+    }
+
+    public function markPaymentPending()
+    {
+        $this->update([
+            'status' => self::STATUS_PAYMENT_PENDING
+        ]);
+    }
+
+    public function markPaymentReceived()
+    {
+        $this->update([
+            'status' => self::STATUS_PAID,
+            'payment_received_at' => now()
+        ]);
+    }
+
+    public function markAsReviewed()
+    {
+        $this->update([
+            'status' => self::STATUS_REVIEWED,
+            'reviews_completed_at' => now()
+        ]);
+    }
+
+    public function closeAppointment()
+    {
+        $this->update([
+            'status' => self::STATUS_CLOSED
+        ]);
     }
 
     public function confirm()
@@ -290,5 +401,61 @@ class Appointment extends Model
         }
 
         return $baseRules;
+    }
+
+    // Review-related methods
+    public function canBeReviewed()
+    {
+        return $this->status === self::STATUS_PAID && !$this->reviews_completed_at;
+    }
+
+    public function hasClientReview()
+    {
+        return $this->clientReview()->exists();
+    }
+
+    public function hasProviderReview()
+    {
+        return $this->providerReview()->exists();
+    }
+
+    public function areReviewsCompleted()
+    {
+        return !is_null($this->reviews_completed_at);
+    }
+
+    public function markReviewsCompleted()
+    {
+        $this->update([
+            'reviews_completed_at' => now(),
+            'status' => self::STATUS_REVIEWED
+        ]);
+    }
+
+    // Get client's rating for this appointment
+    public function getClientRatingAttribute()
+    {
+        return $this->clientReview?->rating;
+    }
+
+    // Get provider's rating for this appointment  
+    public function getProviderRatingAttribute()
+    {
+        return $this->providerReview?->rating;
+    }
+
+    public function canReceivePayment()
+    {
+        return in_array($this->status, [
+            self::STATUS_COMPLETED,
+            self::STATUS_INVOICE_SENT,
+            self::STATUS_PAYMENT_PENDING
+        ]) && $this->hasInvoice();
+    }
+
+    // Add method to check if appointment can be invoiced
+    public function canBeInvoiced()
+    {
+        return $this->status === self::STATUS_COMPLETED && !$this->hasInvoice();
     }
 }

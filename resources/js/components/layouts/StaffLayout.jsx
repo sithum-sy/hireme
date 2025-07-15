@@ -5,8 +5,8 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useStaff } from "../../context/StaffContext";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import DashboardNavbar from "../Navigation/shared/DashboardNavbar";
-import DashboardSidebar from "../Navigation/shared/DashboardSidebar";
+import DashboardNavbar from "../navigation/shared/DashboardNavbar";
+import DashboardSidebar from "../navigation/shared/DashboardSidebar";
 
 const StaffLayout = ({ children }) => {
     const { user } = useAuth();

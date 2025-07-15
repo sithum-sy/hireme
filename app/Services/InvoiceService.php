@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Invoice;
 use App\Models\Appointment;
+use App\Models\Payment;
 use App\Notifications\InvoiceCreated;
 use App\Notifications\InvoiceSent;
 use Carbon\Carbon;
@@ -73,19 +74,44 @@ class InvoiceService
     /**
      * Send invoice to client
      */
-    public function sendInvoice(Invoice $invoice)
+    // public function sendInvoice(Invoice $invoice)
+    // {
+    //     if (!$invoice->canBeSent()) {
+    //         throw new \Exception('Invoice cannot be sent in current status');
+    //     }
+
+    //     $invoice->markAsSent();
+
+    //     // Here you would:
+    //     // 1. Send email to client
+    //     // 2. Send notification
+    //     // 3. Generate PDF if needed
+    //     $this->notifyClientInvoiceSent($invoice);
+
+    //     return $invoice;
+    // }
+
+    /**
+     * Send invoice to client and update appointment status
+     */
+    public function sendInvoiceToClient(Invoice $invoice)
     {
         if (!$invoice->canBeSent()) {
             throw new \Exception('Invoice cannot be sent in current status');
         }
 
-        $invoice->markAsSent();
+        DB::transaction(function () use ($invoice) {
+            // Mark invoice as sent
+            $invoice->markAsSent();
 
-        // Here you would:
-        // 1. Send email to client
-        // 2. Send notification
-        // 3. Generate PDF if needed
-        $this->notifyClientInvoiceSent($invoice);
+            // Update appointment status
+            if ($invoice->appointment) {
+                $invoice->appointment->markInvoiceSent();
+            }
+
+            // Send notification to client (implement as needed)
+            $this->notifyClientInvoiceSent($invoice);
+        });
 
         return $invoice;
     }
@@ -135,6 +161,325 @@ class InvoiceService
             default:
                 return $this->getMonthlyEarnings($providerId, $year);
         }
+    }
+
+    /**
+     * Process client payment for invoice
+     */
+    public function processClientPayment(Invoice $invoice, array $paymentData)
+    {
+        if (!$invoice->canBepaid()) {
+            throw new \Exception('Invoice cannot be paid in current status');
+        }
+
+        return DB::transaction(function () use ($invoice, $paymentData) {
+            // Create payment record
+            $payment = $invoice->createPayment(
+                $paymentData['method'],
+                $paymentData['amount'],
+                [
+                    'stripe_payment_intent_id' => $paymentData['stripe_payment_intent_id'] ?? null,
+                    'stripe_payment_method_id' => $paymentData['stripe_payment_method_id'] ?? null,
+                    'transaction_id' => $paymentData['transaction_id'] ?? null,
+                    'payment_details' => $paymentData['details'] ?? []
+                ]
+            );
+
+            // Process payment based on method
+            if ($paymentData['method'] === 'stripe') {
+                return $this->processStripePayment($payment, $paymentData);
+            } else {
+                return $this->processCashPayment($payment, $paymentData);
+            }
+        });
+    }
+
+    /**
+     * Process Stripe payment
+     */
+    // private function processStripePayment(Payment $payment, array $paymentData)
+    // {
+    //     try {
+    //         // Mark payment as processing
+    //         $payment->markAsProcessing();
+
+    //         // Here you would integrate with Stripe
+    //         // For now, we'll simulate successful payment
+    //         $payment->markAsCompleted([
+    //             'stripe_payment_intent_id' => $paymentData['stripe_payment_intent_id'],
+    //             'processed_at' => now(),
+    //             'payment_method_details' => $paymentData['payment_method_details'] ?? []
+    //         ]);
+
+    //         // Mark invoice as paid
+    //         $payment->invoice->markAsPaid([
+    //             'payment_method' => 'stripe',
+    //             'stripe_payment_intent_id' => $paymentData['stripe_payment_intent_id'],
+    //             'transaction_id' => $paymentData['stripe_payment_intent_id']
+    //         ]);
+
+    //         return [
+    //             'success' => true,
+    //             'payment' => $payment,
+    //             'message' => 'Payment processed successfully'
+    //         ];
+    //     } catch (\Exception $e) {
+    //         $payment->markAsFailed($e->getMessage());
+
+    //         return [
+    //             'success' => false,
+    //             'message' => 'Payment processing failed: ' . $e->getMessage()
+    //         ];
+    //     }
+    // }
+    private function processStripePayment(Payment $payment, array $paymentData)
+    {
+        try {
+            // Set Stripe API key
+            \Stripe\Stripe::setApiKey(config('services.stripe.secret'));
+
+            // Mark payment as processing
+            $payment->markAsProcessing();
+
+            // Create payment intent
+            $paymentIntent = \Stripe\PaymentIntent::create([
+                'amount' => intval($payment->amount * 100), // Convert to cents
+                'currency' => strtolower($payment->currency),
+                'payment_method' => $paymentData['stripe_payment_method_id'],
+                'confirm' => true,
+                'return_url' => config('app.url') . '/client/appointments/' . $payment->appointment_id,
+                'metadata' => [
+                    'appointment_id' => $payment->appointment_id,
+                    'invoice_id' => $payment->invoice_id,
+                    'client_id' => $payment->client_id,
+                    'provider_id' => $payment->provider_id,
+                ]
+            ]);
+
+            if ($paymentIntent->status === 'succeeded') {
+                // Payment successful
+                $payment->update([
+                    'stripe_payment_intent_id' => $paymentIntent->id,
+                    'stripe_charge_id' => $paymentIntent->charges->data[0]->id ?? null,
+                    'transaction_id' => $paymentIntent->id,
+                ]);
+
+                $payment->markAsCompleted([
+                    'stripe_payment_intent_id' => $paymentIntent->id,
+                    'payment_method_details' => $paymentIntent->payment_method ?? null,
+                    'processed_at' => now(),
+                ]);
+
+                // Mark invoice as paid
+                $payment->invoice->markAsPaid([
+                    'payment_method' => 'stripe',
+                    'stripe_payment_intent_id' => $paymentIntent->id,
+                    'transaction_id' => $paymentIntent->id,
+                ]);
+
+                return [
+                    'success' => true,
+                    'payment' => $payment,
+                    'stripe_payment_intent' => $paymentIntent,
+                    'message' => 'Payment processed successfully'
+                ];
+            } elseif ($paymentIntent->status === 'requires_action') {
+                // 3D Secure authentication required
+                return [
+                    'success' => false,
+                    'requires_action' => true,
+                    'payment_intent' => $paymentIntent,
+                    'message' => 'Payment requires additional authentication'
+                ];
+            } else {
+                // Payment failed
+                $payment->markAsFailed('Payment intent status: ' . $paymentIntent->status);
+
+                return [
+                    'success' => false,
+                    'message' => 'Payment failed. Please try again.'
+                ];
+            }
+        } catch (\Stripe\Exception\CardException $e) {
+            // Card was declined
+            $payment->markAsFailed($e->getMessage());
+
+            return [
+                'success' => false,
+                'message' => 'Your card was declined: ' . $e->getMessage()
+            ];
+        } catch (\Stripe\Exception\InvalidRequestException $e) {
+            // Invalid parameters
+            $payment->markAsFailed($e->getMessage());
+
+            return [
+                'success' => false,
+                'message' => 'Payment processing error. Please try again.'
+            ];
+        } catch (\Exception $e) {
+            // Other errors
+            $payment->markAsFailed($e->getMessage());
+
+            return [
+                'success' => false,
+                'message' => 'Payment processing failed: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Process cash payment
+     */
+    // private function processCashPayment(Payment $payment, array $paymentData)
+    // {
+    //     try {
+    //         // For cash payments, mark as completed immediately
+    //         $payment->markAsCompleted([
+    //             'payment_method' => 'cash',
+    //             'marked_by_client' => true,
+    //             'processed_at' => now(),
+    //             'notes' => $paymentData['notes'] ?? 'Client confirmed cash payment'
+    //         ]);
+
+    //         // Mark invoice as paid
+    //         $payment->invoice->markAsPaid([
+    //             'payment_method' => 'cash',
+    //             'transaction_id' => $payment->id,
+    //             'confirmed_by_client' => true
+    //         ]);
+
+    //         return [
+    //             'success' => true,
+    //             'payment' => $payment,
+    //             'message' => 'Cash payment recorded successfully'
+    //         ];
+    //     } catch (\Exception $e) {
+    //         $payment->markAsFailed($e->getMessage());
+
+    //         return [
+    //             'success' => false,
+    //             'message' => 'Cash payment processing failed: ' . $e->getMessage()
+    //         ];
+    //     }
+    // }
+    private function processCashPayment(Payment $payment, array $paymentData)
+    {
+        try {
+            // For cash payments, mark as completed immediately
+            // In a real scenario, you might want provider confirmation
+            $payment->markAsCompleted([
+                'payment_method' => 'cash',
+                'marked_by_client' => true,
+                'processed_at' => now(),
+                'notes' => $paymentData['notes'] ?? 'Client confirmed cash payment',
+                'requires_provider_confirmation' => true // Flag for provider to confirm
+            ]);
+
+            // Mark invoice as paid
+            $payment->invoice->markAsPaid([
+                'payment_method' => 'cash',
+                'transaction_id' => 'CASH_' . $payment->id,
+                'confirmed_by_client' => true,
+                'awaiting_provider_confirmation' => true
+            ]);
+
+            // Notify provider about cash payment (implement as needed)
+            $this->notifyProviderCashPayment($payment);
+
+            return [
+                'success' => true,
+                'payment' => $payment,
+                'message' => 'Cash payment recorded successfully. Provider will be notified.'
+            ];
+        } catch (\Exception $e) {
+            $payment->markAsFailed($e->getMessage());
+
+            return [
+                'success' => false,
+                'message' => 'Cash payment processing failed: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Notify provider about cash payment
+     */
+    private function notifyProviderCashPayment(Payment $payment)
+    {
+        // Implement notification logic here
+        // Could be email, SMS, in-app notification, etc.
+        Log::info("Cash payment notification sent to provider", [
+            'payment_id' => $payment->id,
+            'provider_id' => $payment->provider_id,
+            'amount' => $payment->amount
+        ]);
+    }
+
+    /**
+     * Get client invoice with payment details
+     */
+    public function getClientInvoice($invoiceId, $clientId)
+    {
+        $invoice = Invoice::where('id', $invoiceId)
+            ->where('client_id', $clientId)
+            ->with(['appointment.service', 'appointment.provider', 'payment'])
+            ->firstOrFail();
+
+        // Mark as viewed by client
+        if (!$invoice->hasBeenViewed()) {
+            $invoice->markAsViewed();
+        }
+
+        return $invoice;
+    }
+
+    /**
+     * Generate receipt data after payment
+     */
+    // public function generateReceiptData(Payment $payment)
+    // {
+    //     return [
+    //         'payment_id' => $payment->id,
+    //         'invoice_id' => $payment->invoice_id,
+    //         'appointment_id' => $payment->appointment_id,
+    //         'amount' => $payment->amount,
+    //         'currency' => $payment->currency,
+    //         'method' => $payment->method,
+    //         'status' => $payment->status,
+    //         'processed_at' => $payment->processed_at,
+    //         'transaction_id' => $payment->transaction_id,
+    //         'service_title' => $payment->appointment->service->title ?? 'Service',
+    //         'provider_name' => $payment->provider->name ?? 'Provider',
+    //         'client_name' => $payment->client->name ?? 'Client'
+    //     ];
+    // }
+    public function generateReceiptData(Payment $payment)
+    {
+        return [
+            'receipt_id' => 'RCP-' . str_pad($payment->id, 8, '0', STR_PAD_LEFT),
+            'payment_id' => $payment->id,
+            'invoice_number' => $payment->invoice->formatted_invoice_number,
+            'appointment_id' => $payment->appointment_id,
+            'amount' => $payment->amount,
+            'currency' => $payment->currency,
+            'method' => ucfirst($payment->method),
+            'status' => ucfirst($payment->status),
+            'processed_at' => $payment->processed_at,
+            'transaction_id' => $payment->transaction_id,
+            'service_details' => [
+                'title' => $payment->appointment->service->title ?? 'Service',
+                'date' => $payment->appointment->appointment_date,
+                'time' => $payment->appointment->appointment_time,
+            ],
+            'provider_details' => [
+                'name' => $payment->provider->name ?? 'Provider',
+                'business_name' => $payment->provider->providerProfile->business_name ?? null,
+            ],
+            'client_details' => [
+                'name' => $payment->client->name ?? 'Client',
+                'email' => $payment->client->email ?? null,
+            ]
+        ];
     }
 
     /**

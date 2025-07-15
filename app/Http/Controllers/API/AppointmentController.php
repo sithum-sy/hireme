@@ -553,7 +553,7 @@ class AppointmentController extends Controller
                 'provider_id' => 'required|exists:users,id',
                 'appointment_date' => 'required|date|after_or_equal:today',
                 'appointment_time' => 'required|date_format:H:i',
-                'duration_hours' => 'required|numeric|min:0.5|max:8',
+                'duration_hours' => 'required|numeric|min:1|max:8',
             ]);
 
             $provider = User::findOrFail($request->provider_id);
@@ -561,7 +561,7 @@ class AppointmentController extends Controller
 
             $endTime = Carbon::parse($request->appointment_time)
                 ->addHours($request->duration_hours)
-                ->format('H:i');
+                ->format('H');
 
             $availability = $availabilityService->isAvailableAt(
                 $provider,

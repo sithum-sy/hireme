@@ -166,6 +166,30 @@ class User extends Authenticatable
         return $this->hasOne(ProviderProfile::class, 'user_id');
     }
 
+    public function reviewsReceived()
+    {
+        return $this->hasMany(Review::class, 'reviewee_id');
+    }
+
+    public function reviewsGiven()
+    {
+        return $this->hasMany(Review::class, 'reviewer_id');
+    }
+
+    public function providerReviews()
+    {
+        return $this->reviewsReceived()
+            ->where('review_type', Review::TYPE_CLIENT_TO_PROVIDER)
+            ->visible();
+    }
+
+    public function clientReviews()
+    {
+        return $this->reviewsReceived()
+            ->where('review_type', Review::TYPE_PROVIDER_TO_CLIENT)
+            ->visible();
+    }
+
     // Helper methods
     // public function isServiceProvider()
     // {
@@ -273,5 +297,27 @@ class User extends Authenticatable
     public function scopeCreatedBy($query, $userId)
     {
         return $query->where('created_by', $userId);
+    }
+
+    // Calculate average ratings
+    public function getAverageProviderRatingAttribute()
+    {
+        return $this->providerReviews()->avg('rating') ?: 0;
+    }
+
+    public function getTotalProviderReviewsAttribute()
+    {
+        return $this->providerReviews()->count();
+    }
+
+    // Update provider profile ratings (if you have provider profiles)
+    public function updateProviderRating()
+    {
+        if ($this->role === 'service_provider' && $this->providerProfile) {
+            $this->providerProfile->update([
+                'average_rating' => round($this->average_provider_rating, 1),
+                'total_reviews' => $this->total_provider_reviews
+            ]);
+        }
     }
 }

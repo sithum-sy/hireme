@@ -50,9 +50,9 @@ const AppointmentsList = () => {
     }, [searchParams]);
 
     useEffect(() => {
-        console.log("URL search params:", searchParams.toString());
-        console.log("Current filters:", filters);
-        console.log("Status from URL:", searchParams.get("status"));
+        // console.log("URL search params:", searchParams.toString());
+        // console.log("Current filters:", filters);
+        // console.log("Status from URL:", searchParams.get("status"));
     }, [searchParams, filters]);
 
     const loadAppointments = async () => {
@@ -67,17 +67,19 @@ const AppointmentsList = () => {
             const result = await providerAppointmentService.getAppointments(
                 params
             );
+            // console.log("Loaded appointments:", result);
 
             if (result.success) {
                 setAppointments(result.data.data || []);
-                if (result.data.meta) {
+                if (result.data.data) {
                     setPagination((prev) => ({
                         ...prev,
-                        current_page: result.data.meta.current_page,
-                        last_page: result.data.meta.last_page,
-                        total: result.data.meta.total,
+                        current_page: result.data.current_page,
+                        last_page: result.data.last_page,
+                        total: result.data.total,
                     }));
                 }
+                // console.log("Pagination data:", result.data.data);
             }
         } catch (error) {
             console.error("Failed to load appointments:", error);
@@ -135,18 +137,18 @@ const AppointmentsList = () => {
                     <div className="d-flex gap-2">
                         <Link
                             to="/provider/appointments/today"
-                            className="btn btn-outline-orange"
+                            className="btn btn-orange"
                         >
                             <i className="fas fa-calendar-day me-2"></i>
                             Today's Schedule
                         </Link>
-                        <Link
+                        {/* <Link
                             to="/provider/availability"
-                            className="btn btn-orange"
+                            className="btn btn-outline-orange"
                         >
                             <i className="fas fa-calendar-plus me-2"></i>
                             Manage Availability
-                        </Link>
+                        </Link> */}
                     </div>
                 </div>
 

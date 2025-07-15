@@ -220,6 +220,8 @@ const ProviderLayout = ({ children }) => {
     // Get performance indicators
     const performanceIndicators = getPerformanceIndicators();
 
+    // console.log("User object:", user);
+
     return (
         <div className="provider-dashboard-layout">
             {/* Universal Navigation Bar */}
@@ -323,7 +325,7 @@ const ProviderLayout = ({ children }) => {
                                                       1
                                                           ? "s"
                                                           : ""
-                                                  } today. Expected earnings: Rs. ${todaysEarnings.toLocaleString()}`
+                                                  } today.`
                                                 : businessStats.pendingRequests >
                                                   0
                                                 ? `You have ${
@@ -338,7 +340,7 @@ const ProviderLayout = ({ children }) => {
                                         </p>
                                         <div className="d-flex gap-2">
                                             <Link
-                                                to="/provider/requests"
+                                                to="/provider/appointments?status=pending"
                                                 className="btn btn-light btn-lg"
                                             >
                                                 <i className="fas fa-bell me-2"></i>
