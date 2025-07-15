@@ -860,7 +860,7 @@ const PublicLayout = ({
             )}
 
             {/* Custom Styles */}
-            <style jsx>{`
+            <style>{`
                 .public-layout {
                     min-height: 100vh;
                 }

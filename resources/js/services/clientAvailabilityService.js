@@ -10,7 +10,7 @@ class ClientAvailabilityService {
                 {
                     params: {
                         date: params.date,
-                        service_duration: params.duration || 1,
+                        service_duration: parseFloat(params.duration) || 1,
                     },
                 }
             );
@@ -25,6 +25,11 @@ class ClientAvailabilityService {
             };
         } catch (error) {
             console.warn("Provider availability slots endpoint error:", error);
+
+            // Log the actual error for debugging
+            if (error.response) {
+                console.error("Error response:", error.response.data);
+            }
 
             // Return empty slots for safety rather than fake data
             return {

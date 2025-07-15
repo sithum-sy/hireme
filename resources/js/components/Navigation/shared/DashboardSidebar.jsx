@@ -325,24 +325,24 @@ const DashboardSidebar = ({
                             label: "All Quotes",
                             path: "/client/quotes",
                         },
-                        {
-                            label: "Pending",
-                            path: "/client/quotes?status=pending",
-                            badge: "",
-                        },
-                        {
-                            label: "Received",
-                            path: "/client/quotes?status=quoted",
-                            badge: "",
-                        },
-                        {
-                            label: "Accepted",
-                            path: "/client/quotes?status=accepted",
-                        },
-                        {
-                            label: "Declined",
-                            path: "/client/quotes?status=rejected",
-                        },
+                        // {
+                        //     label: "Pending",
+                        //     path: "/client/quotes?status=pending",
+                        //     badge: "",
+                        // },
+                        // {
+                        //     label: "Received",
+                        //     path: "/client/quotes?status=quoted",
+                        //     badge: "",
+                        // },
+                        // {
+                        //     label: "Accepted",
+                        //     path: "/client/quotes?status=accepted",
+                        // },
+                        // {
+                        //     label: "Declined",
+                        //     path: "/client/quotes?status=rejected",
+                        // },
                     ],
                 },
                 // {

@@ -4,8 +4,10 @@ namespace App\Http\Controllers\API\Client;
 
 use App\Http\Controllers\Controller;
 use App\Models\Appointment;
+use App\Models\Quote;
 use App\Models\Service;
 use App\Models\User;
+use App\Services\AppointmentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -13,9 +15,24 @@ use Illuminate\Support\Facades\Log;
 
 class BookingController extends Controller
 {
+
+
     public function store(Request $request)
     {
         try {
+            // Log the incoming request data
+            Log::info('Booking request received', [
+                'data' => $request->all(),
+                'user_id' => Auth::id()
+            ]);
+
+            // Log specifically the quote-related fields
+            Log::info('Quote-related fields in request', [
+                'quote_id' => $request->input('quote_id'),
+                'isFromQuote' => $request->boolean('isFromQuote'),
+                'booking_source' => $request->input('booking_source')
+            ]);
+
             $validatedData = $request->validate([
                 'service_id' => 'required|exists:services,id',
                 'provider_id' => 'required|exists:users,id',
@@ -26,9 +43,26 @@ class BookingController extends Controller
                 'client_phone' => 'nullable|string|max:20',
                 'client_email' => 'nullable|email',
                 'client_address' => 'nullable|string|max:255',
+                'client_city' => 'nullable|string|max:100',
+                'client_postal_code' => 'nullable|string|max:20',
                 'location_type' => 'required|in:client_address,provider_location,custom_location',
+                'location_instructions' => 'nullable|string|max:1000',
+                'contact_preference' => 'nullable|in:phone,message',
+                'client_notes' => 'nullable|string|max:1000',
                 'payment_method' => 'required|in:cash,card,bank_transfer',
                 'agreed_to_terms' => 'required|boolean|accepted',
+                'base_price' => 'nullable|numeric|min:0',
+                'travel_fee' => 'nullable|numeric|min:0',
+                'booking_source' => 'nullable|string|max:50',
+                'quote_id' => 'nullable|exists:quotes,id',
+                'isFromQuote' => 'nullable|boolean',
+            ]);
+
+            // Log the validated data
+            Log::info('Validated booking data', [
+                'validated' => $validatedData,
+                'quote_id' => $validatedData['quote_id'] ?? null,
+                'isFromQuote' => $request->boolean('isFromQuote')
             ]);
 
             // Ensure at least one contact method is provided
@@ -64,17 +98,46 @@ class BookingController extends Controller
                 'client_notes' => $request->client_notes,
                 'payment_method' => $validatedData['payment_method'],
                 'status' => 'pending',
-                'booking_source' => 'web_app',
+                'booking_source' => $validatedData['booking_source'] ?? 'web_app',
+                'quote_id' => $validatedData['quote_id'] ?? null,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
+
+            Log::info('Appointment created', [
+                'appointment_id' => $appointment->id,
+                'quote_id' => $appointment->quote_id
+            ]);
+
+            // If this booking is from a quote, update the quote status
+            if (!empty($validatedData['quote_id']) || $request->boolean('isFromQuote')) {
+                $quote = Quote::find($validatedData['quote_id']);
+                if ($quote && $quote->client_id === Auth::id()) {
+                    $quote->update([
+                        'status' => 'accepted',
+                        'client_responded_at' => now(),
+                        'client_response_notes' => 'Quote accepted via appointment booking',
+                        'appointment_id' => $appointment->id,
+                    ]);
+
+                    Log::info('Quote status updated to accepted', [
+                        'quote_id' => $quote->id,
+                        'appointment_id' => $appointment->id,
+                        'client_id' => Auth::id()
+                    ]);
+                }
+            }
 
             // Load relationships for response
             $appointment->load(['service', 'provider', 'client']);
 
             DB::commit();
 
-            Log::info('Booking created successfully', ['appointment_id' => $appointment->id, 'client_id' => Auth::id()]);
+            Log::info('Booking created successfully', [
+                'appointment_id' => $appointment->id,
+                'client_id' => Auth::id(),
+                'from_quote' => !empty($validatedData['quote_id'])
+            ]);
 
             return response()->json([
                 'success' => true,
@@ -106,7 +169,12 @@ class BookingController extends Controller
             ], 422);
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Booking creation failed', ['error' => $e->getMessage(), 'client_id' => Auth::id()]);
+            Log::error('Booking creation failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'client_id' => Auth::id(),
+                'request_data' => $request->all()
+            ]);
 
             return response()->json([
                 'success' => false,

@@ -27,6 +27,7 @@ import QuotesList from "./pages/client/quotes/QuotesList";
 import AppointmentsList from "./pages/client/bookings/AppointmentsList";
 import AppointmentDetail from "./pages/client/bookings/AppointmentDetail";
 import ClientQuoteDetail from "./pages/client/quotes/QuoteDetail";
+import QuoteAcceptanceBooking from "./components/client/booking/QuoteAcceptanceBooking";
 
 // Provider Pages
 import ProviderDashboard from "./pages/provider/Dashboard";
@@ -162,6 +163,13 @@ function App() {
                                             <Route
                                                 path="services/:id"
                                                 element={<ServiceDetail />}
+                                            />
+
+                                            <Route
+                                                path="booking/from-quote"
+                                                element={
+                                                    <QuoteAcceptanceBooking />
+                                                }
                                             />
 
                                             {/* Provider Routes */}

@@ -96,6 +96,10 @@ const BookingConfirmation = ({
                 booking_source: "web_app",
                 user_agent: navigator.userAgent,
                 timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+
+                quote_id: bookingData.quote_id,
+                isFromQuote: bookingData.isFromQuote,
+                booking_source: bookingData.booking_source,
             };
 
             // console.log("Submitting booking payload:", bookingPayload);

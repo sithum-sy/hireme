@@ -67,14 +67,24 @@ class Quote extends Model
         return $this->belongsTo(User::class, 'client_id');
     }
 
+    // public function provider()
+    // {
+    //     return $this->belongsTo(ProviderProfile::class, 'provider_id');
+    // }
+
     public function provider()
     {
-        return $this->belongsTo(ProviderProfile::class, 'provider_id');
+        return $this->belongsTo(User::class, 'provider_id');
     }
 
-    public function providerUser()
+    // public function providerUser()
+    // {
+    //     return $this->belongsTo(User::class, 'provider_id');
+    // }
+
+    public function providerProfile()
     {
-        return $this->belongsTo(User::class, 'provider_id');
+        return $this->hasOneThrough(ProviderProfile::class, User::class, 'id', 'user_id', 'provider_id', 'id');
     }
 
     public function service()
@@ -84,7 +94,7 @@ class Quote extends Model
 
     public function appointment()
     {
-        return $this->belongsTo(Appointment::class);
+        return $this->hasOne(Appointment::class, 'quote_id');
     }
 
 

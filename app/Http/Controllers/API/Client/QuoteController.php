@@ -208,10 +208,253 @@ class QuoteController extends Controller
         }
     }
 
+    // public function show(Request $request, Quote $quote)
+    // {
+    //     try {
+    //         // Ensure user can only view their own quotes
+    //         if ($quote->client_id !== auth()->id()) {
+    //             return response()->json([
+    //                 'success' => false,
+    //                 'message' => 'Quote not found'
+    //             ], 404);
+    //         }
+
+    //         // Load relationships - be careful with provider_profile
+    //         $quote->load(['service', 'provider', 'client', 'providerUser, appointment']);
+
+    //         // Get provider profile safely
+    //         $providerProfile = null;
+    //         if ($quote->provider) {
+    //             try {
+    //                 $providerProfile = $quote->provider->provider_profile ?? null;
+    //             } catch (\Exception $e) {
+    //                 $providerProfile = null;
+    //             }
+    //         }
+
+    //         // Transform single quote data
+    //         $transformedQuote = [
+    //             'id' => $quote->id,
+    //             'quote_number' => $quote->quote_number,
+    //             'status' => $quote->status,
+
+    //             // 'service_id' => $quote->service_id,
+    //             // 'provider_id' => $quote->provider_id,
+
+    //             // Service information with real data
+    //             'service_id' => $quote->service_id,
+    //             'service_title' => $quote->service->title ?? 'Unknown Service',
+    //             'service_description' => $quote->service->description ?? '',
+    //             'service_image' => $quote->service->first_image_url ?? null,
+
+    //             // // Service information
+    //             // 'service_title' => $quote->service->title ?? $quote->title ?? 'Unknown Service',
+    //             // 'service_description' => $quote->service->description ?? $quote->description ?? '',
+    //             // 'service_image' => $quote->service->first_image_url ?? null,
+
+    //             // Real category data
+    //             'service_category' => $quote->service->category ? [
+    //                 'id' => $quote->service->category->id,
+    //                 'name' => $quote->service->category->name,
+    //                 'color' => $quote->service->category->color ?? 'primary',
+    //                 'icon' => $quote->service->category->icon ?? 'fas fa-cog',
+    //             ] : [
+    //                 'name' => 'Service',
+    //                 'color' => 'primary',
+    //                 'icon' => 'fas fa-cog'
+    //             ],
+
+    //             // Provider information
+    //             // 'provider_id' => $quote->provider_id,
+    //             // // 'provider_name' => $quote->provider ?
+    //             // //     trim($quote->provider->first_name . ' ' . $quote->provider->last_name) :
+    //             // //     'Unknown Provider',
+    //             // 'provider_name' => $quote->provider ?
+    //             //     ($quote->provider->name ?? 'Unknown Provider') :
+    //             //     'Unknown Provider',
+    //             // 'provider_image' => $quote->provider->profile_picture ?? null,
+
+    //             // Provider information with real data
+    //             'provider_id' => $quote->provider_id,
+    //             'provider_name' => $quote->provider->name ?? 'Unknown Provider',
+    //             'provider_image' => $quote->provider->profile_picture ?? null,
+
+    //             // 'provider_rating' => $providerProfile->average_rating ?? 0,
+    //             // 'provider_reviews' => $providerProfile->total_reviews ?? 0,
+    //             // Real provider profile data
+    //             'provider_business_name' => $quote->provider->provider_profile->business_name ?? $quote->provider->name ?? 'Unknown Provider',
+    //             'provider_rating' => $quote->provider->provider_profile->average_rating ?? 0,
+    //             'provider_reviews' => $quote->provider->provider_profile->total_reviews ?? 0,
+    //             'provider_bio' => $quote->provider->provider_profile->bio ?? 'Professional service provider',
+    //             'provider_verified' => $quote->provider->provider_profile->is_verified ?? false,
+
+
+    //             // Request data
+    //             'message' => $quote->client_requirements ?? '',
+    //             'requested_date' => $quote->requested_date,
+    //             'requested_time' => $quote->requested_time,
+    //             'location_summary' => $quote->location_summary,
+    //             'special_requirements' => $quote->special_requirements,
+    //             'urgency' => $quote->urgency,
+
+    //             // Quote response data
+    //             'quoted_price' => $quote->quoted_price,
+    //             'travel_fee' => $quote->travel_fee ?? 0,
+    //             'estimated_duration' => $quote->duration_hours,
+    //             'provider_response' => $quote->quote_details,
+    //             'quote_notes' => $quote->provider_notes,
+    //             'validity_days' => $quote->valid_until ?
+    //                 now()->diffInDays($quote->valid_until) : null,
+
+    //             // Status helpers
+    //             'time_remaining' => $quote->time_remaining,
+    //             'can_be_accepted' => $quote->canBeAccepted(),
+    //             'can_be_rejected' => $quote->canBeRejected(),
+
+    //             // Timestamps
+    //             'created_at' => $quote->created_at,
+    //             'updated_at' => $quote->updated_at,
+    //             'quoted_at' => $quote->responded_at,
+    //             'expires_at' => $quote->valid_until,
+    //             'accepted_at' => $quote->client_responded_at && $quote->status === 'accepted' ? $quote->client_responded_at : null,
+    //             'declined_at' => $quote->client_responded_at && $quote->status === 'rejected' ? $quote->client_responded_at : null,
+    //         ];
+
+    //         return response()->json([
+    //             'success' => true,
+    //             'data' => $transformedQuote,
+    //             'message' => 'Quote details retrieved successfully'
+    //         ]);
+    //     } catch (\Exception $e) {
+    //         Log::error('Error fetching quote details: ' . $e->getMessage());
+    //         Log::error('Stack trace: ' . $e->getTraceAsString());
+
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'Failed to fetch quote details',
+    //             'error' => config('app.debug') ? $e->getMessage() : 'Internal server error'
+    //         ], 500);
+    //     }
+    // }
+
+    // public function show(Request $request, Quote $quote)
+    // {
+    //     try {
+    //         // Ensure user can only view their own quotes
+    //         if ($quote->client_id !== auth()->id()) {
+    //             return response()->json([
+    //                 'success' => false,
+    //                 'message' => 'Quote not found'
+    //             ], 404);
+    //         }
+
+    //         // Load relationships carefully to avoid 500 errors
+    //         $quote->load([
+    //             'service.category',
+    //             'provider', // This is the User model
+    //             'providerProfile' // This is the ProviderProfile model
+    //         ]);
+
+    //         // Get provider profile safely
+    //         $providerProfile = null;
+    //         $providerUser = $quote->provider;
+
+    //         if ($providerUser) {
+    //             try {
+    //                 $providerProfile = $providerUser->provider_profile;
+    //             } catch (\Exception $e) {
+    //                 Log::warning('Provider profile not found for user: ' . $providerUser->id);
+    //             }
+    //         }
+
+    //         // Transform single quote data with safe data access
+    //         $transformedQuote = [
+    //             'id' => $quote->id,
+    //             'quote_number' => $quote->quote_number,
+    //             'status' => $quote->status,
+
+    //             // Service information with real data
+    //             'service_id' => $quote->service_id,
+    //             'service_title' => $quote->service->title ?? 'Unknown Service',
+    //             'service_description' => $quote->service->description ?? '',
+    //             'service_image' => $quote->service->first_image_url ?? null,
+
+    //             // Real category data (safely accessed)
+    //             'service_category' => $quote->service && $quote->service->category ? [
+    //                 'id' => $quote->service->category->id,
+    //                 'name' => $quote->service->category->name,
+    //                 'color' => $quote->service->category->color ?? 'primary',
+    //                 'icon' => $quote->service->category->icon ?? 'fas fa-cog',
+    //             ] : [
+    //                 'name' => 'Service',
+    //                 'color' => 'primary',
+    //                 'icon' => 'fas fa-cog'
+    //             ],
+
+    //             // Provider information with real data
+    //             'provider_id' => $quote->provider_id,
+    //             'provider_name' => $providerUser->name ?? 'Unknown Provider',
+    //             'provider_image' => $providerUser->profile_picture ?? null,
+
+    //             // Real provider profile data (safely accessed)
+    //             'provider_business_name' => $providerProfile->business_name ?? ($providerUser->name ?? 'Unknown Provider'),
+    //             'provider_rating' => $providerProfile->average_rating ?? 0,
+    //             'provider_reviews' => $providerProfile->total_reviews ?? 0,
+    //             'provider_bio' => $providerProfile->bio ?? 'Professional service provider',
+    //             'provider_verified' => $providerProfile->is_verified ?? false,
+
+    //             // Request data from accessors
+    //             'message' => $quote->client_requirements ?? '',
+    //             'requested_date' => $quote->requested_date,
+    //             'requested_time' => $quote->requested_time,
+    //             'location_summary' => $quote->location_summary,
+    //             'special_requirements' => $quote->special_requirements,
+    //             'urgency' => $quote->urgency,
+
+    //             // Quote response data
+    //             'quoted_price' => $quote->quoted_price,
+    //             'travel_fee' => $quote->travel_fee ?? 0,
+    //             'estimated_duration' => $quote->duration_hours,
+    //             'provider_response' => $quote->quote_details,
+    //             'quote_notes' => $quote->provider_notes,
+    //             'validity_days' => $quote->valid_until ? now()->diffInDays($quote->valid_until) : null,
+
+    //             // Status helpers
+    //             'time_remaining' => $quote->time_remaining,
+    //             'can_be_accepted' => $quote->canBeAccepted(),
+    //             'can_be_rejected' => $quote->canBeRejected(),
+
+    //             // Timestamps
+    //             'created_at' => $quote->created_at,
+    //             'updated_at' => $quote->updated_at,
+    //             'quoted_at' => $quote->responded_at,
+    //             'expires_at' => $quote->valid_until,
+    //             'accepted_at' => $quote->client_responded_at && $quote->status === 'accepted' ? $quote->client_responded_at : null,
+    //             'declined_at' => $quote->client_responded_at && $quote->status === 'rejected' ? $quote->client_responded_at : null,
+    //         ];
+
+    //         return response()->json([
+    //             'success' => true,
+    //             'data' => $transformedQuote,
+    //             'message' => 'Quote details retrieved successfully'
+    //         ]);
+    //     } catch (\Exception $e) {
+    //         Log::error('Error fetching quote details: ' . $e->getMessage());
+    //         Log::error('Stack trace: ' . $e->getTraceAsString());
+
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'Failed to fetch quote details',
+    //             'error' => config('app.debug') ? $e->getMessage() : 'Internal server error'
+    //         ], 500);
+    //     }
+    // }
+
     public function show(Request $request, Quote $quote)
     {
         try {
-            // Ensure user can only view their own quotes
+            Log::info('Loading quote: ' . $quote->id);
+
             if ($quote->client_id !== auth()->id()) {
                 return response()->json([
                     'success' => false,
@@ -219,43 +462,65 @@ class QuoteController extends Controller
                 ], 404);
             }
 
-            // Load relationships - be careful with provider_profile
-            $quote->load(['service', 'provider']);
+            Log::info('Loading relationships');
+            // Load relationships step by step to see which one fails
+            $quote->load([
+                'service.category',
+                'provider' // This is the User model
+            ]);
+
+            Log::info('All relationships loaded successfully');
 
             // Get provider profile safely
             $providerProfile = null;
-            if ($quote->provider) {
+            $providerUser = $quote->provider;
+
+            if ($providerUser) {
                 try {
-                    $providerProfile = $quote->provider->provider_profile ?? null;
+                    $providerProfile = $providerUser->provider_profile;
+                    Log::info('Provider profile loaded: ' . ($providerProfile ? 'Yes' : 'No'));
                 } catch (\Exception $e) {
-                    $providerProfile = null;
+                    Log::warning('Provider profile not found for user: ' . $providerUser->id);
                 }
             }
 
-            // Transform single quote data
+            // Transform single quote data with safe data access
             $transformedQuote = [
                 'id' => $quote->id,
                 'quote_number' => $quote->quote_number,
                 'status' => $quote->status,
 
-                // Service information
-                'service_title' => $quote->service->title ?? $quote->title ?? 'Unknown Service',
-                'service_description' => $quote->service->description ?? $quote->description ?? '',
+                // Service information with real data
+                'service_id' => $quote->service_id,
+                'service_title' => $quote->service->title ?? 'Unknown Service',
+                'service_description' => $quote->service->description ?? '',
                 'service_image' => $quote->service->first_image_url ?? null,
 
-                // Provider information
+                // Real category data (safely accessed)
+                'service_category' => $quote->service && $quote->service->category ? [
+                    'id' => $quote->service->category->id,
+                    'name' => $quote->service->category->name,
+                    'color' => $quote->service->category->color ?? 'primary',
+                    'icon' => $quote->service->category->icon ?? 'fas fa-cog',
+                ] : [
+                    'name' => 'Service',
+                    'color' => 'primary',
+                    'icon' => 'fas fa-cog'
+                ],
+
+                // Provider information with real data
                 'provider_id' => $quote->provider_id,
-                // 'provider_name' => $quote->provider ?
-                //     trim($quote->provider->first_name . ' ' . $quote->provider->last_name) :
-                //     'Unknown Provider',
-                'provider_name' => $quote->provider ?
-                    ($quote->provider->name ?? 'Unknown Provider') :
-                    'Unknown Provider',
-                'provider_image' => $quote->provider->profile_picture ?? null,
+                'provider_name' => $providerUser->name ?? 'Unknown Provider',
+                'provider_image' => $providerUser->profile_picture ?? null,
+
+                // Real provider profile data (safely accessed)
+                'provider_business_name' => $providerProfile->business_name ?? ($providerUser->name ?? 'Unknown Provider'),
                 'provider_rating' => $providerProfile->average_rating ?? 0,
                 'provider_reviews' => $providerProfile->total_reviews ?? 0,
+                'provider_bio' => $providerProfile->bio ?? 'Professional service provider',
+                'provider_verified' => $providerProfile->is_verified ?? false,
 
-                // Request data
+                // Request data from accessors
                 'message' => $quote->client_requirements ?? '',
                 'requested_date' => $quote->requested_date,
                 'requested_time' => $quote->requested_time,
@@ -269,8 +534,7 @@ class QuoteController extends Controller
                 'estimated_duration' => $quote->duration_hours,
                 'provider_response' => $quote->quote_details,
                 'quote_notes' => $quote->provider_notes,
-                'validity_days' => $quote->valid_until ?
-                    now()->diffInDays($quote->valid_until) : null,
+                'validity_days' => $quote->valid_until ? now()->diffInDays($quote->valid_until) : null,
 
                 // Status helpers
                 'time_remaining' => $quote->time_remaining,
@@ -285,6 +549,8 @@ class QuoteController extends Controller
                 'accepted_at' => $quote->client_responded_at && $quote->status === 'accepted' ? $quote->client_responded_at : null,
                 'declined_at' => $quote->client_responded_at && $quote->status === 'rejected' ? $quote->client_responded_at : null,
             ];
+
+            Log::info('Quote data transformed successfully');
 
             return response()->json([
                 'success' => true,
@@ -304,7 +570,7 @@ class QuoteController extends Controller
     }
 
     /**
-     * Update quote with provider response
+     * Update quote and optionally create appointment using existing booking system
      */
     public function accept(Request $request, Quote $quote)
     {
@@ -369,41 +635,74 @@ class QuoteController extends Controller
 
                 $appointment = null;
 
-                // Create appointment if requested
+                // Create appointment using existing booking system if requested
                 if ($request->input('create_appointment', false)) {
                     $appointmentDetails = $request->input('appointment_details');
 
-                    $appointment = Appointment::create([
-                        'client_id' => auth()->id(),
-                        'provider_id' => $appointmentDetails['provider_id'],
+                    // Get quote request data for additional details
+                    $quoteRequestData = $quote->quote_request_data ?? [];
+
+                    // Prepare booking data in the same format as direct booking
+                    $bookingData = [
+                        // Basic appointment info
                         'service_id' => $appointmentDetails['service_id'],
-                        'quote_id' => $quote->id,
+                        'provider_id' => $appointmentDetails['provider_id'],
                         'appointment_date' => $appointmentDetails['date'],
                         'appointment_time' => $appointmentDetails['time'],
                         'duration_hours' => $appointmentDetails['duration'],
+
+                        // Pricing from quote
                         'total_price' => $quote->quoted_price + ($quote->travel_fee ?? 0),
-                        'status' => 'pending_confirmation',
-                        'client_notes' => $request->input('notes', ''),
+                        'base_price' => $quote->quoted_price,
+                        'travel_fee' => $quote->travel_fee ?? 0,
+
+                        // Location from quote request
+                        'location_type' => $quoteRequestData['location_type'] ?? 'client_address',
+                        'client_address' => $quoteRequestData['address'] ?? '',
+                        'client_city' => $quoteRequestData['city'] ?? '',
+                        'client_postal_code' => $quoteRequestData['postal_code'] ?? '',
+                        'location_instructions' => $quoteRequestData['location_instructions'] ?? '',
+
+                        // Contact info from quote request
+                        'client_phone' => $quoteRequestData['phone'] ?? '',
+                        'client_email' => $quoteRequestData['email'] ?? '',
+                        'contact_preference' => $quoteRequestData['contact_preference'] ?? 'phone',
+                        'emergency_contact' => $quoteRequestData['emergency_contact'] ?? '',
+
+                        // Notes and instructions
+                        'client_notes' => $request->input('notes', '') . "\n\nFrom Quote #" . $quote->quote_number,
+                        'special_instructions' => $quote->client_requirements ?? '',
+
+                        // Quote reference
+                        'quote_id' => $quote->id,
                         'booking_source' => 'quote_acceptance',
-                    ]);
+                        'payment_method' => 'cash', // Default, can be changed
+                        'status' => 'pending', // Use your model's default status
 
-                    // Update quote with appointment reference
-                    $quote->update(['appointment_id' => $appointment->id]);
+                        // Additional services if any
+                        'additional_services' => [],
 
-                    // Block the time slot in provider's availability
-                    $availabilityService = app(AvailabilityService::class);
-                    $provider = User::find($appointmentDetails['provider_id']);
+                        // System fields
+                        'booking_type' => 'quote_acceptance',
+                        'agreed_to_terms' => true, // Assumed since they're accepting quote
+                        'timezone' => $request->header('timezone', 'Asia/Colombo'),
+                        'user_agent' => $request->header('User-Agent', ''),
+                    ];
 
-                    $availabilityService->blockTimeForAppointment(
-                        $provider,
-                        $appointmentDetails['date'],
-                        $appointmentDetails['time'],
-                        $appointmentDetails['duration'],
-                        "Appointment #{$appointment->id} - {$quote->service->title}"
-                    );
+                    // Use the existing AppointmentService to create the appointment
+                    $appointmentService = app(\App\Services\AppointmentService::class);
+                    $user = auth()->user();
 
-                    // TODO: Send notifications to provider about appointment
-                    Log::info("Appointment created and time blocked for provider {$provider->id}");
+                    $bookingResult = $appointmentService->createBooking($user, $bookingData);
+
+                    if ($bookingResult['type'] === 'appointment') {
+                        $appointment = $bookingResult['data'];
+
+                        // Update quote with appointment reference
+                        $quote->update(['appointment_id' => $appointment->id]);
+                    } else {
+                        throw new \Exception('Failed to create appointment from quote');
+                    }
                 }
 
                 DB::commit();
@@ -471,6 +770,184 @@ class QuoteController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to decline quote'
+            ], 500);
+        }
+    }
+
+    // In App/Http/Controllers/API/Client/QuoteController.php - Add this method:
+
+    /**
+     * Create appointment from accepted quote (separate from quote acceptance)
+     */
+    public function createAppointmentFromQuote(Request $request, Quote $quote)
+    {
+        try {
+            // Validation
+            if ($quote->client_id !== auth()->id()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Quote not found'
+                ], 404);
+            }
+
+            if ($quote->status !== 'quoted') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Quote must be in quoted status to create appointment'
+                ], 422);
+            }
+
+            // Validate appointment data
+            $validatedData = $request->validate([
+                'appointment_date' => 'required|date|after_or_equal:today',
+                'appointment_time' => 'required|string',
+                'duration_hours' => 'required|numeric|min:0.5|max:24',
+                'client_phone' => 'nullable|string|max:20',
+                'client_email' => 'nullable|email',
+                'client_address' => 'nullable|string|max:255',
+                'client_city' => 'nullable|string|max:255',
+                'client_postal_code' => 'nullable|string|max:20',
+                'location_instructions' => 'nullable|string',
+                'client_notes' => 'nullable|string',
+                'contact_preference' => 'nullable|in:phone,email,whatsapp',
+                'emergency_contact' => 'nullable|string|max:20',
+                'payment_method' => 'required|in:cash,card,bank_transfer',
+                'agreed_to_terms' => 'required|boolean|accepted',
+                'location_type' => 'nullable|in:client_address,provider_location,custom_location',
+            ]);
+
+            // Ensure contact method
+            if (empty($validatedData['client_phone']) && empty($validatedData['client_email'])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Either phone number or email is required',
+                    'errors' => ['contact' => ['Contact information is required']]
+                ], 422);
+            }
+
+            // Check availability
+            $availabilityCheck = $this->checkProviderAvailability(
+                $quote->provider_id,
+                $validatedData['appointment_date'],
+                $validatedData['appointment_time'],
+                $validatedData['duration_hours']
+            );
+
+            if (!$availabilityCheck['available']) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Selected time slot is no longer available',
+                    'availability_info' => $availabilityCheck
+                ], 422);
+            }
+
+            DB::beginTransaction();
+
+            try {
+                // Get quote request data for defaults
+                $quoteRequestData = $quote->quote_request_data ?? [];
+
+                // Create appointment using similar structure to BookingController
+                $appointment = Appointment::create([
+                    'client_id' => auth()->id(),
+                    'provider_id' => $quote->provider_id,
+                    'service_id' => $quote->service_id,
+                    'appointment_date' => $validatedData['appointment_date'],
+                    'appointment_time' => $validatedData['appointment_time'],
+                    'duration_hours' => $validatedData['duration_hours'],
+
+                    // Pricing from quote
+                    'total_price' => ($quote->quoted_price ?? 0) + ($quote->travel_fee ?? 0),
+                    'base_price' => $quote->quoted_price ?? 0,
+                    'travel_fee' => $quote->travel_fee ?? 0,
+
+                    // Location data
+                    'location_type' => $validatedData['location_type'] ?? 'client_address',
+                    'client_address' => $validatedData['client_address'] ?? $quoteRequestData['address'] ?? '',
+                    'client_city' => $validatedData['client_city'] ?? $quoteRequestData['city'] ?? '',
+                    'client_postal_code' => $validatedData['client_postal_code'] ?? $quoteRequestData['postal_code'] ?? '',
+                    'location_instructions' => $validatedData['location_instructions'] ?? $quoteRequestData['location_instructions'] ?? '',
+
+                    // Contact info
+                    'client_phone' => $validatedData['client_phone'] ?? $quoteRequestData['phone'] ?? '',
+                    'client_email' => $validatedData['client_email'] ?? $quoteRequestData['email'] ?? '',
+                    'contact_preference' => $validatedData['contact_preference'] ?? $quoteRequestData['contact_preference'] ?? 'phone',
+                    'emergency_contact' => $validatedData['emergency_contact'] ?? $quoteRequestData['emergency_contact'] ?? '',
+
+                    // Notes and metadata
+                    'client_notes' => ($validatedData['client_notes'] ?? '') . "\n\nFrom Quote #" . $quote->quote_number,
+                    'special_instructions' => $quote->client_requirements ?? '',
+                    'payment_method' => $validatedData['payment_method'],
+
+                    // Status and tracking
+                    'status' => 'pending',
+                    'booking_source' => 'quote_acceptance',
+                    'quote_id' => $quote->id,
+
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+
+                // Accept the quote
+                $quote->update([
+                    'status' => 'accepted',
+                    'client_responded_at' => now(),
+                    'client_response_notes' => $request->input('notes', 'Quote accepted via appointment booking'),
+                    'appointment_id' => $appointment->id,
+                ]);
+
+                // Load relationships for response
+                $appointment->load(['service', 'provider', 'client']);
+
+                DB::commit();
+
+                Log::info('Appointment created from quote', [
+                    'appointment_id' => $appointment->id,
+                    'quote_id' => $quote->id,
+                    'client_id' => auth()->id()
+                ]);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Quote accepted and appointment created successfully!',
+                    'data' => [
+                        'appointment' => [
+                            'id' => $appointment->id,
+                            'confirmation_code' => $appointment->confirmation_code,
+                            'status' => $appointment->status,
+                            'appointment_date' => $appointment->appointment_date,
+                            'appointment_time' => $appointment->appointment_time,
+                            'total_price' => $appointment->total_price,
+                            'service' => [
+                                'id' => $appointment->service->id,
+                                'title' => $appointment->service->title,
+                            ],
+                            'provider' => [
+                                'id' => $appointment->provider->id,
+                                'name' => $appointment->provider->name ?? 'Provider',
+                            ],
+                        ],
+                        'quote' => $quote->fresh(),
+                    ],
+                ], 201);
+            } catch (\Exception $e) {
+                DB::rollback();
+                throw $e;
+            }
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors(),
+            ], 422);
+        } catch (\Exception $e) {
+            Log::error('Error creating appointment from quote: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create appointment from quote',
+                'error' => config('app.debug') ? $e->getMessage() : 'Internal server error'
             ], 500);
         }
     }

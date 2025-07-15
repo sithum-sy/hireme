@@ -246,21 +246,88 @@ class ClientService {
     }
 
     // Helper method to format quote data consistently
+    // formatQuoteData(quoteData) {
+    //     return {
+    //         id: quoteData.id,
+    //         quote_number: quoteData.quote_number,
+    //         status: quoteData.status,
+    //         service_title: quoteData.service?.title || quoteData.service_title,
+    //         service_description:
+    //             quoteData.service?.description ||
+    //             "Service description not available",
+    //         service_image: quoteData.service?.first_image_url,
+    //         provider_id: quoteData.provider_id,
+    //         provider_name: quoteData.provider?.name || quoteData.provider_name,
+    //         provider_image: quoteData.provider?.profile_image_url,
+    //         provider_rating: quoteData.provider?.average_rating || 0,
+    //         provider_reviews: quoteData.provider?.reviews_count || 0,
+    //         message: quoteData.message,
+    //         special_requirements: quoteData.special_requirements,
+    //         location_summary:
+    //             quoteData.location_summary ||
+    //             `${quoteData.city || "Not specified"}`,
+    //         urgency: quoteData.urgency,
+    //         requested_date: quoteData.requested_date,
+    //         requested_time: quoteData.requested_time,
+    //         quoted_price: quoteData.quoted_price,
+    //         travel_fee: quoteData.travel_fee || 0,
+    //         estimated_duration: quoteData.estimated_duration,
+    //         provider_response: quoteData.provider_response,
+    //         quote_notes: quoteData.quote_notes,
+    //         validity_days: quoteData.validity_days,
+    //         expires_at: quoteData.expires_at,
+    //         created_at: quoteData.created_at,
+    //         updated_at: quoteData.updated_at,
+    //         quoted_at: quoteData.quoted_at,
+    //         accepted_at: quoteData.accepted_at,
+    //         declined_at: quoteData.declined_at,
+    //         withdrawn_at: quoteData.withdrawn_at,
+    //     };
+    // }
+
     formatQuoteData(quoteData) {
         return {
             id: quoteData.id,
             quote_number: quoteData.quote_number,
             status: quoteData.status,
+
+            service_id: quoteData.service_id,
+            provider_id: quoteData.provider_id,
+
+            // Service information
             service_title: quoteData.service?.title || quoteData.service_title,
             service_description:
                 quoteData.service?.description ||
+                quoteData.service_description ||
                 "Service description not available",
-            service_image: quoteData.service?.first_image_url,
-            provider_id: quoteData.provider_id,
+            service_image:
+                quoteData.service?.first_image_url || quoteData.service_image,
+            service_category: quoteData.service_category,
+
+            // Provider information
+            // provider_name: quoteData.provider?.name || quoteData.provider_name,
+            // provider_image:
+            //     quoteData.provider?.profile_image_url ||
+            //     quoteData.provider_image,
+            // provider_rating:
+            //     quoteData.provider?.average_rating ||
+            //     quoteData.provider_rating ||
+            //     0,
+            // provider_reviews:
+            //     quoteData.provider?.reviews_count ||
+            //     quoteData.provider_reviews ||
+            //     0,
             provider_name: quoteData.provider?.name || quoteData.provider_name,
-            provider_image: quoteData.provider?.profile_image_url,
-            provider_rating: quoteData.provider?.average_rating || 0,
-            provider_reviews: quoteData.provider?.reviews_count || 0,
+            provider_business_name: quoteData.provider_business_name, // Real business name
+            provider_image:
+                quoteData.provider?.profile_image_url ||
+                quoteData.provider_image,
+            provider_rating: quoteData.provider_rating || 0,
+            provider_reviews: quoteData.provider_reviews || 0,
+            provider_bio: quoteData.provider_bio,
+            provider_verified: quoteData.provider_verified || false,
+
+            // Request details
             message: quoteData.message,
             special_requirements: quoteData.special_requirements,
             location_summary:
@@ -269,6 +336,8 @@ class ClientService {
             urgency: quoteData.urgency,
             requested_date: quoteData.requested_date,
             requested_time: quoteData.requested_time,
+
+            // Quote response details
             quoted_price: quoteData.quoted_price,
             travel_fee: quoteData.travel_fee || 0,
             estimated_duration: quoteData.estimated_duration,
@@ -276,6 +345,8 @@ class ClientService {
             quote_notes: quoteData.quote_notes,
             validity_days: quoteData.validity_days,
             expires_at: quoteData.expires_at,
+
+            // Timestamps
             created_at: quoteData.created_at,
             updated_at: quoteData.updated_at,
             quoted_at: quoteData.quoted_at,
@@ -286,16 +357,56 @@ class ClientService {
     }
 
     // Fallback data for development
+    // getFallbackQuoteDetail(quoteId) {
+    //     return {
+    //         id: quoteId,
+    //         quote_number: `Q${String(quoteId).padStart(6, "0")}`,
+    //         status: "quoted",
+    //         service_title: "Professional House Cleaning Service",
+    //         service_description:
+    //             "Complete house cleaning including all rooms, kitchen, and bathrooms",
+    //         service_image: null,
+    //         provider_id: 1,
+    //         provider_name: "Clean Masters",
+    //         provider_image: null,
+    //         provider_rating: 4.8,
+    //         provider_reviews: 45,
+    //         message:
+    //             "I need a thorough cleaning of my 3-bedroom house. Kitchen needs deep cleaning and bathrooms need sanitization.",
+    //         special_requirements:
+    //             "Please use eco-friendly products. I have a pet cat.",
+    //         location_summary: "Colombo 07",
+    //         urgency: "normal",
+    //         requested_date: "2025-07-20",
+    //         requested_time: "10:00 AM",
+    //         quoted_price: 4500,
+    //         travel_fee: 300,
+    //         estimated_duration: 3,
+    //         provider_response:
+    //             "Thank you for your request. I can provide a comprehensive cleaning service for your 3-bedroom house using eco-friendly products that are safe for pets.",
+    //         quote_notes:
+    //             "I will bring all necessary equipment and eco-friendly cleaning supplies.",
+    //         validity_days: 7,
+    //         expires_at: "2025-07-25T23:59:59Z",
+    //         created_at: "2025-07-12T10:00:00Z",
+    //         updated_at: "2025-07-13T14:30:00Z",
+    //         quoted_at: "2025-07-13T14:30:00Z",
+    //     };
+    // }
     getFallbackQuoteDetail(quoteId) {
         return {
             id: quoteId,
             quote_number: `Q${String(quoteId).padStart(6, "0")}`,
             status: "quoted",
+
+            // ADD THESE MISSING FIELDS FOR FALLBACK:
+            service_id: 1, // Use a default service ID for fallback
+            provider_id: 1, // Use a default provider ID for fallback
+
             service_title: "Professional House Cleaning Service",
             service_description:
                 "Complete house cleaning including all rooms, kitchen, and bathrooms",
             service_image: null,
-            provider_id: 1,
             provider_name: "Clean Masters",
             provider_image: null,
             provider_rating: 4.8,
@@ -635,17 +746,177 @@ class ClientService {
     //         };
     //     }
     // }
+    // async createBooking(bookingData) {
+    //     try {
+    //         console.log("Creating booking with data:", bookingData);
+
+    //         // Check if this is a quote acceptance booking
+    //         if (bookingData.isFromQuote && bookingData.quote_id) {
+    //             console.log("Creating appointment from quote...");
+
+    //             // Use the quote-specific endpoint
+    //             const response = await axios.post(
+    //                 `${API_BASE}/quotes/${bookingData.quote_id}/create-appointment`,
+    //                 bookingData
+    //             );
+
+    //             return {
+    //                 success: true,
+    //                 data: response.data.data || response.data,
+    //                 message:
+    //                     response.data.message ||
+    //                     "Appointment created from quote successfully",
+    //             };
+    //         }
+
+    //         // Regular booking flow - ensure service_id is present
+    //         if (!bookingData.service_id) {
+    //             return {
+    //                 success: false,
+    //                 message: "Service ID is required for booking",
+    //                 errors: { service_id: ["Service ID is required"] },
+    //             };
+    //         }
+
+    //         // Check availability before booking if it's a direct appointment
+    //         if (
+    //             bookingData.appointment_date &&
+    //             bookingData.appointment_time &&
+    //             !bookingData.request_quote
+    //         ) {
+    //             console.log("Checking availability before booking...");
+
+    //             // Use the existing provider availability endpoint instead
+    //             const endTime = this.calculateEndTime(
+    //                 bookingData.appointment_time,
+    //                 bookingData.duration_hours || 1
+    //             );
+
+    //             const availabilityCheck = await axios.get(
+    //                 `/api/client/providers/${bookingData.provider_id}/availability/check`,
+    //                 {
+    //                     params: {
+    //                         date: bookingData.appointment_date,
+    //                         start_time: bookingData.appointment_time,
+    //                         end_time: endTime,
+    //                     },
+    //                 }
+    //             );
+
+    //             if (
+    //                 !availabilityCheck.data.success ||
+    //                 !availabilityCheck.data.data.available
+    //             ) {
+    //                 return {
+    //                     success: false,
+    //                     message:
+    //                         "Selected time slot is no longer available. Please choose a different time.",
+    //                     availability_info: availabilityCheck.data.data,
+    //                 };
+    //             }
+    //         }
+
+    //         // Proceed with booking
+    //         const response = await axios.post(
+    //             `${API_BASE}/bookings`,
+    //             bookingData
+    //         );
+
+    //         return {
+    //             success: true,
+    //             data: response.data.data || response.data,
+    //             message:
+    //                 response.data.message || "Booking created successfully",
+    //         };
+    //     } catch (error) {
+    //         console.error("ClientService - Create booking error:", error);
+
+    //         // Log detailed error for debugging
+    //         if (error.response) {
+    //             console.error("Error response:", error.response.data);
+    //             console.error("Error status:", error.response.status);
+    //             console.error("Request data sent:", error.config?.data);
+    //         }
+
+    //         return {
+    //             success: false,
+    //             message:
+    //                 error.response?.data?.message || "Failed to create booking",
+    //             errors: error.response?.data?.errors || {},
+    //         };
+    //     }
+    // }
+
     async createBooking(bookingData) {
         try {
+            console.log("Creating booking with data:", bookingData);
+
+            // Log specifically the quote-related fields
+            console.log("Quote-related fields:", {
+                quote_id: bookingData.quote_id,
+                isFromQuote: bookingData.isFromQuote,
+                booking_source: bookingData.booking_source,
+            });
+
+            // Check if this is a quote acceptance booking
+            if (bookingData.isFromQuote && bookingData.quote_id) {
+                console.log("Creating appointment from quote...");
+
+                // Map the booking data to the format expected by the quote acceptance endpoint
+                const appointmentData = {
+                    appointment_date: bookingData.appointment_date,
+                    appointment_time: bookingData.appointment_time,
+                    duration_hours: parseFloat(bookingData.duration_hours) || 1,
+                    client_phone: bookingData.client_phone || "",
+                    client_email: bookingData.client_email || "",
+                    client_address: bookingData.client_address || "",
+                    client_city: bookingData.client_city || "",
+                    client_postal_code: bookingData.client_postal_code || "",
+                    location_instructions:
+                        bookingData.location_instructions || "",
+                    client_notes: bookingData.client_notes || "",
+                    contact_preference:
+                        bookingData.contact_preference || "phone",
+                    emergency_contact: bookingData.emergency_contact || "",
+                    payment_method: bookingData.payment_method || "cash",
+                    agreed_to_terms: bookingData.agreed_to_terms || true,
+                    location_type:
+                        bookingData.location_type || "client_address",
+                };
+
+                // Use the quote-specific endpoint
+                const response = await axios.post(
+                    `/api/client/quotes/${bookingData.quote_id}/create-appointment`,
+                    appointmentData
+                );
+
+                return {
+                    success: true,
+                    type: "quote_acceptance",
+                    data: response.data.data || response.data,
+                    message:
+                        response.data.message ||
+                        "Quote accepted and appointment created successfully",
+                };
+            }
+
+            // Regular booking flow - ensure service_id is present
+            if (!bookingData.service_id) {
+                return {
+                    success: false,
+                    message: "Service ID is required for booking",
+                    errors: { service_id: ["Service ID is required"] },
+                };
+            }
+
             // Check availability before booking if it's a direct appointment
             if (
                 bookingData.appointment_date &&
                 bookingData.appointment_time &&
                 !bookingData.request_quote
             ) {
-                // console.log("Checking availability before booking...");
+                console.log("Checking availability before booking...");
 
-                // Use the existing provider availability endpoint instead
                 const endTime = this.calculateEndTime(
                     bookingData.appointment_time,
                     bookingData.duration_hours || 1
@@ -675,7 +946,7 @@ class ClientService {
                 }
             }
 
-            // Proceed with booking
+            // Proceed with regular booking
             const response = await axios.post(
                 `${API_BASE}/bookings`,
                 bookingData
@@ -683,12 +954,22 @@ class ClientService {
 
             return {
                 success: true,
+                type: "appointment",
                 data: response.data.data || response.data,
+                appointment: response.data.data || response.data,
                 message:
                     response.data.message || "Booking created successfully",
             };
         } catch (error) {
             console.error("ClientService - Create booking error:", error);
+
+            // Log detailed error for debugging
+            if (error.response) {
+                console.error("Error response:", error.response.data);
+                console.error("Error status:", error.response.status);
+                console.error("Request data sent:", error.config?.data);
+            }
+
             return {
                 success: false,
                 message:
@@ -823,6 +1104,8 @@ class ClientService {
 
     async acceptQuote(quoteId, options = {}) {
         try {
+            console.log("ClientService - Accepting quote:", quoteId, options);
+
             const requestData = {
                 notes: options.notes || "",
                 create_appointment: options.create_appointment || false,
@@ -831,9 +1114,14 @@ class ClientService {
             // Add appointment details if creating appointment
             if (options.create_appointment && options.appointment_details) {
                 requestData.appointment_details = {
+                    // appointment_date:
+                    //     options.appointment_details.appointment_date,
+                    // appointment_time:
+                    //     options.appointment_details.appointment_time,
                     date: options.appointment_details.date,
                     time: options.appointment_details.time,
-                    duration: options.appointment_details.duration || 1,
+                    duration:
+                        parseFloat(options.appointment_details.duration) || 1,
                     provider_id: options.appointment_details.provider_id,
                     service_id: options.appointment_details.service_id,
                 };
@@ -851,6 +1139,13 @@ class ClientService {
             };
         } catch (error) {
             console.error("ClientService - Accept quote error:", error);
+
+            // Log detailed error for debugging
+            if (error.response) {
+                console.error("Error response:", error.response.data);
+                console.error("Error status:", error.response.status);
+            }
+
             return {
                 success: false,
                 message:

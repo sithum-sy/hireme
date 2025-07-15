@@ -58,6 +58,7 @@ Route::prefix('quotes')->group(function () {
     Route::get('/{quote}', [QuoteController::class, 'show']); // Get quote details
     Route::patch('/{quote}/accept', [QuoteController::class, 'accept']); // Accept quote
     Route::patch('/{quote}/decline', [QuoteController::class, 'decline']); // Decline quote
+    Route::post('/{quote}/create-appointment', [QuoteController::class, 'createAppointmentFromQuote']);
 });
 
 // Search Analytics & Suggestions

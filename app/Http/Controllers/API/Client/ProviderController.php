@@ -430,7 +430,8 @@ class ProviderController extends Controller
         $request->validate([
             'date' => 'required|date|after_or_equal:today',
             'service_id' => 'nullable|exists:services,id',
-            'duration' => 'nullable|numeric|min:0.5|max:8',
+            // 'duration' => 'nullable|numeric|min:0.5|max:8',
+            'service_duration' => 'nullable|numeric|min:0.5|max:8',
         ]);
 
         try {

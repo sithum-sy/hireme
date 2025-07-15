@@ -27,6 +27,7 @@ const QuoteDetail = () => {
         try {
             const response = await clientService.getQuoteDetail(id);
             if (response.success) {
+                console.log("Raw quote data from API:", response.data);
                 setQuote(response.data);
             } else {
                 setError(response.message || "Quote not found");
@@ -39,8 +40,41 @@ const QuoteDetail = () => {
         }
     };
 
+    // const handleAcceptQuote = () => {
+    //     setShowAcceptModal(true);
+    // };
+
     const handleAcceptQuote = () => {
-        setShowAcceptModal(true);
+        // Instead of opening a modal, redirect to booking with quote data
+        navigate("/client/booking/from-quote", {
+            state: {
+                quote: quote,
+                service: {
+                    id: quote.service_id,
+                    title: quote.service_title,
+                    description: quote.service_description,
+                    price: quote.quoted_price,
+                    base_price: quote.quoted_price,
+                    duration_hours: quote.estimated_duration || 1,
+                    category: {
+                        name: "Service",
+                        color: "primary",
+                        icon: "fas fa-cog",
+                    },
+                    first_image_url: quote.service_images,
+                    pricing_type: "fixed",
+                },
+                provider: {
+                    id: quote.provider_id,
+                    name: quote.provider_name,
+                    profile_image_url: quote.provider_image,
+                    average_rating: quote.provider_rating || 0,
+                    reviews_count: quote.provider_reviews || 0,
+                    is_verified: true,
+                },
+                isFromQuote: true,
+            },
+        });
     };
 
     const handleDeclineQuote = () => {
@@ -182,10 +216,10 @@ const QuoteDetail = () => {
                                                 </div>
                                             </div>
                                             <div className="col-md-4 text-end">
-                                                {quote.service_image && (
+                                                {quote.service_images && (
                                                     <img
                                                         src={
-                                                            quote.service_image
+                                                            quote.service_images
                                                         }
                                                         alt={
                                                             quote.service_title
@@ -316,7 +350,7 @@ const QuoteDetail = () => {
                                         </div>
                                         <div>
                                             <h6 className="fw-bold mb-1">
-                                                {quote.provider_name}
+                                                {quote.provider_business_name}
                                             </h6>
                                             <div className="text-muted small">
                                                 <i className="fas fa-star text-warning me-1"></i>

@@ -395,7 +395,7 @@ const ServiceSelection = ({
                                     </div>
                                     <div>
                                         <div className="fw-semibold">
-                                            {provider.name}
+                                            {provider.business_name}
                                         </div>
                                         <div className="text-muted small">
                                             <i className="fas fa-star text-warning me-1"></i>
