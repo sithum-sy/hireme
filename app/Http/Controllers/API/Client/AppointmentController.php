@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Services\AppointmentService;
 use App\Services\InvoiceService;
 use App\Services\ReviewService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -78,6 +79,36 @@ class AppointmentController extends Controller
             //     'quote_id' => $validatedData['quote_id'] ?? null,
             //     'isFromQuote' => $request->boolean('isFromQuote')
             // ]);
+
+            // ✅ ADD: Custom validation for appointment date and time
+            $validationError = $this->validateAppointmentDateTime(
+                $validatedData['appointment_date'],
+                $validatedData['appointment_time']
+            );
+
+            if ($validationError) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $validationError,
+                    'errors' => ['appointment_time' => [$validationError]]
+                ], 422);
+            }
+
+            // ✅ ADD: Check provider availability
+            $availabilityError = $this->checkProviderAvailability(
+                $validatedData['provider_id'],
+                $validatedData['appointment_date'],
+                $validatedData['appointment_time'],
+                $validatedData['duration_hours']
+            );
+
+            if ($availabilityError) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $availabilityError,
+                    'errors' => ['availability' => [$availabilityError]]
+                ], 422);
+            }
 
             // Ensure at least one contact method is provided
             if (empty($validatedData['client_phone']) && empty($validatedData['client_email'])) {
@@ -195,6 +226,141 @@ class AppointmentController extends Controller
                 'message' => 'Failed to create booking. Please try again.',
                 'error' => config('app.debug') ? $e->getMessage() : 'Internal server error',
             ], 500);
+        }
+    }
+
+    /**
+     * ✅ NEW: Validate appointment date and time
+     */
+    private function validateAppointmentDateTime($appointmentDate, $appointmentTime)
+    {
+        try {
+            $now = now(); // Current Sri Lankan time
+            $appointmentDateTime = $this->parseAppointmentDateTime($appointmentDate, $appointmentTime);
+
+            if (!$appointmentDateTime) {
+                return 'Invalid appointment date or time format';
+            }
+
+            // Check if appointment is in the past
+            if ($appointmentDateTime->lte($now)) {
+                return 'Appointment time cannot be in the past. Please select a future date and time.';
+            }
+
+            // Check if appointment is too close (minimum 2 hours advance notice)
+            // $minimumAdvanceHours = 2;
+            // $minimumDateTime = $now->copy()->addHours($minimumAdvanceHours);
+
+            // if ($appointmentDateTime->lt($minimumDateTime)) {
+            //     return "Appointments must be booked at least {$minimumAdvanceHours} hours in advance.";
+            // }
+
+            // Check if appointment is too far in the future (maximum 3 months)
+            $maximumDateTime = $now->copy()->addMonths(3);
+
+            if ($appointmentDateTime->gt($maximumDateTime)) {
+                return 'Appointments cannot be booked more than 3 months in advance.';
+            }
+
+            return null; // No validation errors
+        } catch (\Exception $e) {
+            Log::error('DateTime validation error: ' . $e->getMessage());
+            return 'Invalid appointment date or time';
+        }
+    }
+
+    /**
+     * ✅ NEW: Check provider availability 
+     */
+    private function checkProviderAvailability($providerId, $appointmentDate, $appointmentTime, $durationHours)
+    {
+        try {
+            $provider = User::find($providerId);
+            if (!$provider || $provider->role !== 'service_provider') {
+                return 'Provider not found';
+            }
+
+            // Calculate end time
+            $startDateTime = $this->parseAppointmentDateTime($appointmentDate, $appointmentTime);
+            if (!$startDateTime) {
+                return 'Invalid appointment time';
+            }
+
+            $endDateTime = $startDateTime->copy()->addHours($durationHours);
+
+            // Use the AvailabilityService to check if provider is available
+            $availabilityService = app(\App\Services\AvailabilityService::class);
+
+            $availability = $availabilityService->isAvailableAt(
+                $provider,
+                $appointmentDate,
+                $startDateTime->format('H:i'),
+                $endDateTime->format('H:i')
+            );
+
+            if (!$availability['available']) {
+                return $availability['reason'] ?? 'Provider is not available at the selected time';
+            }
+
+            return null; // Provider is available
+        } catch (\Exception $e) {
+            Log::error('Provider availability check error: ' . $e->getMessage());
+            return 'Unable to verify provider availability';
+        }
+    }
+
+    /**
+     * ✅ NEW: Parse appointment date and time into Carbon instance
+     */
+    private function parseAppointmentDateTime($appointmentDate, $appointmentTime)
+    {
+        try {
+            // Handle different date formats
+            if ($appointmentDate instanceof \Carbon\Carbon) {
+                $date = $appointmentDate->format('Y-m-d');
+            } elseif (is_string($appointmentDate)) {
+                if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $appointmentDate)) {
+                    $date = $appointmentDate;
+                } elseif (strpos($appointmentDate, 'T') !== false) {
+                    $date = explode('T', $appointmentDate)[0];
+                } else {
+                    $date = Carbon::parse($appointmentDate)->format('Y-m-d');
+                }
+            } else {
+                $date = Carbon::parse($appointmentDate)->format('Y-m-d');
+            }
+
+            // Handle different time formats
+            if ($appointmentTime instanceof \Carbon\Carbon) {
+                $time = $appointmentTime->format('H:i:s');
+            } elseif (is_string($appointmentTime)) {
+                if (strpos($appointmentTime, 'T') !== false) {
+                    $timePart = explode('T', $appointmentTime)[1];
+                    $time = explode('.', $timePart)[0]; // Remove microseconds
+                    if (substr_count($time, ':') === 1) {
+                        $time .= ':00';
+                    }
+                } else {
+                    $time = $appointmentTime;
+                    if (substr_count($time, ':') === 1) {
+                        $time .= ':00';
+                    }
+                }
+            } else {
+                $time = '00:00:00';
+            }
+
+            // Combine date and time
+            $dateTimeString = $date . ' ' . $time;
+
+            // Create Carbon instance in Sri Lankan timezone
+            return Carbon::createFromFormat('Y-m-d H:i:s', $dateTimeString, 'Asia/Colombo');
+        } catch (\Exception $e) {
+            Log::error('Error parsing appointment datetime: ' . $e->getMessage(), [
+                'date' => $appointmentDate,
+                'time' => $appointmentTime
+            ]);
+            return null;
         }
     }
 

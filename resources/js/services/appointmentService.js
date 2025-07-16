@@ -380,6 +380,83 @@ class AppointmentService {
     }
 
     /**
+     * Validate appointment date and time on frontend
+     */
+    validateAppointmentDateTime(appointmentDate, appointmentTime) {
+        const now = new Date();
+        const appointmentDateTime = new Date(
+            `${appointmentDate}T${appointmentTime}`
+        );
+
+        if (isNaN(appointmentDateTime.getTime())) {
+            return "Invalid date or time format";
+        }
+
+        // Check if appointment is in the past
+        if (appointmentDateTime <= now) {
+            return "Appointment time cannot be in the past. Please select a future date and time.";
+        }
+
+        // Check minimum advance notice (2 hours)
+        const minimumAdvanceTime = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+        if (appointmentDateTime < minimumAdvanceTime) {
+            return "Appointments must be booked at least 2 hours in advance.";
+        }
+
+        // Check maximum advance booking (3 months)
+        const maximumAdvanceTime = new Date(
+            now.getTime() + 3 * 30 * 24 * 60 * 60 * 1000
+        );
+        if (appointmentDateTime > maximumAdvanceTime) {
+            return "Appointments cannot be booked more than 3 months in advance.";
+        }
+
+        return null; // No errors
+    }
+
+    /**
+     * Enhanced booking method with validation
+     */
+    async createAppointment(appointmentData) {
+        try {
+            // Validate appointment time before sending request
+            const timeValidationError = this.validateAppointmentDateTime(
+                appointmentData.appointment_date,
+                appointmentData.appointment_time
+            );
+
+            if (timeValidationError) {
+                return {
+                    success: false,
+                    message: timeValidationError,
+                    errors: { appointment_time: [timeValidationError] },
+                };
+            }
+
+            const response = await axios.post(
+                `${API_BASE}/appointments`,
+                appointmentData
+            );
+
+            return {
+                success: true,
+                data: response.data.data,
+                message:
+                    response.data.message || "Appointment booked successfully",
+            };
+        } catch (error) {
+            console.error("Appointment booking error:", error);
+            return {
+                success: false,
+                message:
+                    error.response?.data?.message ||
+                    "Failed to book appointment",
+                errors: error.response?.data?.errors || {},
+            };
+        }
+    }
+
+    /**
      * Check if appointment can be cancelled based on policy (24 hours rule)
      * @param {string} appointmentDate - Appointment date (YYYY-MM-DD)
      * @param {string} appointmentTime - Appointment time (HH:MM)

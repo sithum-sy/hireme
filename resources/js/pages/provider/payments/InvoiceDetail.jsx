@@ -377,7 +377,7 @@ const InvoiceDetail = () => {
                                                 className="text-center"
                                                 style={{ width: "100px" }}
                                             >
-                                                Quantity
+                                                Quantity/Hour Count
                                             </th>
                                             <th
                                                 className="text-end"

@@ -1,11 +1,16 @@
 import React, { useState } from "react";
 import invoiceService from "../../../services/invoiceService";
 import CashPaymentModal from "./CashPaymentModal";
+import {
+    downloadInvoicePDF,
+    downloadFormattedInvoicePDF,
+} from "../../../utils/pdfGenerator.js";
 
 const InvoiceActions = ({ invoice, onUpdate, onMarkPaid }) => {
     const [loading, setLoading] = useState(false);
     const [showCashModal, setShowCashModal] = useState(false);
     const [showDropdown, setShowDropdown] = useState(false);
+    const [downloadingPDF, setDownloadingPDF] = useState(false);
 
     const handleSendInvoice = async () => {
         if (
@@ -28,6 +33,26 @@ const InvoiceActions = ({ invoice, onUpdate, onMarkPaid }) => {
             alert("Error sending invoice");
         }
         setLoading(false);
+    };
+
+    const handleDownloadPDF = async () => {
+        if (downloadingPDF) return;
+
+        setDownloadingPDF(true);
+        try {
+            // Option 1: Download as image-based PDF
+            await downloadInvoicePDF(
+                "invoice-content", // ID of the invoice container
+                `invoice-${invoice.invoice_number}.pdf`
+            );
+
+            // Option 2: Download as formatted PDF (alternative)
+            // await downloadFormattedInvoicePDF(invoice, `invoice-${invoice.invoice_number}.pdf`);
+        } catch (error) {
+            console.error("PDF download failed:", error);
+        } finally {
+            setDownloadingPDF(false);
+        }
     };
 
     const canConfirmCash = () => {
@@ -127,9 +152,26 @@ const InvoiceActions = ({ invoice, onUpdate, onMarkPaid }) => {
                             <i className="fas fa-download me-2"></i>
                             Download PDF
                         </button>
+                        {/* <button
+                            className="dropdown-item"
+                            onClick={handleDownloadPDF}
+                            disabled={downloadingPDF}
+                        >
+                            {downloadingPDF ? (
+                                <>
+                                    <i className="fas fa-spinner fa-spin me-2"></i>
+                                    Generating PDF...
+                                </>
+                            ) : (
+                                <>
+                                    <i className="fas fa-download me-2"></i>
+                                    Download PDF
+                                </>
+                            )}
+                        </button> */}
                     </li>
                     <li>
-                        <button
+                        {/* <button
                             className="dropdown-item"
                             onClick={() =>
                                 navigator.clipboard.writeText(
@@ -139,9 +181,9 @@ const InvoiceActions = ({ invoice, onUpdate, onMarkPaid }) => {
                         >
                             <i className="fas fa-link me-2"></i>
                             Copy Link
-                        </button>
+                        </button> */}
                     </li>
-                    <li>
+                    {/* <li>
                         <hr className="dropdown-divider" />
                     </li>
                     <li>
@@ -154,7 +196,7 @@ const InvoiceActions = ({ invoice, onUpdate, onMarkPaid }) => {
                             <i className="fas fa-copy me-2"></i>
                             Duplicate Invoice
                         </button>
-                    </li>
+                    </li> */}
                     {invoice.status === "draft" && (
                         <>
                             <li>

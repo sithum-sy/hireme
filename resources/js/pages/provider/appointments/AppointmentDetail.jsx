@@ -4,6 +4,7 @@ import ProviderLayout from "../../../components/layouts/ProviderLayout";
 import LoadingSpinner from "../../../components/LoadingSpinner";
 import CompleteServiceModal from "../../../components/provider/appointments/CompleteServiceModal";
 import providerAppointmentService from "../../../services/providerAppointmentService";
+import ReviewButton from "../../../components/reviews/ReviewButton";
 
 const AppointmentDetail = () => {
     const { id } = useParams();
@@ -458,6 +459,22 @@ const AppointmentDetail = () => {
         return count === 1 ? singular : plural;
     };
 
+    const handleReviewSubmitted = (review) => {
+        // Update the appointment state to reflect review submission
+        setAppointment((prev) => ({
+            ...prev,
+            provider_review_submitted: true,
+            provider_review: review,
+        }));
+
+        // Show success message
+        setTimeout(() => {
+            alert(
+                "Thank you for your review! Your feedback helps us maintain service quality."
+            );
+        }, 100);
+    };
+
     return (
         <ProviderLayout>
             <div className="appointment-detail-page">
@@ -495,6 +512,23 @@ const AppointmentDetail = () => {
                             <span className="text-muted">
                                 Appointment #{appointment.id}
                             </span>
+
+                            {/* Add review status indicator */}
+                            {appointment.status === "paid" && (
+                                <div className="review-status-indicator">
+                                    {appointment.provider_review_submitted ? (
+                                        <span className="badge bg-warning text-dark">
+                                            <i className="fas fa-star me-1"></i>
+                                            Review Submitted
+                                        </span>
+                                    ) : (
+                                        <span className="badge bg-outline-warning">
+                                            <i className="fas fa-star-half-alt me-1"></i>
+                                            Review Pending
+                                        </span>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     </div>
 
@@ -568,7 +602,7 @@ const AppointmentDetail = () => {
                                         ? "Processing..."
                                         : "Complete Service"}
                                 </button>
-                                <button
+                                {/* <button
                                     className="btn btn-outline-secondary"
                                     onClick={() =>
                                         handleStatusUpdate("no_show", true)
@@ -577,7 +611,7 @@ const AppointmentDetail = () => {
                                 >
                                     <i className="fas fa-user-times me-2"></i>
                                     No Show
-                                </button>
+                                </button> */}
                             </div>
                         )}
                     </div>
@@ -802,6 +836,95 @@ const AppointmentDetail = () => {
                             </div>
                         </div>
 
+                        {/* Review Section (only show when paid) */}
+                        {appointment.status === "paid" && (
+                            <div className="card border-0 shadow-sm mb-4">
+                                <div className="card-header bg-white border-bottom">
+                                    <h6 className="fw-bold mb-0">
+                                        <i className="fas fa-star me-2 text-warning"></i>
+                                        Client Review
+                                    </h6>
+                                </div>
+                                <div className="card-body">
+                                    {/* Service Completion Info */}
+                                    <div className="completion-info mb-3">
+                                        <div className="d-flex align-items-center justify-content-between mb-2">
+                                            <span className="badge bg-success">
+                                                <i className="fas fa-check-circle me-1"></i>
+                                                Service Completed
+                                            </span>
+                                            <small className="text-muted">
+                                                Payment received
+                                            </small>
+                                        </div>
+
+                                        <div className="service-summary bg-light rounded p-2 mb-2">
+                                            <div className="row text-center">
+                                                <div className="col-4">
+                                                    <small className="text-muted d-block">
+                                                        Duration
+                                                    </small>
+                                                    <strong>
+                                                        {
+                                                            appointment.duration_hours
+                                                        }
+                                                        h
+                                                    </strong>
+                                                </div>
+                                                <div className="col-4">
+                                                    <small className="text-muted d-block">
+                                                        Earned
+                                                    </small>
+                                                    <strong className="text-success">
+                                                        Rs.{" "}
+                                                        {appointment.earnings?.toLocaleString() ||
+                                                            appointment.total_price?.toLocaleString()}
+                                                    </strong>
+                                                </div>
+                                                <div className="col-4">
+                                                    <small className="text-muted d-block">
+                                                        Client
+                                                    </small>
+                                                    <strong>
+                                                        {
+                                                            appointment.client_name.split(
+                                                                " "
+                                                            )[0]
+                                                        }
+                                                    </strong>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Review Call to Action */}
+                                    <div className="review-cta text-center">
+                                        <p className="text-muted small mb-3">
+                                            <i className="fas fa-handshake me-1"></i>
+                                            Help us maintain service quality by
+                                            sharing your experience with this
+                                            client
+                                        </p>
+
+                                        <ReviewButton
+                                            appointment={appointment}
+                                            userType="provider"
+                                            onReviewSubmitted={
+                                                handleReviewSubmitted
+                                            }
+                                        />
+
+                                        <div className="mt-2">
+                                            <small className="text-muted">
+                                                Your review helps other
+                                                providers and improves our
+                                                platform
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                         {/* Quick Actions */}
                         <div className="card border-0 shadow-sm">
                             <div className="card-header bg-white border-bottom">
@@ -930,15 +1053,62 @@ const AppointmentDetail = () => {
             </div>
 
             <style>{`
-           .summary-item {
-               padding-bottom: 0.75rem;
-               border-bottom: 1px solid #f1f1f1;
-           }
-           .summary-item:last-child {
-               border-bottom: none;
-               padding-bottom: 0;
-           }
-       `}</style>
+                .summary-item {
+                    padding-bottom: 0.75rem;
+                    border-bottom: 1px solid #f1f1f1;
+                }
+                .summary-item:last-child {
+                    border-bottom: none;
+                    padding-bottom: 0;
+                }
+
+                .review-section .card {
+                    border-left: 4px solid #ffc107;
+                }
+
+                .review-cta {
+                    background: linear-gradient(
+                        135deg,
+                        #fff3cd 0%,
+                        #ffeaa7 100%
+                    );
+                    border-radius: 0.5rem;
+                    padding: 1rem;
+                    margin: -0.5rem;
+                    margin-top: 0.5rem;
+                }
+
+                .completion-info .service-summary {
+                    border: 2px dashed #28a745;
+                    background: #f8fff8 !important;
+                }
+
+                .review-status-indicator .badge {
+                    font-size: 0.75rem;
+                    animation: pulse 2s infinite;
+                }
+
+                @keyframes pulse {
+                    0% {
+                        opacity: 1;
+                    }
+                    50% {
+                        opacity: 0.7;
+                    }
+                    100% {
+                        opacity: 1;
+                    }
+                }
+
+                .appointment-detail-page .review-section {
+                    transition: all 0.3s ease;
+                }
+
+                .appointment-detail-page .review-section:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
+                }
+            `}</style>
         </ProviderLayout>
     );
 };

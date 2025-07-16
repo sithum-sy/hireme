@@ -1,6 +1,7 @@
 // components/client/booking/BookingConfirmation.jsx
 import React, { useState } from "react";
 import clientService from "../../../services/clientService";
+// import { validateAppointmentDateTime } from "../../../utils/bookingValidation";
 
 const BookingConfirmation = ({
     service,
@@ -15,11 +16,57 @@ const BookingConfirmation = ({
     const [paymentMethod, setPaymentMethod] = useState("cash");
     const [errors, setErrors] = useState({});
 
+    const validateAppointmentDateTime = (appointmentDate, appointmentTime) => {
+        const now = new Date();
+        const appointmentDateTime = new Date(
+            `${appointmentDate}T${appointmentTime}`
+        );
+
+        if (isNaN(appointmentDateTime.getTime())) {
+            return "Invalid date or time format";
+        }
+
+        // Check if appointment is in the past
+        if (appointmentDateTime <= now) {
+            return "Appointment time cannot be in the past. Please select a future date and time.";
+        }
+
+        // Check minimum advance notice (2 hours)
+        // const minimumAdvanceTime = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+        //  if (appointmentDateTime < minimumAdvanceTime) {
+        //      return "Appointments must be booked at least 2 hours in advance.";
+        //  }
+
+        // Check maximum advance booking (3 months)
+        const maximumAdvanceTime = new Date(
+            now.getTime() + 3 * 30 * 24 * 60 * 60 * 1000
+        );
+        if (appointmentDateTime > maximumAdvanceTime) {
+            return "Appointments cannot be booked more than 3 months in advance.";
+        }
+
+        return null; // No errors
+    };
+
     const handleSubmitBooking = async () => {
         // Clear previous errors
         setErrors({});
 
-        // Validate required fields
+        // ✅ ADD: Validate appointment time before other validations
+        const timeValidationError = validateAppointmentDateTime(
+            bookingData.date || bookingData.appointment_date,
+            bookingData.time || bookingData.appointment_time
+        );
+
+        if (timeValidationError) {
+            setErrors({
+                booking: timeValidationError,
+                appointment_time: timeValidationError,
+            });
+            return;
+        }
+
+        // Validate required fields (your existing validations)
         if (!agreedToTerms) {
             setErrors({ terms: "Please agree to the terms and conditions" });
             return;

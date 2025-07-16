@@ -322,7 +322,7 @@ const ServiceDetail = () => {
                                                 {service.average_rating || 0}
                                             </span>
                                             <span className="text-muted">
-                                                ({service.reviews_count || 0}{" "}
+                                                ({service.total_reviews || 0}{" "}
                                                 reviews)
                                             </span>
                                         </div>

@@ -9,6 +9,7 @@ use App\Http\Controllers\API\AvailabilityController;
 use App\Http\Controllers\API\ProfileController;
 use App\Http\Controllers\API\AppointmentController;
 use App\Http\Controllers\API\LocationController;
+use App\Http\Controllers\API\PaymentController;
 use App\Http\Controllers\API\ReviewController;
 
 /*
@@ -89,9 +90,17 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
 
+
     Route::prefix('location')->group(function () {
         Route::get('/service-areas', [LocationController::class, 'getAllServiceAreas']);
         Route::post('/nearby-areas', [LocationController::class, 'getNearbyServiceAreas']);
+    });
+
+    Route::post('/create-payment-intent', [PaymentController::class, 'createPaymentIntent']);
+
+    // Test route to verify auth is working
+    Route::get('/test-auth', function () {
+        return response()->json(['message' => 'Authentication working', 'user' => auth()->user()]);
     });
 
     // Utility routes

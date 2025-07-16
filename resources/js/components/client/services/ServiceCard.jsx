@@ -127,11 +127,11 @@ const ServiceCard = ({ service, showDistance = true }) => {
                                             service.base_price || service.price
                                         }`}
                                 </span>
-                                {service.pricing_type && (
+                                {/* {service.pricing_type && (
                                     <small className="text-muted">
                                         /{service.pricing_type}
                                     </small>
-                                )}
+                                )} */}
                             </div>
 
                             {showDistance && service.distance && (

@@ -479,7 +479,7 @@ class ClientService {
 
             // Ratings and availability
             average_rating: serviceData.average_rating || 0,
-            reviews_count: serviceData.reviews_count || 0,
+            reviews_count: serviceData.total_reviews || 0,
             availability_status: "available", // This should come from provider availability
             next_available: "Today",
             default_duration: serviceData.duration_hours || 1,
@@ -517,7 +517,7 @@ class ClientService {
 
             // Stats
             average_rating: providerData.average_rating || 0,
-            reviews_count: providerData.reviews_count || 0,
+            reviews_count: providerData.total_reviews || 0,
             total_services: providerData.total_services || 0,
             completed_bookings: providerData.completed_bookings || 0,
             years_experience: providerData.years_experience || 0,
