@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Appointment;
 use App\Services\AppointmentService;
 use App\Services\InvoiceService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -26,8 +27,6 @@ class AppointmentController extends Controller
      */
     public function index(Request $request)
     {
-        // Log::info('Appointment filters received:', $request->all());
-
         $request->validate([
             'status' => 'nullable|in:pending,confirmed,in_progress,completed,cancelled_by_client,cancelled_by_provider,no_show,disputed',
             'date_from' => 'nullable|date',
@@ -39,15 +38,21 @@ class AppointmentController extends Controller
             $user = Auth::user();
             $filters = $request->only(['status', 'date_from', 'date_to']);
 
-            // Log::info('Processed filters:', $filters);
-
             $query = $this->appointmentService->getAppointments($user, $filters);
+
+            // Enhanced sorting: closest date/time first, but completed ones at the end
+            $query->orderByRaw("
+            CASE 
+                WHEN status = 'completed' THEN 2 
+                WHEN status IN ('cancelled_by_client', 'cancelled_by_provider', 'no_show') THEN 3
+                ELSE 1 
+            END
+        ")
+                ->orderBy('appointment_date', 'asc')
+                ->orderBy('appointment_time', 'asc');
+
             $perPage = $request->get('per_page', 15);
             $appointments = $query->paginate($perPage);
-
-            // Debug the query and results
-            // Log::info('SQL Query:', [$query->toSql()]);
-            // Log::info('Appointments found:', ['count' => $appointments->total()]);
 
             // Transform for provider view
             $appointments->through(function ($appointment) {
@@ -80,7 +85,7 @@ class AppointmentController extends Controller
                 ->where('appointment_date', $today)
                 ->whereIn('status', ['pending', 'confirmed', 'in_progress'])
                 ->with(['client', 'service'])
-                ->orderBy('appointment_time')
+                ->orderBy('appointment_time', 'asc') // Earliest time first
                 ->get();
 
             $appointments = $appointments->map(function ($appointment) {
@@ -123,6 +128,70 @@ class AppointmentController extends Controller
     /**
      * Update appointment status
      */
+    // public function updateStatus(Request $request, Appointment $appointment)
+    // {
+    //     $request->validate([
+    //         'status' => 'required|in:confirmed,in_progress,completed,cancelled_by_provider,no_show',
+    //         'notes' => 'nullable|string|max:1000'
+    //     ]);
+
+    //     // Verify provider owns this appointment
+    //     if ($appointment->provider_id !== Auth::id()) {
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'Unauthorized'
+    //         ], 403);
+    //     }
+
+    //     // try {
+    //     //     $result = $this->appointmentService->respondToAppointment(
+    //     //         Auth::user(),
+    //     //         $appointment,
+    //     //         $request->status === 'confirmed' ? 'confirm' : ($request->status === 'cancelled_by_provider' ? 'cancel' : ($request->status === 'in_progress' ? 'start' : 'complete')),
+    //     //         ['provider_notes' => $request->notes]
+    //     //     );
+
+    //     //     return response()->json([
+    //     //         'success' => true,
+    //     //         'message' => 'Appointment status updated successfully',
+    //     //         'data' => $this->transformAppointmentForProvider($result)
+    //     //     ]);
+    //     // } catch (\Exception $e) {
+    //     //     return response()->json([
+    //     //         'success' => false,
+    //     //         'message' => $e->getMessage()
+    //     //     ], 400);
+    //     // }
+    //     try {
+    //         $oldStatus = $appointment->status;
+    //         $newStatus = $request->status;
+
+    //         // Update appointment status
+    //         $appointment->update([
+    //             'status' => $newStatus,
+    //             'provider_notes' => $request->notes,
+    //             $newStatus . '_at' => now() // completed_at, confirmed_at, etc.
+    //         ]);
+
+    //         // **AUTO-CREATE INVOICE WHEN COMPLETED**
+    //         if ($newStatus === 'completed' && $oldStatus !== 'completed') {
+    //             $this->createInvoiceForCompletedAppointment($appointment);
+    //         }
+
+    //         return response()->json([
+    //             'success' => true,
+    //             'data' => $appointment->fresh()->load(['service', 'client']),
+    //             'message' => 'Appointment status updated successfully'
+    //         ]);
+    //     } catch (\Exception $e) {
+    //         Log::error('Failed to update appointment status: ' . $e->getMessage());
+
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'Failed to update appointment status'
+    //         ], 500);
+    //     }
+    // }
     public function updateStatus(Request $request, Appointment $appointment)
     {
         $request->validate([
@@ -130,7 +199,6 @@ class AppointmentController extends Controller
             'notes' => 'nullable|string|max:1000'
         ]);
 
-        // Verify provider owns this appointment
         if ($appointment->provider_id !== Auth::id()) {
             return response()->json([
                 'success' => false,
@@ -138,37 +206,28 @@ class AppointmentController extends Controller
             ], 403);
         }
 
-        // try {
-        //     $result = $this->appointmentService->respondToAppointment(
-        //         Auth::user(),
-        //         $appointment,
-        //         $request->status === 'confirmed' ? 'confirm' : ($request->status === 'cancelled_by_provider' ? 'cancel' : ($request->status === 'in_progress' ? 'start' : 'complete')),
-        //         ['provider_notes' => $request->notes]
-        //     );
-
-        //     return response()->json([
-        //         'success' => true,
-        //         'message' => 'Appointment status updated successfully',
-        //         'data' => $this->transformAppointmentForProvider($result)
-        //     ]);
-        // } catch (\Exception $e) {
-        //     return response()->json([
-        //         'success' => false,
-        //         'message' => $e->getMessage()
-        //     ], 400);
+        // Special validation for starting service
+        // if ($request->status === 'in_progress' && $appointment->status === 'confirmed') {
+        //     if (!$this->canStartService($appointment)) {
+        //         return response()->json([
+        //             'success' => false,
+        //             'message' => 'Service cannot be started yet. Please wait until the scheduled time (15 minutes grace period allowed).',
+        //             'time_validation_failed' => true
+        //         ], 400);
+        //     }
         // }
+
         try {
             $oldStatus = $appointment->status;
             $newStatus = $request->status;
 
-            // Update appointment status
             $appointment->update([
                 'status' => $newStatus,
                 'provider_notes' => $request->notes,
-                $newStatus . '_at' => now() // completed_at, confirmed_at, etc.
+                $newStatus . '_at' => now()
             ]);
 
-            // **AUTO-CREATE INVOICE WHEN COMPLETED**
+            // Auto-create invoice when completed
             if ($newStatus === 'completed' && $oldStatus !== 'completed') {
                 $this->createInvoiceForCompletedAppointment($appointment);
             }
@@ -185,6 +244,133 @@ class AppointmentController extends Controller
                 'success' => false,
                 'message' => 'Failed to update appointment status'
             ], 500);
+        }
+    }
+
+    /**
+     * Check if service can be started based on appointment time
+     */
+    private function canStartService(Appointment $appointment)
+    {
+        try {
+            $now = now(); // Current time in Sri Lanka timezone
+
+            // Get appointment date and time
+            $appointmentDate = $appointment->appointment_date;
+            $appointmentTime = $appointment->appointment_time;
+
+            if (!$appointmentDate || !$appointmentTime) {
+                Log::info('Missing date or time', [
+                    'date' => $appointmentDate,
+                    'time' => $appointmentTime
+                ]);
+                return false;
+            }
+
+            // Create appointment datetime based on the format we receive
+            $appointmentDateTime = $this->parseAppointmentDateTime($appointmentDate, $appointmentTime);
+
+            if (!$appointmentDateTime) {
+                Log::error('Failed to parse appointment datetime', [
+                    'date' => $appointmentDate,
+                    'time' => $appointmentTime
+                ]);
+                return false;
+            }
+
+            // Allow starting 15 minutes before scheduled time
+            $allowedStartTime = $appointmentDateTime->copy()->subMinutes(15);
+
+            Log::info('Time check details', [
+                'now' => $now->format('Y-m-d H:i:s'),
+                'appointment_datetime' => $appointmentDateTime->format('Y-m-d H:i:s'),
+                'allowed_start_time' => $allowedStartTime->format('Y-m-d H:i:s'),
+                'can_start' => $now->gte($allowedStartTime)
+            ]);
+
+            return $now->gte($allowedStartTime);
+        } catch (\Exception $e) {
+            Log::error('Error checking appointment start time: ' . $e->getMessage(), [
+                'appointment_id' => $appointment->id,
+                'date' => $appointment->appointment_date ?? 'null',
+                'time' => $appointment->appointment_time ?? 'null',
+                'trace' => $e->getTraceAsString()
+            ]);
+            return false;
+        }
+    }
+
+    /**
+     * Parse appointment date and time into Carbon instance
+     */
+    private function parseAppointmentDateTime($appointmentDate, $appointmentTime)
+    {
+        try {
+            // Handle different date formats
+            if ($appointmentDate instanceof \Carbon\Carbon) {
+                $date = $appointmentDate->format('Y-m-d');
+            } elseif (is_string($appointmentDate)) {
+                // If it's already in YYYY-MM-DD format
+                if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $appointmentDate)) {
+                    $date = $appointmentDate;
+                }
+                // If it's a datetime string, extract the date part
+                elseif (strpos($appointmentDate, 'T') !== false) {
+                    $date = explode('T', $appointmentDate)[0];
+                }
+                // If it's in another format, try to parse it
+                else {
+                    $date = Carbon::parse($appointmentDate)->format('Y-m-d');
+                }
+            } else {
+                $date = Carbon::parse($appointmentDate)->format('Y-m-d');
+            }
+
+            // Handle different time formats
+            if ($appointmentTime instanceof \Carbon\Carbon) {
+                $time = $appointmentTime->format('H:i:s');
+            } elseif (is_string($appointmentTime)) {
+                // If it's a full datetime string, extract time part
+                if (strpos($appointmentTime, 'T') !== false) {
+                    $timePart = explode('T', $appointmentTime)[1];
+                    $time = explode('.', $timePart)[0]; // Remove microseconds
+                    // Ensure it has seconds
+                    if (substr_count($time, ':') === 1) {
+                        $time .= ':00';
+                    }
+                }
+                // If it's just time (HH:MM or HH:MM:SS)
+                else {
+                    $time = $appointmentTime;
+                    // Ensure it has seconds
+                    if (substr_count($time, ':') === 1) {
+                        $time .= ':00';
+                    }
+                }
+            } else {
+                $time = '00:00:00';
+            }
+
+            // Combine date and time
+            $dateTimeString = $date . ' ' . $time;
+
+            Log::info('Parsing datetime', [
+                'original_date' => $appointmentDate,
+                'original_time' => $appointmentTime,
+                'parsed_date' => $date,
+                'parsed_time' => $time,
+                'combined' => $dateTimeString
+            ]);
+
+            // Create Carbon instance
+            return Carbon::createFromFormat('Y-m-d H:i:s', $dateTimeString);
+        } catch (\Exception $e) {
+            Log::error('Error parsing appointment datetime: ' . $e->getMessage(), [
+                'date' => $appointmentDate,
+                'time' => $appointmentTime,
+                'error' => $e->getMessage()
+            ]);
+            return null;
         }
     }
 
@@ -292,8 +478,8 @@ class AppointmentController extends Controller
                 ->where('appointment_date', '<=', $nextWeek)
                 ->whereIn('status', ['pending', 'confirmed'])
                 ->with(['client', 'service'])
-                ->orderBy('appointment_date')
-                ->orderBy('appointment_time')
+                ->orderBy('appointment_date', 'asc')
+                ->orderBy('appointment_time', 'asc') // Closest first
                 ->limit(5)
                 ->get();
 
@@ -471,7 +657,7 @@ class AppointmentController extends Controller
             $invoice = $this->invoiceService->createInvoiceFromAppointment($appointment, [
                 'payment_method' => $appointment->payment_method,
                 'due_days' => 7, // 7 days to pay
-                'notes' => 'Thank you for choosing our service. Payment is due within 7 days.',
+                'notes' => 'Thank you for choosing our service. We appreciate your business!',
                 'auto_created' => true
             ]);
 
@@ -516,8 +702,7 @@ class AppointmentController extends Controller
             'can_cancel' => $appointment->canBeCancelled(),
             // Add earnings calculation
             'earnings' => $appointment->status === 'completed' ?
-                $appointment->total_price * 0.85 : // 15% platform fee
-                ($appointment->status === 'confirmed' ? $appointment->total_price * 0.85 : 0)
+                $appointment->total_price : ($appointment->status === 'confirmed' ? $appointment->total_price : 0)
         ];
     }
 }

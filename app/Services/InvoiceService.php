@@ -16,15 +16,33 @@ use Illuminate\Support\Facades\Log;
 class InvoiceService
 {
     /**
-     * Create invoice from completed appointment
+     * Create invoice from completed appointment (fix method name)
+     */
+    public function createInvoice(Appointment $appointment, array $options = [])
+    {
+        return $this->createInvoiceFromAppointment($appointment, $options);
+    }
+
+    /**
+     * Create invoice from completed appointment - Enhanced
      */
     public function createInvoiceFromAppointment(Appointment $appointment, array $options = [])
     {
         return DB::transaction(function () use ($appointment, $options) {
-            $subtotal = $appointment->total_price;
-            $platformFeeRate = 0.15; // 15% platform fee
-            $platformFee = $subtotal * $platformFeeRate;
-            $providerEarnings = $subtotal - $platformFee;
+            // Check if invoice already exists
+            if ($appointment->invoice) {
+                throw new \Exception('Invoice already exists for this appointment');
+            }
+
+            // $subtotal = $appointment->total_price;
+            // $platformFeeRate = 0.15; // 15% platform fee
+            // $platformFee = $subtotal * $platformFeeRate;
+            // $providerEarnings = $subtotal - $platformFee;
+
+            // SET PROVIDER EARNINGS = TOTAL PRICE (no platform fee)
+            $platformFee = 0;
+            $subtotal = $appointment->total_price; // Use total price directly
+            $providerEarnings = $subtotal; // Provider gets full amount
 
             $invoice = Invoice::create([
                 'invoice_number' => (new Invoice())->generateInvoiceNumber(),
@@ -32,19 +50,26 @@ class InvoiceService
                 'provider_id' => $appointment->provider_id,
                 'client_id' => $appointment->client_id,
                 'subtotal' => $subtotal,
-                'tax_amount' => 0,
+                'tax_amount' => $options['tax_amount'] ?? 0,
                 'platform_fee' => $platformFee,
                 'total_amount' => $subtotal,
                 'provider_earnings' => $providerEarnings,
-                'payment_method' => $options['payment_method'] ?? null,
+                'payment_method' => $options['payment_method'] ?? 'cash',
+                'payment_status' => 'pending',
+                'status' => 'draft', // Start as draft
                 'due_date' => now()->addDays($options['due_days'] ?? 7),
-                'notes' => $options['notes'] ?? null,
+                'notes' => $options['notes'] ?? 'Thank you for choosing our service. Payment is due within 7 days.',
                 'line_items' => $this->generateLineItems($appointment, $options['line_items'] ?? []),
                 'issued_at' => now(),
-                'status' => 'draft' // Start as draft
             ]);
 
-            // Send notification to client about new invoice
+            // Update appointment status to indicate invoice created
+            $appointment->update([
+                'status' => Appointment::STATUS_INVOICE_SENT, // or keep as completed
+                'invoice_created_at' => now()
+            ]);
+
+            // Send notification if auto-created
             if (isset($options['auto_created']) && $options['auto_created']) {
                 $this->notifyClientOfNewInvoice($invoice);
             }
@@ -53,6 +78,13 @@ class InvoiceService
         });
     }
 
+    /**
+     * Send invoice to client - Fix method name
+     */
+    public function sendInvoice(Invoice $invoice)
+    {
+        return $this->sendInvoiceToClient($invoice);
+    }
     /**
      * Update existing invoice
      */
@@ -126,7 +158,7 @@ class InvoiceService
         return [
             'total_invoices' => $baseQuery->count(),
             'total_amount' => $baseQuery->sum('total_amount'),
-            'total_earnings' => $baseQuery->sum('provider_earnings'),
+            'total_earnings' => $baseQuery->sum('total_amount'),
             'paid_invoices' => $baseQuery->paid()->count(),
             'paid_amount' => $baseQuery->paid()->sum('total_amount'),
             'pending_invoices' => $baseQuery->pending()->count(),
@@ -136,11 +168,11 @@ class InvoiceService
             'this_month_earnings' => $baseQuery->paid()
                 ->whereMonth('paid_at', now()->month)
                 ->whereYear('paid_at', now()->year)
-                ->sum('provider_earnings'),
+                ->sum('total_amount'),
             'last_month_earnings' => $baseQuery->paid()
                 ->whereMonth('paid_at', now()->subMonth()->month)
                 ->whereYear('paid_at', now()->subMonth()->year)
-                ->sum('provider_earnings')
+                ->sum('total_amount')
         ];
     }
 

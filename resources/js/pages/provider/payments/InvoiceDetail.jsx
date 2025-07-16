@@ -436,7 +436,7 @@ const InvoiceDetail = () => {
                                                         )}
                                                     </td>
                                                 </tr>
-                                                {invoice.tax_amount > 0 && (
+                                                {/* {invoice.tax_amount > 0 && (
                                                     <tr>
                                                         <td className="text-muted">
                                                             Tax:
@@ -447,7 +447,7 @@ const InvoiceDetail = () => {
                                                             )}
                                                         </td>
                                                     </tr>
-                                                )}
+                                                )} */}
                                                 <tr className="border-top">
                                                     <td className="fw-bold">
                                                         Total:
@@ -458,7 +458,7 @@ const InvoiceDetail = () => {
                                                         )}
                                                     </td>
                                                 </tr>
-                                                <tr>
+                                                {/* <tr>
                                                     <td className="text-muted">
                                                         Platform Fee:
                                                     </td>
@@ -468,14 +468,14 @@ const InvoiceDetail = () => {
                                                             invoice.platform_fee
                                                         )}
                                                     </td>
-                                                </tr>
+                                                </tr> */}
                                                 <tr className="border-top">
                                                     <td className="fw-bold text-success">
                                                         Your Earnings:
                                                     </td>
                                                     <td className="text-end fw-bold h5 text-success">
                                                         {formatCurrency(
-                                                            invoice.provider_earnings
+                                                            invoice.total_amount
                                                         )}
                                                     </td>
                                                 </tr>

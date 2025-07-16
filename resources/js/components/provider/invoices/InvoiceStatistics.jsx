@@ -16,7 +16,7 @@ const InvoiceStatistics = ({ statistics }) => {
             value: formatCurrency(statistics.total_earnings || 0),
             icon: "fas fa-dollar-sign",
             color: "success",
-            description: "Total amount earned",
+            description: "Total amount earned (no platform fees)",
             bgGradient: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
         },
         {

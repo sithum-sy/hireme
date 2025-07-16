@@ -68,15 +68,15 @@ const ProviderLayout = ({ children }) => {
         if (item.id === "services") {
             // console.log("Managing services");
         } else if (item.id === "appointments") {
-            console.log("Viewing appointments");
+            // console.log("Viewing appointments");
         } else if (item.id === "requests") {
-            console.log("Checking service requests");
+            // console.log("Checking service requests");
             // Mark request notifications as seen
             providerNotifications
                 .filter((n) => n.type === "request" && !n.read)
                 .forEach((n) => markNotificationAsRead(n.id));
         } else if (item.id === "earnings") {
-            console.log("Viewing earnings");
+            // console.log("Viewing earnings");
         }
 
         // Close sidebar on mobile after clicking

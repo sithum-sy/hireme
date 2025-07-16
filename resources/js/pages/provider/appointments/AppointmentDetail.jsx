@@ -21,25 +21,124 @@ const AppointmentDetail = () => {
         loadAppointmentDetail();
     }, [id]);
 
-    const loadAppointmentDetail = async () => {
-        setLoading(true);
+    const canStartService = () => {
+        if (appointment.status !== "confirmed") return false;
+
         try {
-            const result =
-                await providerAppointmentService.getAppointmentDetail(id);
-            if (result.success) {
-                setAppointment(result.data);
+            const now = new Date();
+
+            const appointmentDate = appointment.appointment_date;
+            const appointmentTime = appointment.appointment_time;
+
+            if (!appointmentDate || !appointmentTime) return false;
+
+            let appointmentDateTime;
+
+            if (typeof appointmentDate === "string") {
+                let datePart;
+                if (appointmentDate.includes("T")) {
+                    datePart = appointmentDate.split("T")[0];
+                } else {
+                    datePart = appointmentDate;
+                }
+
+                let timePart;
+                if (
+                    typeof appointmentTime === "string" &&
+                    appointmentTime.includes("T")
+                ) {
+                    timePart = appointmentTime.split("T")[1].split(".")[0];
+                } else {
+                    timePart = appointmentTime.toString();
+                }
+
+                appointmentDateTime = new Date(`${datePart}T${timePart}`);
             } else {
-                navigate("/provider/appointments");
+                appointmentDateTime = new Date(appointmentDate);
             }
+
+            if (isNaN(appointmentDateTime.getTime())) return false;
+
+            // Allow starting 15 minutes before scheduled time
+            const graceMinutes = 15;
+            const allowedStartTime = new Date(
+                appointmentDateTime.getTime() - graceMinutes * 60 * 1000
+            );
+
+            return now >= allowedStartTime;
         } catch (error) {
-            console.error("Failed to load appointment:", error);
-            navigate("/provider/appointments");
-        } finally {
-            setLoading(false);
+            console.error("Error checking appointment time:", error);
+            return false;
         }
     };
 
+    const getTimeUntilStart = () => {
+        try {
+            const now = new Date();
+            const appointmentDate = appointment.appointment_date;
+            const appointmentTime = appointment.appointment_time;
+
+            if (!appointmentDate || !appointmentTime) return null;
+
+            let appointmentDateTime;
+
+            if (typeof appointmentDate === "string") {
+                let datePart = appointmentDate.includes("T")
+                    ? appointmentDate.split("T")[0]
+                    : appointmentDate;
+                let timePart =
+                    typeof appointmentTime === "string" &&
+                    appointmentTime.includes("T")
+                        ? appointmentTime.split("T")[1].split(".")[0]
+                        : appointmentTime.toString();
+
+                appointmentDateTime = new Date(`${datePart}T${timePart}`);
+            } else {
+                appointmentDateTime = new Date(appointmentDate);
+            }
+
+            if (isNaN(appointmentDateTime.getTime())) return null;
+
+            const graceMinutes = 15;
+            const allowedStartTime = new Date(
+                appointmentDateTime.getTime() - graceMinutes * 60 * 1000
+            );
+
+            if (now >= allowedStartTime) return null;
+
+            const timeDiff = allowedStartTime - now;
+            const hoursUntil = Math.floor(timeDiff / (1000 * 60 * 60));
+            const minutesUntil = Math.floor(
+                (timeDiff % (1000 * 60 * 60)) / (1000 * 60)
+            );
+
+            if (hoursUntil > 0) {
+                return `${hoursUntil}h ${minutesUntil}m`;
+            } else {
+                return `${minutesUntil}m`;
+            }
+        } catch (error) {
+            return null;
+        }
+    };
+
+    // Update your handleStatusUpdate function for "in_progress"
     const handleStatusUpdate = async (status, requiresNotes = false) => {
+        // Special validation for starting service
+        if (status === "in_progress" && !canStartService()) {
+            const timeUntil = getTimeUntilStart();
+            if (timeUntil) {
+                alert(
+                    `You can start this service in ${timeUntil} (15 minutes before scheduled time).`
+                );
+            } else {
+                alert(
+                    "This service cannot be started yet. Please wait until the scheduled time."
+                );
+            }
+            return;
+        }
+
         if (requiresNotes && !notes.trim()) {
             setPendingAction(status);
             setShowNotesModal(true);
@@ -67,6 +166,105 @@ const AppointmentDetail = () => {
             setActionLoading(false);
         }
     };
+
+    // Update the confirmed status action buttons section
+    {
+        appointment && appointment.status === "confirmed" && (
+            <div className="d-flex gap-2">
+                <div className="position-relative">
+                    <button
+                        className={`btn btn-primary ${
+                            !canStartService() ? "position-relative" : ""
+                        }`}
+                        onClick={() => handleStatusUpdate("in_progress")}
+                        disabled={actionLoading}
+                        title={
+                            !canStartService() && getTimeUntilStart()
+                                ? `Available in ${getTimeUntilStart()}`
+                                : ""
+                        }
+                    >
+                        <i className="fas fa-play me-2"></i>
+                        {actionLoading ? "Starting..." : "Start Service"}
+                    </button>
+                    {!canStartService() && getTimeUntilStart() && (
+                        <div className="position-absolute top-0 start-100 translate-middle">
+                            <span className="badge bg-warning text-dark">
+                                <i className="fas fa-clock"></i>
+                            </span>
+                        </div>
+                    )}
+                </div>
+
+                {/* Show time until start info */}
+                {!canStartService() && getTimeUntilStart() && (
+                    <div className="align-self-center">
+                        <small className="text-muted">
+                            Available in {getTimeUntilStart()}
+                        </small>
+                    </div>
+                )}
+
+                <button
+                    className="btn btn-outline-danger"
+                    onClick={() =>
+                        handleStatusUpdate("cancelled_by_provider", true)
+                    }
+                    disabled={actionLoading}
+                >
+                    <i className="fas fa-times me-2"></i>
+                    Cancel
+                </button>
+            </div>
+        );
+    }
+
+    const loadAppointmentDetail = async () => {
+        setLoading(true);
+        try {
+            const result =
+                await providerAppointmentService.getAppointmentDetail(id);
+            if (result.success) {
+                setAppointment(result.data);
+            } else {
+                navigate("/provider/appointments");
+            }
+        } catch (error) {
+            console.error("Failed to load appointment:", error);
+            navigate("/provider/appointments");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // const handleStatusUpdate = async (status, requiresNotes = false) => {
+    //     if (requiresNotes && !notes.trim()) {
+    //         setPendingAction(status);
+    //         setShowNotesModal(true);
+    //         return;
+    //     }
+
+    //     setActionLoading(true);
+    //     try {
+    //         const result =
+    //             await providerAppointmentService.updateAppointmentStatus(
+    //                 appointment.id,
+    //                 status,
+    //                 notes
+    //             );
+
+    //         if (result.success) {
+    //             setAppointment(result.data);
+    //             setNotes("");
+    //             setShowNotesModal(false);
+    //             setPendingAction(null);
+    //         }
+    //     } catch (error) {
+    //         console.error("Status update failed:", error);
+    //     } finally {
+    //         setActionLoading(false);
+    //     }
+    // };
 
     const handleCompleteService = async (options) => {
         setActionLoading(true);

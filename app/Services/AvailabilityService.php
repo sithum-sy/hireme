@@ -157,14 +157,14 @@ class AvailabilityService
     public function createBlockedTime(User $provider, array $data): BlockedTime
     {
         try {
-            \Log::info('Creating blocked time for provider: ' . $provider->id);
-            \Log::info('Original blocked time data: ' . json_encode($data));
+            Log::info('Creating blocked time for provider: ' . $provider->id);
+            Log::info('Original blocked time data: ' . json_encode($data));
 
             // Ensure dates are parsed correctly without timezone conversion
             $startDate = Carbon::parse($data['start_date'])->format('Y-m-d');
             $endDate = Carbon::parse($data['end_date'])->format('Y-m-d');
 
-            \Log::info('Parsed dates - Start: ' . $startDate . ', End: ' . $endDate);
+            Log::info('Parsed dates - Start: ' . $startDate . ', End: ' . $endDate);
 
             $blockedTime = BlockedTime::create([
                 'provider_id' => $provider->id,
@@ -176,11 +176,11 @@ class AvailabilityService
                 'all_day' => $data['all_day'] ?? false,
             ]);
 
-            \Log::info('Created blocked time: ' . json_encode($blockedTime->toArray()));
+            Log::info('Created blocked time: ' . json_encode($blockedTime->toArray()));
 
             return $blockedTime;
         } catch (\Exception $e) {
-            \Log::error('Error creating blocked time: ' . $e->getMessage());
+            Log::error('Error creating blocked time: ' . $e->getMessage());
             throw $e;
         }
     }
@@ -191,7 +191,7 @@ class AvailabilityService
     public function getBlockedTimes(User $provider, $startDate = null, $endDate = null)
     {
         try {
-            \Log::info('Getting blocked times for provider: ' . $provider->id);
+            Log::info('Getting blocked times for provider: ' . $provider->id);
 
             $query = BlockedTime::where('provider_id', $provider->id);
 
@@ -203,7 +203,7 @@ class AvailabilityService
 
             return $query->orderBy('start_date')->get();
         } catch (\Exception $e) {
-            \Log::error('Error getting blocked times: ' . $e->getMessage());
+            Log::error('Error getting blocked times: ' . $e->getMessage());
             throw $e;
         }
     }
@@ -214,7 +214,7 @@ class AvailabilityService
     public function deleteBlockedTime(User $provider, BlockedTime $blockedTime): bool
     {
         try {
-            \Log::info('Deleting blocked time: ' . $blockedTime->id . ' for provider: ' . $provider->id);
+            Log::info('Deleting blocked time: ' . $blockedTime->id . ' for provider: ' . $provider->id);
 
             if ($blockedTime->provider_id !== $provider->id) {
                 throw new \Exception('You can only delete your own blocked times');
@@ -222,7 +222,7 @@ class AvailabilityService
 
             return $blockedTime->delete();
         } catch (\Exception $e) {
-            \Log::error('Error deleting blocked time: ' . $e->getMessage());
+            Log::error('Error deleting blocked time: ' . $e->getMessage());
             throw $e;
         }
     }

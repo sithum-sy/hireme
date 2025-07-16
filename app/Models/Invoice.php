@@ -180,7 +180,7 @@ class Invoice extends Model
     public function canBePaid()
     {
         return $this->payment_status === 'pending' &&
-            in_array($this->status, ['sent', 'viewed']);
+            in_array($this->status, ['draft', 'sent', 'viewed']);
     }
 
     public function isAwaitingPayment()

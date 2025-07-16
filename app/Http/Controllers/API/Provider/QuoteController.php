@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Quote;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class QuoteController extends Controller
 {
@@ -46,7 +47,7 @@ class QuoteController extends Controller
                 'data' => $quotes
             ]);
         } catch (\Exception $e) {
-            \Log::error('Failed to fetch quotes: ' . $e->getMessage());
+            Log::error('Failed to fetch quotes: ' . $e->getMessage());
 
             return response()->json([
                 'success' => false,
@@ -129,7 +130,7 @@ class QuoteController extends Controller
                 'data' => $quote->fresh(['client', 'service'])
             ]);
         } catch (\Exception $e) {
-            \Log::error('Failed to update quote: ' . $e->getMessage());
+            Log::error('Failed to update quote: ' . $e->getMessage());
 
             return response()->json([
                 'success' => false,
@@ -170,7 +171,7 @@ class QuoteController extends Controller
                 'data' => $quote->fresh()
             ]);
         } catch (\Exception $e) {
-            \Log::error('Failed to withdraw quote: ' . $e->getMessage());
+            Log::error('Failed to withdraw quote: ' . $e->getMessage());
 
             return response()->json([
                 'success' => false,
@@ -210,7 +211,7 @@ class QuoteController extends Controller
                 'data' => $quote->fresh()
             ]);
         } catch (\Exception $e) {
-            \Log::error('Failed to send quote: ' . $e->getMessage());
+            Log::error('Failed to send quote: ' . $e->getMessage());
 
             return response()->json([
                 'success' => false,
@@ -251,7 +252,7 @@ class QuoteController extends Controller
                 'data' => $quotes
             ]);
         } catch (\Exception $e) {
-            \Log::error('Failed to load pending quotes: ' . $e->getMessage());
+            Log::error('Failed to load pending quotes: ' . $e->getMessage());
 
             return response()->json([
                 'success' => false,

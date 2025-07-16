@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
 
 class AuthController extends Controller
 {
@@ -278,7 +279,7 @@ class AuthController extends Controller
                 'message' => 'Logout successful'
             ], 200);
         } catch (\Exception $e) {
-            \Log::warning('Logout encountered an error but proceeding:', [
+            Log::warning('Logout encountered an error but proceeding:', [
                 'user_id' => $request->user()?->id,
                 'error' => $e->getMessage(),
                 'token_class' => $request->user()?->currentAccessToken() ? get_class($request->user()->currentAccessToken()) : 'null'

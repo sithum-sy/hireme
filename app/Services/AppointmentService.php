@@ -261,39 +261,37 @@ class AppointmentService
     /**
      * Get appointments with filters
      */
-    public function getAppointments(User $user, array $filters = [])
+    public function getAppointments($user, $filters = [])
     {
-        $query = Appointment::with(['client', 'provider', 'service.category']);
-
-        // Filter by user role
-        if ($user->role === 'client') {
-            $query->where('client_id', $user->id);
-        } elseif ($user->role === 'service_provider') {
-            $query->where('provider_id', $user->id);
-        } else {
-            // Admin can see all
-        }
+        $query = Appointment::where('provider_id', $user->id)
+            ->with(['client', 'service', 'quote', 'invoice']);
 
         // Apply filters
-        if (isset($filters['status']) && $filters['status']) {
-            Log::info('Filtering by status:', ['status' => $filters['status']]);
+        if (isset($filters['status']) && $filters['status'] !== 'all') {
             $query->where('status', $filters['status']);
         }
-        if (isset($filters['date_from'])) {
-            $query->where('appointment_date', '>=', $filters['date_from']);
+
+        if (isset($filters['date_from']) && $filters['date_from']) {
+            $query->whereDate('appointment_date', '>=', $filters['date_from']);
         }
 
-        if (isset($filters['date_to'])) {
-            $query->where('appointment_date', '<=', $filters['date_to']);
+        if (isset($filters['date_to']) && $filters['date_to']) {
+            $query->whereDate('appointment_date', '<=', $filters['date_to']);
         }
 
-        if (isset($filters['service_id'])) {
-            $query->where('service_id', $filters['service_id']);
-        }
+        // Smart sorting: Active appointments first, then by date/time
+        $query->orderByRaw("
+        CASE 
+            WHEN status IN ('pending', 'confirmed', 'in_progress') THEN 1
+            WHEN status = 'completed' THEN 2 
+            WHEN status IN ('cancelled_by_client', 'cancelled_by_provider', 'no_show') THEN 3
+            ELSE 4 
+        END
+    ");
 
-        // Default ordering
-        $query->orderBy('appointment_date', 'desc')
-            ->orderBy('appointment_time', 'desc');
+        // Then sort by date and time (closest first)
+        $query->orderBy('appointment_date', 'asc')
+            ->orderBy('appointment_time', 'asc');
 
         return $query;
     }

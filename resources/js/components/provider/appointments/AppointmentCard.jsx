@@ -2,22 +2,133 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import CompleteServiceModal from "./CompleteServiceModal";
 import providerAppointmentService from "../../../services/providerAppointmentService";
+import ReviewButton from "../../reviews/ReviewButton";
 
 const AppointmentCard = ({ appointment, onStatusUpdate }) => {
     const [loading, setLoading] = useState(false);
     const [actionLoading, setActionLoading] = useState(false);
     const [showCompleteModal, setShowCompleteModal] = useState(false);
 
-    // Debug: Log the appointment object to see its structure
-    // console.log(
-    //     "Appointment data:",
-    //     // appointment.appointment_date,
-    //     appointment.appointment_time
-    // );
+    // Check if appointment time has arrived
+    const canStartService = () => {
+        if (appointment.status !== "confirmed") return false;
 
-    // Helper function to safely get client name
+        try {
+            const now = new Date();
+
+            // Parse appointment date and time
+            const appointmentDate = appointment.appointment_date;
+            const appointmentTime = appointment.appointment_time;
+
+            if (!appointmentDate || !appointmentTime) return false;
+
+            // Create appointment datetime
+            let appointmentDateTime;
+
+            if (typeof appointmentDate === "string") {
+                let datePart;
+                if (appointmentDate.includes("T")) {
+                    datePart = appointmentDate.split("T")[0];
+                } else {
+                    datePart = appointmentDate;
+                }
+
+                let timePart;
+                if (
+                    typeof appointmentTime === "string" &&
+                    appointmentTime.includes("T")
+                ) {
+                    timePart = appointmentTime.split("T")[1].split(".")[0];
+                } else {
+                    timePart = appointmentTime.toString();
+                }
+
+                // Combine date and time
+                appointmentDateTime = new Date(`${datePart}T${timePart}`);
+            } else {
+                appointmentDateTime = new Date(appointmentDate);
+            }
+
+            if (isNaN(appointmentDateTime.getTime())) {
+                console.warn("Invalid appointment datetime");
+                return false;
+            }
+
+            // Allow starting 15 minutes before scheduled time (grace period)
+            const graceMinutes = 15;
+            const allowedStartTime = new Date(
+                appointmentDateTime.getTime() - graceMinutes * 60 * 1000
+            );
+
+            return now >= allowedStartTime;
+        } catch (error) {
+            console.error("Error checking appointment time:", error);
+            return false;
+        }
+    };
+
+    // Get time until appointment can start
+    const getTimeUntilStart = () => {
+        try {
+            const now = new Date();
+            const appointmentDate = appointment.appointment_date;
+            const appointmentTime = appointment.appointment_time;
+
+            if (!appointmentDate || !appointmentTime) return null;
+
+            let appointmentDateTime;
+
+            if (typeof appointmentDate === "string") {
+                let datePart;
+                if (appointmentDate.includes("T")) {
+                    datePart = appointmentDate.split("T")[0];
+                } else {
+                    datePart = appointmentDate;
+                }
+
+                let timePart;
+                if (
+                    typeof appointmentTime === "string" &&
+                    appointmentTime.includes("T")
+                ) {
+                    timePart = appointmentTime.split("T")[1].split(".")[0];
+                } else {
+                    timePart = appointmentTime.toString();
+                }
+
+                appointmentDateTime = new Date(`${datePart}T${timePart}`);
+            } else {
+                appointmentDateTime = new Date(appointmentDate);
+            }
+
+            if (isNaN(appointmentDateTime.getTime())) return null;
+
+            const graceMinutes = 15;
+            const allowedStartTime = new Date(
+                appointmentDateTime.getTime() - graceMinutes * 60 * 1000
+            );
+
+            if (now >= allowedStartTime) return null; // Can start now
+
+            const timeDiff = allowedStartTime - now;
+            const hoursUntil = Math.floor(timeDiff / (1000 * 60 * 60));
+            const minutesUntil = Math.floor(
+                (timeDiff % (1000 * 60 * 60)) / (1000 * 60)
+            );
+
+            if (hoursUntil > 0) {
+                return `${hoursUntil}h ${minutesUntil}m`;
+            } else {
+                return `${minutesUntil}m`;
+            }
+        } catch (error) {
+            console.error("Error calculating time until start:", error);
+            return null;
+        }
+    };
+
+    // Your existing helper functions remain the same...
     const getClientName = () => {
-        // Try different possible property names
         return (
             appointment?.client?.name ||
             appointment?.client_name ||
@@ -28,7 +139,6 @@ const AppointmentCard = ({ appointment, onStatusUpdate }) => {
         );
     };
 
-    // Helper function to safely get service name
     const getServiceName = () => {
         return (
             appointment?.service?.title ||
@@ -38,7 +148,6 @@ const AppointmentCard = ({ appointment, onStatusUpdate }) => {
         );
     };
 
-    // Helper function to safely get client initials
     const getClientInitials = () => {
         const clientName = getClientName();
         if (!clientName || clientName === "Unknown Client") return "?";
@@ -49,14 +158,15 @@ const AppointmentCard = ({ appointment, onStatusUpdate }) => {
                 .map((n) => n[0])
                 .join("")
                 .toUpperCase()
-                .substring(0, 2); // Max 2 initials
+                .substring(0, 2);
         } catch (error) {
             return "?";
         }
     };
 
-    // Format date and time
+    // Your existing formatDateTime function remains the same...
     const formatDateTime = (dateString, timeString) => {
+        // ... your existing code
         if (!dateString || !timeString) {
             return {
                 date: "Date not available",
@@ -66,21 +176,18 @@ const AppointmentCard = ({ appointment, onStatusUpdate }) => {
         }
 
         try {
-            // Extract date from dateString (YYYY-MM-DDTHH:MM:SS.sssZ format)
             let appointmentDate;
             if (typeof dateString === "string") {
                 if (dateString.includes("T")) {
-                    // Handle ISO datetime format - extract just the date part
                     const datePart = dateString.split("T")[0];
                     const dateParts = datePart.split("-");
                     if (dateParts.length === 3) {
                         const year = parseInt(dateParts[0]);
-                        const month = parseInt(dateParts[1]) - 1; // Month is 0-indexed
+                        const month = parseInt(dateParts[1]) - 1;
                         const day = parseInt(dateParts[2]);
                         appointmentDate = new Date(year, month, day);
                     }
                 } else {
-                    // Handle simple date format (YYYY-MM-DD)
                     const dateParts = dateString.split("-");
                     if (dateParts.length === 3) {
                         const year = parseInt(dateParts[0]);
@@ -93,7 +200,6 @@ const AppointmentCard = ({ appointment, onStatusUpdate }) => {
                 appointmentDate = new Date(dateString);
             }
 
-            // Extract time from timeString (YYYY-MM-DDTHH:MM:SS.sssZ format)
             let formattedTime = "Time not available";
             if (timeString) {
                 let timeToUse;
@@ -102,9 +208,8 @@ const AppointmentCard = ({ appointment, onStatusUpdate }) => {
                     typeof timeString === "string" &&
                     timeString.includes("T")
                 ) {
-                    // Extract time part from ISO datetime format
                     const timePart = timeString.split("T")[1];
-                    timeToUse = timePart.split(".")[0]; // Remove milliseconds and Z
+                    timeToUse = timePart.split(".")[0];
                 } else {
                     timeToUse = timeString.toString();
                 }
@@ -113,17 +218,13 @@ const AppointmentCard = ({ appointment, onStatusUpdate }) => {
                 if (timeParts.length >= 2) {
                     const hours = parseInt(timeParts[0]);
                     const minutes = timeParts[1];
-
-                    // Correct AM/PM logic
                     const ampm = hours >= 12 ? "PM" : "AM";
                     const displayHour =
                         hours === 0 ? 12 : hours > 12 ? hours - 12 : hours;
-
                     formattedTime = `${displayHour}:${minutes} ${ampm}`;
                 }
             }
 
-            // Check if date is valid
             if (isNaN(appointmentDate.getTime())) {
                 throw new Error("Invalid date");
             }
@@ -157,69 +258,8 @@ const AppointmentCard = ({ appointment, onStatusUpdate }) => {
             };
         }
     };
-    // const formatDateTime = (date, time) => {
-    //     if (!date || !time) {
-    //         return {
-    //             date: "Date not set",
-    //             time: "Time not set",
-    //         };
-    //     }
 
-    //     try {
-    //         let dateObj;
-    //         if (date instanceof Date) {
-    //             dateObj = date;
-    //         } else if (typeof date === "string" && date.includes("-")) {
-    //             const [year, month, day] = date.split("-");
-    //             dateObj = new Date(
-    //                 parseInt(year),
-    //                 parseInt(month) - 1,
-    //                 parseInt(day)
-    //             );
-    //         } else {
-    //             dateObj = new Date(date);
-    //         }
-
-    //         if (isNaN(dateObj.getTime())) {
-    //             throw new Error("Invalid date");
-    //         }
-
-    //         let formattedTime = "Time not set";
-    //         if (time) {
-    //             try {
-    //                 const timeParts = time.toString().split(":");
-    //                 if (timeParts.length >= 2) {
-    //                     const hours = parseInt(timeParts[0]);
-    //                     const minutes = timeParts[1];
-    //                     const ampm = hours >= 12 ? "PM" : "AM";
-    //                     const displayHour = hours % 12 || 12;
-    //                     formattedTime = `${displayHour}:${minutes} ${ampm}`;
-    //                 }
-    //             } catch (timeError) {
-    //                 console.warn("Time parsing error:", timeError);
-    //                 formattedTime = time.toString();
-    //             }
-    //         }
-
-    //         return {
-    //             date: dateObj.toLocaleDateString("en-US", {
-    //                 weekday: "short",
-    //                 month: "short",
-    //                 day: "numeric",
-    //                 year: "numeric",
-    //             }),
-    //             time: formattedTime,
-    //         };
-    //     } catch (error) {
-    //         console.warn("Date formatting error:", error, { date, time });
-    //         return {
-    //             date: date ? date.toString() : "Invalid date",
-    //             time: time ? time.toString() : "Invalid time",
-    //         };
-    //     }
-    // };
-
-    // Handle status updates
+    // Your existing event handlers remain the same...
     const handleStatusUpdate = async (status, notes = "") => {
         setActionLoading(true);
         try {
@@ -241,13 +281,11 @@ const AppointmentCard = ({ appointment, onStatusUpdate }) => {
     };
 
     const handleCompleteService = async (options) => {
-        // Prevent multiple calls
         if (loading) return;
 
         setLoading(true);
 
         try {
-            // Close modal immediately to prevent flickering
             setShowCompleteModal(false);
 
             const result = await providerAppointmentService.completeService(
@@ -256,12 +294,10 @@ const AppointmentCard = ({ appointment, onStatusUpdate }) => {
             );
 
             if (result.success) {
-                // Update appointment status
                 if (onStatusUpdate) {
                     onStatusUpdate(result.data);
                 }
 
-                // Show success message
                 if (result.invoice) {
                     const action = options.send_invoice
                         ? "created and sent"
@@ -287,18 +323,35 @@ const AppointmentCard = ({ appointment, onStatusUpdate }) => {
         }
     };
 
-    // FIXED: Modal close handler
     const handleCloseModal = () => {
         if (!loading) {
             setShowCompleteModal(false);
         }
     };
 
+    // Enhanced start service handler
+    const handleStartService = () => {
+        if (!canStartService()) {
+            const timeUntil = getTimeUntilStart();
+            if (timeUntil) {
+                alert(
+                    `You can start this service in ${timeUntil} (15 minutes before scheduled time).`
+                );
+            } else {
+                alert(
+                    "This service cannot be started yet. Please wait until the scheduled time."
+                );
+            }
+            return;
+        }
+
+        handleStatusUpdate("in_progress");
+    };
+
     const dateTime = formatDateTime(
         appointment.appointment_date,
         appointment.appointment_time
     );
-
     const pluralize = (count, singular, plural = singular + "s") => {
         return count === 1 ? singular : plural;
     };
@@ -306,6 +359,8 @@ const AppointmentCard = ({ appointment, onStatusUpdate }) => {
     const clientName = getClientName();
     const serviceName = getServiceName();
     const clientInitials = getClientInitials();
+    const canStart = canStartService();
+    const timeUntilStart = getTimeUntilStart();
 
     return (
         <div className="card border-0 shadow-sm mb-3">
@@ -353,6 +408,18 @@ const AppointmentCard = ({ appointment, onStatusUpdate }) => {
                                     ? "Provider location"
                                     : "Location TBD"}
                             </div>
+
+                            {/* Time until start warning */}
+                            {appointment.status === "confirmed" &&
+                                !canStart &&
+                                timeUntilStart && (
+                                    <div className="mt-2">
+                                        <span className="badge bg-info">
+                                            <i className="fas fa-clock me-1"></i>
+                                            Can start in {timeUntilStart}
+                                        </span>
+                                    </div>
+                                )}
                         </div>
                     </div>
 
@@ -416,16 +483,30 @@ const AppointmentCard = ({ appointment, onStatusUpdate }) => {
                             )}
 
                             {appointment.status === "confirmed" && (
-                                <button
-                                    className="btn btn-primary btn-sm"
-                                    onClick={() =>
-                                        handleStatusUpdate("in_progress")
-                                    }
-                                    disabled={actionLoading}
-                                >
-                                    <i className="fas fa-play me-1"></i>
-                                    {actionLoading ? "Starting..." : "Start"}
-                                </button>
+                                <div className="position-relative">
+                                    <button
+                                        className={`btn btn-primary btn-sm ${
+                                            !canStart ? "position-relative" : ""
+                                        }`}
+                                        onClick={handleStartService}
+                                        disabled={actionLoading}
+                                        title={
+                                            !canStart && timeUntilStart
+                                                ? `Available in ${timeUntilStart}`
+                                                : ""
+                                        }
+                                    >
+                                        <i className="fas fa-play me-1"></i>
+                                        {actionLoading
+                                            ? "Starting..."
+                                            : "Start"}
+                                    </button>
+                                    {!canStart && (
+                                        <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning text-dark">
+                                            <i className="fas fa-clock"></i>
+                                        </span>
+                                    )}
+                                </div>
                             )}
 
                             {appointment.status === "in_progress" && (
@@ -439,6 +520,22 @@ const AppointmentCard = ({ appointment, onStatusUpdate }) => {
                                         ? "Processing..."
                                         : "Complete Service"}
                                 </button>
+                            )}
+
+                            {appointment.status === "paid" && (
+                                <div className="review-section mt-2 pt-2 border-top">
+                                    <div className="d-flex justify-content-between align-items-center">
+                                        <small className="text-muted">
+                                            <i className="fas fa-star me-1"></i>
+                                            Service completed - Please review
+                                            your client
+                                        </small>
+                                        <ReviewButton
+                                            appointment={appointment}
+                                            userType="provider" // ✅ Provider reviews client
+                                        />
+                                    </div>
+                                </div>
                             )}
                         </div>
                     </div>
@@ -457,7 +554,7 @@ const AppointmentCard = ({ appointment, onStatusUpdate }) => {
     );
 };
 
-// Helper function for status badge colors
+// Helper function for status badge colors (remains the same)
 const getStatusBadge = (status) => {
     const badges = {
         pending: "bg-warning text-dark",

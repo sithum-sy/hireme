@@ -157,16 +157,14 @@ const CompleteServiceModal = ({ appointment, isOpen, onClose, onComplete }) => {
                                             <small className="text-muted">
                                                 Client:
                                             </small>
-                                            <div>
-                                                {appointment.client?.name}
-                                            </div>
+                                            <div>{appointment.client_name}</div>
                                         </div>
                                         <div className="col-6">
                                             <small className="text-muted">
                                                 Amount:
                                             </small>
                                             <div className="fw-bold">
-                                                ${appointment.total_price}
+                                                Rs. {appointment.total_price}
                                             </div>
                                         </div>
                                     </div>

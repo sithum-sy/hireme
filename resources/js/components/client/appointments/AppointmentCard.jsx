@@ -1,5 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import ReviewButton from "../../reviews/ReviewButton";
 
 const AppointmentCard = ({
     appointment,
@@ -536,6 +537,21 @@ const AppointmentCard = ({
                                             </div>
                                         </div>
                                     )}
+
+                                {appointment.status === "paid" && (
+                                    <div className="review-section mt-2 pt-2 border-top">
+                                        <div className="d-flex justify-content-between align-items-center">
+                                            <small className="text-muted">
+                                                <i className="fas fa-star me-1"></i>
+                                                How was your service experience?
+                                            </small>
+                                            <ReviewButton
+                                                appointment={appointment}
+                                                userType="client" // ✅ Client reviews provider
+                                            />
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>

@@ -90,6 +90,7 @@ Route::prefix('invoices')->group(function () {
     Route::patch('/{invoice}', [InvoiceController::class, 'update']);
     Route::patch('/{invoice}/send', [InvoiceController::class, 'send']);
     Route::patch('/{invoice}/mark-paid', [InvoiceController::class, 'markPaid']);
+    Route::patch('/{invoice}/confirm-cash', [InvoiceController::class, 'confirmCashReceived']);
 });
 
 // Provider Dashboard & Analytics

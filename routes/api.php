@@ -9,6 +9,7 @@ use App\Http\Controllers\API\AvailabilityController;
 use App\Http\Controllers\API\ProfileController;
 use App\Http\Controllers\API\AppointmentController;
 use App\Http\Controllers\API\LocationController;
+use App\Http\Controllers\API\ReviewController;
 
 /*
 |--------------------------------------------------------------------------
@@ -59,6 +60,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('quotes')->group(function () {
         Route::get('/', [AppointmentController::class, 'getQuotes']);
         Route::get('/{quote}', [AppointmentController::class, 'getQuote']);
+    });
+
+    // Review Management
+    Route::prefix('appointments/{appointment}')->group(function () {
+        Route::post('review', [ReviewController::class, 'submitReview']);
+        Route::get('reviews', [ReviewController::class, 'getAppointmentReviews']);
     });
 
     // Service Provider Routes

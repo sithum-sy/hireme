@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import invoiceService from "../../../services/invoiceService";
+import CashPaymentModal from "./CashPaymentModal";
 
 const InvoiceActions = ({ invoice, onUpdate, onMarkPaid }) => {
     const [loading, setLoading] = useState(false);
+    const [showCashModal, setShowCashModal] = useState(false);
     const [showDropdown, setShowDropdown] = useState(false);
 
     const handleSendInvoice = async () => {
@@ -26,6 +28,34 @@ const InvoiceActions = ({ invoice, onUpdate, onMarkPaid }) => {
             alert("Error sending invoice");
         }
         setLoading(false);
+    };
+
+    const canConfirmCash = () => {
+        return (
+            invoice.payment_method === "cash" &&
+            invoice.payment_status === "pending" &&
+            invoice.status === "sent"
+        );
+    };
+
+    const handleConfirmCash = async (paymentData) => {
+        setLoading(true);
+        try {
+            const result = await invoiceService.confirmCashReceived(
+                invoice.id,
+                paymentData
+            );
+            if (result.success) {
+                onUpdate();
+                alert("Cash payment confirmed successfully!");
+            } else {
+                throw new Error(result.message);
+            }
+        } catch (error) {
+            throw error;
+        } finally {
+            setLoading(false);
+        }
     };
 
     const canEdit = () => invoice.status === "draft";
@@ -63,6 +93,18 @@ const InvoiceActions = ({ invoice, onUpdate, onMarkPaid }) => {
                 >
                     <i className="fas fa-edit me-2"></i>
                     Edit
+                </button>
+            )}
+
+            {/* Cash Payment Confirmation */}
+            {canConfirmCash() && (
+                <button
+                    onClick={() => setShowCashModal(true)}
+                    disabled={loading}
+                    className="btn btn-success"
+                >
+                    <i className="fas fa-money-bill me-2"></i>
+                    {loading ? "Processing..." : "Confirm Cash Received"}
                 </button>
             )}
 
@@ -134,6 +176,15 @@ const InvoiceActions = ({ invoice, onUpdate, onMarkPaid }) => {
                     )}
                 </ul>
             </div>
+            {/* Cash Payment Modal */}
+            {showCashModal && (
+                <CashPaymentModal
+                    invoice={invoice}
+                    isOpen={showCashModal}
+                    onClose={() => setShowCashModal(false)}
+                    onConfirm={handleConfirmCash}
+                />
+            )}
         </div>
     );
 };

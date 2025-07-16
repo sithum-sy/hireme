@@ -13,6 +13,7 @@ class Review extends Model
         'appointment_id',
         'reviewer_id',
         'reviewee_id',
+        'service_id', //  Added
         'review_type',
         'rating',
         'comment',
@@ -25,9 +26,12 @@ class Review extends Model
         'is_verified',
         'is_featured',
         'is_hidden',
+        'status', //   Added
         'provider_response',
         'provider_responded_at',
-        'helpful_count'
+        'helpful_count',
+        'flagged_at', //   Added
+        'moderation_notes' //   Added
     ];
 
     protected $casts = [
@@ -36,12 +40,19 @@ class Review extends Model
         'is_verified' => 'boolean',
         'is_featured' => 'boolean',
         'is_hidden' => 'boolean',
-        'provider_responded_at' => 'datetime'
+        'provider_responded_at' => 'datetime',
+        'flagged_at' => 'datetime' //   Added
     ];
 
     // Constants
     public const TYPE_CLIENT_TO_PROVIDER = 'client_to_provider';
     public const TYPE_PROVIDER_TO_CLIENT = 'provider_to_client';
+
+    // Status constants   Added
+    public const STATUS_DRAFT = 'draft';
+    public const STATUS_PUBLISHED = 'published';
+    public const STATUS_HIDDEN = 'hidden';
+    public const STATUS_FLAGGED = 'flagged';
 
     // Relationships
     public function appointment()
@@ -57,6 +68,12 @@ class Review extends Model
     public function reviewee()
     {
         return $this->belongsTo(User::class, 'reviewee_id');
+    }
+
+    //   Added service relationship
+    public function service()
+    {
+        return $this->belongsTo(Service::class);
     }
 
     // Scopes
@@ -84,12 +101,29 @@ class Review extends Model
 
     public function scopeVisible($query)
     {
-        return $query->where('is_hidden', false);
+        return $query->where('is_hidden', false)
+            ->where('status', self::STATUS_PUBLISHED);
     }
 
     public function scopeVerified($query)
     {
         return $query->where('is_verified', true);
+    }
+
+    //   Added status scopes
+    public function scopePublished($query)
+    {
+        return $query->where('status', self::STATUS_PUBLISHED);
+    }
+
+    public function scopeDraft($query)
+    {
+        return $query->where('status', self::STATUS_DRAFT);
+    }
+
+    public function scopeFlagged($query)
+    {
+        return $query->where('status', self::STATUS_FLAGGED);
     }
 
     // Helper methods
@@ -121,6 +155,25 @@ class Review extends Model
         $this->increment('helpful_count');
     }
 
+    //   Added flag method
+    public function flagForModeration($reason = null)
+    {
+        $this->update([
+            'status' => self::STATUS_FLAGGED,
+            'flagged_at' => now(),
+            'moderation_notes' => $reason
+        ]);
+    }
+
+    //   Added publish method
+    public function publish()
+    {
+        $this->update([
+            'status' => self::STATUS_PUBLISHED,
+            'is_hidden' => false
+        ]);
+    }
+
     // Calculate overall rating from individual ratings
     public function getOverallRatingAttribute()
     {
@@ -132,5 +185,11 @@ class Review extends Model
         ]);
 
         return $ratings ? round(array_sum($ratings) / count($ratings), 1) : $this->rating;
+    }
+
+    //   Added published status check
+    public function isPublished()
+    {
+        return $this->status === self::STATUS_PUBLISHED && !$this->is_hidden;
     }
 }

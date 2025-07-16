@@ -8,6 +8,7 @@ import providerAppointmentService from "../../../services/providerAppointmentSer
 const TodaysSchedule = () => {
     const [appointments, setAppointments] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [currentTime, setCurrentTime] = useState(new Date());
     const [todayStats, setTodayStats] = useState({
         total: 0,
         pending: 0,
@@ -18,30 +19,115 @@ const TodaysSchedule = () => {
 
     useEffect(() => {
         loadTodaysAppointments();
+
+        // Update current time every minute
+        const timer = setInterval(() => {
+            setCurrentTime(new Date());
+        }, 60000); // Update every minute
+
+        return () => clearInterval(timer);
     }, []);
 
     useEffect(() => {
         calculateTodayStats();
     }, [appointments]);
 
-    // Format appointment time to HH:MM AM/PM
+    // Format appointment time to HH:MM AM/PM - NO UTILS
     const formatAppointmentTime = (timeString) => {
         if (!timeString) return "Time not set";
 
         try {
-            const timeParts = timeString.toString().split(":");
+            let timeToUse;
+
+            // Handle different time formats
+            if (typeof timeString === "string" && timeString.includes("T")) {
+                // ISO datetime format: "2025-07-16T14:30:00.000000Z"
+                const timePart = timeString.split("T")[1];
+                timeToUse = timePart.split(".")[0]; // Remove milliseconds and Z
+            } else {
+                // Simple time format: "14:30:00" or "14:30"
+                timeToUse = timeString.toString();
+            }
+
+            const timeParts = timeToUse.split(":");
             if (timeParts.length >= 2) {
                 const hours = parseInt(timeParts[0]);
                 const minutes = timeParts[1];
+
+                // Fix the AM/PM logic
                 const ampm = hours >= 12 ? "PM" : "AM";
-                const displayHour = hours % 12 || 12;
+                const displayHour =
+                    hours === 0 ? 12 : hours > 12 ? hours - 12 : hours;
+
                 return `${displayHour}:${minutes} ${ampm}`;
             }
-            return timeString;
+
+            return timeString.toString();
         } catch (error) {
             console.warn("Time formatting error:", error);
             return timeString.toString();
         }
+    };
+
+    // Get current local time in HH:MM format (24-hour)
+    const getCurrentTimeSlot = () => {
+        const now = new Date();
+        return (
+            now.getHours().toString().padStart(2, "0") +
+            ":" +
+            now.getMinutes().toString().padStart(2, "0")
+        );
+    };
+
+    // Get current local time formatted for display
+    const getCurrentTimeFormatted = () => {
+        const now = new Date();
+        const hours = now.getHours();
+        const minutes = now.getMinutes().toString().padStart(2, "0");
+        const ampm = hours >= 12 ? "PM" : "AM";
+        const displayHour = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours;
+        return `${displayHour}:${minutes} ${ampm}`;
+    };
+
+    // Parse time string to minutes for comparison
+    const parseTimeToMinutes = (timeString) => {
+        if (!timeString) return 0;
+
+        try {
+            let timeToUse;
+
+            if (typeof timeString === "string" && timeString.includes("T")) {
+                const timePart = timeString.split("T")[1];
+                timeToUse = timePart.split(".")[0];
+            } else {
+                timeToUse = timeString.toString();
+            }
+
+            const [hours, minutes] = timeToUse.split(":").map(Number);
+            return hours * 60 + minutes;
+        } catch (error) {
+            console.warn("Error parsing time:", error);
+            return 0;
+        }
+    };
+
+    // Check if appointment is happening now (within 15 minutes)
+    const isAppointmentNow = (appointmentTime) => {
+        const now = new Date();
+        const currentMinutes = now.getHours() * 60 + now.getMinutes();
+        const appointmentMinutes = parseTimeToMinutes(appointmentTime);
+
+        // Consider "now" if within 15 minutes before or after
+        return Math.abs(currentMinutes - appointmentMinutes) <= 15;
+    };
+
+    // Check if appointment time has passed
+    const isAppointmentPast = (appointmentTime) => {
+        const now = new Date();
+        const currentMinutes = now.getHours() * 60 + now.getMinutes();
+        const appointmentMinutes = parseTimeToMinutes(appointmentTime);
+
+        return currentMinutes > appointmentMinutes + 15; // Past if more than 15 minutes ago
     };
 
     const loadTodaysAppointments = async () => {
@@ -85,29 +171,65 @@ const TodaysSchedule = () => {
 
     const getTimelineAppointments = () => {
         return appointments
-            .sort((a, b) =>
-                a.appointment_time.localeCompare(b.appointment_time)
-            )
+            .sort((a, b) => {
+                // Sort by time in minutes for accurate ordering
+                const timeA = parseTimeToMinutes(a.appointment_time);
+                const timeB = parseTimeToMinutes(b.appointment_time);
+                return timeA - timeB;
+            })
             .map((apt) => ({
                 ...apt,
-                timeSlot: apt.appointment_time
-                    ? apt.appointment_time.substring(0, 5)
-                    : "00:00",
                 formattedTime: formatAppointmentTime(apt.appointment_time),
+                timeInMinutes: parseTimeToMinutes(apt.appointment_time),
+                isNow: isAppointmentNow(apt.appointment_time),
+                isPast: isAppointmentPast(apt.appointment_time),
             }));
     };
 
-    const getCurrentTimeSlot = () => {
-        const now = new Date();
-        return (
-            now.getHours().toString().padStart(2, "0") +
-            ":" +
-            now.getMinutes().toString().padStart(2, "0")
-        );
+    // Get time status indicator
+    const getTimeStatusIndicator = (appointment) => {
+        if (appointment.isNow) {
+            return (
+                <div className="d-flex flex-column align-items-center">
+                    <div className="fw-bold text-warning">
+                        {appointment.formattedTime}
+                    </div>
+                    <span className="badge bg-warning text-dark">NOW</span>
+                </div>
+            );
+        } else if (appointment.isPast) {
+            return (
+                <div className="d-flex flex-column align-items-center">
+                    <div className="fw-bold text-muted">
+                        {appointment.formattedTime}
+                    </div>
+                    <small className="text-muted">Past</small>
+                </div>
+            );
+        } else {
+            return (
+                <div className="d-flex flex-column align-items-center">
+                    <div className="fw-bold text-primary">
+                        {appointment.formattedTime}
+                    </div>
+                    <small className="text-muted">Upcoming</small>
+                </div>
+            );
+        }
     };
 
+    console.log("Current local time:", getCurrentTimeFormatted());
+    console.log(
+        "Appointments with times:",
+        appointments.map((apt) => ({
+            id: apt.id,
+            rawTime: apt.appointment_time,
+            formattedTime: formatAppointmentTime(apt.appointment_time),
+            timeInMinutes: parseTimeToMinutes(apt.appointment_time),
+        }))
+    );
+
     const timelineAppointments = getTimelineAppointments();
-    const currentTime = getCurrentTimeSlot();
 
     return (
         <ProviderLayout>
@@ -230,10 +352,16 @@ const TodaysSchedule = () => {
                                 <div className="col-lg-8">
                                     <div className="card border-0 shadow-sm">
                                         <div className="card-header bg-white border-bottom">
-                                            <h6 className="fw-bold mb-0">
-                                                <i className="fas fa-clock me-2 text-orange"></i>
-                                                Schedule Timeline
-                                            </h6>
+                                            <div className="d-flex justify-content-between align-items-center">
+                                                <h6 className="fw-bold mb-0">
+                                                    <i className="fas fa-clock me-2 text-orange"></i>
+                                                    Schedule Timeline
+                                                </h6>
+                                                <small className="text-muted">
+                                                    Current time:{" "}
+                                                    {getCurrentTimeFormatted()}
+                                                </small>
+                                            </div>
                                         </div>
                                         <div className="card-body p-0">
                                             <div className="timeline-container p-3">
@@ -241,54 +369,22 @@ const TodaysSchedule = () => {
                                                     (appointment, index) => (
                                                         <div
                                                             key={appointment.id}
-                                                            className="timeline-item d-flex mb-3"
+                                                            className={`timeline-item d-flex mb-3 ${
+                                                                appointment.isNow
+                                                                    ? "current-appointment"
+                                                                    : ""
+                                                            }`}
                                                         >
                                                             <div
                                                                 className="timeline-time me-3 text-center"
                                                                 style={{
                                                                     minWidth:
-                                                                        "60px",
+                                                                        "80px",
                                                                 }}
                                                             >
-                                                                <div
-                                                                    className="timeline-time me-3 text-center"
-                                                                    style={{
-                                                                        minWidth:
-                                                                            "60px",
-                                                                    }}
-                                                                >
-                                                                    <div
-                                                                        className={`fw-bold ${
-                                                                            appointment.timeSlot <=
-                                                                            currentTime
-                                                                                ? "text-success"
-                                                                                : "text-muted"
-                                                                        }`}
-                                                                    >
-                                                                        {
-                                                                            appointment.formattedTime
-                                                                        }{" "}
-                                                                        {/* ✅ Shows "2:30 PM" instead of "14:30" */}
-                                                                    </div>
-                                                                    {appointment.timeSlot <=
-                                                                        currentTime && (
-                                                                        <small className="text-success">
-                                                                            Past
-                                                                        </small>
-                                                                    )}
-                                                                </div>
-                                                                {appointment.timeSlot <=
-                                                                    currentTime &&
-                                                                    appointment.timeSlot >
-                                                                        currentTime.substring(
-                                                                            0,
-                                                                            3
-                                                                        ) +
-                                                                            "00" && (
-                                                                        <small className="text-success">
-                                                                            Now
-                                                                        </small>
-                                                                    )}
+                                                                {getTimeStatusIndicator(
+                                                                    appointment
+                                                                )}
                                                             </div>
                                                             <div className="timeline-content flex-grow-1">
                                                                 <AppointmentCard
@@ -310,6 +406,18 @@ const TodaysSchedule = () => {
 
                                 {/* Quick Actions Sidebar */}
                                 <div className="col-lg-4">
+                                    {/* Current Time Card */}
+                                    <div className="card border-0 shadow-sm mb-4 bg-primary text-white">
+                                        <div className="card-body text-center">
+                                            <h5 className="fw-bold mb-1">
+                                                {getCurrentTimeFormatted()}
+                                            </h5>
+                                            <small className="opacity-75">
+                                                Current Time
+                                            </small>
+                                        </div>
+                                    </div>
+
                                     <div className="card border-0 shadow-sm mb-4">
                                         <div className="card-header bg-white border-bottom">
                                             <h6 className="fw-bold mb-0">
@@ -410,16 +518,33 @@ const TodaysSchedule = () => {
             <style>{`
                 .timeline-item {
                     position: relative;
+                    transition: all 0.3s ease;
                 }
+                
                 .timeline-item:not(:last-child)::before {
                     content: '';
                     position: absolute;
-                    left: 30px;
+                    left: 40px;
                     top: 60px;
                     bottom: -20px;
                     width: 2px;
                     background: #dee2e6;
                 }
+                
+                .current-appointment {
+                    background: linear-gradient(90deg, #fff3e0 0%, transparent 100%);
+                    border-left: 4px solid #fd7e14;
+                    border-radius: 0.375rem;
+                    padding: 0.5rem;
+                    margin: -0.5rem;
+                    margin-bottom: 0.5rem !important;
+                }
+                
+                .current-appointment::before {
+                    background: #fd7e14 !important;
+                    width: 3px !important;
+                }
+                
                 .tip-item {
                     padding: 0.5rem 0;
                     border-left: 3px solid transparent;
@@ -427,6 +552,7 @@ const TodaysSchedule = () => {
                     margin-left: -0.5rem;
                     transition: all 0.2s ease;
                 }
+                
                 .tip-item:hover {
                     border-left-color: #fd7e14;
                     background-color: #fff3e0;
