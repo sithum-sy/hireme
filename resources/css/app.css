@@ -1,15 +1,143 @@
-@import "bootstrap";
+/* @import "bootstrap";
 
-/* Update these variables at the top of app.css */
 :root {
     --primary-gradient: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
     --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
 }
 
-/* Update this as well */
 .bg-gradient-primary {
     background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+} */
+
+/* resources/css/app.css */
+@import "bootstrap";
+
+/* Import our modular CSS files */
+@import "components/buttons.css";
+@import "components/cards.css";
+@import "components/forms.css";
+@import "components/sections.css";
+@import "layouts/navbar.css";
+@import "layouts/footer.css";
+@import "layouts/public-layout.css";
+@import "pages/landing.css";
+
+/* CSS Variables - Single Source of Truth */
+:root {
+    --primary-gradient: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+    --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    --primary-color: #4a90e2;
+    --primary-hover: #357abd;
+    --primary-dark: #2d6aa3;
+    --success-color: #10b981;
+    --warning-color: #f59e0b;
+    --danger-color: #ef4444;
+    --info-color: #06b6d4;
+    --secondary-color: #6b7280;
+    --text-primary: #1a1a1a;
+    --text-secondary: #64748b;
+    --text-muted: #94a3b8;
+    --bg-light: #f8fafc;
+    --bg-white: #ffffff;
+    --border-color: #e2e8f0;
+    --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 10px 25px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.15);
+    --border-radius: 12px;
+    --border-radius-lg: 16px;
+    --border-radius-xl: 20px;
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+        Roboto, sans-serif;
 }
+
+/* Global Styles */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font-family);
+    line-height: 1.6;
+    color: var(--text-primary);
+    background: var(--bg-white);
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+}
+
+/* Override Bootstrap with our consistent colors */
+.btn-primary {
+    background: var(--primary-gradient) !important;
+    border-color: var(--primary-color) !important;
+    color: white !important;
+    transition: var(--transition) !important;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #357abd 0%, #2d6aa3 100%) !important;
+    border-color: var(--primary-hover) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3) !important;
+}
+
+.btn-secondary {
+    background: transparent !important;
+    color: var(--text-secondary) !important;
+    border-color: var(--border-color) !important;
+    transition: var(--transition) !important;
+}
+
+.btn-secondary:hover {
+    background: var(--bg-light) !important;
+    color: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+    transform: translateY(-1px);
+}
+
+.btn-outline-primary {
+    color: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+}
+
+.btn-outline-primary:hover {
+    background: var(--primary-gradient) !important;
+    border-color: var(--primary-color) !important;
+    color: white !important;
+}
+
+.text-primary {
+    color: var(--primary-color) !important;
+}
+
+.bg-primary {
+    background: var(--primary-gradient) !important;
+}
+
+.bg-gradient-primary {
+    background: var(--primary-gradient);
+}
+
+/* Utility Classes */
+.container-custom {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+}
+
+.full-width {
+    width: 100vw;
+    max-width: 100%;
+}
+
+.text-gradient {
+    background: linear-gradient(135deg, #ffd700, #ffed4a);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+///////////////////////////////////////////////////////////
 
 /* Dashboard Layout */
 .dashboard-wrapper {
@@ -89,7 +217,7 @@
 
 /* Main Content */
 .main-content {
-    margin-left: 280px;
+    /* margin-left: 280px; */
     margin-top: 56px;
     padding: 2rem;
     min-height: calc(100vh - 56px);
@@ -512,7 +640,7 @@
 /* Main Content */
 .main-content {
     flex: 1;
-    margin-left: 280px;
+    /* margin-left: 280px; */
     transition: all 0.3s ease;
     min-height: 100vh;
 }

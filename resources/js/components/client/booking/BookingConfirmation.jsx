@@ -140,13 +140,13 @@ const BookingConfirmation = ({
                 status: "pending_confirmation",
 
                 // Additional metadata
-                booking_source: "web_app",
+                booking_source: bookingData.booking_source || "web_app",
                 user_agent: navigator.userAgent,
                 timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
 
                 quote_id: bookingData.quote_id,
                 isFromQuote: bookingData.isFromQuote,
-                booking_source: bookingData.booking_source,
+                // booking_source: bookingData.booking_source,
             };
 
             // console.log("Submitting booking payload:", bookingPayload);

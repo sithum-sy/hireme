@@ -1,5 +1,6 @@
-// components/landing/StatsSection.jsx
+// components/landingPage/StatsSection.jsx
 import React, { useState, useEffect, useRef } from "react";
+import { Link } from "react-router-dom";
 
 const StatsSection = () => {
     const [inView, setInView] = useState(false);
@@ -8,31 +9,74 @@ const StatsSection = () => {
     const stats = [
         {
             icon: "fas fa-users",
-            number: 10000,
+            number: 25000,
             suffix: "+",
-            title: "Happy Clients",
-            description: "Satisfied customers",
+            title: "Happy Customers",
+            description: "Satisfied clients across Sri Lanka",
+            color: "primary",
         },
         {
             icon: "fas fa-user-tie",
-            number: 2500,
+            number: 10000,
             suffix: "+",
             title: "Verified Providers",
-            description: "Professional experts",
+            description: "Skilled professionals ready to serve",
+            color: "success",
         },
         {
             icon: "fas fa-calendar-check",
-            number: 50000,
+            number: 150000,
             suffix: "+",
-            title: "Bookings Completed",
-            description: "Successful appointments",
+            title: "Services Completed",
+            description: "Successfully finished appointments",
+            color: "info",
+        },
+        {
+            icon: "fas fa-map-marker-alt",
+            number: 25,
+            suffix: "+",
+            title: "Cities Covered",
+            description: "Expanding across Sri Lanka",
+            color: "warning",
         },
         {
             icon: "fas fa-star",
             number: 4.9,
             suffix: "/5",
             title: "Average Rating",
-            description: "Customer satisfaction",
+            description: "Exceptional customer satisfaction",
+            color: "danger",
+        },
+        {
+            icon: "fas fa-clock",
+            number: 15,
+            suffix: " min",
+            title: "Average Response",
+            description: "Quick connection to providers",
+            color: "secondary",
+        },
+    ];
+
+    const achievements = [
+        {
+            title: "Most Trusted Platform",
+            description:
+                "Recognized as Sri Lanka's most trusted service marketplace",
+            icon: "fas fa-trophy",
+            year: "2024",
+        },
+        {
+            title: "Best User Experience",
+            description: "Award for exceptional platform design and usability",
+            icon: "fas fa-award",
+            year: "2024",
+        },
+        {
+            title: "Innovation in Tech",
+            description:
+                "Leading innovation in location-based service matching",
+            icon: "fas fa-lightbulb",
+            year: "2023",
         },
     ];
 
@@ -70,7 +114,11 @@ const StatsSection = () => {
                         setCurrentNumber(number);
                         clearInterval(timer);
                     } else {
-                        setCurrentNumber(Math.floor(current * 10) / 10);
+                        setCurrentNumber(
+                            number % 1 === 0
+                                ? Math.floor(current)
+                                : parseFloat(current.toFixed(1))
+                        );
                     }
                 }, duration / steps);
 
@@ -89,159 +137,143 @@ const StatsSection = () => {
     };
 
     return (
-        <section className="stats-section" ref={sectionRef}>
-            <div className="container">
+        <section
+            className="section-modern stats-section gradient-section"
+            ref={sectionRef}
+        >
+            <div className="container-custom">
                 {/* Section Header */}
-                <div className="row">
-                    <div className="col-lg-8 mx-auto text-center section-header">
-                        <h2 className="section-title">Trusted by Thousands</h2>
-                        <p className="section-subtitle">
-                            Join our growing community of satisfied users
-                        </p>
+                <div className="section-header">
+                    <div className="section-badge">
+                        <span>📊 Our Impact</span>
                     </div>
+                    <h2 className="section-title" style={{ color: "white" }}>
+                        Trusted by{" "}
+                        <span className="text-gradient">Thousands</span> Across
+                        Sri Lanka
+                    </h2>
+                    <p
+                        className="section-subtitle"
+                        style={{ color: "rgba(255, 255, 255, 0.9)" }}
+                    >
+                        See how HireMe is transforming the service industry and
+                        creating opportunities for both clients and service
+                        providers.
+                    </p>
                 </div>
 
                 {/* Stats Grid */}
-                <div className="row g-4">
+                <div className="stats-grid">
                     {stats.map((stat, index) => (
-                        <div key={index} className="col-lg-3 col-md-6">
-                            <div className="stat-card">
-                                <div className="stat-icon">
-                                    <i className={stat.icon}></i>
-                                </div>
+                        <div key={index} className="stat-card">
+                            <div className={`stat-icon ${stat.color}`}>
+                                <i className={stat.icon}></i>
+                            </div>
 
-                                <div className="stat-content">
-                                    <div className="stat-number-container">
-                                        <AnimatedNumber
-                                            number={stat.number}
-                                            suffix={stat.suffix}
-                                            inView={inView}
-                                        />
-                                    </div>
-                                    <h3 className="stat-title">{stat.title}</h3>
-                                    <p className="stat-description">
-                                        {stat.description}
-                                    </p>
+                            <div className="stat-content">
+                                <div className="stat-number-container">
+                                    <AnimatedNumber
+                                        number={stat.number}
+                                        suffix={stat.suffix}
+                                        inView={inView}
+                                    />
                                 </div>
+                                <h3 className="stat-title">{stat.title}</h3>
+                                <p className="stat-description">
+                                    {stat.description}
+                                </p>
                             </div>
                         </div>
                     ))}
                 </div>
+
+                {/* Achievements Section */}
+                <div className="achievements-section">
+                    <div className="achievements-header">
+                        <h3
+                            style={{
+                                color: "white",
+                                fontSize: "2rem",
+                                fontWeight: 700,
+                                marginBottom: "1rem",
+                            }}
+                        >
+                            Our Achievements
+                        </h3>
+                        <p
+                            style={{
+                                color: "rgba(255, 255, 255, 0.9)",
+                                marginBottom: "3rem",
+                            }}
+                        >
+                            Recognition for our commitment to excellence and
+                            innovation
+                        </p>
+                    </div>
+
+                    <div className="achievements-grid">
+                        {achievements.map((achievement, index) => (
+                            <div key={index} className="achievement-card">
+                                <div className="achievement-icon">
+                                    <i className={achievement.icon}></i>
+                                </div>
+                                <div className="achievement-content">
+                                    <div className="achievement-year">
+                                        {achievement.year}
+                                    </div>
+                                    <h4 className="achievement-title">
+                                        {achievement.title}
+                                    </h4>
+                                    <p className="achievement-description">
+                                        {achievement.description}
+                                    </p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Call to Action */}
+                <div className="stats-cta">
+                    <h3
+                        style={{
+                            color: "white",
+                            fontSize: "1.75rem",
+                            fontWeight: 700,
+                            marginBottom: "1rem",
+                        }}
+                    >
+                        Ready to Be Part of Our Success Story?
+                    </h3>
+                    <p
+                        style={{
+                            color: "rgba(255, 255, 255, 0.9)",
+                            marginBottom: "2rem",
+                        }}
+                    >
+                        Join thousands of satisfied users who have found their
+                        perfect service match.
+                    </p>
+                    <div
+                        className="cta-actions"
+                        style={{
+                            display: "flex",
+                            justifyContent: "center",
+                            gap: "1rem",
+                            flexWrap: "wrap",
+                        }}
+                    >
+                        <Link to="/register" className="btn-primary-large">
+                            <i className="fas fa-user-plus"></i>
+                            <span>Join HireMe Today</span>
+                        </Link>
+                        <Link to="/about" className="btn-secondary-outline">
+                            <i className="fas fa-info-circle"></i>
+                            <span>Learn More</span>
+                        </Link>
+                    </div>
+                </div>
             </div>
-
-            <style jsx>{`
-                .stats-section {
-                    padding: 6rem 0;
-                    background: #f8fafc;
-                }
-
-                .section-header {
-                    margin-bottom: 4rem;
-                }
-
-                .section-title {
-                    font-size: 2.5rem;
-                    font-weight: 700;
-                    color: #1a202c;
-                    margin-bottom: 1rem;
-                }
-
-                .section-subtitle {
-                    font-size: 1.125rem;
-                    color: #6b7280;
-                    margin-bottom: 0;
-                }
-
-                .stat-card {
-                    background: white;
-                    border-radius: 16px;
-                    padding: 2rem;
-                    text-align: center;
-                    height: 100%;
-                    border: 1px solid #f1f5f9;
-                    transition: all 0.3s ease;
-                }
-
-                .stat-card:hover {
-                    transform: translateY(-4px);
-                    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
-                    border-color: #e2e8f0;
-                }
-
-                .stat-icon {
-                    width: 70px;
-                    height: 70px;
-                    background: linear-gradient(135deg, #4a90e2, #357abd);
-                    border-radius: 16px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    margin: 0 auto 1.5rem;
-                    font-size: 1.75rem;
-                    color: white;
-                }
-
-                .stat-content {
-                    text-align: center;
-                }
-
-                .stat-number-container {
-                    margin-bottom: 0.75rem;
-                }
-
-                .stat-number {
-                    font-size: 2.5rem;
-                    font-weight: 700;
-                    color: #1a202c;
-                    display: block;
-                }
-
-                .stat-title {
-                    font-size: 1.125rem;
-                    font-weight: 600;
-                    color: #1a202c;
-                    margin-bottom: 0.5rem;
-                }
-
-                .stat-description {
-                    color: #6b7280;
-                    font-size: 0.875rem;
-                    margin-bottom: 0;
-                }
-
-                /* Responsive Design */
-                @media (max-width: 991.98px) {
-                    .stats-section {
-                        padding: 4rem 0;
-                    }
-
-                    .section-title {
-                        font-size: 2rem;
-                    }
-
-                    .section-header {
-                        margin-bottom: 3rem;
-                    }
-                }
-
-                @media (max-width: 767.98px) {
-                    .stats-section {
-                        padding: 3rem 0;
-                    }
-
-                    .stat-card {
-                        padding: 1.5rem;
-                    }
-
-                    .stat-number {
-                        font-size: 2rem;
-                    }
-
-                    .section-title {
-                        font-size: 1.75rem;
-                    }
-                }
-            `}</style>
         </section>
     );
 };

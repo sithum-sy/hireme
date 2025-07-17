@@ -1,4 +1,3 @@
-// pages/Landing.jsx
 import React from "react";
 import PublicLayout from "../components/layouts/PublicLayout";
 import HeroSection from "../components/landingPage/HeroSection";
@@ -11,12 +10,14 @@ import CTASection from "../components/landingPage/CTASection";
 export default function Landing() {
     return (
         <PublicLayout navbarVariant="transparent" footerVariant="dark">
-            <HeroSection />
-            <ServicesSection />
-            <FeaturesSection />
-            <TestimonialsSection />
-            <StatsSection />
-            <CTASection />
+            <div className="landing-page full-width">
+                <HeroSection />
+                <ServicesSection />
+                <FeaturesSection />
+                <TestimonialsSection />
+                <StatsSection />
+                <CTASection />
+            </div>
         </PublicLayout>
     );
 }

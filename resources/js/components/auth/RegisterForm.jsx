@@ -369,7 +369,24 @@ const RegisterForm = () => {
                 <div className="form-header">
                     <div className="logo-section">
                         <div className="logo-icon">
-                            <i className="fas fa-handshake fa-2x"></i>
+                            <img
+                                src="/images/hireme-logo.png"
+                                alt="HireMe"
+                                className="logo-img"
+                                onError={(e) => {
+                                    e.target.style.display = "none";
+                                    e.target.nextSibling.style.display = "flex";
+                                }}
+                            />
+                            <div
+                                className="logo-fallback"
+                                style={{ display: "none" }}
+                            >
+                                <div className="logo-icon">
+                                    <i className="fas fa-handshake fa-2x"></i>
+                                </div>
+                                <span className="logo-text">HireMe</span>
+                            </div>
                         </div>
                     </div>
                     <div className="header-text">
@@ -445,8 +462,10 @@ const RegisterForm = () => {
                 }
 
                 .logo-icon {
-                    width: 50px;
-                    height: 50px;
+                     {
+                        /* width: 50px;
+                    height: 50px; */
+                    }
                     background: #4a90e2;
                     border-radius: 12px;
                     display: flex;
@@ -454,6 +473,12 @@ const RegisterForm = () => {
                     justify-content: center;
                     color: white;
                     box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+                }
+
+                .logo-img {
+                    height: 45px;
+                    width: auto;
+                    object-fit: contain;
                 }
 
                 .header-text {

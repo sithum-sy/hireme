@@ -1,0 +1,56 @@
+/* Modern Public Layout */
+.modern-public-layout {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    font-family: var(--font-family);
+}
+
+/* Main Content */
+.main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.main-content.with-navbar {
+    margin-top: 80px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1023px) {
+    .main-content.with-navbar {
+        margin-top: 70px;
+    }
+}
+
+@media (max-width: 768px) {
+    .main-content.with-navbar {
+        margin-top: 70px;
+    }
+}
+
+/* Focus states for accessibility */
+.nav-link:focus,
+.mobile-btn:focus {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+    .nav-link:hover,
+    .newsletter-btn {
+        background: #0000ff;
+        color: white;
+    }
+}
