@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
@@ -48,12 +48,15 @@ const Login = () => {
 
         if (!formData.email.trim()) {
             newErrors.email = "Email is required";
-        } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+        } // Check for valid email format - Regex pattern
+        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(formData.email)) {
             newErrors.email = "Please enter a valid email address";
         }
 
         if (!formData.password) {
             newErrors.password = "Password is required";
+        } else if (formData.password.length < 8) {
+            newErrors.password = "Password must be at least 8 characters";
         }
 
         return newErrors;
@@ -61,6 +64,7 @@ const Login = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setErrors({});
 
         const formErrors = validateForm();
         if (Object.keys(formErrors).length > 0) {
@@ -68,25 +72,42 @@ const Login = () => {
             return;
         }
 
-        const result = await login({
-            email: formData.email,
-            password: formData.password,
-        });
+        try {
+            const result = await login({
+                email: formData.email,
+                password: formData.password,
+            });
 
-        if (result.success) {
-            const from = location.state?.from?.pathname;
-            const defaultPath =
-                result.user.role === "client"
-                    ? "/client/dashboard"
-                    : result.user.role === "service_provider"
-                    ? "/provider/dashboard"
-                    : result.user.role === "admin"
-                    ? "/admin/dashboard"
-                    : "/staff/dashboard";
+            if (result.success) {
+                const from = location.state?.from?.pathname;
+                const defaultPath =
+                    result.user.role === "client"
+                        ? "/client/dashboard"
+                        : result.user.role === "service_provider"
+                        ? "/provider/dashboard"
+                        : result.user.role === "admin"
+                        ? "/admin/dashboard"
+                        : "/staff/dashboard";
 
-            navigate(from || defaultPath, { replace: true });
-        } else {
-            setErrors({ general: result.message });
+                navigate(from || defaultPath, { replace: true });
+            } else {
+                console.log("Login failed, setting errors...");
+                console.log("   - Message:", result.message);
+                console.log("   - Errors:", result.errors);
+                // Handle login failure
+                if (result.errors) {
+                    // Handle field-specific errors (422 validation errors)
+                    setErrors(result.errors);
+                } else {
+                    // Handle general errors (401, 403, etc.)
+                    setErrors({ general: result.message });
+                }
+            }
+        } catch (error) {
+            console.error("Unexpected error:", error);
+            setErrors({
+                general: "An unexpected error occurred. Please try again.",
+            });
         }
     };
 
@@ -174,12 +195,20 @@ const Login = () => {
                         {/* Card Body */}
                         <div className="card-body">
                             {/* General Error */}
-                            {errors.general && (
+                            {/* {errors.general && (
                                 <div className="alert alert-danger">
                                     <i className="fas fa-exclamation-triangle me-2"></i>
                                     {errors.general}
                                 </div>
-                            )}
+                            )} */}
+
+                            {typeof errors.general === "string" &&
+                                errors.general.length > 0 && (
+                                    <div className="alert alert-danger">
+                                        <i className="fas fa-exclamation-triangle me-2"></i>
+                                        {errors.general}
+                                    </div>
+                                )}
 
                             <form onSubmit={handleSubmit}>
                                 {/* Email Field */}

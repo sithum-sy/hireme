@@ -1,4 +1,3 @@
-// resources/js/context/AuthContext.jsx
 import React, { createContext, useContext, useState, useEffect } from "react";
 import axios from "axios";
 
@@ -104,11 +103,59 @@ export const AuthProvider = ({ children }) => {
                 localStorage.setItem("auth_token", userToken);
 
                 return { success: true, user: userData };
+            } else {
+                return {
+                    success: false,
+                    message: response.data.message || "Login failed",
+                };
             }
         } catch (error) {
             console.error("Login error:", error);
-            const message = error.response?.data?.message || "Login failed";
-            return { success: false, message };
+
+            // Handle different types of errors
+            if (error.response) {
+                // The request was made and the server responded with a status code
+                // that falls out of the range of 2xx
+                const status = error.response.status;
+                const data = error.response.data;
+
+                switch (status) {
+                    case 401:
+                        return {
+                            success: false,
+                            message:
+                                data.message || "Invalid email or password",
+                        };
+                    case 403:
+                        return {
+                            success: false,
+                            message: data.message || "Account is deactivated",
+                        };
+                    case 422:
+                        return {
+                            success: false,
+                            message: data.message || "Validation failed",
+                            errors: data.errors || {},
+                        };
+                    default:
+                        return {
+                            success: false,
+                            message: data.message || "Login failed",
+                        };
+                }
+            } else if (error.request) {
+                // The request was made but no response was received
+                return {
+                    success: false,
+                    message: "Network error. Please check your connection.",
+                };
+            } else {
+                // Something happened in setting up the request
+                return {
+                    success: false,
+                    message: "An unexpected error occurred",
+                };
+            }
         } finally {
             setLoading(false);
         }

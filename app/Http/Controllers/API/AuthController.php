@@ -140,7 +140,7 @@ class AuthController extends Controller
             if (!Auth::attempt($credentials)) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Invalid credentials'
+                    'message' => 'Invalid email or password. Please check your credentials and try again.'
                 ], 401);
             }
 
@@ -150,7 +150,7 @@ class AuthController extends Controller
             if (!$user->is_active) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Account is deactivated. Please contact support.'
+                    'message' => 'Your account has been deactivated. Please contact support for assistance.'
                 ], 403);
             }
 
