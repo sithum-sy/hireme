@@ -1,0 +1,317 @@
+.dashboard-card,
+.stats-card,
+.action-card {
+    background: var(--bg-white);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-sm);
+    transition: var(--transition);
+    overflow: hidden;
+}
+
+.dashboard-card:hover,
+.stats-card:hover,
+.action-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+/* Card Headers */
+.card-header,
+.dashboard-card-header {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-white);
+}
+
+.card-title,
+.dashboard-card-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.card-body,
+.dashboard-card-body {
+    padding: 1.5rem;
+}
+
+/* Stats Cards - Enhanced version of your existing cards */
+.stats-card {
+    padding: 1.5rem;
+    border-left: 4px solid var(--current-role-primary);
+    position: relative;
+    overflow: hidden;
+}
+
+.stats-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 60px;
+    background: linear-gradient(135deg, var(--current-role-light), transparent);
+    opacity: 0.5;
+}
+
+.stats-value {
+    font-size: 2.25rem;
+    font-weight: 700;
+    color: var(--current-role-primary);
+    margin-bottom: 0.5rem;
+    line-height: 1;
+}
+
+.stats-label {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.75rem;
+}
+
+.stats-change {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.stats-change.positive {
+    color: var(--success-color);
+}
+
+.stats-change.negative {
+    color: var(--danger-color);
+}
+
+.stats-change.neutral {
+    color: var(--text-muted);
+}
+
+/* Action Cards - Interactive cards for quick actions */
+.action-card {
+    padding: 1.5rem;
+    text-align: center;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    border: 2px solid transparent;
+}
+
+.action-card:hover {
+    border-color: var(--current-role-primary);
+    text-decoration: none;
+    color: inherit;
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+}
+
+.action-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: var(--border-radius);
+    background: var(--current-role-gradient);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem;
+    font-size: 1.5rem;
+    transition: var(--transition);
+}
+
+.action-card:hover .action-icon {
+    transform: scale(1.1);
+}
+
+.action-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.action-description {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    margin: 0;
+    line-height: 1.4;
+}
+
+/* Quick Action Cards with badges */
+.quick-action-card {
+    position: relative;
+}
+
+.quick-action-card .badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: var(--danger-color);
+    color: white;
+    font-size: 0.7rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 10px;
+    font-weight: 500;
+    min-width: 20px;
+    text-align: center;
+}
+
+/* Performance indicator cards */
+.performance-card {
+    padding: 1rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.performance-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.performance-icon.excellent {
+    background: rgba(34, 197, 94, 0.1);
+    color: var(--success-color);
+}
+
+.performance-icon.good {
+    background: rgba(251, 191, 36, 0.1);
+    color: var(--warning-color);
+}
+
+.performance-icon.poor {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--danger-color);
+}
+
+.performance-content h6 {
+    margin: 0 0 0.25rem 0;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.performance-content p {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+/* Grid Layouts */
+.dashboard-grid {
+    display: grid;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.dashboard-grid-1 {
+    grid-template-columns: 1fr;
+}
+
+.dashboard-grid-2 {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+.dashboard-grid-3 {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+}
+
+.dashboard-grid-4 {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+/* Info/Tip Cards */
+.info-card,
+.tip-card {
+    background: var(--current-role-light);
+    border: 1px solid rgba(var(--current-role-primary), 0.2);
+    border-radius: var(--border-radius);
+    padding: 1rem 1.5rem;
+    margin: 1rem 0;
+}
+
+.info-card h6,
+.tip-card h6 {
+    color: var(--current-role-primary);
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.info-card p,
+.tip-card p {
+    color: var(--text-secondary);
+    margin: 0;
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .dashboard-grid-2,
+    .dashboard-grid-3,
+    .dashboard-grid-4 {
+        grid-template-columns: 1fr;
+    }
+
+    .stats-value {
+        font-size: 1.875rem;
+    }
+
+    .action-icon {
+        width: 50px;
+        height: 50px;
+        font-size: 1.25rem;
+    }
+
+    .performance-card {
+        padding: 0.75rem 1rem;
+        gap: 0.75rem;
+    }
+
+    .performance-icon {
+        width: 36px;
+        height: 36px;
+    }
+}
+
+@media (max-width: 576px) {
+    .dashboard-card,
+    .stats-card,
+    .action-card {
+        margin-bottom: 1rem;
+    }
+
+    .card-header,
+    .dashboard-card-header {
+        padding: 1rem 1.25rem;
+    }
+
+    .card-body,
+    .dashboard-card-body {
+        padding: 1.25rem;
+    }
+
+    .stats-card {
+        padding: 1.25rem;
+    }
+
+    .stats-value {
+        font-size: 1.75rem;
+    }
+}

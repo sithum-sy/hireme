@@ -21,6 +21,10 @@
 @import "layouts/footer.css";
 @import "layouts/public-layout.css";
 @import "pages/landing.css";
+@import "layouts/dashboard-layout.css";
+@import "components/dashboard-cards.css";
+/* @import "components/dashboard-sidebar.css";
+@import "components/dashboard-navbar.css"; */
 
 /* CSS Variables - Single Source of Truth */
 :root {
@@ -49,6 +53,93 @@
     --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
         Roboto, sans-serif;
+
+    /* Role-Specific Colors  */
+
+    /* Admin - Deeper Blue (Authority & Control) */
+    --admin-primary: #2563eb;
+    --admin-secondary: #1d4ed8;
+    --admin-gradient: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    --admin-light: rgba(37, 99, 235, 0.1);
+    --admin-hover: #1e40af;
+
+    /* Staff - Elegant Purple (Support & Management) */
+    --staff-primary: #7c3aed;
+    --staff-secondary: #6d28d9;
+    --staff-gradient: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+    --staff-light: rgba(124, 58, 237, 0.1);
+    --staff-hover: #5b21b6;
+
+    /* Provider - Professional Teal (Growth & Business) */
+    --provider-primary: #0891b2;
+    --provider-secondary: #0e7490;
+    --provider-gradient: linear-gradient(135deg, #0891b2 0%, #0e7490 100%);
+    --provider-light: rgba(8, 145, 178, 0.1);
+    --provider-hover: #155e75;
+
+    /* Client - Original Blue (Trust & Reliability) - Keep your brand color */
+    --client-primary: #4a90e2;
+    --client-secondary: #357abd;
+    --client-gradient: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+    --client-light: rgba(74, 144, 226, 0.1);
+    --client-hover: #2d6aa3;
+
+    /* Current Role Variables (dynamically set by body class) */
+    --current-role-primary: var(--primary-color);
+    --current-role-secondary: var(--primary-hover);
+    --current-role-gradient: var(--primary-gradient);
+    --current-role-light: rgba(74, 144, 226, 0.1);
+    --current-role-hover: var(--primary-dark);
+
+    /* Dashboard Component Variables */
+    --card-background: var(--bg-white);
+    --card-border: var(--border-color);
+    --card-shadow: var(--shadow-sm);
+    --card-hover-shadow: var(--shadow-md);
+    --sidebar-background: #1e293b;
+    --sidebar-text: #e2e8f0;
+    --sidebar-text-muted: #94a3b8;
+    --sidebar-active: var(--current-role-light);
+    --sidebar-hover: rgba(255, 255, 255, 0.1);
+
+    /* Dashboard Layout Variables */
+    --dashboard-sidebar-width: 280px;
+    --dashboard-sidebar-collapsed: 80px;
+    --dashboard-header-height: 70px;
+    --dashboard-content-padding: 2rem;
+}
+
+/* Role-specific body classes */
+body.dashboard-admin {
+    --current-role-primary: var(--admin-primary);
+    --current-role-secondary: var(--admin-secondary);
+    --current-role-gradient: var(--admin-gradient);
+    --current-role-light: var(--admin-light);
+    --current-role-hover: var(--admin-hover);
+}
+
+body.dashboard-staff {
+    --current-role-primary: var(--staff-primary);
+    --current-role-secondary: var(--staff-secondary);
+    --current-role-gradient: var(--staff-gradient);
+    --current-role-light: var(--staff-light);
+    --current-role-hover: var(--staff-hover);
+}
+
+body.dashboard-provider {
+    --current-role-primary: var(--provider-primary);
+    --current-role-secondary: var(--provider-secondary);
+    --current-role-gradient: var(--provider-gradient);
+    --current-role-light: var(--provider-light);
+    --current-role-hover: var(--provider-hover);
+}
+
+body.dashboard-client {
+    --current-role-primary: var(--client-primary);
+    --current-role-secondary: var(--client-secondary);
+    --current-role-gradient: var(--client-gradient);
+    --current-role-light: var(--client-light);
+    --current-role-hover: var(--client-hover);
 }
 
 /* Global Styles */

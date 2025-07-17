@@ -370,7 +370,7 @@ export const ClientProvider = ({ children }) => {
     // ✅ Initialize data on mount (only once)
     useEffect(() => {
         if (user && user.role === "client" && !isInitialized.current) {
-            console.log("Initializing client data...");
+            // console.log("Initializing client data...");
             isInitialized.current = true;
 
             loadDashboardData();

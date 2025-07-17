@@ -197,6 +197,7 @@ class DashboardController extends Controller
     public function getOverviewReport(Request $request)
     {
         try {
+            // Default to last 30 days if not specified
             $days = $request->get('days', 30);
             $startDate = Carbon::now()->subDays($days);
 
@@ -259,7 +260,8 @@ class DashboardController extends Controller
     public function getActivitiesReport(Request $request)
     {
         try {
-            $limit = $request->get('limit', 50);
+            // Default limit for recent activities
+            $limit = $request->get('limit', 10);
 
             // Recent user activities (registrations, profile updates)
             $recentActivities = collect();
@@ -283,6 +285,7 @@ class DashboardController extends Controller
                     ];
                 });
 
+            // Merge recent registrations into activities
             $recentActivities = $recentActivities->merge($recentRegistrations);
 
             // Recent service creations
@@ -304,6 +307,7 @@ class DashboardController extends Controller
                     ];
                 });
 
+            // Merge recent services into activities
             $recentActivities = $recentActivities->merge($recentServices);
 
             // Sort by timestamp and take the most recent

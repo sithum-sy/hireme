@@ -1,0 +1,311 @@
+.dashboard-layout {
+    min-height: 100vh;
+    background: var(--bg-light);
+    font-family: var(--font-family);
+}
+
+.dashboard-container {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* Main Content Area - Consistent with your existing layouts */
+.main-content {
+    flex: 1;
+    transition: margin-left 0.3s ease;
+    min-height: calc(100vh - 60px);
+    background: var(--bg-light);
+}
+
+.content-container {
+    max-width: 100%;
+    padding: var(--dashboard-content-padding);
+}
+
+/* Page Headers - Matching your landing page style */
+.page-header {
+    margin-bottom: 2rem;
+    padding: 1.5rem 0;
+}
+
+.page-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+    background: var(--current-role-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.2;
+}
+
+.page-subtitle {
+    color: var(--text-secondary);
+    font-size: 1.125rem;
+    margin: 0;
+    font-weight: 400;
+}
+
+/* Breadcrumbs - Enhanced styling */
+.breadcrumb {
+    background: var(--bg-white);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-sm);
+    padding: 0.75rem 1.5rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid var(--border-color);
+}
+
+.breadcrumb-item {
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.breadcrumb-item + .breadcrumb-item::before {
+    content: "›";
+    color: var(--current-role-primary);
+    font-weight: 600;
+    font-size: 1.2em;
+}
+
+.breadcrumb-item.active {
+    color: var(--text-muted);
+}
+
+.breadcrumb-item a {
+    color: var(--current-role-primary);
+    text-decoration: none;
+    transition: var(--transition);
+}
+
+.breadcrumb-item a:hover {
+    color: var(--current-role-hover);
+    text-decoration: underline;
+}
+
+/* Alert/Notification Styling - Consistent with your forms */
+.alert {
+    border: none;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-sm);
+    padding: 1rem 1.5rem;
+    margin-bottom: 1.5rem;
+    font-size: 0.9rem;
+    animation: slideIn 0.3s ease-out;
+}
+
+.alert-success {
+    background: #f0f9f4;
+    color: #166534;
+    border-left: 4px solid var(--success-color);
+}
+
+.alert-danger {
+    background: #fef2f2;
+    color: #991b1b;
+    border-left: 4px solid var(--danger-color);
+}
+
+.alert-warning {
+    background: #fffbeb;
+    color: #92400e;
+    border-left: 4px solid var(--warning-color);
+}
+
+.alert-info {
+    background: #f0f9ff;
+    color: #1e40af;
+    border-left: 4px solid var(--info-color);
+}
+
+.alert-light {
+    background: var(--bg-white);
+    color: var(--text-secondary);
+    border-left: 4px solid var(--current-role-primary);
+}
+
+/* Footer - Consistent styling */
+.content-footer {
+    background: var(--bg-white);
+    margin: 2rem -2rem -2rem -2rem;
+    padding: 1.5rem 2rem;
+    border-top: 1px solid var(--border-color);
+    border-radius: var(--border-radius) var(--border-radius) 0 0;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+}
+
+/* Loading States */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(2px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.spinner-border {
+    width: 2rem;
+    height: 2rem;
+    border: 0.25em solid transparent;
+    border-top-color: var(--current-role-primary);
+    border-radius: 50%;
+    animation: spin 0.75s linear infinite;
+}
+
+.spinner-border-sm {
+    width: 1rem;
+    height: 1rem;
+    border-width: 0.125em;
+}
+
+/* Animations */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Role-specific welcome banners */
+.welcome-banner,
+.business-banner {
+    background: var(--current-role-gradient);
+    color: white;
+    border-radius: var(--border-radius-lg);
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow-md);
+    position: relative;
+    overflow: hidden;
+}
+
+.welcome-banner::before,
+.business-banner::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background: radial-gradient(
+        circle at 70% 20%,
+        rgba(255, 255, 255, 0.1) 0%,
+        transparent 50%
+    );
+    pointer-events: none;
+}
+
+.welcome-banner h3,
+.business-banner h3 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    position: relative;
+}
+
+.welcome-banner p,
+.business-banner p {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    margin-bottom: 1.5rem;
+    position: relative;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .content-container {
+        padding: 1.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .main-content {
+        margin-left: 0 !important;
+    }
+
+    .content-container {
+        padding: 1rem;
+    }
+
+    .page-title {
+        font-size: 1.5rem;
+    }
+
+    .page-subtitle {
+        font-size: 1rem;
+    }
+
+    .breadcrumb {
+        padding: 0.5rem 1rem;
+        font-size: 0.8rem;
+    }
+
+    .content-footer {
+        margin: 1.5rem -1rem -1rem -1rem;
+        padding: 1rem;
+    }
+
+    .welcome-banner,
+    .business-banner {
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .welcome-banner h3,
+    .business-banner h3 {
+        font-size: 1.5rem;
+    }
+
+    .welcome-banner p,
+    .business-banner p {
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .content-container {
+        padding: 0.75rem;
+    }
+
+    .page-title {
+        font-size: 1.25rem;
+    }
+
+    .alert {
+        padding: 0.75rem 1rem;
+        font-size: 0.85rem;
+    }
+
+    .breadcrumb {
+        padding: 0.5rem 0.75rem;
+    }
+}
+
+/* Dark mode support (if needed later) */
+@media (prefers-color-scheme: dark) {
+    .dashboard-layout {
+        --bg-light: #1f2937;
+        --bg-white: #374151;
+        --text-primary: #f9fafb;
+        --text-secondary: #d1d5db;
+        --border-color: #4b5563;
+    }
+}
