@@ -81,3 +81,9 @@ stripe trigger payment_intent.succeeded
 
 # Check your account info
 stripe config --list
+
+
+# To Use in Your React Frontend:
+const profilePicUrl = `${process.env.REACT_APP_API_URL}/storage/${user.profile_picture}`;
+
+<img src={profilePicUrl} alt="Profile" />

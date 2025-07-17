@@ -1,3 +1,4 @@
+// components/layouts/PublicLayout.jsx
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
@@ -43,9 +44,9 @@ const PublicLayout = ({
             scroll: "services",
         },
         {
-            label: "How It Works",
-            path: "/how-it-works",
-            scroll: "how-it-works",
+            label: "Features",
+            path: "/features",
+            scroll: "features",
         },
         {
             label: "About",
@@ -55,7 +56,7 @@ const PublicLayout = ({
         {
             label: "Reviews",
             path: "/reviews",
-            scroll: "reviews",
+            scroll: "testimonials",
         },
         {
             label: "Contact",
@@ -132,8 +133,7 @@ const PublicLayout = ({
 
     // Get navbar classes
     const getNavbarClasses = () => {
-        const baseClasses =
-            "navbar navbar-expand-lg fixed-top transition-navbar";
+        const baseClasses = "navbar navbar-expand-lg fixed-top";
 
         if (navbarVariant === "transparent") {
             return `${baseClasses} ${
@@ -148,26 +148,44 @@ const PublicLayout = ({
         return baseClasses;
     };
 
-    // Service categories for dropdown (if needed)
+    // Service categories for dropdown
     const serviceCategories = [
         {
-            name: "House Cleaning",
-            icon: "fas fa-home",
-            path: "/services/cleaning",
+            name: "Healthcare & Care",
+            icon: "fas fa-heart",
+            path: "/services/healthcare",
+            color: "danger",
         },
-        { name: "Plumbing", icon: "fas fa-wrench", path: "/services/plumbing" },
         {
-            name: "Electrical",
-            icon: "fas fa-bolt",
-            path: "/services/electrical",
-        },
-        { name: "Gardening", icon: "fas fa-leaf", path: "/services/gardening" },
-        {
-            name: "Tutoring",
+            name: "Education & Tutoring",
             icon: "fas fa-graduation-cap",
-            path: "/services/tutoring",
+            path: "/services/education",
+            color: "info",
         },
-        { name: "Tech Support", icon: "fas fa-laptop", path: "/services/tech" },
+        {
+            name: "Home Services",
+            icon: "fas fa-tools",
+            path: "/services/home",
+            color: "warning",
+        },
+        {
+            name: "Transportation",
+            icon: "fas fa-car",
+            path: "/services/transport",
+            color: "primary",
+        },
+        {
+            name: "Cleaning Services",
+            icon: "fas fa-broom",
+            path: "/services/cleaning",
+            color: "success",
+        },
+        {
+            name: "Tech Support",
+            icon: "fas fa-laptop-code",
+            path: "/services/tech",
+            color: "secondary",
+        },
     ];
 
     return (
@@ -176,26 +194,42 @@ const PublicLayout = ({
             {showNavbar && (
                 <nav className={getNavbarClasses()}>
                     <div className="container">
-                        <div className="d-flex justify-content-between align-items-center w-100">
+                        <div className="navbar-content">
                             {/* Brand */}
-                            <Link
-                                className="navbar-brand fw-bold d-flex align-items-center"
-                                to="/"
-                            >
-                                <div className="brand-icon me-2">
-                                    <i className="fas fa-handshake text-primary"></i>
+                            <Link className="navbar-brand" to="/">
+                                <div className="brand-container">
+                                    <img
+                                        src="/images/hireme-logo.png"
+                                        alt="HireMe Logo"
+                                        className="brand-logo"
+                                        onError={(e) => {
+                                            e.target.style.display = "none";
+                                            e.target.nextSibling.style.display =
+                                                "flex";
+                                        }}
+                                    />
+                                    <div
+                                        className="brand-fallback"
+                                        style={{ display: "none" }}
+                                    >
+                                        <div className="brand-icon">
+                                            <i className="fas fa-handshake"></i>
+                                        </div>
+                                        <span className="brand-text">
+                                            HireMe
+                                        </span>
+                                    </div>
                                 </div>
-                                <span className="brand-text">HireMe</span>
                             </Link>
 
                             {/* Desktop Navigation */}
-                            <div className="d-none d-lg-flex align-items-center">
+                            <div className="navbar-desktop">
                                 {/* Navigation Links */}
-                                <ul className="navbar-nav me-4">
+                                <ul className="navbar-nav">
                                     {publicNavItems.map((item, index) => (
                                         <li key={index} className="nav-item">
                                             <button
-                                                className="nav-link btn btn-link border-0 bg-transparent"
+                                                className="nav-link"
                                                 onClick={() =>
                                                     handleNavClick(item)
                                                 }
@@ -208,52 +242,65 @@ const PublicLayout = ({
                                     {/* Services Dropdown */}
                                     <li className="nav-item dropdown">
                                         <button
-                                            className="nav-link dropdown-toggle btn btn-link border-0 bg-transparent"
+                                            className="nav-link dropdown-toggle"
                                             data-bs-toggle="dropdown"
                                         >
                                             Browse Services
                                         </button>
-                                        <ul className="dropdown-menu dropdown-menu-end shadow-lg border-0">
-                                            <li>
-                                                <h6 className="dropdown-header">
-                                                    Popular Services
-                                                </h6>
-                                            </li>
-                                            {serviceCategories
-                                                .slice(0, 6)
-                                                .map((service, index) => (
-                                                    <li key={index}>
-                                                        <Link
-                                                            to={service.path}
-                                                            className="dropdown-item"
-                                                        >
-                                                            <i
-                                                                className={`${service.icon} me-2 text-primary`}
-                                                            ></i>
-                                                            {service.name}
-                                                        </Link>
-                                                    </li>
-                                                ))}
-                                            <li>
-                                                <hr className="dropdown-divider" />
-                                            </li>
-                                            <li>
-                                                <Link
-                                                    to="/services"
-                                                    className="dropdown-item fw-semibold"
-                                                >
-                                                    <i className="fas fa-th-large me-2 text-primary"></i>
-                                                    View All Services
-                                                </Link>
-                                            </li>
-                                        </ul>
+                                        <div className="dropdown-menu">
+                                            <div className="dropdown-header">
+                                                <h6>Popular Services</h6>
+                                                <p>Find the service you need</p>
+                                            </div>
+                                            <div className="dropdown-content">
+                                                <div className="services-grid">
+                                                    {serviceCategories.map(
+                                                        (service, index) => (
+                                                            <Link
+                                                                key={index}
+                                                                to={
+                                                                    service.path
+                                                                }
+                                                                className="service-dropdown-item"
+                                                            >
+                                                                <div
+                                                                    className={`service-icon bg-${service.color}`}
+                                                                >
+                                                                    <i
+                                                                        className={
+                                                                            service.icon
+                                                                        }
+                                                                    ></i>
+                                                                </div>
+                                                                <div className="service-info">
+                                                                    <span className="service-name">
+                                                                        {
+                                                                            service.name
+                                                                        }
+                                                                    </span>
+                                                                </div>
+                                                            </Link>
+                                                        )
+                                                    )}
+                                                </div>
+                                                <div className="dropdown-footer">
+                                                    <Link
+                                                        to="/services"
+                                                        className="view-all-btn"
+                                                    >
+                                                        <i className="fas fa-th-large me-2"></i>
+                                                        View All Services
+                                                    </Link>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </li>
                                 </ul>
 
                                 {/* Auth Buttons */}
-                                <div className="d-flex align-items-center gap-3">
+                                <div className="navbar-auth">
                                     {isAuthenticated ? (
-                                        <>
+                                        <div className="user-menu">
                                             <Link
                                                 to={getDashboardPath()}
                                                 className="btn btn-outline-primary"
@@ -261,28 +308,17 @@ const PublicLayout = ({
                                                 <i className="fas fa-tachometer-alt me-2"></i>
                                                 Dashboard
                                             </Link>
-                                            <div className="d-flex align-items-center">
+                                            <div className="user-profile">
                                                 {user?.profile_picture ? (
                                                     <img
                                                         src={
                                                             user.profile_picture
                                                         }
                                                         alt="Profile"
-                                                        className="rounded-circle"
-                                                        style={{
-                                                            width: "32px",
-                                                            height: "32px",
-                                                            objectFit: "cover",
-                                                        }}
+                                                        className="user-avatar"
                                                     />
                                                 ) : (
-                                                    <div
-                                                        className="bg-primary rounded-circle d-flex align-items-center justify-content-center text-white fw-bold"
-                                                        style={{
-                                                            width: "32px",
-                                                            height: "32px",
-                                                        }}
-                                                    >
+                                                    <div className="user-avatar-placeholder">
                                                         {user?.first_name?.charAt(
                                                             0
                                                         )}
@@ -291,27 +327,27 @@ const PublicLayout = ({
                                                         )}
                                                     </div>
                                                 )}
-                                                <span className="ms-2 small">
+                                                <span className="user-greeting">
                                                     Hi, {user?.first_name}!
                                                 </span>
                                             </div>
-                                        </>
+                                        </div>
                                     ) : (
-                                        <>
+                                        <div className="auth-buttons">
                                             <Link
                                                 to="/login"
-                                                className="nav-link px-3 py-2"
+                                                className="btn btn-ghost"
                                             >
                                                 Sign In
                                             </Link>
                                             <button
-                                                className="btn btn-primary px-4 py-2"
+                                                className="btn btn-primary"
                                                 onClick={handleGetStarted}
                                                 disabled={isLoading}
                                             >
                                                 {isLoading ? (
                                                     <>
-                                                        <span className="spinner-border spinner-border-sm me-2"></span>
+                                                        <span className="spinner"></span>
                                                         Loading...
                                                     </>
                                                 ) : (
@@ -321,76 +357,79 @@ const PublicLayout = ({
                                                     </>
                                                 )}
                                             </button>
-                                        </>
+                                        </div>
                                     )}
                                 </div>
                             </div>
 
                             {/* Mobile Menu Toggle */}
                             <button
-                                className={`navbar-toggler border-0 p-0 d-lg-none ${
+                                className={`navbar-toggler ${
                                     isMobileMenuOpen ? "active" : ""
                                 }`}
                                 type="button"
                                 onClick={toggleMobileMenu}
                             >
-                                <span className="navbar-toggler-icon-custom">
-                                    <span className="hamburger-line"></span>
-                                    <span className="hamburger-line"></span>
-                                    <span className="hamburger-line"></span>
-                                </span>
+                                <span></span>
+                                <span></span>
+                                <span></span>
                             </button>
                         </div>
                     </div>
 
                     {/* Mobile Menu */}
                     <div
-                        className={`mobile-menu d-lg-none ${
-                            isMobileMenuOpen ? "show" : ""
+                        className={`mobile-menu ${
+                            isMobileMenuOpen ? "active" : ""
                         }`}
                     >
                         <div className="mobile-menu-content">
                             {/* Mobile Navigation Links */}
                             <div className="mobile-nav-section">
-                                <h6 className="mobile-nav-title">Navigation</h6>
-                                {publicNavItems.map((item, index) => (
-                                    <button
-                                        key={index}
-                                        className="mobile-nav-link btn btn-link w-100 text-start"
-                                        onClick={() => handleNavClick(item)}
-                                    >
-                                        {item.label}
-                                    </button>
-                                ))}
+                                <h6 className="mobile-section-title">
+                                    Navigation
+                                </h6>
+                                <div className="mobile-nav-links">
+                                    {publicNavItems.map((item, index) => (
+                                        <button
+                                            key={index}
+                                            className="mobile-nav-link"
+                                            onClick={() => handleNavClick(item)}
+                                        >
+                                            {item.label}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
 
                             {/* Mobile Services */}
                             <div className="mobile-nav-section">
-                                <h6 className="mobile-nav-title">
+                                <h6 className="mobile-section-title">
                                     Popular Services
                                 </h6>
-                                <div className="row g-2">
+                                <div className="mobile-services-grid">
                                     {serviceCategories
                                         .slice(0, 4)
                                         .map((service, index) => (
-                                            <div key={index} className="col-6">
-                                                <Link
-                                                    to={service.path}
-                                                    className="mobile-service-card d-block text-decoration-none p-3 border rounded text-center"
-                                                    onClick={() =>
-                                                        setIsMobileMenuOpen(
-                                                            false
-                                                        )
-                                                    }
+                                            <Link
+                                                key={index}
+                                                to={service.path}
+                                                className="mobile-service-card"
+                                                onClick={() =>
+                                                    setIsMobileMenuOpen(false)
+                                                }
+                                            >
+                                                <div
+                                                    className={`service-icon bg-${service.color}`}
                                                 >
                                                     <i
-                                                        className={`${service.icon} fa-2x text-primary mb-2`}
+                                                        className={service.icon}
                                                     ></i>
-                                                    <div className="small fw-semibold">
-                                                        {service.name}
-                                                    </div>
-                                                </Link>
-                                            </div>
+                                                </div>
+                                                <span className="service-name">
+                                                    {service.name}
+                                                </span>
+                                            </Link>
                                         ))}
                                 </div>
                                 <Link
@@ -405,58 +444,47 @@ const PublicLayout = ({
                             {/* Mobile Auth */}
                             <div className="mobile-nav-section">
                                 {isAuthenticated ? (
-                                    <div className="d-flex align-items-center justify-content-between">
-                                        <div className="d-flex align-items-center">
+                                    <div className="mobile-user-info">
+                                        <div className="user-profile-mobile">
                                             {user?.profile_picture ? (
                                                 <img
                                                     src={user.profile_picture}
                                                     alt="Profile"
-                                                    className="rounded-circle me-3"
-                                                    style={{
-                                                        width: "40px",
-                                                        height: "40px",
-                                                        objectFit: "cover",
-                                                    }}
+                                                    className="user-avatar-mobile"
                                                 />
                                             ) : (
-                                                <div
-                                                    className="bg-primary rounded-circle me-3 d-flex align-items-center justify-content-center text-white fw-bold"
-                                                    style={{
-                                                        width: "40px",
-                                                        height: "40px",
-                                                    }}
-                                                >
+                                                <div className="user-avatar-placeholder-mobile">
                                                     {user?.first_name?.charAt(
                                                         0
                                                     )}
                                                     {user?.last_name?.charAt(0)}
                                                 </div>
                                             )}
-                                            <div>
-                                                <div className="fw-semibold">
+                                            <div className="user-info-mobile">
+                                                <div className="user-name">
                                                     {user?.first_name}{" "}
                                                     {user?.last_name}
                                                 </div>
-                                                <small className="text-muted text-capitalize">
+                                                <div className="user-role">
                                                     {user?.role}
-                                                </small>
+                                                </div>
                                             </div>
                                         </div>
                                         <Link
                                             to={getDashboardPath()}
-                                            className="btn btn-primary btn-sm"
+                                            className="btn btn-primary w-100"
                                             onClick={() =>
                                                 setIsMobileMenuOpen(false)
                                             }
                                         >
-                                            Dashboard
+                                            Go to Dashboard
                                         </Link>
                                     </div>
                                 ) : (
-                                    <div className="d-grid gap-2">
+                                    <div className="mobile-auth-buttons">
                                         <Link
                                             to="/login"
-                                            className="btn btn-outline-primary"
+                                            className="btn btn-outline-primary w-100"
                                             onClick={() =>
                                                 setIsMobileMenuOpen(false)
                                             }
@@ -464,7 +492,7 @@ const PublicLayout = ({
                                             Sign In
                                         </Link>
                                         <button
-                                            className="btn btn-primary"
+                                            className="btn btn-primary w-100"
                                             onClick={() => {
                                                 setIsMobileMenuOpen(false);
                                                 handleGetStarted();
@@ -498,54 +526,41 @@ const PublicLayout = ({
 
             {/* Footer */}
             {showFooter && (
-                <footer
-                    className={`footer ${
-                        footerVariant === "dark"
-                            ? "bg-dark text-light"
-                            : footerVariant === "light"
-                            ? "bg-light"
-                            : "bg-primary text-white"
-                    }`}
-                >
+                <footer className="footer">
                     {/* Newsletter Section */}
-                    <div className="newsletter-section bg-primary py-5">
+                    <div className="newsletter-section">
                         <div className="container">
                             <div className="row align-items-center">
                                 <div className="col-lg-6 mb-4 mb-lg-0">
-                                    <h3 className="fw-bold text-white mb-2">
-                                        Stay Connected
-                                    </h3>
-                                    <p className="text-light opacity-90 mb-0">
-                                        Get updates on new services, special
-                                        offers, and platform news.
-                                    </p>
+                                    <div className="newsletter-content">
+                                        <h3 className="newsletter-title">
+                                            Stay in the Loop
+                                        </h3>
+                                        <p className="newsletter-subtitle">
+                                            Get the latest updates on new
+                                            services, features, and special
+                                            offers.
+                                        </p>
+                                    </div>
                                 </div>
                                 <div className="col-lg-6">
                                     <form className="newsletter-form">
-                                        <div className="input-group">
+                                        <div className="newsletter-input-group">
                                             <input
                                                 type="email"
-                                                className="form-control form-control-lg border-0"
+                                                className="newsletter-input"
                                                 placeholder="Enter your email address"
-                                                style={{
-                                                    borderRadius:
-                                                        "50px 0 0 50px",
-                                                }}
                                             />
                                             <button
                                                 type="submit"
-                                                className="btn btn-light btn-lg px-4 fw-semibold"
-                                                style={{
-                                                    borderRadius:
-                                                        "0 50px 50px 0",
-                                                }}
+                                                className="newsletter-btn"
                                             >
                                                 Subscribe
                                             </button>
                                         </div>
-                                        <small className="text-light opacity-75 mt-2 d-block">
+                                        <small className="newsletter-privacy">
                                             We respect your privacy. Unsubscribe
-                                            at any time.
+                                            anytime.
                                         </small>
                                     </form>
                                 </div>
@@ -554,259 +569,245 @@ const PublicLayout = ({
                     </div>
 
                     {/* Main Footer Content */}
-                    <div className="footer-content py-5">
+                    <div className="footer-content">
                         <div className="container">
                             <div className="row g-4">
                                 {/* Brand Section */}
                                 <div className="col-lg-4 col-md-6">
-                                    <Link
-                                        to="/"
-                                        className="text-decoration-none d-flex align-items-center mb-3"
-                                    >
-                                        <div className="brand-icon me-2">
-                                            <i className="fas fa-handshake text-primary fa-2x"></i>
-                                        </div>
-                                        <span className="h3 fw-bold text-white mb-0">
-                                            HireMe
-                                        </span>
-                                    </Link>
-                                    <p className="text-light opacity-75 mb-4">
-                                        Connecting clients with trusted
-                                        professionals across various industries.
-                                        Your one-stop platform for reliable,
-                                        verified service providers.
-                                    </p>
+                                    <div className="footer-brand">
+                                        <Link
+                                            to="/"
+                                            className="footer-brand-link"
+                                        >
+                                            <img
+                                                src="/images/logo-white.png"
+                                                alt="HireMe Logo"
+                                                className="footer-logo"
+                                                onError={(e) => {
+                                                    e.target.style.display =
+                                                        "none";
+                                                    e.target.nextSibling.style.display =
+                                                        "flex";
+                                                }}
+                                            />
+                                            <div
+                                                className="footer-brand-fallback"
+                                                style={{ display: "none" }}
+                                            >
+                                                <div className="footer-brand-icon">
+                                                    <i className="fas fa-handshake"></i>
+                                                </div>
+                                                <span className="footer-brand-text">
+                                                    HireMe
+                                                </span>
+                                            </div>
+                                        </Link>
+                                        <p className="footer-brand-description">
+                                            Connecting clients with trusted
+                                            professionals across various
+                                            industries. Your one-stop platform
+                                            for reliable, verified service
+                                            providers.
+                                        </p>
 
-                                    {/* Quick Links */}
-                                    <div className="d-flex gap-3">
-                                        <Link
-                                            to="/about"
-                                            className="text-light opacity-75 text-decoration-none small"
-                                        >
-                                            About
-                                        </Link>
-                                        <Link
-                                            to="/contact"
-                                            className="text-light opacity-75 text-decoration-none small"
-                                        >
-                                            Contact
-                                        </Link>
-                                        <Link
-                                            to="/careers"
-                                            className="text-light opacity-75 text-decoration-none small"
-                                        >
-                                            Careers
-                                        </Link>
-                                        <Link
-                                            to="/blog"
-                                            className="text-light opacity-75 text-decoration-none small"
-                                        >
-                                            Blog
-                                        </Link>
+                                        {/* Social Links */}
+                                        <div className="social-links">
+                                            <h6 className="social-title">
+                                                Follow Us
+                                            </h6>
+                                            <div className="social-icons">
+                                                {[
+                                                    {
+                                                        icon: "fab fa-facebook-f",
+                                                        href: "#",
+                                                        color: "#1877f2",
+                                                    },
+                                                    {
+                                                        icon: "fab fa-twitter",
+                                                        href: "#",
+                                                        color: "#1da1f2",
+                                                    },
+                                                    {
+                                                        icon: "fab fa-instagram",
+                                                        href: "#",
+                                                        color: "#e4405f",
+                                                    },
+                                                    {
+                                                        icon: "fab fa-linkedin-in",
+                                                        href: "#",
+                                                        color: "#0077b5",
+                                                    },
+                                                ].map((social, index) => (
+                                                    <a
+                                                        key={index}
+                                                        href={social.href}
+                                                        className="social-link"
+                                                        style={{
+                                                            "--social-color":
+                                                                social.color,
+                                                        }}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                    >
+                                                        <i
+                                                            className={
+                                                                social.icon
+                                                            }
+                                                        ></i>
+                                                    </a>
+                                                ))}
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 
                                 {/* For Clients */}
                                 <div className="col-lg-2 col-md-6">
-                                    <h6 className="footer-title fw-bold text-white mb-3">
-                                        For Clients
-                                    </h6>
-                                    <ul className="footer-links list-unstyled">
-                                        <li className="mb-2">
-                                            <Link
-                                                to="/services"
-                                                className="footer-link text-light opacity-75 text-decoration-none"
-                                            >
-                                                Browse Services
-                                            </Link>
-                                        </li>
-                                        <li className="mb-2">
-                                            <Link
-                                                to="/how-it-works"
-                                                className="footer-link text-light opacity-75 text-decoration-none"
-                                            >
-                                                How It Works
-                                            </Link>
-                                        </li>
-                                        <li className="mb-2">
-                                            <Link
-                                                to="/register?role=client"
-                                                className="footer-link text-light opacity-75 text-decoration-none"
-                                            >
-                                                Sign Up as Client
-                                            </Link>
-                                        </li>
-                                        <li className="mb-2">
-                                            <Link
-                                                to="/help"
-                                                className="footer-link text-light opacity-75 text-decoration-none"
-                                            >
-                                                Help Center
-                                            </Link>
-                                        </li>
-                                    </ul>
+                                    <div className="footer-section">
+                                        <h6 className="footer-section-title">
+                                            For Clients
+                                        </h6>
+                                        <ul className="footer-links">
+                                            <li>
+                                                <Link to="/services">
+                                                    Browse Services
+                                                </Link>
+                                            </li>
+                                            <li>
+                                                <Link to="/#features">
+                                                    How It Works
+                                                </Link>
+                                            </li>
+                                            <li>
+                                                <Link to="/register?role=client">
+                                                    Sign Up as Client
+                                                </Link>
+                                            </li>
+                                            <li>
+                                                <Link to="/help">
+                                                    Help Center
+                                                </Link>
+                                            </li>
+                                            <li>
+                                                <Link to="/safety">
+                                                    Safety Guidelines
+                                                </Link>
+                                            </li>
+                                        </ul>
+                                    </div>
                                 </div>
 
                                 {/* For Providers */}
                                 <div className="col-lg-2 col-md-6">
-                                    <h6 className="footer-title fw-bold text-white mb-3">
-                                        For Providers
-                                    </h6>
-                                    <ul className="footer-links list-unstyled">
-                                        <li className="mb-2">
-                                            <Link
-                                                to="/register?role=service_provider"
-                                                className="footer-link text-light opacity-75 text-decoration-none"
-                                            >
-                                                Become a Provider
-                                            </Link>
-                                        </li>
-                                        <li className="mb-2">
-                                            <Link
-                                                to="/provider-resources"
-                                                className="footer-link text-light opacity-75 text-decoration-none"
-                                            >
-                                                Resources
-                                            </Link>
-                                        </li>
-                                        <li className="mb-2">
-                                            <Link
-                                                to="/success-stories"
-                                                className="footer-link text-light opacity-75 text-decoration-none"
-                                            >
-                                                Success Stories
-                                            </Link>
-                                        </li>
-                                        <li className="mb-2">
-                                            <Link
-                                                to="/provider-support"
-                                                className="footer-link text-light opacity-75 text-decoration-none"
-                                            >
-                                                Support
-                                            </Link>
-                                        </li>
-                                    </ul>
+                                    <div className="footer-section">
+                                        <h6 className="footer-section-title">
+                                            For Providers
+                                        </h6>
+                                        <ul className="footer-links">
+                                            <li>
+                                                <Link to="/register?role=service_provider">
+                                                    Become a Provider
+                                                </Link>
+                                            </li>
+                                            <li>
+                                                <Link to="/provider-resources">
+                                                    Resources
+                                                </Link>
+                                            </li>
+                                            <li>
+                                                <Link to="/success-stories">
+                                                    Success Stories
+                                                </Link>
+                                            </li>
+                                            <li>
+                                                <Link to="/provider-support">
+                                                    Support
+                                                </Link>
+                                            </li>
+                                            <li>
+                                                <Link to="/pricing">
+                                                    Pricing
+                                                </Link>
+                                            </li>
+                                        </ul>
+                                    </div>
                                 </div>
 
                                 {/* Company */}
                                 <div className="col-lg-2 col-md-6">
-                                    <h6 className="footer-title fw-bold text-white mb-3">
-                                        Company
-                                    </h6>
-                                    <ul className="footer-links list-unstyled">
-                                        <li className="mb-2">
-                                            <Link
-                                                to="/about"
-                                                className="footer-link text-light opacity-75 text-decoration-none"
-                                            >
-                                                About Us
-                                            </Link>
-                                        </li>
-                                        <li className="mb-2">
-                                            <Link
-                                                to="/careers"
-                                                className="footer-link text-light opacity-75 text-decoration-none"
-                                            >
-                                                Careers
-                                            </Link>
-                                        </li>
-                                        <li className="mb-2">
-                                            <Link
-                                                to="/press"
-                                                className="footer-link text-light opacity-75 text-decoration-none"
-                                            >
-                                                Press
-                                            </Link>
-                                        </li>
-                                        <li className="mb-2">
-                                            <Link
-                                                to="/investors"
-                                                className="footer-link text-light opacity-75 text-decoration-none"
-                                            >
-                                                Investors
-                                            </Link>
-                                        </li>
-                                    </ul>
+                                    <div className="footer-section">
+                                        <h6 className="footer-section-title">
+                                            Company
+                                        </h6>
+                                        <ul className="footer-links">
+                                            <li>
+                                                <Link to="/about">
+                                                    About Us
+                                                </Link>
+                                            </li>
+                                            <li>
+                                                <Link to="/careers">
+                                                    Careers
+                                                </Link>
+                                            </li>
+                                            <li>
+                                                <Link to="/press">Press</Link>
+                                            </li>
+                                            <li>
+                                                <Link to="/blog">Blog</Link>
+                                            </li>
+                                            <li>
+                                                <Link to="/contact">
+                                                    Contact
+                                                </Link>
+                                            </li>
+                                        </ul>
+                                    </div>
                                 </div>
 
-                                {/* Connect */}
+                                {/* Connect & Download */}
                                 <div className="col-lg-2 col-md-6">
-                                    <h6 className="footer-title fw-bold text-white mb-3">
-                                        Connect
-                                    </h6>
-                                    <div className="social-links mb-3">
-                                        <div className="d-flex gap-2">
+                                    <div className="footer-section">
+                                        <h6 className="footer-section-title">
+                                            Get the App
+                                        </h6>
+                                        <div className="app-downloads">
                                             <a
                                                 href="#"
-                                                className="social-link bg-white bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center text-decoration-none"
-                                                style={{
-                                                    width: "40px",
-                                                    height: "40px",
-                                                }}
+                                                className="app-download-btn"
                                             >
-                                                <i className="fab fa-facebook-f text-white"></i>
+                                                <img
+                                                    src="/images/app-store.svg"
+                                                    alt="Download on App Store"
+                                                />
                                             </a>
                                             <a
                                                 href="#"
-                                                className="social-link bg-white bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center text-decoration-none"
-                                                style={{
-                                                    width: "40px",
-                                                    height: "40px",
-                                                }}
+                                                className="app-download-btn"
                                             >
-                                                <i className="fab fa-twitter text-white"></i>
-                                            </a>
-                                            <a
-                                                href="#"
-                                                className="social-link bg-white bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center text-decoration-none"
-                                                style={{
-                                                    width: "40px",
-                                                    height: "40px",
-                                                }}
-                                            >
-                                                <i className="fab fa-instagram text-white"></i>
-                                            </a>
-                                            <a
-                                                href="#"
-                                                className="social-link bg-white bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center text-decoration-none"
-                                                style={{
-                                                    width: "40px",
-                                                    height: "40px",
-                                                }}
-                                            >
-                                                <i className="fab fa-linkedin-in text-white"></i>
+                                                <img
+                                                    src="/images/google-play.svg"
+                                                    alt="Get it on Google Play"
+                                                />
                                             </a>
                                         </div>
-                                    </div>
 
-                                    {/* App Downloads */}
-                                    <div className="app-downloads">
-                                        <small className="text-light opacity-75 d-block mb-2">
-                                            Get the App
-                                        </small>
-                                        <div className="d-flex flex-column gap-1">
-                                            <a
-                                                href="#"
-                                                className="app-download-link text-decoration-none"
-                                            >
-                                                <img
-                                                    src="/images/app-store.png"
-                                                    alt="Download on App Store"
-                                                    className="img-fluid"
-                                                    style={{ height: "30px" }}
-                                                />
-                                            </a>
-                                            <a
-                                                href="#"
-                                                className="app-download-link text-decoration-none"
-                                            >
-                                                <img
-                                                    src="/images/google-play.png"
-                                                    alt="Get it on Google Play"
-                                                    className="img-fluid"
-                                                    style={{ height: "30px" }}
-                                                />
-                                            </a>
+                                        <div className="trust-badges">
+                                            <h6 className="trust-title">
+                                                Security & Trust
+                                            </h6>
+                                            <div className="trust-items">
+                                                <div className="trust-item">
+                                                    <i className="fas fa-shield-alt"></i>
+                                                    <span>SSL Secured</span>
+                                                </div>
+                                                <div className="trust-item">
+                                                    <i className="fas fa-check-circle"></i>
+                                                    <span>
+                                                        Verified Platform
+                                                    </span>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -815,43 +816,23 @@ const PublicLayout = ({
                     </div>
 
                     {/* Footer Bottom */}
-                    <div className="footer-bottom bg-black py-3">
+                    <div className="footer-bottom">
                         <div className="container">
-                            <div className="row align-items-center">
-                                <div className="col-md-6 mb-2 mb-md-0">
-                                    <p className="text-light opacity-50 mb-0 small">
+                            <div className="footer-bottom-content">
+                                <div className="footer-copyright">
+                                    <p>
                                         © {new Date().getFullYear()} HireMe. All
                                         rights reserved. Made with ❤️ for
                                         connecting people.
                                     </p>
                                 </div>
-                                <div className="col-md-6">
-                                    <div className="d-flex justify-content-md-end gap-3 flex-wrap">
-                                        <Link
-                                            to="/terms"
-                                            className="text-light opacity-50 text-decoration-none small"
-                                        >
-                                            Terms of Service
-                                        </Link>
-                                        <Link
-                                            to="/privacy"
-                                            className="text-light opacity-50 text-decoration-none small"
-                                        >
-                                            Privacy Policy
-                                        </Link>
-                                        <Link
-                                            to="/cookies"
-                                            className="text-light opacity-50 text-decoration-none small"
-                                        >
-                                            Cookie Policy
-                                        </Link>
-                                        <Link
-                                            to="/accessibility"
-                                            className="text-light opacity-50 text-decoration-none small"
-                                        >
-                                            Accessibility
-                                        </Link>
-                                    </div>
+                                <div className="footer-legal">
+                                    <Link to="/terms">Terms of Service</Link>
+                                    <Link to="/privacy">Privacy Policy</Link>
+                                    <Link to="/cookies">Cookie Policy</Link>
+                                    <Link to="/accessibility">
+                                        Accessibility
+                                    </Link>
                                 </div>
                             </div>
                         </div>
@@ -859,86 +840,467 @@ const PublicLayout = ({
                 </footer>
             )}
 
-            {/* Custom Styles */}
-            <style>{`
+            <style jsx>{`
                 .public-layout {
                     min-height: 100vh;
+                    display: flex;
+                    flex-direction: column;
                 }
 
                 /* Navbar Styles */
                 .navbar {
-                    transition: all 0.3s ease;
-                    z-index: 1030;
+                    padding: 0;
+                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                    z-index: 1050;
                 }
 
                 .navbar-transparent {
                     background: rgba(255, 255, 255, 0.95) !important;
-                    backdrop-filter: blur(10px);
+                    backdrop-filter: blur(20px);
+                    -webkit-backdrop-filter: blur(20px);
+                    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
                 }
 
                 .navbar-scrolled {
                     background: rgba(255, 255, 255, 0.98) !important;
-                    backdrop-filter: blur(15px);
-                    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+                    backdrop-filter: blur(25px);
+                    -webkit-backdrop-filter: blur(25px);
+                    box-shadow: 0 2px 40px rgba(0, 0, 0, 0.1);
+                    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
                 }
 
-                .brand-icon {
+                .navbar-content {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    padding: 1rem 0;
+                    width: 100%;
+                }
+
+                .navbar-scrolled .navbar-content {
+                    padding: 0.75rem 0;
+                }
+
+                /* Brand Styles */
+                .navbar-brand {
+                    text-decoration: none;
                     transition: transform 0.3s ease;
                 }
 
-                .brand-icon:hover {
-                    transform: scale(1.1);
+                .navbar-brand:hover {
+                    transform: scale(1.02);
                 }
 
-                /* Mobile Menu */
-                .navbar-toggler-icon-custom {
+                .brand-container {
+                    display: flex;
+                    align-items: center;
+                }
+
+                .brand-logo {
+                    height: 50px;
+                    width: auto;
+                    object-fit: contain;
+                }
+
+                .brand-fallback {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.75rem;
+                }
+
+                .brand-icon {
+                    width: 40px;
+                    height: 40px;
+                    background: linear-gradient(135deg, #4a90e2, #357abd);
+                    border-radius: 10px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: white;
+                    font-size: 1.2rem;
+                }
+
+                .brand-text {
+                    font-size: 1.5rem;
+                    font-weight: 700;
+                    color: #1a202c;
+                    letter-spacing: -0.02em;
+                }
+
+                /* Desktop Navigation */
+                .navbar-desktop {
+                    display: none;
+                    align-items: center;
+                    gap: 2rem;
+                }
+
+                @media (min-width: 992px) {
+                    .navbar-desktop {
+                        display: flex;
+                    }
+                }
+
+                .navbar-nav {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                    margin: 0;
+                    padding: 0;
+                    list-style: none;
+                }
+
+                .nav-item {
+                    position: relative;
+                }
+
+                .nav-link {
+                    background: none;
+                    border: none;
+                    color: #374151;
+                    font-weight: 500;
+                    font-size: 0.95rem;
+                    padding: 0.75rem 1rem;
+                    border-radius: 8px;
+                    transition: all 0.2s ease;
+                    cursor: pointer;
+                    position: relative;
+                    text-decoration: none;
+                }
+
+                .nav-link:hover {
+                    color: #4a90e2;
+                    background: rgba(74, 144, 226, 0.05);
+                }
+
+                .nav-link::after {
+                    content: "";
+                    position: absolute;
+                    bottom: 0;
+                    left: 50%;
+                    width: 0;
+                    height: 2px;
+                    background: #4a90e2;
+                    transition: all 0.3s ease;
+                    transform: translateX(-50%);
+                }
+
+                .nav-link:hover::after {
+                    width: 70%;
+                }
+
+                /* Dropdown Styles */
+                .dropdown {
+                    position: relative;
+                }
+
+                .dropdown-menu {
+                    position: absolute;
+                    top: 100%;
+                    right: 0;
+                    background: white;
+                    border: none;
+                    border-radius: 16px;
+                    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+                    padding: 0;
+                    margin-top: 0.5rem;
+                    min-width: 480px;
+                    z-index: 1000;
+                    overflow: hidden;
+                }
+
+                .dropdown-header {
+                    padding: 1.5rem;
+                    background: #f8fafc;
+                    border-bottom: 1px solid #f1f5f9;
+                }
+
+                .dropdown-header h6 {
+                    font-size: 1.125rem;
+                    font-weight: 600;
+                    color: #1a202c;
+                    margin-bottom: 0.25rem;
+                }
+
+                .dropdown-header p {
+                    color: #6b7280;
+                    font-size: 0.875rem;
+                    margin: 0;
+                }
+
+                .dropdown-content {
+                    padding: 1.5rem;
+                }
+
+                .services-grid {
+                    display: grid;
+                    grid-template-columns: repeat(2, 1fr);
+                    gap: 0.75rem;
+                    margin-bottom: 1rem;
+                }
+
+                .service-dropdown-item {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.75rem;
+                    padding: 0.75rem;
+                    border-radius: 8px;
+                    text-decoration: none;
+                    color: #374151;
+                    transition: all 0.2s ease;
+                }
+
+                .service-dropdown-item:hover {
+                    background: #f8fafc;
+                    color: #4a90e2;
+                    transform: translateX(4px);
+                }
+
+                .service-icon {
+                    width: 36px;
+                    height: 36px;
+                    border-radius: 8px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: white;
+                    font-size: 0.875rem;
+                    flex-shrink: 0;
+                }
+
+                .service-icon.bg-danger {
+                    background: linear-gradient(135deg, #ef4444, #dc2626);
+                }
+
+                .service-icon.bg-info {
+                    background: linear-gradient(135deg, #06b6d4, #0891b2);
+                }
+
+                .service-icon.bg-warning {
+                    background: linear-gradient(135deg, #f59e0b, #d97706);
+                }
+
+                .service-icon.bg-primary {
+                    background: linear-gradient(135deg, #4a90e2, #357abd);
+                }
+
+                .service-icon.bg-success {
+                    background: linear-gradient(135deg, #10b981, #059669);
+                }
+
+                .service-icon.bg-secondary {
+                    background: linear-gradient(135deg, #6b7280, #4b5563);
+                }
+
+                .service-name {
+                    font-weight: 500;
+                    font-size: 0.875rem;
+                }
+
+                .dropdown-footer {
+                    padding-top: 1rem;
+                    border-top: 1px solid #f1f5f9;
+                }
+
+                .view-all-btn {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    width: 100%;
+                    padding: 0.75rem;
+                    background: #4a90e2;
+                    color: white;
+                    text-decoration: none;
+                    border-radius: 8px;
+                    font-weight: 500;
+                    transition: all 0.2s ease;
+                }
+
+                .view-all-btn:hover {
+                    background: #357abd;
+                    color: white;
+                    transform: translateY(-1px);
+                }
+
+                /* Auth Buttons */
+                .navbar-auth {
+                    display: flex;
+                    align-items: center;
+                    gap: 1rem;
+                }
+
+                .user-menu {
+                    display: flex;
+                    align-items: center;
+                    gap: 1rem;
+                }
+
+                .user-profile {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                }
+
+                .user-avatar,
+                .user-avatar-placeholder {
+                    width: 32px;
+                    height: 32px;
+                    border-radius: 50%;
+                    object-fit: cover;
+                }
+
+                .user-avatar-placeholder {
+                    background: linear-gradient(135deg, #4a90e2, #357abd);
+                    color: white;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-weight: 600;
+                    font-size: 0.75rem;
+                }
+
+                .user-greeting {
+                    font-size: 0.875rem;
+                    font-weight: 500;
+                    color: #374151;
+                }
+
+                .auth-buttons {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.75rem;
+                }
+
+                .btn {
+                    padding: 0.5rem 1.25rem;
+                    border-radius: 8px;
+                    font-weight: 500;
+                    font-size: 0.875rem;
+                    transition: all 0.2s ease;
+                    border: none;
+                    cursor: pointer;
+                    text-decoration: none;
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 0.5rem;
+                }
+
+                .btn-ghost {
+                    background: transparent;
+                    color: #374151;
+                }
+
+                .btn-ghost:hover {
+                    color: #4a90e2;
+                    background: rgba(74, 144, 226, 0.05);
+                }
+
+                .btn-primary {
+                    background: linear-gradient(135deg, #4a90e2, #357abd);
+                    color: white;
+                    box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+                }
+
+                .btn-primary:hover {
+                    transform: translateY(-1px);
+                    box-shadow: 0 6px 20px rgba(74, 144, 226, 0.4);
+                }
+
+                .btn-outline-primary {
+                    background: transparent;
+                    color: #4a90e2;
+                    border: 1px solid #4a90e2;
+                }
+
+                .btn-outline-primary:hover {
+                    background: #4a90e2;
+                    color: white;
+                    transform: translateY(-1px);
+                }
+
+                .spinner {
+                    width: 14px;
+                    height: 14px;
+                    border: 2px solid transparent;
+                    border-top: 2px solid currentColor;
+                    border-radius: 50%;
+                    animation: spin 1s linear infinite;
+                }
+
+                @keyframes spin {
+                    to {
+                        transform: rotate(360deg);
+                    }
+                }
+
+                /* Mobile Toggle */
+                .navbar-toggler {
                     display: flex;
                     flex-direction: column;
-                    justify-content: space-around;
-                    width: 24px;
-                    height: 18px;
-                }
-
-                .hamburger-line {
-                    display: block;
-                    height: 2px;
-                    width: 100%;
-                    background-color: currentColor;
+                    justify-content: center;
+                    width: 30px;
+                    height: 30px;
+                    background: none;
+                    border: none;
+                    cursor: pointer;
+                    gap: 4px;
                     transition: all 0.3s ease;
                 }
 
-                .navbar-toggler.active .hamburger-line:nth-child(1) {
-                    transform: rotate(45deg) translate(5px, 5px);
+                @media (min-width: 992px) {
+                    .navbar-toggler {
+                        display: none;
+                    }
                 }
 
-                .navbar-toggler.active .hamburger-line:nth-child(2) {
+                .navbar-toggler span {
+                    display: block;
+                    height: 2px;
+                    width: 100%;
+                    background: #374151;
+                    border-radius: 1px;
+                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                    transform-origin: center;
+                }
+
+                .navbar-toggler.active span:nth-child(1) {
+                    transform: rotate(45deg) translate(4px, 4px);
+                }
+
+                .navbar-toggler.active span:nth-child(2) {
                     opacity: 0;
+                    transform: translateX(20px);
                 }
 
-                .navbar-toggler.active .hamburger-line:nth-child(3) {
-                    transform: rotate(-45deg) translate(7px, -6px);
+                .navbar-toggler.active span:nth-child(3) {
+                    transform: rotate(-45deg) translate(4px, -4px);
                 }
 
+                /* Mobile Menu */
                 .mobile-menu {
                     position: absolute;
                     top: 100%;
                     left: 0;
                     right: 0;
                     background: white;
-                    border-top: 1px solid #dee2e6;
-                    max-height: 0;
-                    overflow: hidden;
-                    transition: max-height 0.3s ease;
-                    z-index: 1025;
+                    border-top: 1px solid #f1f5f9;
+                    transform: translateY(-20px);
+                    opacity: 0;
+                    visibility: hidden;
+                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                    z-index: 1000;
                 }
 
-                .mobile-menu.show {
-                    max-height: 80vh;
-                    overflow-y: auto;
+                .mobile-menu.active {
+                    transform: translateY(0);
+                    opacity: 1;
+                    visibility: visible;
                 }
 
                 .mobile-menu-content {
-                    padding: 1.5rem;
+                    padding: 2rem 1.5rem;
+                    max-height: 80vh;
+                    overflow-y: auto;
                 }
 
                 .mobile-nav-section {
@@ -949,38 +1311,126 @@ const PublicLayout = ({
                     margin-bottom: 0;
                 }
 
-                .mobile-nav-title {
-                    color: #6c757d;
-                    font-size: 0.875rem;
+                .mobile-section-title {
+                    color: #6b7280;
+                    font-size: 0.75rem;
                     font-weight: 600;
                     text-transform: uppercase;
                     letter-spacing: 0.5px;
                     margin-bottom: 1rem;
-                    border-bottom: 1px solid #dee2e6;
                     padding-bottom: 0.5rem;
+                    border-bottom: 1px solid #f1f5f9;
+                }
+
+                .mobile-nav-links {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 0.25rem;
                 }
 
                 .mobile-nav-link {
-                    color: #212529;
-                    text-decoration: none;
-                    padding: 0.75rem 0;
+                    background: none;
                     border: none;
+                    color: #374151;
+                    font-weight: 500;
+                    padding: 0.75rem 0;
+                    text-align: left;
                     transition: color 0.2s ease;
+                    cursor: pointer;
+                    font-size: 1rem;
                 }
 
                 .mobile-nav-link:hover {
-                    color: #0d6efd;
+                    color: #4a90e2;
+                }
+
+                .mobile-services-grid {
+                    display: grid;
+                    grid-template-columns: repeat(2, 1fr);
+                    gap: 0.75rem;
+                    margin-bottom: 1rem;
                 }
 
                 .mobile-service-card {
-                    color: #212529;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    gap: 0.5rem;
+                    padding: 1rem;
+                    background: #f8fafc;
+                    border-radius: 8px;
+                    text-decoration: none;
+                    color: #374151;
                     transition: all 0.2s ease;
+                    text-align: center;
                 }
 
                 .mobile-service-card:hover {
-                    color: #0d6efd;
+                    color: #4a90e2;
                     transform: translateY(-2px);
-                    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                }
+
+                .mobile-service-card .service-name {
+                    font-size: 0.75rem;
+                    font-weight: 500;
+                }
+
+                .mobile-user-info {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 1rem;
+                }
+
+                .user-profile-mobile {
+                    display: flex;
+                    align-items: center;
+                    gap: 1rem;
+                }
+
+                .user-avatar-mobile,
+                .user-avatar-placeholder-mobile {
+                    width: 50px;
+                    height: 50px;
+                    border-radius: 50%;
+                    object-fit: cover;
+                }
+
+                .user-avatar-placeholder-mobile {
+                    background: linear-gradient(135deg, #4a90e2, #357abd);
+                    color: white;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-weight: 600;
+                    font-size: 1rem;
+                }
+
+                .user-info-mobile {
+                    flex: 1;
+                }
+
+                .user-name {
+                    font-weight: 600;
+                    color: #1a202c;
+                    margin-bottom: 0.25rem;
+                }
+
+                .user-role {
+                    color: #6b7280;
+                    font-size: 0.875rem;
+                    text-transform: capitalize;
+                }
+
+                .mobile-auth-buttons {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 0.75rem;
+                }
+
+                .mobile-auth-buttons .btn {
+                    width: 100%;
+                    justify-content: center;
                 }
 
                 .mobile-menu-overlay {
@@ -990,316 +1440,489 @@ const PublicLayout = ({
                     right: 0;
                     bottom: 0;
                     background: rgba(0, 0, 0, 0.5);
-                    z-index: 1020;
+                    z-index: 999;
                 }
 
                 /* Main Content */
                 .main-content {
-                    min-height: 100vh;
+                    flex: 1;
                 }
 
                 .main-content.with-navbar {
-                    padding-top: 76px; /* Navbar height */
-                }
-
-                /* Navigation Links */
-                .nav-link {
-                    font-weight: 500;
-                    transition: color 0.2s ease;
-                    position: relative;
-                }
-
-                .nav-link:hover {
-                    color: #0d6efd !important;
-                }
-
-                .nav-link::after {
-                    content: "";
-                    position: absolute;
-                    bottom: -5px;
-                    left: 50%;
-                    width: 0;
-                    height: 2px;
-                    background-color: #0d6efd;
-                    transition: all 0.3s ease;
-                    transform: translateX(-50%);
-                }
-
-                .nav-link:hover::after {
-                    width: 80%;
-                }
-
-                /* Dropdown Menus */
-                .dropdown-menu {
-                    border: none;
-                    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-                    border-radius: 12px;
-                    padding: 1rem 0;
-                    margin-top: 0.5rem;
-                }
-
-                .dropdown-item {
-                    padding: 0.75rem 1.5rem;
-                    transition: all 0.2s ease;
-                    border-radius: 0;
-                }
-
-                .dropdown-item:hover {
-                    background-color: #f8f9fa;
-                    color: #0d6efd;
-                    transform: translateX(5px);
-                }
-
-                .dropdown-header {
-                    padding: 0.5rem 1.5rem 1rem;
-                    color: #6c757d;
-                    font-weight: 600;
-                    font-size: 0.875rem;
-                    text-transform: uppercase;
-                    letter-spacing: 0.5px;
-                }
-
-                /* Button Styles */
-                .btn {
-                    border-radius: 50px;
-                    font-weight: 500;
-                    transition: all 0.3s ease;
-                }
-
-                .btn-primary {
-                    background: linear-gradient(135deg, #0d6efd, #0056b3);
-                    border: none;
-                    box-shadow: 0 4px 15px rgba(13, 110, 253, 0.3);
-                }
-
-                .btn-primary:hover {
-                    transform: translateY(-2px);
-                    box-shadow: 0 6px 20px rgba(13, 110, 253, 0.4);
-                }
-
-                .btn-outline-primary {
-                    border: 2px solid #0d6efd;
-                    color: #0d6efd;
-                    background: transparent;
-                }
-
-                .btn-outline-primary:hover {
-                    background: #0d6efd;
-                    border-color: #0d6efd;
-                    transform: translateY(-2px);
-                    box-shadow: 0 4px 15px rgba(13, 110, 253, 0.3);
+                    padding-top: 80px;
                 }
 
                 /* Footer Styles */
                 .footer {
                     margin-top: auto;
+                    background: #1a202c;
+                    color: white;
                 }
 
+                /* Newsletter Section */
                 .newsletter-section {
                     background: linear-gradient(
                         135deg,
-                        #0d6efd,
-                        #0056b3
-                    ) !important;
+                        #4a90e2 0%,
+                        #357abd 100%
+                    );
+                    padding: 4rem 0;
+                    position: relative;
+                    overflow: hidden;
                 }
 
-                .footer-content {
-                    background: #1a1a1a;
+                .newsletter-section::before {
+                    content: "";
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background: radial-gradient(
+                            circle at 20% 80%,
+                            rgba(255, 255, 255, 0.1) 0%,
+                            transparent 50%
+                        ),
+                        radial-gradient(
+                            circle at 80% 20%,
+                            rgba(255, 255, 255, 0.05) 0%,
+                            transparent 50%
+                        );
+                    pointer-events: none;
                 }
 
-                .footer-title {
-                    margin-bottom: 1.5rem;
+                .newsletter-content {
+                    position: relative;
+                    z-index: 1;
+                }
+
+                .newsletter-title {
+                    font-size: 2rem;
+                    font-weight: 700;
+                    color: white;
+                    margin-bottom: 0.5rem;
+                }
+
+                .newsletter-subtitle {
+                    color: rgba(255, 255, 255, 0.9);
+                    font-size: 1.125rem;
+                    margin: 0;
+                }
+
+                .newsletter-form {
+                    position: relative;
+                    z-index: 1;
+                }
+
+                .newsletter-input-group {
+                    display: flex;
+                    background: white;
+                    border-radius: 12px;
+                    padding: 0.25rem;
+                    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+                    margin-bottom: 0.75rem;
+                }
+
+                .newsletter-input {
+                    flex: 1;
+                    border: none;
+                    padding: 1rem 1.25rem;
+                    font-size: 1rem;
+                    background: transparent;
+                    border-radius: 8px;
+                    outline: none;
+                }
+
+                .newsletter-input::placeholder {
+                    color: #9ca3af;
+                }
+
+                .newsletter-btn {
+                    background: #4a90e2;
+                    color: white;
+                    border: none;
+                    padding: 1rem 2rem;
+                    border-radius: 8px;
                     font-weight: 600;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                    white-space: nowrap;
                 }
 
-                .footer-link {
+                .newsletter-btn:hover {
+                    background: #357abd;
+                    transform: translateY(-1px);
+                }
+
+                .newsletter-privacy {
+                    color: rgba(255, 255, 255, 0.8);
+                    font-size: 0.875rem;
+                    text-align: center;
+                    display: block;
+                }
+
+                /* Footer Content */
+                .footer-content {
+                    padding: 4rem 0 2rem;
+                    background: #1a202c;
+                }
+
+                .footer-brand {
+                    margin-bottom: 2rem;
+                }
+
+                .footer-brand-link {
+                    display: inline-flex;
+                    align-items: center;
+                    text-decoration: none;
+                    margin-bottom: 1rem;
+                }
+
+                .footer-logo {
+                    height: 40px;
+                    width: auto;
+                    object-fit: contain;
+                    filter: brightness(0) invert(1);
+                }
+
+                .footer-brand-fallback {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.75rem;
+                }
+
+                .footer-brand-icon {
+                    width: 40px;
+                    height: 40px;
+                    background: linear-gradient(135deg, #4a90e2, #357abd);
+                    border-radius: 10px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: white;
+                    font-size: 1.2rem;
+                }
+
+                .footer-brand-text {
+                    font-size: 1.5rem;
+                    font-weight: 700;
+                    color: white;
+                }
+
+                .footer-brand-description {
+                    color: #9ca3af;
+                    line-height: 1.6;
+                    margin-bottom: 2rem;
+                    max-width: 90%;
+                }
+
+                .social-links {
+                    margin-bottom: 1rem;
+                }
+
+                .social-title {
+                    color: white;
+                    font-size: 0.875rem;
+                    font-weight: 600;
+                    margin-bottom: 1rem;
+                }
+
+                .social-icons {
+                    display: flex;
+                    gap: 0.75rem;
+                }
+
+                .social-link {
+                    width: 40px;
+                    height: 40px;
+                    background: rgba(255, 255, 255, 0.1);
+                    border-radius: 8px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: white;
+                    text-decoration: none;
+                    transition: all 0.3s ease;
+                    position: relative;
+                    overflow: hidden;
+                }
+
+                .social-link::before {
+                    content: "";
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background: var(--social-color);
+                    opacity: 0;
+                    transition: opacity 0.3s ease;
+                }
+
+                .social-link:hover::before {
+                    opacity: 1;
+                }
+
+                .social-link i {
+                    position: relative;
+                    z-index: 1;
+                }
+
+                .social-link:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+                }
+
+                /* Footer Sections */
+                .footer-section {
+                    margin-bottom: 2rem;
+                }
+
+                .footer-section-title {
+                    color: white;
+                    font-size: 1rem;
+                    font-weight: 600;
+                    margin-bottom: 1rem;
+                    position: relative;
+                    padding-bottom: 0.5rem;
+                }
+
+                .footer-section-title::after {
+                    content: "";
+                    position: absolute;
+                    bottom: 0;
+                    left: 0;
+                    width: 30px;
+                    height: 2px;
+                    background: #4a90e2;
+                    border-radius: 1px;
+                }
+
+                .footer-links {
+                    list-style: none;
+                    padding: 0;
+                    margin: 0;
+                }
+
+                .footer-links li {
+                    margin-bottom: 0.75rem;
+                }
+
+                .footer-links a {
+                    color: #9ca3af;
+                    text-decoration: none;
+                    font-size: 0.875rem;
                     transition: all 0.2s ease;
                     display: inline-block;
                 }
 
-                .footer-link:hover {
-                    color: #0d6efd !important;
-                    transform: translateX(5px);
+                .footer-links a:hover {
+                    color: #4a90e2;
+                    transform: translateX(4px);
                 }
 
-                .social-link {
-                    transition: all 0.3s ease;
+                /* App Downloads */
+                .app-downloads {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 0.75rem;
+                    margin-bottom: 2rem;
                 }
 
-                .social-link:hover {
-                    background: rgba(255, 255, 255, 0.2) !important;
+                .app-download-btn {
+                    display: block;
+                    transition: transform 0.2s ease;
+                }
+
+                .app-download-btn:hover {
                     transform: translateY(-2px);
+                }
+
+                .app-download-btn img {
+                    height: 40px;
+                    width: auto;
+                    object-fit: contain;
+                }
+
+                /* Trust Badges */
+                .trust-badges {
+                    margin-top: 1.5rem;
+                }
+
+                .trust-title {
+                    color: white;
+                    font-size: 0.875rem;
+                    font-weight: 600;
+                    margin-bottom: 1rem;
+                }
+
+                .trust-items {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 0.5rem;
+                }
+
+                .trust-item {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                    color: #9ca3af;
+                    font-size: 0.75rem;
+                }
+
+                .trust-item i {
+                    color: #10b981;
+                    width: 16px;
+                }
+
+                /* Footer Bottom */
+                .footer-bottom {
+                    background: #111827;
+                    padding: 1.5rem 0;
+                    border-top: 1px solid #374151;
+                }
+
+                .footer-bottom-content {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    flex-wrap: wrap;
+                    gap: 1rem;
+                }
+
+                .footer-copyright p {
+                    color: #9ca3af;
+                    font-size: 0.875rem;
+                    margin: 0;
+                }
+
+                .footer-legal {
+                    display: flex;
+                    gap: 1.5rem;
+                    flex-wrap: wrap;
+                }
+
+                .footer-legal a {
+                    color: #9ca3af;
+                    text-decoration: none;
+                    font-size: 0.875rem;
+                    transition: color 0.2s ease;
+                }
+
+                .footer-legal a:hover {
+                    color: white;
                 }
 
                 /* Responsive Design */
                 @media (max-width: 991.98px) {
-                    .navbar-nav {
-                        margin-top: 1rem;
-                    }
-
                     .main-content.with-navbar {
                         padding-top: 70px;
                     }
 
-                    .mobile-menu-content {
-                        padding: 1rem;
-                    }
-
                     .newsletter-section {
+                        padding: 3rem 0;
                         text-align: center;
                     }
 
-                    .newsletter-section .col-lg-6:first-child {
-                        margin-bottom: 2rem;
+                    .newsletter-title {
+                        font-size: 1.75rem;
+                    }
+
+                    .dropdown-menu {
+                        min-width: 320px;
+                    }
+
+                    .services-grid {
+                        grid-template-columns: 1fr;
                     }
                 }
 
                 @media (max-width: 767.98px) {
-                    .brand-text {
-                        font-size: 1.1rem;
+                    .navbar-content {
+                        padding: 0.75rem 0;
                     }
 
-                    .mobile-nav-section {
-                        margin-bottom: 1.5rem;
+                    .newsletter-input-group {
+                        flex-direction: column;
+                        gap: 0.5rem;
+                        padding: 0.75rem;
                     }
 
-                    .footer-content .row > div {
-                        margin-bottom: 2rem;
+                    .newsletter-btn {
+                        width: 100%;
                     }
 
-                    .footer-content .row > div:last-child {
-                        margin-bottom: 0;
+                    .mobile-services-grid {
+                        grid-template-columns: 1fr;
+                    }
+
+                    .footer-content {
+                        padding: 3rem 0 1.5rem;
+                    }
+
+                    .footer-bottom-content {
+                        flex-direction: column;
+                        text-align: center;
+                        gap: 1rem;
+                    }
+
+                    .footer-legal {
+                        justify-content: center;
+                    }
+
+                    .social-icons {
+                        justify-content: center;
                     }
                 }
 
                 @media (max-width: 575.98px) {
-                    .container {
-                        padding-left: 1rem;
-                        padding-right: 1rem;
+                    .newsletter-section {
+                        padding: 2rem 0;
                     }
 
-                    .newsletter-form .input-group {
+                    .newsletter-title {
+                        font-size: 1.5rem;
+                    }
+
+                    .footer-legal {
                         flex-direction: column;
+                        gap: 0.75rem;
                     }
 
-                    .newsletter-form .form-control,
-                    .newsletter-form .btn {
-                        border-radius: 50px !important;
-                        margin-bottom: 0.5rem;
-                    }
-
-                    .footer-bottom .d-flex {
-                        flex-direction: column;
-                        gap: 1rem;
-                        text-align: center;
+                    .brand-logo,
+                    .footer-logo {
+                        height: 32px;
                     }
                 }
 
-                /* Animation Classes */
-                .fade-in {
-                    animation: fadeIn 0.6s ease-out;
-                }
-
-                @keyframes fadeIn {
-                    from {
-                        opacity: 0;
-                        transform: translateY(20px);
-                    }
-                    to {
-                        opacity: 1;
-                        transform: translateY(0);
-                    }
-                }
-
-                .slide-up {
-                    animation: slideUp 0.6s ease-out;
-                }
-
-                @keyframes slideUp {
-                    from {
-                        opacity: 0;
-                        transform: translateY(30px);
-                    }
-                    to {
-                        opacity: 1;
-                        transform: translateY(0);
-                    }
-                }
-
-                /* Loading States */
-                .spinner-border-sm {
-                    width: 1rem;
-                    height: 1rem;
-                }
-
-                /* Accessibility Improvements */
-                .nav-link:focus,
-                .btn:focus,
-                .dropdown-item:focus {
-                    outline: 2px solid #0d6efd;
-                    outline-offset: 2px;
-                }
-
-                /* Dark Mode Support (Optional) */
-                @media (prefers-color-scheme: dark) {
-                    .navbar-transparent,
-                    .navbar-scrolled {
-                        background: rgba(33, 37, 41, 0.95) !important;
-                    }
-
-                    .mobile-menu {
-                        background: #212529;
-                        color: #fff;
-                    }
-
-                    .mobile-nav-link {
-                        color: #fff;
-                    }
-
-                    .mobile-service-card {
-                        color: #fff;
-                        border-color: #495057;
-                    }
-                }
-
-                /* Print Styles */
-                @media print {
-                    .navbar,
-                    .footer,
-                    .mobile-menu {
-                        display: none !important;
-                    }
-
-                    .main-content {
-                        padding-top: 0 !important;
-                    }
-                }
-
-                /* High Contrast Mode */
-                @media (prefers-contrast: high) {
-                    .btn-primary {
-                        background: #0000ff;
-                        border-color: #0000ff;
-                    }
-
-                    .btn-outline-primary {
-                        border-color: #0000ff;
-                        color: #0000ff;
-                    }
-
-                    .nav-link::after {
-                        background-color: #0000ff;
-                    }
-                }
-
-                /* Reduced Motion */
+                /* Accessibility */
                 @media (prefers-reduced-motion: reduce) {
-                    *,
-                    *::before,
-                    *::after {
+                    * {
                         animation-duration: 0.01ms !important;
                         animation-iteration-count: 1 !important;
                         transition-duration: 0.01ms !important;
+                    }
+                }
+
+                /* Dark mode support */
+                @media (prefers-color-scheme: dark) {
+                    .navbar-transparent,
+                    .navbar-scrolled {
+                        background: rgba(17, 24, 39, 0.95) !important;
+                        border-bottom-color: rgba(55, 65, 81, 0.3);
+                    }
+
+                    .navbar-transparent .nav-link,
+                    .navbar-scrolled .nav-link {
+                        color: #f9fafb;
+                    }
+
+                    .mobile-menu {
+                        background: #111827;
+                    }
+
+                    .mobile-nav-link {
+                        color: #f9fafb;
                     }
                 }
             `}</style>
