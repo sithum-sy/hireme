@@ -69,14 +69,20 @@ const ContactAndProfessional = ({
                         />
 
                         <div className="profile-picture-section half-width">
-                            <FileUpload
+                            <FormField
                                 label="Profile Picture (Optional)"
                                 name="profile_picture"
-                                accept="image/*"
-                                onFileSelect={(files) => onFileChange(files[0])}
-                                helpText="Max 2MB, JPEG/PNG only"
                                 error={errors.profile_picture}
-                            />
+                                helpText="Max 2MB, JPEG/PNG only"
+                            >
+                                <FileUpload
+                                    name="profile_picture"
+                                    accept="image/*"
+                                    onFileSelect={(files) =>
+                                        onFileChange(files[0])
+                                    }
+                                />
+                            </FormField>
 
                             {previewImage && (
                                 <div className="image-preview-container">
@@ -157,6 +163,7 @@ const ContactAndProfessional = ({
                             error={errors.bio}
                             placeholder="Describe your experience and skills (minimum 50 characters)"
                             required
+                            helpText={`${formData.bio.length}/50 minimum characters`}
                         >
                             <textarea
                                 name="bio"
@@ -168,9 +175,6 @@ const ContactAndProfessional = ({
                                 onChange={onChange}
                                 placeholder="Describe your experience and skills (minimum 50 characters)"
                             />
-                            <div className="char-counter">
-                                {formData.bio.length}/50 minimum
-                            </div>
                         </FormField>
 
                         {/* Info Alert */}
@@ -189,9 +193,14 @@ const ContactAndProfessional = ({
                             </h4>
 
                             <div className="form-row">
-                                <div className="half-width">
+                                <FormField
+                                    label="Business License"
+                                    name="business_license"
+                                    error={errors.business_license}
+                                    helpText="PDF, DOC, or Image (Max 5MB)"
+                                    className="half-width"
+                                >
                                     <FileUpload
-                                        label="Business License"
                                         name="business_license"
                                         accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
                                         onFileSelect={(files) =>
@@ -200,8 +209,6 @@ const ContactAndProfessional = ({
                                                 "business_license"
                                             )
                                         }
-                                        helpText="PDF, DOC, or Image (Max 5MB)"
-                                        error={errors.business_license}
                                     />
                                     <DocumentPreview
                                         documents={
@@ -216,11 +223,16 @@ const ContactAndProfessional = ({
                                             onRemoveDocument("business_license")
                                         }
                                     />
-                                </div>
+                                </FormField>
 
-                                <div className="half-width">
+                                <FormField
+                                    label="Certifications"
+                                    name="certifications"
+                                    error={errors.certifications}
+                                    helpText="Multiple files allowed (Max 5MB each)"
+                                    className="half-width"
+                                >
                                     <FileUpload
-                                        label="Certifications"
                                         name="certifications"
                                         accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
                                         multiple
@@ -230,8 +242,6 @@ const ContactAndProfessional = ({
                                                 "certifications"
                                             )
                                         }
-                                        helpText="Multiple files allowed (Max 5MB each)"
-                                        error={errors.certifications}
                                     />
                                     <DocumentPreview
                                         documents={
@@ -245,27 +255,39 @@ const ContactAndProfessional = ({
                                             )
                                         }
                                     />
-                                </div>
+                                </FormField>
                             </div>
 
-                            <FileUpload
+                            <FormField
                                 label="Portfolio Images"
                                 name="portfolio_images"
-                                accept="image/*"
-                                multiple
-                                onFileSelect={(files) =>
-                                    onDocumentUpload(files, "portfolio_images")
-                                }
-                                helpText="Showcase your work (Max 10 images, 2MB each)"
                                 error={errors.portfolio_images}
-                            />
-                            <DocumentPreview
-                                documents={documentPreviews.portfolio_images}
-                                type="portfolio_images"
-                                onRemove={(index) =>
-                                    onRemoveDocument("portfolio_images", index)
-                                }
-                            />
+                                helpText="Showcase your work (Max 10 images, 2MB each)"
+                            >
+                                <FileUpload
+                                    name="portfolio_images"
+                                    accept="image/*"
+                                    multiple
+                                    onFileSelect={(files) =>
+                                        onDocumentUpload(
+                                            files,
+                                            "portfolio_images"
+                                        )
+                                    }
+                                />
+                                <DocumentPreview
+                                    documents={
+                                        documentPreviews.portfolio_images
+                                    }
+                                    type="portfolio_images"
+                                    onRemove={(index) =>
+                                        onRemoveDocument(
+                                            "portfolio_images",
+                                            index
+                                        )
+                                    }
+                                />
+                            </FormField>
                         </div>
                     </div>
                 )}
@@ -369,12 +391,6 @@ const ContactAndProfessional = ({
                     margin: 0;
                 }
 
-                .char-counter {
-                    font-size: 0.8rem;
-                    color: #6b7280;
-                    margin-top: 0.25rem;
-                }
-
                 .info-alert {
                     background: #dbeafe;
                     border: 1px solid #93c5fd;
@@ -412,7 +428,7 @@ const ContactAndProfessional = ({
                 @media (max-width: 768px) {
                     .form-row {
                         grid-template-columns: 1fr;
-                        gap: 0.5rem;
+                        gap: 0;
                     }
 
                     .provider-section {

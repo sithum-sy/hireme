@@ -1,4 +1,3 @@
-// pages/Login.jsx
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
@@ -184,7 +183,11 @@ const Login = () => {
 
                             <form onSubmit={handleSubmit}>
                                 {/* Email Field */}
-                                <div className="form-group">
+                                <div
+                                    className={`form-group ${
+                                        errors.email ? "has-error" : ""
+                                    }`}
+                                >
                                     <label className="form-label">
                                         Email Address
                                     </label>
@@ -213,7 +216,11 @@ const Login = () => {
                                 </div>
 
                                 {/* Password Field */}
-                                <div className="form-group">
+                                <div
+                                    className={`form-group ${
+                                        errors.password ? "has-error" : ""
+                                    }`}
+                                >
                                     <label className="form-label">
                                         Password
                                     </label>
@@ -636,7 +643,8 @@ const Login = () => {
                     padding: 0 2rem 2rem 2rem;
                 }
 
-                .form-group {
+                 {
+                    /* .form-group {
                     margin-bottom: 1.25rem;
                 }
 
@@ -649,6 +657,30 @@ const Login = () => {
                 }
 
                 .input-group {
+                    position: relative;
+                    display: flex;
+                    align-items: center;
+                } */
+                }
+
+                .form-group {
+                    margin-bottom: 1.5rem;
+                    display: grid;
+                    grid-template-rows: auto auto auto; /* label, input, error */
+                    gap: 0.5rem;
+                }
+
+                .form-label {
+                    grid-row: 1;
+                    display: block;
+                    font-weight: 600;
+                    color: #374151;
+                    font-size: 0.875rem;
+                    margin-bottom: 0; /* Remove margin since we're using grid gap */
+                }
+
+                .input-group {
+                    grid-row: 2;
                     position: relative;
                     display: flex;
                     align-items: center;
@@ -698,13 +730,28 @@ const Login = () => {
                     color: #6b7280;
                 }
 
-                .error-message {
+                 {
+                    /* .error-message {
                     color: #ef4444;
                     font-size: 0.8rem;
                     margin-top: 0.375rem;
                     display: flex;
                     align-items: center;
                     gap: 0.25rem;
+                } */
+                }
+                .error-message {
+                    grid-row: 3;
+                    color: #ef4444;
+                    font-size: 0.8rem;
+                    line-height: 1.4;
+                    padding-left: 0.25rem;
+                    margin: 0; /* Remove margin since we're using grid gap */
+                }
+
+                /* Hide error message when there's no error */
+                .form-group:not(.has-error) .error-message {
+                    display: none;
                 }
 
                 .form-options {

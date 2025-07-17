@@ -138,7 +138,7 @@ const PersonalInfo = ({
                 .form-grid {
                     display: flex;
                     flex-direction: column;
-                    gap: 0.5rem;
+                    gap: 0; /* Remove gap since FormField handles spacing */
                 }
 
                 .form-row {
@@ -163,6 +163,7 @@ const PersonalInfo = ({
                     padding: 0.25rem;
                     font-size: 0.875rem;
                     transition: color 0.2s ease;
+                    z-index: 10;
                 }
 
                 .password-toggle:hover {
@@ -183,7 +184,7 @@ const PersonalInfo = ({
                 @media (max-width: 768px) {
                     .form-row {
                         grid-template-columns: 1fr;
-                        gap: 0.5rem;
+                        gap: 0; /* FormField handles spacing */
                     }
                 }
             `}</style>
