@@ -10,7 +10,7 @@ import LocationSelector from "../../../components/map/LocationSelector";
 import LoadingSpinner from "../../../components/LoadingSpinner";
 
 const ServiceSearch = () => {
-    const { location, categories } = useClient();
+    const { location, setLocation, categories } = useClient();
     const [searchParams, setSearchParams] = useSearchParams();
 
     const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");
@@ -19,7 +19,7 @@ const ServiceSearch = () => {
     const [pagination, setPagination] = useState({});
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [suggestions, setSuggestions] = useState([]);
-    const [showLocationSelector, setShowLocationSelector] = useState(false);
+    const [showLocationSelector, setShowLocationSelector] = useState(location);
 
     const [filters, setFilters] = useState({
         category_id: searchParams.get("category_id") || "",
@@ -29,6 +29,21 @@ const ServiceSearch = () => {
         pricing_type: searchParams.get("pricing_type") || "",
         sort_by: searchParams.get("sort_by") || "distance",
     });
+
+    const handleLocationChange = (newLocation) => {
+        // Update the ClientContext with new location
+        // This will trigger re-search with location filters
+        if (newLocation) {
+            // Trigger search with new location
+            performSearch(searchQuery, 1, newLocation);
+        }
+    };
+
+    useEffect(() => {
+        if (location) {
+            setCurrentLocation(location);
+        }
+    }, [location]);
 
     useEffect(() => {
         if (searchQuery || Object.values(filters).some(Boolean)) {
@@ -44,6 +59,18 @@ const ServiceSearch = () => {
         }
     }, [searchParams]);
 
+    const handleLocationSelect = (newLocation) => {
+        console.log("New location selected:", newLocation); // Debug log
+        setCurrentLocation(newLocation);
+        setLocation(newLocation); // Update context
+        setShowLocationSelector(false);
+
+        // Auto-search when location changes
+        if (searchQuery) {
+            performSearch(searchQuery);
+        }
+    };
+
     const performSearch = async (query = searchQuery, page = 1) => {
         if (!query && !Object.values(filters).some(Boolean)) return;
 
@@ -58,10 +85,12 @@ const ServiceSearch = () => {
             };
 
             // Add location if available
-            if (location) {
-                searchParams.latitude = location.lat;
-                searchParams.longitude = location.lng;
-                searchParams.radius = location.radius || 15;
+            if (currentLocation) {
+                searchParams.latitude = currentLocation.lat;
+                searchParams.longitude = currentLocation.lng;
+                searchParams.radius = currentLocation.radius || 15;
+
+                console.log("Searching with location:", searchParams); // Debug log
             }
 
             // Remove empty filters
@@ -234,13 +263,22 @@ const ServiceSearch = () => {
 
                     {/* Location Selector */}
                     {showLocationSelector && (
-                        <div className="mt-3 p-3 bg-light rounded">
-                            <LocationSelector
+                        <div className="mt-4 p-3 bg-light rounded">
+                            <div className="d-flex justify-content-between align-items-center mb-3">
+                                <h6 className="mb-0">Select Search Location</h6>
+                                <button
+                                    className="btn btn-sm btn-outline-secondary"
+                                    onClick={() =>
+                                        setShowLocationSelector(false)
+                                    }
+                                >
+                                    <i className="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <EnhancedLocationSelector
                                 value={location}
-                                onChange={(newLocation) => {
-                                    setShowLocationSelector(false);
-                                    // Location change handled by ClientContext
-                                }}
+                                onChange={handleLocationChange}
+                                error={null}
                             />
                         </div>
                     )}
@@ -487,6 +525,7 @@ const ServiceSearch = () => {
                 </div>
             </div>
 
+            {/* debugging styles */}
             <style>{`
                 .text-purple {
                     color: #6f42c1 !important;
@@ -509,6 +548,27 @@ const ServiceSearch = () => {
                     background-color: #6f42c1;
                     border-color: #6f42c1;
                     color: white;
+                }
+                
+                /* ✅ Ensure map container has proper styling */
+                .leaflet-container {
+                    height: 400px !important;
+                    width: 100% !important;
+                    z-index: 1 !important;
+                }
+                
+                /* ✅ Fix any modal/dropdown z-index conflicts */
+                .location-selector .leaflet-container {
+                    position: relative !important;
+                    z-index: 1 !important;
+                }
+                
+                .location-selector .leaflet-popup-pane {
+                    z-index: 1000 !important;
+                }
+                
+                .location-selector .leaflet-control-zoom {
+                    z-index: 1000 !important;
                 }
             `}</style>
         </ClientLayout>

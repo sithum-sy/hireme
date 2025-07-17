@@ -14,6 +14,8 @@ const AppointmentsList = () => {
 
     // State management
     const [appointments, setAppointments] = useState([]);
+    // console.log("Appointment total:", appointments.total);
+
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState(false);
     const [filters, setFilters] = useState({
@@ -45,7 +47,7 @@ const AppointmentsList = () => {
     useEffect(() => {
         if (location.state?.message) {
             // Show toast notification (you can implement your preferred notification system)
-            console.log(location.state.message);
+            // console.log(location.state.message);
         }
     }, [location.state]);
 
@@ -71,12 +73,12 @@ const AppointmentsList = () => {
                 setAppointments(responseData.data || responseData);
 
                 // Update pagination info
-                if (responseData.meta) {
+                if (responseData.data) {
                     setPagination((prev) => ({
                         ...prev,
-                        current_page: responseData.meta.current_page,
-                        last_page: responseData.meta.last_page,
-                        total: responseData.meta.total,
+                        current_page: responseData.current_page,
+                        last_page: responseData.last_page,
+                        total: responseData.total,
                     }));
                 }
             }

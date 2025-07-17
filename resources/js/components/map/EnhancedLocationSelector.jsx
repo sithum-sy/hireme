@@ -9,16 +9,16 @@ import {
 } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
+import markerIcon from "leaflet/dist/images/marker-icon.png";
+import markerShadow from "leaflet/dist/images/marker-shadow.png";
 
-// Fix for default markers
+// CRITICAL FIX: Properly configure marker icons
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
-    iconRetinaUrl:
-        "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
-    iconUrl:
-        "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
-    shadowUrl:
-        "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+    iconRetinaUrl: markerIcon2x,
+    iconUrl: markerIcon,
+    shadowUrl: markerShadow,
 });
 
 const LocationPicker = ({
@@ -41,10 +41,18 @@ const LocationPicker = ({
                     city:
                         address.address?.city ||
                         address.address?.town ||
-                        address.address?.village,
+                        address.address?.village ||
+                        "Unknown",
                     neighborhood:
                         address.address?.suburb ||
-                        address.address?.neighbourhood,
+                        address.address?.neighbourhood ||
+                        "",
+                    province: getProvinceFromCoordinates(
+                        e.latlng.lat,
+                        e.latlng.lng
+                    ),
+                    country: "Sri Lanka",
+                    radius: radius,
                 });
             });
         },
@@ -53,11 +61,21 @@ const LocationPicker = ({
     return position ? (
         <>
             <Marker position={position}>
-                <Popup>Selected Location</Popup>
+                <Popup>
+                    <div>
+                        <strong>Selected Location</strong>
+                        <br />
+                        Lat: {position[0].toFixed(4)}
+                        <br />
+                        Lng: {position[1].toFixed(4)}
+                        <br />
+                        Radius: {radius}km
+                    </div>
+                </Popup>
             </Marker>
             <Circle
                 center={position}
-                radius={radius * 1000}
+                radius={radius * 1000} // Convert km to meters
                 fillColor="blue"
                 fillOpacity={0.1}
                 color="blue"
@@ -67,7 +85,7 @@ const LocationPicker = ({
     ) : null;
 };
 
-// Reverse geocoding function using Nominatim
+// Helper functions
 const reverseGeocode = async (lat, lng) => {
     try {
         const response = await fetch(
@@ -81,11 +99,17 @@ const reverseGeocode = async (lat, lng) => {
         return await response.json();
     } catch (error) {
         console.error("Reverse geocoding failed:", error);
-        return { display_name: "Unknown location", address: {} };
+        return {
+            display_name: "Unknown location",
+            address: {
+                city: "Unknown",
+                town: "Unknown",
+                village: "Unknown",
+            },
+        };
     }
 };
 
-// Geocoding function to search for places
 const geocodeSearch = async (query) => {
     try {
         const response = await fetch(
@@ -105,51 +129,96 @@ const geocodeSearch = async (query) => {
     }
 };
 
+const getProvinceFromCoordinates = (latitude, longitude) => {
+    // Simple province detection based on coordinate ranges
+    if (
+        latitude >= 6.5 &&
+        latitude <= 7.5 &&
+        longitude >= 79.5 &&
+        longitude <= 80.5
+    ) {
+        return "Western Province";
+    } else if (
+        latitude >= 6.5 &&
+        latitude <= 8.0 &&
+        longitude >= 80.0 &&
+        longitude <= 81.5
+    ) {
+        return "Central Province";
+    } else if (
+        latitude >= 5.5 &&
+        latitude <= 6.5 &&
+        longitude >= 80.0 &&
+        longitude <= 82.0
+    ) {
+        return "Southern Province";
+    } else if (
+        latitude >= 8.5 &&
+        latitude <= 10.0 &&
+        longitude >= 79.5 &&
+        longitude <= 81.0
+    ) {
+        return "Northern Province";
+    } else if (
+        latitude >= 7.0 &&
+        latitude <= 9.0 &&
+        longitude >= 81.0 &&
+        longitude <= 82.5
+    ) {
+        return "Eastern Province";
+    } else if (
+        latitude >= 7.0 &&
+        latitude <= 8.5 &&
+        longitude >= 79.5 &&
+        longitude <= 80.5
+    ) {
+        return "North Western Province";
+    } else if (
+        latitude >= 7.5 &&
+        latitude <= 9.0 &&
+        longitude >= 80.0 &&
+        longitude <= 81.5
+    ) {
+        return "North Central Province";
+    } else if (
+        latitude >= 6.0 &&
+        latitude <= 7.5 &&
+        longitude >= 80.5 &&
+        longitude <= 82.0
+    ) {
+        return "Uva Province";
+    } else if (
+        latitude >= 6.0 &&
+        latitude <= 7.5 &&
+        longitude >= 80.0 &&
+        longitude <= 81.0
+    ) {
+        return "Sabaragamuwa Province";
+    }
+    return "Western Province"; // Default fallback
+};
+
 const EnhancedLocationSelector = ({ value, onChange, error }) => {
     const [position, setPosition] = useState(null);
     const [radius, setRadius] = useState(15);
     const [searchQuery, setSearchQuery] = useState("");
     const [searchResults, setSearchResults] = useState([]);
     const [isSearching, setIsSearching] = useState(false);
-    const [nearbyPlaces, setNearbyPlaces] = useState([]);
-    const [loadingPlaces, setLoadingPlaces] = useState(false);
+    const [mapKey, setMapKey] = useState(0);
 
     // Initialize with existing value
     useEffect(() => {
         if (value && value.lat && value.lng) {
             setPosition([value.lat, value.lng]);
             setRadius(value.radius || 15);
+            setMapKey((prev) => prev + 1);
         }
     }, [value]);
 
-    // Load nearby places when position changes
-    useEffect(() => {
-        if (position) {
-            loadNearbyPlaces(position[0], position[1], radius);
-        }
-    }, [position, radius]);
-
-    const loadNearbyPlaces = async (lat, lng, radiusKm) => {
-        setLoadingPlaces(true);
-        try {
-            const places = await getNearbyPlacesFromNominatim(
-                lat,
-                lng,
-                radiusKm
-            );
-            setNearbyPlaces(places);
-        } catch (error) {
-            console.error("Error loading nearby places:", error);
-        } finally {
-            setLoadingPlaces(false);
-        }
-    };
-
     const handleLocationSelect = (locationData) => {
-        onChange({
-            ...locationData,
-            radius: radius,
-        });
+        if (onChange) {
+            onChange(locationData);
+        }
     };
 
     const handleSearch = async (query) => {
@@ -182,9 +251,16 @@ const EnhancedLocationSelector = ({ value, onChange, error }) => {
             city:
                 result.address?.city ||
                 result.address?.town ||
-                result.address?.village,
+                result.address?.village ||
+                "Unknown",
             neighborhood:
-                result.address?.suburb || result.address?.neighbourhood,
+                result.address?.suburb || result.address?.neighbourhood || "",
+            province: getProvinceFromCoordinates(
+                parseFloat(result.lat),
+                parseFloat(result.lon)
+            ),
+            country: "Sri Lanka",
+            radius: radius,
         });
     };
 
@@ -204,7 +280,7 @@ const EnhancedLocationSelector = ({ value, onChange, error }) => {
                             setSearchQuery(e.target.value);
                             handleSearch(e.target.value);
                         }}
-                        placeholder="Search for a location..."
+                        placeholder="Search for a location in Sri Lanka..."
                     />
                     {isSearching && (
                         <div className="position-absolute end-0 top-50 translate-middle-y me-3">
@@ -215,19 +291,29 @@ const EnhancedLocationSelector = ({ value, onChange, error }) => {
 
                 {/* Search Results */}
                 {searchResults.length > 0 && (
-                    <div className="search-results mt-2 border rounded shadow-sm">
+                    <div
+                        className="search-results mt-2 border rounded shadow-sm bg-white"
+                        style={{
+                            maxHeight: "200px",
+                            overflowY: "auto",
+                            zIndex: 1000,
+                        }}
+                    >
                         {searchResults.map((result, index) => (
                             <div
                                 key={index}
-                                className="search-result-item p-2 border-bottom cursor-pointer"
+                                className="search-result-item p-2 border-bottom cursor-pointer hover-bg-light"
                                 onClick={() => selectSearchResult(result)}
                                 style={{ cursor: "pointer" }}
                             >
-                                <div className="fw-semibold">
+                                <div className="fw-semibold text-truncate">
                                     {result.display_name}
                                 </div>
                                 <small className="text-muted">
-                                    {result.type}
+                                    {result.type} •{" "}
+                                    {result.address?.city ||
+                                        result.address?.town ||
+                                        "Unknown"}
                                 </small>
                             </div>
                         ))}
@@ -237,9 +323,11 @@ const EnhancedLocationSelector = ({ value, onChange, error }) => {
 
             {/* Radius Selector */}
             <div className="mb-3">
-                <label className="form-label fw-semibold">Service Radius</label>
-                <div className="d-flex gap-2">
-                    {[10, 15, 25, 50].map((r) => (
+                <label className="form-label fw-semibold">
+                    Service Radius: {radius}km
+                </label>
+                <div className="d-flex gap-2 flex-wrap">
+                    {[5, 10, 15, 25, 50].map((r) => (
                         <button
                             key={r}
                             type="button"
@@ -256,166 +344,122 @@ const EnhancedLocationSelector = ({ value, onChange, error }) => {
                 </div>
             </div>
 
-            {/* Map */}
-            <div style={{ height: "400px", marginBottom: "1rem" }}>
-                <MapContainer
-                    center={position || [7.2906, 80.6337]} // Default to Kandy
-                    zoom={position ? 12 : 8}
-                    style={{ height: "100%", width: "100%" }}
+            {/* Map Container - FIXED */}
+            <div className="map-container mb-3">
+                <div
+                    className="map-wrapper"
+                    style={{
+                        height: "400px",
+                        width: "100%",
+                        position: "relative",
+                        border: "1px solid #ddd",
+                        borderRadius: "8px",
+                        overflow: "hidden",
+                    }}
                 >
-                    <TileLayer
-                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                    />
-                    <LocationPicker
-                        position={position}
-                        setPosition={setPosition}
-                        radius={radius}
-                        onLocationSelect={handleLocationSelect}
-                    />
-                </MapContainer>
+                    <MapContainer
+                        key={mapKey}
+                        center={position || [6.9271, 79.8612]} // Default to Colombo
+                        zoom={position ? 13 : 8}
+                        style={{
+                            height: "100%",
+                            width: "100%",
+                            zIndex: 1,
+                        }}
+                        scrollWheelZoom={true}
+                        attributionControl={true}
+                        zoomControl={true}
+                    >
+                        <TileLayer
+                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                            maxZoom={19}
+                        />
+                        <LocationPicker
+                            position={position}
+                            setPosition={setPosition}
+                            radius={radius}
+                            onLocationSelect={handleLocationSelect}
+                        />
+                    </MapContainer>
+                </div>
             </div>
 
-            {/* Nearby Places */}
+            {/* Current Location Display */}
             {position && (
-                <div className="nearby-places">
-                    <h6 className="fw-semibold mb-2">
-                        Nearby Areas
-                        {loadingPlaces && (
-                            <span className="spinner-border spinner-border-sm ms-2"></span>
-                        )}
+                <div className="current-location p-3 bg-light rounded border">
+                    <h6 className="mb-2">
+                        <i className="fas fa-map-marker-alt me-2 text-primary"></i>
+                        Selected Location
                     </h6>
-
-                    {nearbyPlaces.length > 0 ? (
-                        <div className="row">
-                            {nearbyPlaces.slice(0, 12).map((place, index) => (
-                                <div
-                                    key={index}
-                                    className="col-md-6 col-lg-4 mb-2"
-                                >
-                                    <div className="nearby-place-item p-2 border rounded bg-light">
-                                        <div className="d-flex justify-content-between align-items-center">
-                                            <span className="small fw-medium">
-                                                {place.name}
-                                            </span>
-                                            <small className="text-muted">
-                                                {place.distance}km
-                                            </small>
-                                        </div>
-                                        <small className="text-muted">
-                                            {place.type}
-                                        </small>
-                                    </div>
-                                </div>
-                            ))}
+                    <div className="small text-muted">
+                        <div>
+                            Coordinates: {position[0].toFixed(4)},{" "}
+                            {position[1].toFixed(4)}
                         </div>
-                    ) : (
-                        !loadingPlaces && (
-                            <p className="text-muted small">
-                                No nearby places found
-                            </p>
-                        )
-                    )}
+                        <div>Service Radius: {radius}km</div>
+                    </div>
                 </div>
             )}
 
-            {error && <div className="text-danger mt-2">{error}</div>}
+            {error && <div className="text-danger mt-2 small">{error}</div>}
+
+            {/* Custom Styles */}
+            <style>{`
+                .enhanced-location-selector {
+                    position: relative;
+                }
+
+                .search-result-item:hover {
+                    background-color: #f8f9fa;
+                }
+
+                .hover-bg-light:hover {
+                    background-color: #f8f9fa !important;
+                }
+
+                .map-container .leaflet-container {
+                    height: 400px !important;
+                    width: 100% !important;
+                }
+
+                .search-results {
+                    position: absolute;
+                    top: 100%;
+                    left: 0;
+                    right: 0;
+                    z-index: 1000;
+                }
+
+                .leaflet-popup-content-wrapper {
+                    background: white;
+                    border-radius: 8px;
+                    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+                }
+
+                .leaflet-popup-content {
+                    margin: 8px 12px;
+                    line-height: 1.4;
+                }
+
+                .leaflet-control-zoom {
+                    border: none;
+                    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.2);
+                }
+
+                .leaflet-control-zoom a {
+                    background-color: white;
+                    color: #333;
+                    border: none;
+                    box-shadow: none;
+                }
+
+                .leaflet-control-zoom a:hover {
+                    background-color: #f4f4f4;
+                }
+            `}</style>
         </div>
     );
-};
-
-// Function to get nearby places from Nominatim
-const getNearbyPlacesFromNominatim = async (lat, lng, radius) => {
-    const places = [];
-    const placeTypes = [
-        "city",
-        "town",
-        "village",
-        "suburb",
-        "neighbourhood",
-        "locality",
-    ];
-
-    for (const type of placeTypes) {
-        try {
-            // Add delay to respect rate limits
-            await new Promise((resolve) => setTimeout(resolve, 1000));
-
-            const response = await fetch(
-                `https://nominatim.openstreetmap.org/search?format=json&limit=10&countrycodes=lk&class=place&type=${type}&lat=${lat}&lon=${lng}&bounded=1&viewbox=${getBoundingBox(
-                    lat,
-                    lng,
-                    radius
-                )}`,
-                {
-                    headers: {
-                        "User-Agent": "HireMe-ServiceApp/1.0",
-                    },
-                }
-            );
-
-            const data = await response.json();
-
-            data.forEach((place) => {
-                const distance = calculateDistance(
-                    lat,
-                    lng,
-                    parseFloat(place.lat),
-                    parseFloat(place.lon)
-                );
-
-                if (distance <= radius) {
-                    places.push({
-                        name: extractPlaceName(place),
-                        distance: Math.round(distance * 10) / 10,
-                        type: place.type,
-                        coordinates: {
-                            lat: parseFloat(place.lat),
-                            lng: parseFloat(place.lon),
-                        },
-                    });
-                }
-            });
-        } catch (error) {
-            console.error(`Error fetching ${type} places:`, error);
-        }
-    }
-
-    // Remove duplicates and sort by distance
-    const uniquePlaces = places.filter(
-        (place, index, self) =>
-            index === self.findIndex((p) => p.name === place.name)
-    );
-
-    return uniquePlaces.sort((a, b) => a.distance - b.distance).slice(0, 20);
-};
-
-// Helper functions
-const extractPlaceName = (place) => {
-    return place.display_name.split(",")[0].trim();
-};
-
-const getBoundingBox = (lat, lng, radiusKm) => {
-    const latDelta = radiusKm / 111;
-    const lngDelta = radiusKm / (111 * Math.cos((lat * Math.PI) / 180));
-
-    return `${lng - lngDelta},${lat - latDelta},${lng + lngDelta},${
-        lat + latDelta
-    }`;
-};
-
-const calculateDistance = (lat1, lng1, lat2, lng2) => {
-    const R = 6371;
-    const dLat = ((lat2 - lat1) * Math.PI) / 180;
-    const dLng = ((lng2 - lng1) * Math.PI) / 180;
-    const a =
-        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-        Math.cos((lat1 * Math.PI) / 180) *
-            Math.cos((lat2 * Math.PI) / 180) *
-            Math.sin(dLng / 2) *
-            Math.sin(dLng / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
 };
 
 export default EnhancedLocationSelector;

@@ -1,4 +1,12 @@
-import React, { createContext, useContext, useReducer, useEffect } from "react";
+import React, {
+    createContext,
+    useContext,
+    useReducer,
+    useEffect,
+    useState,
+    useCallback,
+    useRef,
+} from "react";
 import { useAuth } from "./AuthContext";
 import clientService from "../services/clientService";
 
@@ -91,135 +99,295 @@ export const ClientProvider = ({ children }) => {
     const [state, dispatch] = useReducer(clientReducer, initialState);
     const { user } = useAuth();
 
-    // Load dashboard data
-    const loadDashboardData = async () => {
+    // ✅ FIXED: Use refs to avoid re-renders
+    const lastRequestTimes = useRef({});
+    const pendingRequests = useRef(new Set());
+    const debounceTimers = useRef({});
+    const isInitialized = useRef(false);
+
+    // ✅ FIXED: Store functions in refs to avoid dependency issues
+    const loadServiceDataInternalRef = useRef();
+    const loadDashboardDataRef = useRef();
+
+    const shouldThrottleRequest = (key, minInterval = 3000) => {
+        const lastTime = lastRequestTimes.current[key];
+        const now = Date.now();
+
+        if (key.includes("services") || key.includes("categories")) {
+            minInterval = 2000;
+        }
+
+        if (lastTime && now - lastTime < minInterval) {
+            console.log(
+                `Request ${key} throttled, last request was ${
+                    now - lastTime
+                }ms ago`
+            );
+            return true;
+        }
+
+        lastRequestTimes.current[key] = now;
+        return false;
+    };
+
+    const handleApiCall = async (apiCall, errorKey, retryCount = 2) => {
+        if (pendingRequests.current.has(errorKey)) {
+            console.log(`Request ${errorKey} already pending, skipping`);
+            return null;
+        }
+
+        pendingRequests.current.add(errorKey);
+
+        try {
+            for (let attempt = 1; attempt <= retryCount; attempt++) {
+                try {
+                    const result = await apiCall();
+                    dispatch({ type: "CLEAR_ERROR", key: errorKey });
+                    return result;
+                } catch (error) {
+                    console.error(
+                        `API call ${errorKey} failed (attempt ${attempt}):`,
+                        error
+                    );
+
+                    if (error.response?.status === 429) {
+                        if (attempt < retryCount) {
+                            const waitTime = Math.min(1000 * attempt, 3000);
+                            console.log(
+                                `Rate limited, waiting ${waitTime}ms before retry...`
+                            );
+                            await new Promise((resolve) =>
+                                setTimeout(resolve, waitTime)
+                            );
+                            continue;
+                        }
+                    }
+
+                    if (attempt === retryCount) {
+                        const errorMessage =
+                            error.response?.status === 429
+                                ? "Loading data, please wait..."
+                                : error.message;
+
+                        dispatch({
+                            type: "SET_ERROR",
+                            key: errorKey,
+                            error: errorMessage,
+                        });
+
+                        if (error.response?.status === 429) {
+                            console.warn(`Rate limited for ${errorKey}`);
+                            return null;
+                        }
+                        throw error;
+                    }
+                }
+            }
+        } finally {
+            pendingRequests.current.delete(errorKey);
+        }
+    };
+
+    // ✅ FIXED: Create stable functions with no dependencies
+    const loadDashboardData = useCallback(async () => {
         if (!user || user.role !== "client") return;
+
+        if (shouldThrottleRequest("dashboard", 10000)) {
+            return;
+        }
 
         dispatch({ type: "SET_LOADING", key: "dashboard", value: true });
 
         try {
-            // Load stats
-            const statsResponse = await clientService.getDashboardStats();
-            if (statsResponse.success) {
+            const statsResponse = await handleApiCall(
+                () => clientService.getDashboardStats(),
+                "dashboard"
+            );
+
+            if (statsResponse?.success) {
                 dispatch({ type: "SET_STATS", payload: statsResponse.data });
             }
 
-            // Load recent activity
-            const activityResponse = await clientService.getRecentActivity(10);
-            if (activityResponse.success) {
+            const activityResponse = await handleApiCall(
+                () => clientService.getRecentActivity(10),
+                "dashboard_activity"
+            );
+
+            if (activityResponse?.success) {
                 dispatch({
                     type: "SET_RECENT_ACTIVITY",
                     payload: activityResponse.data,
                 });
             }
         } catch (error) {
-            dispatch({
-                type: "SET_ERROR",
-                key: "dashboard",
-                error: error.message,
-            });
+            console.error("Dashboard data loading failed:", error);
         } finally {
             dispatch({ type: "SET_LOADING", key: "dashboard", value: false });
         }
-    };
+    }, []); // ✅ No dependencies
 
-    // Load service data
-    const loadServiceData = async (location = null) => {
+    const loadServiceDataInternal = useCallback(async (location = null) => {
+        const requestKey = location
+            ? `services_${location.lat}_${location.lng}`
+            : "services_no_location";
+
+        if (shouldThrottleRequest(requestKey, 2000)) {
+            return;
+        }
+
         dispatch({ type: "SET_LOADING", key: "services", value: true });
 
         try {
-            // Load popular services
-            const popularResponse = await clientService.getPopularServices(
-                location,
-                8
-            );
-            if (popularResponse.success) {
+            const locationParams = location
+                ? {
+                      latitude: location.lat,
+                      longitude: location.lng,
+                      radius: location.radius || 15,
+                  }
+                : {};
+
+            const promises = [
+                handleApiCall(
+                    () =>
+                        clientService.getPopularServices({
+                            ...locationParams,
+                            limit: 8,
+                        }),
+                    "popular_services"
+                ),
+                handleApiCall(
+                    () =>
+                        clientService.getRecentServices({
+                            ...locationParams,
+                            limit: 8,
+                        }),
+                    "recent_services"
+                ),
+                handleApiCall(
+                    () => clientService.getServiceCategories(locationParams),
+                    "categories"
+                ),
+            ];
+
+            const results = await Promise.allSettled(promises);
+
+            if (
+                results[0].status === "fulfilled" &&
+                results[0].value?.success
+            ) {
                 dispatch({
                     type: "SET_POPULAR_SERVICES",
-                    payload: popularResponse.data,
+                    payload: results[0].value.data,
                 });
             }
 
-            // Load recent services
-            const recentResponse = await clientService.getRecentServices(
-                location,
-                8
-            );
-            if (recentResponse.success) {
+            if (
+                results[1].status === "fulfilled" &&
+                results[1].value?.success
+            ) {
                 dispatch({
                     type: "SET_RECENT_SERVICES",
-                    payload: recentResponse.data,
+                    payload: results[1].value.data,
                 });
             }
 
-            // Load categories
-            const categoriesResponse = await clientService.getServiceCategories(
-                location
-            );
-            if (categoriesResponse.success) {
+            if (
+                results[2].status === "fulfilled" &&
+                results[2].value?.success
+            ) {
                 dispatch({
                     type: "SET_CATEGORIES",
-                    payload: categoriesResponse.data,
+                    payload: results[2].value.data,
                 });
             }
         } catch (error) {
-            dispatch({
-                type: "SET_ERROR",
-                key: "services",
-                error: error.message,
-            });
+            console.error("Service data loading failed:", error);
         } finally {
             dispatch({ type: "SET_LOADING", key: "services", value: false });
         }
-    };
+    }, []); // ✅ No dependencies
 
-    // Load recommendations
-    const loadRecommendations = async (location = null) => {
-        dispatch({ type: "SET_LOADING", key: "recommendations", value: true });
+    const loadServiceData = useCallback((location = null) => {
+        const key = "serviceData";
 
-        try {
-            const response = await clientService.getRecommendations(
-                location,
-                6
-            );
-            if (response.success) {
-                dispatch({
-                    type: "SET_RECOMMENDATIONS",
-                    payload: response.data.recommendations,
-                });
-            }
-        } catch (error) {
-            dispatch({
-                type: "SET_ERROR",
-                key: "recommendations",
-                error: error.message,
-            });
-        } finally {
-            dispatch({
-                type: "SET_LOADING",
-                key: "recommendations",
-                value: false,
-            });
+        if (debounceTimers.current[key]) {
+            clearTimeout(debounceTimers.current[key]);
         }
-    };
 
-    // Set user location
-    const setLocation = (location) => {
-        dispatch({ type: "SET_LOCATION", payload: location });
+        debounceTimers.current[key] = setTimeout(() => {
+            loadServiceDataInternalRef.current(location);
+        }, 800);
+    }, []); // ✅ No dependencies
 
-        // Reload location-dependent data
-        loadServiceData(location);
-        loadRecommendations(location);
-    };
+    const loadRecommendations = useCallback(async (location = null) => {
+        console.log("Recommendations loading disabled to reduce API calls");
+        return;
+    }, []);
 
-    // Initialize data on mount
+    // ✅ FIXED: Create stable setLocation function
+    const setLocation = useCallback((newLocation) => {
+        console.log("🎯 ClientContext: setLocation called");
+
+        // Get current location from state at call time
+        const currentLocation = state.location;
+
+        if (
+            currentLocation &&
+            newLocation &&
+            currentLocation.lat === newLocation.lat &&
+            currentLocation.lng === newLocation.lng
+        ) {
+            console.log(
+                "⚠️ ClientContext: Location unchanged, skipping update"
+            );
+            return;
+        }
+
+        console.log("✅ ClientContext: Location changed, updating state");
+        dispatch({ type: "SET_LOCATION", payload: newLocation });
+
+        if (newLocation) {
+            loadServiceData(newLocation);
+        }
+    }, []); // ✅ No dependencies - access state inside function
+
+    const refreshAllData = useCallback(() => {
+        // Get current location from state at call time
+        const currentLocation = state.location;
+
+        // Clear throttling for refresh
+        lastRequestTimes.current = {};
+
+        // Force refresh all data
+        loadDashboardDataRef.current();
+        loadServiceDataInternalRef.current(currentLocation);
+    }, []); // ✅ No dependencies
+
+    // ✅ Store functions in refs
+    loadServiceDataInternalRef.current = loadServiceDataInternal;
+    loadDashboardDataRef.current = loadDashboardData;
+
+    // ✅ Initialize data on mount (only once)
     useEffect(() => {
-        if (user && user.role === "client") {
+        if (user && user.role === "client" && !isInitialized.current) {
+            console.log("Initializing client data...");
+            isInitialized.current = true;
+
             loadDashboardData();
             loadServiceData();
-            loadRecommendations();
         }
-    }, [user]);
+    }, [user]); // ✅ Only depend on user
+
+    // ✅ Cleanup on unmount
+    useEffect(() => {
+        return () => {
+            Object.values(debounceTimers.current).forEach((timer) => {
+                if (timer) clearTimeout(timer);
+            });
+            debounceTimers.current = {};
+            pendingRequests.current.clear();
+        };
+    }, []);
 
     const value = {
         ...state,
@@ -229,6 +397,12 @@ export const ClientProvider = ({ children }) => {
         loadRecommendations,
         setLocation,
         clearError: (key) => dispatch({ type: "CLEAR_ERROR", key }),
+        refreshAllData,
+
+        // Helper functions
+        isLoading: (key) => state.loading[key] || false,
+        hasError: (key) => !!state.errors[key],
+        getError: (key) => state.errors[key],
     };
 
     return (

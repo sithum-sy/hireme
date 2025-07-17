@@ -10,6 +10,7 @@ const AppointmentsList = () => {
 
     // State management
     const [appointments, setAppointments] = useState([]);
+
     const [loading, setLoading] = useState(true);
     const [filters, setFilters] = useState({
         status: searchParams.get("status") || "all",
@@ -23,6 +24,8 @@ const AppointmentsList = () => {
         total: 0,
         per_page: 15,
     });
+    console.log("Appointment total:", pagination);
+
     const [stats, setStats] = useState({
         today: 0,
         pending: 0,

@@ -33,7 +33,7 @@ Route::get('/providers/{providerId}/availability/slots', [AvailabilityController
 Route::get('/providers/{providerId}/profile', [ProfileController::class, 'getPublicProviderProfile']);
 
 // Protected routes
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
     // Authentication
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'user']);

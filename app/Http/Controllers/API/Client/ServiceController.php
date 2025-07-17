@@ -7,8 +7,10 @@ use App\Models\Service;
 use App\Models\ServiceCategory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\RateLimiter;
 
 class ServiceController extends Controller
 {
@@ -66,7 +68,7 @@ class ServiceController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $services->through(function ($service) {
+            'data' => collect($services->items())->map(function ($service) {
                 return $this->formatServiceForClient($service);
             }),
             'meta' => [
@@ -218,6 +220,36 @@ class ServiceController extends Controller
     /**
      * Get popular services
      */
+    // public function getPopularServices(Request $request)
+    // {
+    //     $request->validate([
+    //         'latitude' => 'nullable|numeric|between:-90,90',
+    //         'longitude' => 'nullable|numeric|between:-180,180',
+    //         'radius' => 'nullable|integer|min:1|max:50',
+    //         'limit' => 'nullable|integer|min:1|max:20'
+    //     ]);
+
+    //     $query = Service::with(['category', 'provider.providerProfile'])
+    //         ->popular($request->get('limit', 10));
+
+    //     // Apply location filter if provided
+    //     if ($request->latitude && $request->longitude) {
+    //         $radius = $request->radius ?? 20; // Wider radius for popular services
+    //         $query->servingLocation($request->latitude, $request->longitude);
+    //     }
+
+    //     $services = $query->get();
+
+    //     return response()->json([
+    //         'success' => true,
+    //         'data' => $services->map(function ($service) {
+    //             return $this->formatServiceForClient($service);
+    //         })
+    //     ]);
+    // }
+    /**
+     * Get popular services with caching
+     */
     public function getPopularServices(Request $request)
     {
         $request->validate([
@@ -227,27 +259,74 @@ class ServiceController extends Controller
             'limit' => 'nullable|integer|min:1|max:20'
         ]);
 
-        $query = Service::with(['category', 'provider.providerProfile'])
-            ->popular($request->get('limit', 10));
+        // Create cache key
+        $lat = $request->latitude ? round($request->latitude, 2) : null;
+        $lng = $request->longitude ? round($request->longitude, 2) : null;
+        $radius = $request->radius ?? 20;
+        $limit = $request->limit ?? 10;
 
-        // Apply location filter if provided
-        if ($request->latitude && $request->longitude) {
-            $radius = $request->radius ?? 20; // Wider radius for popular services
-            $query->servingLocation($request->latitude, $request->longitude);
-        }
+        $cacheKey = "popular_services_" . md5($lat . '_' . $lng . '_' . $radius . '_' . $limit);
 
-        $services = $query->get();
+        // Cache for 5 minutes
+        $services = Cache::remember($cacheKey, 300, function () use ($request) {
+            $query = Service::with(['category', 'provider.providerProfile'])
+                ->popular($request->get('limit', 10));
+
+            // Apply location filter if provided
+            if ($request->latitude && $request->longitude) {
+                $radius = $request->radius ?? 20;
+                $query->servingLocation($request->latitude, $request->longitude);
+            }
+
+            return $query->get()->map(function ($service) {
+                return $this->formatServiceForClient($service);
+            });
+        });
 
         return response()->json([
             'success' => true,
-            'data' => $services->map(function ($service) {
-                return $this->formatServiceForClient($service);
-            })
+            'data' => $services
         ]);
     }
 
+
     /**
      * Get recent services
+     */
+    // public function getRecentServices(Request $request)
+    // {
+    //     $request->validate([
+    //         'latitude' => 'nullable|numeric|between:-90,90',
+    //         'longitude' => 'nullable|numeric|between:-180,180',
+    //         'radius' => 'nullable|integer|min:1|max:50',
+    //         'days' => 'nullable|integer|min:1|max:90',
+    //         'limit' => 'nullable|integer|min:1|max:20'
+    //     ]);
+
+    //     $days = $request->get('days', 30);
+    //     $limit = $request->get('limit', 10);
+
+    //     $query = Service::with(['category', 'provider.providerProfile'])
+    //         ->recent($days)
+    //         ->limit($limit);
+
+    //     // Apply location filter if provided
+    //     if ($request->latitude && $request->longitude) {
+    //         $radius = $request->radius ?? 15;
+    //         $query->servingLocation($request->latitude, $request->longitude);
+    //     }
+
+    //     $services = $query->get();
+
+    //     return response()->json([
+    //         'success' => true,
+    //         'data' => $services->map(function ($service) {
+    //             return $this->formatServiceForClient($service);
+    //         })
+    //     ]);
+    // }
+    /**
+     * Get recent services with caching
      */
     public function getRecentServices(Request $request)
     {
@@ -259,31 +338,82 @@ class ServiceController extends Controller
             'limit' => 'nullable|integer|min:1|max:20'
         ]);
 
-        $days = $request->get('days', 30);
-        $limit = $request->get('limit', 10);
+        // Create cache key
+        $lat = $request->latitude ? round($request->latitude, 2) : null;
+        $lng = $request->longitude ? round($request->longitude, 2) : null;
+        $radius = $request->radius ?? 15;
+        $days = $request->days ?? 30;
+        $limit = $request->limit ?? 10;
 
-        $query = Service::with(['category', 'provider.providerProfile'])
-            ->recent($days)
-            ->limit($limit);
+        $cacheKey = "recent_services_" . md5($lat . '_' . $lng . '_' . $radius . '_' . $days . '_' . $limit);
 
-        // Apply location filter if provided
-        if ($request->latitude && $request->longitude) {
-            $radius = $request->radius ?? 15;
-            $query->servingLocation($request->latitude, $request->longitude);
-        }
+        // Cache for 5 minutes
+        $services = Cache::remember($cacheKey, 300, function () use ($request) {
+            $days = $request->get('days', 30);
+            $limit = $request->get('limit', 10);
 
-        $services = $query->get();
+            $query = Service::with(['category', 'provider.providerProfile'])
+                ->recent($days)
+                ->limit($limit);
+
+            // Apply location filter if provided
+            if ($request->latitude && $request->longitude) {
+                $radius = $request->radius ?? 15;
+                $query->servingLocation($request->latitude, $request->longitude);
+            }
+
+            return $query->get()->map(function ($service) {
+                return $this->formatServiceForClient($service);
+            });
+        });
 
         return response()->json([
             'success' => true,
-            'data' => $services->map(function ($service) {
-                return $this->formatServiceForClient($service);
-            })
+            'data' => $services
         ]);
     }
 
     /**
      * Get service categories with service counts
+     */
+    // public function getCategories(Request $request)
+    // {
+    //     $request->validate([
+    //         'latitude' => 'nullable|numeric|between:-90,90',
+    //         'longitude' => 'nullable|numeric|between:-180,180',
+    //         'radius' => 'nullable|integer|min:1|max:50',
+    //     ]);
+
+    //     $query = ServiceCategory::with(['activeServices' => function ($serviceQuery) use ($request) {
+    //         if ($request->latitude && $request->longitude) {
+    //             $radius = $request->radius ?? 15;
+    //             $serviceQuery->servingLocation($request->latitude, $request->longitude);
+    //         }
+    //     }])
+    //         ->where('is_active', true)
+    //         ->orderBy('sort_order')
+    //         ->orderBy('name');
+
+    //     $categories = $query->get();
+
+    //     return response()->json([
+    //         'success' => true,
+    //         'data' => $categories->map(function ($category) {
+    //             return [
+    //                 'id' => $category->id,
+    //                 'name' => $category->name,
+    //                 'slug' => $category->slug,
+    //                 'description' => $category->description,
+    //                 'icon' => $category->icon,
+    //                 'color' => $category->color,
+    //                 'service_count' => $category->activeServices->count(),
+    //                 'sort_order' => $category->sort_order,
+    //             ];
+    //         })
+    //     ]);
+    // }
+    /**
+     * Get service categories with caching
      */
     public function getCategories(Request $request)
     {
@@ -293,21 +423,26 @@ class ServiceController extends Controller
             'radius' => 'nullable|integer|min:1|max:50',
         ]);
 
-        $query = ServiceCategory::with(['activeServices' => function ($serviceQuery) use ($request) {
-            if ($request->latitude && $request->longitude) {
-                $radius = $request->radius ?? 15;
-                $serviceQuery->servingLocation($request->latitude, $request->longitude);
-            }
-        }])
-            ->where('is_active', true)
-            ->orderBy('sort_order')
-            ->orderBy('name');
+        // Create cache key based on location (rounded to reduce cache variations)
+        $lat = $request->latitude ? round($request->latitude, 2) : null;
+        $lng = $request->longitude ? round($request->longitude, 2) : null;
+        $radius = $request->radius ?? 15;
 
-        $categories = $query->get();
+        $cacheKey = "categories_" . md5($lat . '_' . $lng . '_' . $radius);
 
-        return response()->json([
-            'success' => true,
-            'data' => $categories->map(function ($category) {
+        // Cache for 10 minutes
+        $categories = Cache::remember($cacheKey, 600, function () use ($request) {
+            $query = ServiceCategory::with(['activeServices' => function ($serviceQuery) use ($request) {
+                if ($request->latitude && $request->longitude) {
+                    $radius = $request->radius ?? 15;
+                    $serviceQuery->servingLocation($request->latitude, $request->longitude);
+                }
+            }])
+                ->where('is_active', true)
+                ->orderBy('sort_order')
+                ->orderBy('name');
+
+            return $query->get()->map(function ($category) {
                 return [
                     'id' => $category->id,
                     'name' => $category->name,
@@ -318,7 +453,12 @@ class ServiceController extends Controller
                     'service_count' => $category->activeServices->count(),
                     'sort_order' => $category->sort_order,
                 ];
-            })
+            });
+        });
+
+        return response()->json([
+            'success' => true,
+            'data' => $categories
         ]);
     }
 

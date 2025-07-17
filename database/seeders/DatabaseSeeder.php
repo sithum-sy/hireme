@@ -21,7 +21,9 @@ class DatabaseSeeder extends Seeder
 
         // Run in order due to foreign key constraints
         $this->call([
-            ServiceCategorySeeder::class,
+            // ServiceCategorySeeder::class,
+            ServiceProviderSeeder::class,
+            AdditionalServiceProviderSeeder::class,
             // AdminSeeder::class,
             // Add more seeders here as needed
         ]);

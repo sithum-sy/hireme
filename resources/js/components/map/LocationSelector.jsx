@@ -1,12 +1,34 @@
-import React, { useState, useEffect } from "react";
-import MapComponent from "./MapComponent";
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import EnhancedLocationSelector from "./EnhancedLocationSelector";
 import LocationSearch from "./LocationSearch";
 
 const LocationSelector = ({ value, onChange, error }) => {
+    console.log("🗺️ LocationSelector: Component rendering", {
+        hasValue: !!value,
+        valueCity: value?.city || "none",
+        hasOnChange: !!onChange,
+        hasError: !!error,
+        timestamp: new Date().toISOString(),
+    });
+
     const [locationState, setLocationState] = useState("detecting");
     const [currentLocation, setCurrentLocation] = useState(null);
     const [selectedCity, setSelectedCity] = useState(null);
-    const [radius, setRadius] = useState(15);
+    const [useAdvancedMap, setUseAdvancedMap] = useState(false);
+
+    // ✅ FIXED: Use useState instead of useRef for hasInitialized
+    const [hasInitialized, setHasInitialized] = useState(false);
+    const isUserInteraction = useRef(false);
+
+    console.log("🎯 LocationSelector: Current state", {
+        locationState,
+        hasCurrentLocation: !!currentLocation,
+        currentLocationCity: currentLocation?.city || "none",
+        selectedCityName: selectedCity?.name || "none",
+        useAdvancedMap,
+        hasInitialized,
+        timestamp: new Date().toISOString(),
+    });
 
     const sriLankanCities = [
         {
@@ -59,55 +81,84 @@ const LocationSelector = ({ value, onChange, error }) => {
         },
     ];
 
-    const radiusOptions = [
-        { value: 5, label: "5 km", desc: "Local area" },
-        { value: 10, label: "10 km", desc: "Nearby areas" },
-        { value: 15, label: "15 km", desc: "Extended coverage" },
-        { value: 25, label: "25 km", desc: "Wide coverage" },
-    ];
-
+    // ✅ FIXED: Initialize only once using useState
     useEffect(() => {
-        // Initialize with existing value if provided
-        if (value && value.lat && value.lng) {
-            setCurrentLocation({
-                lat: value.lat,
-                lng: value.lng,
-                address: value.address,
-                neighborhood: value.neighborhood || "",
-                city: value.city,
-                province: value.province || "",
-                accuracy: "existing",
-            });
-            setRadius(value.radius || 15);
-            setLocationState("confirmed");
+        console.log("📍 LocationSelector: useEffect[init] - Initializing", {
+            hasValue: !!value,
+            valueDetails: value ? `${value.city}, ${value.province}` : "null",
+            hasInitialized,
+            timestamp: new Date().toISOString(),
+        });
+
+        if (!hasInitialized) {
+            console.log("🔧 LocationSelector: First time initialization");
+            setHasInitialized(true);
+
+            if (value && value.lat && value.lng) {
+                console.log(
+                    "✅ LocationSelector: Setting current location from value (no onChange)"
+                );
+                setCurrentLocation(value);
+                setLocationState("confirmed");
+            } else {
+                console.log(
+                    "⚡ LocationSelector: No value provided, starting detection"
+                );
+                detectLocation();
+            }
         } else {
-            detectLocation();
+            console.log("⏭️ LocationSelector: Already initialized, skipping");
         }
-    }, []);
+    }, [hasInitialized]); // ✅ Depend on hasInitialized instead of empty array
 
+    // ✅ FIXED: Handle value changes from parent (but don't trigger onChange)
     useEffect(() => {
-        // Initialize with existing value if provided
-        if (value && value.lat && value.lng && !currentLocation) {
-            setCurrentLocation({
-                lat: value.lat,
-                lng: value.lng,
-                address: value.address,
-                neighborhood: value.neighborhood || "",
-                city: value.city,
-                province: value.province || "",
-                accuracy: "existing",
-            });
-            setRadius(value.radius || 15);
+        console.log(
+            "🔄 LocationSelector: useEffect[value] - Value changed from parent",
+            {
+                hasValue: !!value,
+                valueDetails: value
+                    ? `${value.city}, ${value.province}`
+                    : "null",
+                hasInitialized,
+                isUserInteraction: isUserInteraction.current,
+            }
+        );
+
+        // Only update from parent if not from user interaction and component is initialized
+        if (
+            hasInitialized &&
+            !isUserInteraction.current &&
+            value &&
+            value.lat &&
+            value.lng
+        ) {
+            console.log("🔄 LocationSelector: Updating from parent value");
+            setCurrentLocation(value);
             setLocationState("confirmed");
-        } else if (!value && !currentLocation) {
-            detectLocation();
         }
-    }, [value]);
+    }, [value, hasInitialized]);
 
-    // Separate useEffect for handling onChange calls
+    // ✅ FIXED: Only call onChange for user interactions
     useEffect(() => {
-        if (currentLocation && radius && onChange) {
-            // Create a stable reference to prevent loops
+        console.log(
+            "🔄 LocationSelector: useEffect[currentLocation] - Location changed",
+            {
+                hasCurrentLocation: !!currentLocation,
+                currentLocationCity: currentLocation?.city || "none",
+                isUserInteraction: isUserInteraction.current,
+                hasOnChange: !!onChange,
+                hasInitialized,
+            }
+        );
+
+        // Only call onChange if this is from a user interaction AND component has initialized
+        if (
+            currentLocation &&
+            onChange &&
+            isUserInteraction.current &&
+            hasInitialized
+        ) {
             const locationData = {
                 lat: currentLocation.lat,
                 lng: currentLocation.lng,
@@ -116,49 +167,67 @@ const LocationSelector = ({ value, onChange, error }) => {
                 city: currentLocation.city,
                 province: currentLocation.province || "",
                 country: "Sri Lanka",
-                radius: radius,
+                radius: currentLocation.radius || 15,
             };
 
-            // Use a timeout to debounce rapid changes
+            console.log(
+                "📤 LocationSelector: Calling onChange with location data (USER INTERACTION)",
+                {
+                    locationData: `${locationData.city}, ${locationData.province}`,
+                }
+            );
+
+            // Reset the flag
+            isUserInteraction.current = false;
+
             const timeoutId = setTimeout(() => {
                 onChange(locationData);
             }, 100);
 
             return () => clearTimeout(timeoutId);
         }
-    }, [
-        currentLocation?.lat,
-        currentLocation?.lng,
-        currentLocation?.address,
-        radius,
-    ]); // Specific dependencies
+    }, [currentLocation, onChange, hasInitialized]);
 
     const detectLocation = () => {
+        console.log("🔍 LocationSelector: Starting location detection");
+        setLocationState("detecting");
+
         if ("geolocation" in navigator) {
+            console.log(
+                "📱 LocationSelector: Geolocation available, requesting position"
+            );
             navigator.geolocation.getCurrentPosition(
                 async (position) => {
+                    console.log("✅ LocationSelector: Geolocation success");
                     const { latitude, longitude } = position.coords;
                     const locationData = await reverseGeocodeOffline(
                         latitude,
                         longitude
                     );
+
+                    console.log(
+                        "📍 LocationSelector: Setting detected location"
+                    );
+                    isUserInteraction.current = true;
                     setCurrentLocation(locationData);
                     setLocationState("confirming");
                 },
                 (error) => {
-                    console.log("Geolocation failed:", error);
+                    console.log(
+                        "❌ LocationSelector: Geolocation failed:",
+                        error
+                    );
                     setLocationState("manual");
                 },
                 { timeout: 10000, enableHighAccuracy: true }
             );
         } else {
+            console.log("❌ LocationSelector: Geolocation not available");
             setLocationState("manual");
         }
     };
 
-    // Offline reverse geocoding using closest city
     const reverseGeocodeOffline = async (lat, lng) => {
-        // Find closest Sri Lankan city
         let closestCity = sriLankanCities[0];
         let minDistance = calculateDistance(
             lat,
@@ -182,13 +251,13 @@ const LocationSelector = ({ value, onChange, error }) => {
             neighborhood: minDistance < 5 ? `${closestCity.name} Area` : "",
             city: closestCity.name,
             province: closestCity.province,
+            radius: 15,
             accuracy: "gps_offline",
         };
     };
 
-    // Calculate distance between two coordinates (Haversine formula)
     const calculateDistance = (lat1, lng1, lat2, lng2) => {
-        const R = 6371; // Earth's radius in km
+        const R = 6371;
         const dLat = ((lat2 - lat1) * Math.PI) / 180;
         const dLng = ((lng2 - lng1) * Math.PI) / 180;
         const a =
@@ -202,6 +271,10 @@ const LocationSelector = ({ value, onChange, error }) => {
     };
 
     const handleLocationConfirm = (confirmed) => {
+        console.log("🎯 LocationSelector: Location confirm called", {
+            confirmed,
+        });
+        isUserInteraction.current = true;
         if (confirmed) {
             setLocationState("confirmed");
         } else {
@@ -210,6 +283,10 @@ const LocationSelector = ({ value, onChange, error }) => {
     };
 
     const handleCitySelect = (city) => {
+        console.log("🏙️ LocationSelector: City selected", {
+            cityName: city.name,
+        });
+        isUserInteraction.current = true;
         setSelectedCity(city);
         setCurrentLocation({
             lat: city.lat,
@@ -218,37 +295,37 @@ const LocationSelector = ({ value, onChange, error }) => {
             neighborhood: `${city.name} Center`,
             city: city.name,
             province: city.province,
+            radius: 15,
             accuracy: "city",
         });
         setLocationState("selecting");
     };
 
     const handleLocationSelect = (location) => {
+        console.log("📍 LocationSelector: Location selected from map/search");
+        isUserInteraction.current = true;
         setCurrentLocation(location);
         setLocationState("confirmed");
     };
 
-    const handleRadiusChange = (newRadius) => {
-        setRadius(newRadius);
+    const handleAdvancedMapToggle = () => {
+        console.log("🗺️ LocationSelector: Advanced map toggle", {
+            currentState: useAdvancedMap,
+            newState: !useAdvancedMap,
+        });
+        setUseAdvancedMap(!useAdvancedMap);
     };
 
-    // Prevent any event bubbling that might trigger form submission
-    const handleContainerClick = (e) => {
-        e.stopPropagation();
-    };
-
-    const handleContainerSubmit = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        return false;
+    const handleResetLocation = () => {
+        console.log("🔄 LocationSelector: Reset button clicked");
+        setLocationState("manual");
+        setCurrentLocation(null);
+        setUseAdvancedMap(false);
+        isUserInteraction.current = false;
     };
 
     return (
-        <div
-            className={`location-selector ${error ? "is-invalid" : ""}`}
-            onClick={handleContainerClick}
-            onSubmit={handleContainerSubmit}
-        >
+        <div className={`location-selector ${error ? "is-invalid" : ""}`}>
             {/* Location Detection */}
             {locationState === "detecting" && (
                 <div className="text-center py-4">
@@ -278,22 +355,14 @@ const LocationSelector = ({ value, onChange, error }) => {
                         <button
                             type="button"
                             className="btn btn-success btn-sm"
-                            onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                handleLocationConfirm(true);
-                            }}
+                            onClick={() => handleLocationConfirm(true)}
                         >
                             ✅ Yes, this is correct
                         </button>
                         <button
                             type="button"
                             className="btn btn-outline-secondary btn-sm"
-                            onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                handleLocationConfirm(false);
-                            }}
+                            onClick={() => handleLocationConfirm(false)}
                         >
                             ❌ No, let me choose
                         </button>
@@ -310,12 +379,8 @@ const LocationSelector = ({ value, onChange, error }) => {
                             <div key={city.name} className="col-6 col-md-4">
                                 <button
                                     type="button"
-                                    className="btn btn-outline-primary w-100"
-                                    onClick={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        handleCitySelect(city);
-                                    }}
+                                    className="btn btn-outline-primary w-100 h-100"
+                                    onClick={() => handleCitySelect(city)}
                                 >
                                     <div className="fw-semibold">
                                         {city.name}
@@ -343,37 +408,68 @@ const LocationSelector = ({ value, onChange, error }) => {
                 </div>
             )}
 
-            {/* Radius Selection */}
+            {/* Advanced Map Option */}
             {(locationState === "confirmed" ||
                 locationState === "selecting") && (
-                <div className="radius-selector mb-3">
-                    <h6 className="fw-bold mb-2">
-                        📏 How far will you travel?
-                    </h6>
-                    <div className="d-flex gap-2 flex-wrap">
-                        {radiusOptions.map((option) => (
-                            <button
-                                type="button"
-                                key={option.value}
-                                className={`btn ${
-                                    radius === option.value
-                                        ? "btn-primary"
-                                        : "btn-outline-primary"
-                                }`}
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    handleRadiusChange(option.value);
-                                }}
-                            >
-                                {option.label}
-                                <br />
-                                <small>{option.desc}</small>
-                            </button>
-                        ))}
-                    </div>
+                <div className="mb-3">
+                    <button
+                        type="button"
+                        className="btn btn-outline-info btn-sm"
+                        onClick={handleAdvancedMapToggle}
+                    >
+                        <i className="fas fa-map me-2"></i>
+                        {useAdvancedMap
+                            ? "Use Simple Location"
+                            : "Use Advanced Map"}
+                    </button>
                 </div>
             )}
+
+            {/* Advanced Map Selector */}
+            {useAdvancedMap && (
+                <div className="advanced-map-selector mb-3">
+                    <h6 className="fw-bold mb-2">🗺️ Select location on map:</h6>
+                    <EnhancedLocationSelector
+                        value={currentLocation}
+                        onChange={handleLocationSelect}
+                        error={error}
+                    />
+                </div>
+            )}
+
+            {/* Current Location Display */}
+            {currentLocation &&
+                locationState === "confirmed" &&
+                !useAdvancedMap && (
+                    <div className="current-location-display p-3 bg-success bg-opacity-10 rounded mb-3 border-start border-success border-3">
+                        <h6 className="fw-bold text-success mb-2">
+                            <i className="fas fa-check-circle me-2"></i>
+                            Selected Location
+                        </h6>
+                        <div className="location-details">
+                            <div className="mb-2">
+                                <strong>
+                                    {currentLocation.city},{" "}
+                                    {currentLocation.province}
+                                </strong>
+                            </div>
+                            <div className="text-muted small mb-2">
+                                {currentLocation.address}
+                            </div>
+                            <div className="d-flex align-items-center flex-wrap gap-2">
+                                <span className="badge bg-primary">
+                                    Service Radius:{" "}
+                                    {currentLocation.radius || 15}km
+                                </span>
+                                <small className="text-muted">
+                                    Coordinates:{" "}
+                                    {Number(currentLocation.lat).toFixed(4)},{" "}
+                                    {Number(currentLocation.lng).toFixed(4)}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
             {/* Reset Location Button */}
             {locationState === "confirmed" && (
@@ -381,12 +477,7 @@ const LocationSelector = ({ value, onChange, error }) => {
                     <button
                         type="button"
                         className="btn btn-outline-secondary btn-sm"
-                        onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            setLocationState("manual");
-                            setCurrentLocation(null);
-                        }}
+                        onClick={handleResetLocation}
                     >
                         <i className="fas fa-redo me-2"></i>
                         Change Location
@@ -394,178 +485,7 @@ const LocationSelector = ({ value, onChange, error }) => {
                 </div>
             )}
 
-            {/* Current Location Display */}
-            {currentLocation && locationState === "confirmed" && (
-                <div className="current-location-display p-3 bg-success bg-opacity-10 rounded mb-3 border-start border-success border-3">
-                    <h6 className="fw-bold text-success mb-2">
-                        <i className="fas fa-check-circle me-2"></i>
-                        Selected Location
-                    </h6>
-                    <div className="location-details">
-                        <div className="mb-2">
-                            <strong>
-                                {currentLocation.city},{" "}
-                                {currentLocation.province}
-                            </strong>
-                        </div>
-                        <div className="text-muted small mb-2">
-                            {currentLocation.address}
-                        </div>
-                        <div className="d-flex align-items-center">
-                            <span className="badge bg-primary me-2">
-                                Service Radius: {radius}km
-                            </span>
-                            <small className="text-muted">
-                                Coordinates:{" "}
-                                {Number(currentLocation.lat).toFixed(4)},{" "}
-                                {Number(currentLocation.lng).toFixed(4)}
-                            </small>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Map Display */}
-            {currentLocation && (
-                <div className="map-container">
-                    <MapComponent
-                        center={[currentLocation.lat, currentLocation.lng]}
-                        radius={radius}
-                        onLocationChange={handleLocationSelect}
-                    />
-                </div>
-            )}
-
             {error && <div className="invalid-feedback d-block">{error}</div>}
-
-            {/* Custom Styles */}
-            <style>{`
-                .location-selector {
-                    position: relative;
-                }
-
-                .location-confirm,
-                .current-location-display {
-                    animation: slideIn 0.3s ease-out;
-                }
-
-                @keyframes slideIn {
-                    from {
-                        opacity: 0;
-                        transform: translateY(-10px);
-                    }
-                    to {
-                        opacity: 1;
-                        transform: translateY(0);
-                    }
-                }
-
-                .city-selector .btn {
-                    transition: all 0.2s ease;
-                    height: auto;
-                    padding: 0.75rem 0.5rem;
-                }
-
-                .city-selector .btn:hover {
-                    transform: translateY(-2px);
-                    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-                }
-
-                .radius-selector .btn {
-                    min-width: 80px;
-                    text-align: center;
-                    transition: all 0.2s ease;
-                }
-
-                .radius-selector .btn:hover {
-                    transform: translateY(-1px);
-                }
-
-                .radius-selector .btn.btn-primary {
-                    background-color: #0d6efd;
-                    border-color: #0d6efd;
-                }
-
-                .map-container {
-                    border-radius: 0.375rem;
-                    overflow: hidden;
-                    border: 1px solid #dee2e6;
-                }
-
-                .location-details {
-                    font-size: 0.9rem;
-                }
-
-                .badge {
-                    font-size: 0.75rem;
-                }
-
-                /* Prevent any form submission events */
-                .location-selector * {
-                    /* Ensure no elements accidentally trigger form submission */
-                }
-
-                .location-selector button {
-                    /* All buttons are explicitly type="button" */
-                }
-
-                /* Loading spinner styling */
-                .spinner-border {
-                    width: 2rem;
-                    height: 2rem;
-                }
-
-                /* Error state styling */
-                .location-selector.is-invalid {
-                    border: 1px solid #dc3545;
-                    border-radius: 0.375rem;
-                    padding: 1rem;
-                }
-
-                .invalid-feedback {
-                    display: block;
-                    width: 100%;
-                    margin-top: 0.25rem;
-                    font-size: 0.875rem;
-                    color: #dc3545;
-                }
-
-                /* Responsive adjustments */
-                @media (max-width: 576px) {
-                    .city-selector .col-6 {
-                        margin-bottom: 0.5rem;
-                    }
-
-                    .radius-selector .btn {
-                        min-width: 70px;
-                        font-size: 0.8rem;
-                        padding: 0.5rem 0.25rem;
-                    }
-
-                    .d-flex.gap-2 {
-                        gap: 0.5rem !important;
-                    }
-                }
-
-                /* Focus states for accessibility */
-                .location-selector button:focus {
-                    outline: none;
-                    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
-                }
-
-                /* Success state styling */
-                .bg-success.bg-opacity-10 {
-                    background-color: rgba(25, 135, 84, 0.1) !important;
-                }
-
-                .border-success {
-                    border-color: #198754 !important;
-                }
-
-                .text-success {
-                    color: #198754 !important;
-                }
-            `}</style>
         </div>
     );
 };

@@ -8,6 +8,8 @@ use App\Models\ServiceSearch;
 use App\Models\ServiceCategory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class SearchController extends Controller
 {
@@ -36,7 +38,8 @@ class SearchController extends Controller
             'min_price',
             'max_price',
             'min_rating',
-            'pricing_type'
+            'pricing_type',
+            'is_active' => true,
         ]);
 
         $query = Service::with(['category', 'provider.providerProfile'])
@@ -47,6 +50,13 @@ class SearchController extends Controller
             $lat = $request->latitude;
             $lng = $request->longitude;
             $radius = $request->radius ?? 15;
+
+            Log::info('Location-based search:', [
+                'lat' => $request->latitude,
+                'lng' => $request->longitude,
+                'radius' => $radius,
+                'results_count' => $query->count()
+            ]);
 
             $query->servingLocation($lat, $lng);
         }
@@ -72,6 +82,19 @@ class SearchController extends Controller
                 if (!($request->latitude && $request->longitude)) {
                     $query->orderByDesc('created_at');
                 }
+        }
+
+        // Text search
+        if ($request->search) {
+            $query->where(function ($q) use ($request) {
+                $q->where('title', 'like', "%{$request->search}%")
+                    ->orWhere('description', 'like', "%{$request->search}%");
+            });
+        }
+
+        // Category filter
+        if ($request->category_id) {
+            $query->where('category_id', $request->category_id);
         }
 
         $perPage = $request->get('per_page', 12);
@@ -204,7 +227,7 @@ class SearchController extends Controller
         return [
             'id' => $service->id,
             'title' => $service->title,
-            'description' => \Str::limit($service->description, 150),
+            'description' => Str::limit($service->description, 150),
             'category' => [
                 'id' => $service->category->id,
                 'name' => $service->category->name,

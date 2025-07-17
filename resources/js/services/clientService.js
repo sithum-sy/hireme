@@ -6,25 +6,86 @@ import reviewService from "./reviewService";
 const API_BASE = "/api/client";
 
 class ClientService {
-    // Dashboard APIs
-    async getDashboardStats() {
-        const response = await axios.get(`${API_BASE}/dashboard/stats`);
-        return response.data;
+    constructor() {
+        this.cache = new Map();
+        this.cacheTimeout = 5 * 60 * 1000; // 5 minutes
     }
 
-    async getRecommendations(location = null, limit = 10) {
-        const params = { limit };
-        if (location) {
-            params.latitude = location.lat;
-            params.longitude = location.lng;
-            params.radius = location.radius || 15;
+    // Cache helper
+    getCachedData(key) {
+        const cached = this.cache.get(key);
+        if (cached && Date.now() - cached.timestamp < this.cacheTimeout) {
+            return cached.data;
         }
+        return null;
+    }
 
-        const response = await axios.get(
-            `${API_BASE}/dashboard/recommendations`,
-            { params }
-        );
-        return response.data;
+    setCachedData(key, data) {
+        this.cache.set(key, {
+            data,
+            timestamp: Date.now(),
+        });
+    }
+
+    // Dashboard APIs
+    // async getDashboardStats() {
+    //     const response = await axios.get(`${API_BASE}/dashboard/stats`);
+    //     return response.data;
+    // }
+    async getDashboardStats() {
+        const cacheKey = "dashboard_stats";
+        const cached = this.getCachedData(cacheKey);
+        if (cached) return cached;
+
+        try {
+            const response = await axios.get(`${API_BASE}/dashboard/stats`);
+            this.setCachedData(cacheKey, response.data);
+            return response.data;
+        } catch (error) {
+            if (error.response?.status === 429) {
+                // Return cached data if available, even if expired
+                const cached = this.cache.get(cacheKey);
+                if (cached) return cached.data;
+            }
+            throw error;
+        }
+    }
+
+    // async getRecommendations(location = null, limit = 10) {
+    //     const params = { limit };
+    //     if (location) {
+    //         params.latitude = location.lat;
+    //         params.longitude = location.lng;
+    //         params.radius = location.radius || 15;
+    //     }
+
+    //     const response = await axios.get(
+    //         `${API_BASE}/dashboard/recommendations`,
+    //         { params }
+    //     );
+    //     return response.data;
+    // }
+    async getRecommendations(params = {}) {
+        const cacheKey = `recommendations_${JSON.stringify(params)}`;
+        const cached = this.getCachedData(cacheKey);
+        if (cached) return cached;
+
+        try {
+            const response = await axios.get(
+                `${API_BASE}/dashboard/recommendations`,
+                {
+                    params,
+                }
+            );
+            this.setCachedData(cacheKey, response.data);
+            return response.data;
+        } catch (error) {
+            if (error.response?.status === 429) {
+                const cached = this.cache.get(cacheKey);
+                if (cached) return cached.data;
+            }
+            throw error;
+        }
     }
 
     async getRecentActivity(limit = 20) {
@@ -43,46 +104,106 @@ class ClientService {
         return response.data;
     }
 
-    async getPopularServices(location = null, limit = 8) {
-        const params = { limit };
-        if (location) {
-            params.latitude = location.lat;
-            params.longitude = location.lng;
-            params.radius = location.radius || 20;
-        }
+    // async getPopularServices(location = null, limit = 8) {
+    //     const params = { limit };
+    //     if (location) {
+    //         params.latitude = location.lat;
+    //         params.longitude = location.lng;
+    //         params.radius = location.radius || 20;
+    //     }
 
-        const response = await axios.get(`${API_BASE}/services/popular`, {
-            params,
-        });
-        return response.data;
+    //     const response = await axios.get(`${API_BASE}/services/popular`, {
+    //         params,
+    //     });
+    //     return response.data;
+    // }
+    async getPopularServices(params = {}) {
+        const cacheKey = `popular_services_${JSON.stringify(params)}`;
+        const cached = this.getCachedData(cacheKey);
+        if (cached) return cached;
+
+        try {
+            const response = await axios.get(`${API_BASE}/services/popular`, {
+                params,
+            });
+            this.setCachedData(cacheKey, response.data);
+            return response.data;
+        } catch (error) {
+            if (error.response?.status === 429) {
+                const cached = this.cache.get(cacheKey);
+                if (cached) return cached.data;
+            }
+            throw error;
+        }
     }
 
-    async getRecentServices(location = null, limit = 8) {
-        const params = { limit };
-        if (location) {
-            params.latitude = location.lat;
-            params.longitude = location.lng;
-            params.radius = location.radius || 15;
-        }
+    // async getRecentServices(location = null, limit = 8) {
+    //     const params = { limit };
+    //     if (location) {
+    //         params.latitude = location.lat;
+    //         params.longitude = location.lng;
+    //         params.radius = location.radius || 15;
+    //     }
 
-        const response = await axios.get(`${API_BASE}/services/recent`, {
-            params,
-        });
-        return response.data;
+    //     const response = await axios.get(`${API_BASE}/services/recent`, {
+    //         params,
+    //     });
+    //     return response.data;
+    // }
+    async getRecentServices(params = {}) {
+        const cacheKey = `recent_services_${JSON.stringify(params)}`;
+        const cached = this.getCachedData(cacheKey);
+        if (cached) return cached;
+
+        try {
+            const response = await axios.get(`${API_BASE}/services/recent`, {
+                params,
+            });
+            this.setCachedData(cacheKey, response.data);
+            return response.data;
+        } catch (error) {
+            if (error.response?.status === 429) {
+                const cached = this.cache.get(cacheKey);
+                if (cached) return cached.data;
+            }
+            throw error;
+        }
     }
 
-    async getServiceCategories(location = null) {
-        const params = {};
-        if (location) {
-            params.latitude = location.lat;
-            params.longitude = location.lng;
-            params.radius = location.radius || 15;
-        }
+    // async getServiceCategories(location = null) {
+    //     const params = {};
+    //     if (location) {
+    //         params.latitude = location.lat;
+    //         params.longitude = location.lng;
+    //         params.radius = location.radius || 15;
+    //     }
 
-        const response = await axios.get(`${API_BASE}/services/categories`, {
-            params,
-        });
-        return response.data;
+    //     const response = await axios.get(`${API_BASE}/services/categories`, {
+    //         params,
+    //     });
+    //     return response.data;
+    // }
+    async getServiceCategories(params = {}) {
+        const cacheKey = `service_categories_${JSON.stringify(params)}`;
+        const cached = this.getCachedData(cacheKey);
+        if (cached) return cached;
+
+        try {
+            const response = await axios.get(
+                `${API_BASE}/services/categories`,
+                {
+                    params,
+                }
+            );
+            this.setCachedData(cacheKey, response.data);
+            return response.data;
+        } catch (error) {
+            if (error.response?.status === 429) {
+                const cached = this.cache.get(cacheKey);
+                if (cached) return cached.data;
+            }
+            throw error;
+        }
     }
 
     // async getServiceDetail(serviceId) {
@@ -1509,6 +1630,16 @@ class ClientService {
             isValid: Object.keys(errors).length === 0,
             errors,
         };
+    }
+
+    // Clear cache
+    clearCache() {
+        this.cache.clear();
+    }
+
+    // Clear specific cache entry
+    clearCacheEntry(key) {
+        this.cache.delete(key);
     }
 }
 

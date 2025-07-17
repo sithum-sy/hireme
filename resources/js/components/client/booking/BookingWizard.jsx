@@ -249,8 +249,8 @@ const BookingWizard = ({
     //     });
     // };
     const updateBookingData = (updates) => {
-        console.log("UpdateBookingData called with:", updates);
-        console.log("Current initialData:", initialData);
+        // console.log("UpdateBookingData called with:", updates);
+        // console.log("Current initialData:", initialData);
 
         setBookingData((prev) => {
             console.log("Previous bookingData:", prev);

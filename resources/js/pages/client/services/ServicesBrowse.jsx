@@ -265,7 +265,7 @@ const ServicesBrowse = () => {
                             <LoadingSpinner message="Loading services..." />
                         ) : (
                             <>
-                                {services.length > 0 ? (
+                                {services && services.length > 0 ? (
                                     <>
                                         <div className="services-grid">
                                             <div className="row g-4">

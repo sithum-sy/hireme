@@ -12,6 +12,8 @@ import { DynamicAreasProvider } from "./context/DynamicAreasContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import DashboardLayout from "./components/DashboardLayout";
 import "react-toastify/dist/ReactToastify.css";
+import "leaflet/dist/leaflet.css";
+import "../css/auth.css";
 
 // Public Pages
 import LandingPage from "./pages/LandingPage";

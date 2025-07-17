@@ -36,46 +36,10 @@ const CardPaymentForm = ({
         },
     };
 
-    // const handleSubmit = async (event) => {
-    //     event.preventDefault();
+    const handleSubmit = async (event) => {
+        event.preventDefault();
 
-    //     if (!stripe || !elements) {
-    //         return;
-    //     }
-
-    //     setLoading(true);
-    //     setCardError("");
-
-    //     const cardElement = elements.getElement(CardNumberElement);
-
-    //     try {
-    //         const { error: confirmError, paymentIntent } =
-    //             await stripe.confirmCardPayment(clientSecret, {
-    //                 payment_method: {
-    //                     card: cardElement,
-    //                     billing_details: {
-    //                         name: "Customer Name",
-    //                     },
-    //                 },
-    //             });
-
-    //         if (confirmError) {
-    //             setCardError(confirmError.message);
-    //             onPaymentError(confirmError);
-    //         } else if (paymentIntent.status === "succeeded") {
-    //             onPaymentSuccess(paymentIntent);
-    //         }
-    //     } catch (error) {
-    //         setCardError(error.message);
-    //         onPaymentError(error);
-    //     } finally {
-    //         setLoading(false);
-    //     }
-    // };
-
-    const handlePayment = async () => {
         if (!stripe || !elements) {
-            onPaymentError({ message: "Stripe not loaded" });
             return;
         }
 
@@ -109,17 +73,52 @@ const CardPaymentForm = ({
         }
     };
 
-    // Expose the handlePayment function to parent component
-    React.useImperativeHandle(
-        React.forwardRef(() => null),
-        () => ({
-            handlePayment,
-        })
-    );
+    // const handlePayment = async () => {
+    //     if (!stripe || !elements) {
+    //         onPaymentError({ message: "Stripe not loaded" });
+    //         return;
+    //     }
+
+    //     setLoading(true);
+    //     setCardError("");
+
+    //     const cardElement = elements.getElement(CardNumberElement);
+
+    //     try {
+    //         const { error: confirmError, paymentIntent } =
+    //             await stripe.confirmCardPayment(clientSecret, {
+    //                 payment_method: {
+    //                     card: cardElement,
+    //                     billing_details: {
+    //                         name: "Customer Name",
+    //                     },
+    //                 },
+    //             });
+
+    //         if (confirmError) {
+    //             setCardError(confirmError.message);
+    //             onPaymentError(confirmError);
+    //         } else if (paymentIntent.status === "succeeded") {
+    //             onPaymentSuccess(paymentIntent);
+    //         }
+    //     } catch (error) {
+    //         setCardError(error.message);
+    //         onPaymentError(error);
+    //     } finally {
+    //         setLoading(false);
+    //     }
+    // };
+
+    // // Expose the handlePayment function to parent component
+    // React.useImperativeHandle(
+    //     React.forwardRef(() => null),
+    //     () => ({
+    //         handlePayment,
+    //     })
+    // );
 
     return (
-        // <form onSubmit={handleSubmit}>
-        <div>
+        <form onSubmit={handleSubmit}>
             <div className="card-input-group">
                 <div className="form-group mb-3">
                     <label className="form-label">Card Number</label>
@@ -186,8 +185,7 @@ const CardPaymentForm = ({
                     box-shadow: 0 0 0 0.2rem rgba(111, 66, 193, 0.25);
                 }
             `}</style>
-            {/* </form> */}
-        </div>
+        </form>
     );
 };
 
