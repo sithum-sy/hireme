@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\API\Client;
 
 use App\Http\Controllers\Controller;
+use App\Models\ProviderProfile;
 use App\Models\Service;
 use App\Models\ServiceCategory;
 use App\Models\ServiceSearch;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -552,35 +554,80 @@ class ServiceController extends Controller
             return response()->json(['success' => true, 'data' => []]);
         }
 
+        $suggestions = collect();
+
         // Service title suggestions
         $serviceSuggestions = Service::where('title', 'like', "%{$query}%")
             ->where('is_active', true)
-            ->limit(5)
+            ->limit(3)
             ->get(['id', 'title'])
             ->map(function ($service) {
                 return [
                     'type' => 'service',
                     'id' => $service->id,
                     'text' => $service->title,
-                    'category' => 'Services'
+                    'category' => 'Services',
+                    'icon' => 'fas fa-cogs'
                 ];
             });
 
         // Category suggestions
         $categorySuggestions = ServiceCategory::where('name', 'like', "%{$query}%")
             ->where('is_active', true)
-            ->limit(3)
-            ->get(['id', 'name'])
+            ->limit(2)
+            ->get(['id', 'name', 'icon'])
             ->map(function ($category) {
                 return [
                     'type' => 'category',
                     'id' => $category->id,
                     'text' => $category->name,
-                    'category' => 'Categories'
+                    'category' => 'Categories',
+                    'icon' => $category->icon ?: 'fas fa-folder'
                 ];
             });
 
-        $suggestions = $serviceSuggestions->concat($categorySuggestions);
+        // Provider/Business name suggestions
+        $providerSuggestions = User::where('role', 'service_provider')
+            ->where(function ($q) use ($query) {
+                $q->where('first_name', 'like', "%{$query}%")
+                    ->orWhere('last_name', 'like', "%{$query}%")
+                    ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$query}%"]);
+            })
+            ->with('providerProfile')
+            ->limit(2)
+            ->get()
+            ->map(function ($provider) {
+                return [
+                    'type' => 'provider',
+                    'id' => $provider->id,
+                    'text' => $provider->full_name,
+                    'category' => 'Providers',
+                    'icon' => 'fas fa-user'
+                ];
+            });
+
+        // Business name suggestions
+        $businessSuggestions = ProviderProfile::where('business_name', 'like', "%{$query}%")
+            ->whereNotNull('business_name')
+            ->with('user')
+            ->limit(2)
+            ->get()
+            ->map(function ($profile) {
+                return [
+                    'type' => 'business',
+                    'id' => $profile->user_id,
+                    'text' => $profile->business_name,
+                    'category' => 'Businesses',
+                    'icon' => 'fas fa-building'
+                ];
+            });
+
+        // Combine all suggestions
+        $suggestions = $serviceSuggestions
+            ->concat($categorySuggestions)
+            ->concat($providerSuggestions)
+            ->concat($businessSuggestions)
+            ->take(8); // Limit total suggestions
 
         return response()->json([
             'success' => true,
@@ -639,6 +686,12 @@ class ServiceController extends Controller
      */
     private function formatServiceForClient($service)
     {
+        // Calculate service-specific review count
+        $serviceReviewsCount = $service->appointments()
+            ->completed()
+            ->whereNotNull('provider_rating')
+            ->count();
+
         return [
             'id' => $service->id,
             'title' => $service->title,
@@ -652,10 +705,6 @@ class ServiceController extends Controller
             'provider' => [
                 'id' => $service->provider->id,
                 'name' => $service->provider->full_name,
-                'profile_image_url' => $service->provider->profile_picture
-                    ? Storage::url($service->provider->profile_picture)
-                    : null,
-                'bio' => $service->provider->providerProfile?->bio,
                 'business_name' => $service->provider->providerProfile?->business_name,
                 'average_rating' => $service->provider->providerProfile?->average_rating ?? 0,
                 'total_reviews' => $service->provider->providerProfile?->total_reviews ?? 0,
@@ -665,11 +714,10 @@ class ServiceController extends Controller
             'base_price' => $service->base_price,
             'formatted_price' => $service->formatted_price,
             'duration_hours' => $service->duration_hours,
-            'average_rating' => $service->average_rating,
+            'average_rating' => $service->average_rating ?? 0,
+            'reviews_count' => $serviceReviewsCount,
             'views_count' => $service->views_count,
             'bookings_count' => $service->bookings_count,
-            'service_images' => $service->service_images,
-            'service_image_urls' => $service->service_image_urls,
             'first_image_url' => $service->first_image_url,
             'location' => $service->location,
             'distance' => isset($service->distance) ? round($service->distance, 2) : null,

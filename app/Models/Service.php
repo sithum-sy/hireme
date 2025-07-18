@@ -139,14 +139,28 @@ class Service extends Model
      */
     public function scopeAdvancedSearch($query, $filters = [])
     {
-        // Text search
+        // Text search - Enhanced version
         if (!empty($filters['search'])) {
             $searchTerm = $filters['search'];
             $query->where(function ($q) use ($searchTerm) {
                 $q->where('title', 'like', "%{$searchTerm}%")
                     ->orWhere('description', 'like', "%{$searchTerm}%")
+
+                    // Search in category name
                     ->orWhereHas('category', function ($catQuery) use ($searchTerm) {
                         $catQuery->where('name', 'like', "%{$searchTerm}%");
+                    })
+
+                    // Search in provider name
+                    ->orWhereHas('provider', function ($providerQuery) use ($searchTerm) {
+                        $providerQuery->where('first_name', 'like', "%{$searchTerm}%")
+                            ->orWhere('last_name', 'like', "%{$searchTerm}%")
+                            ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$searchTerm}%"]);
+                    })
+
+                    // Search in business name
+                    ->orWhereHas('provider.providerProfile', function ($profileQuery) use ($searchTerm) {
+                        $profileQuery->where('business_name', 'like', "%{$searchTerm}%");
                     });
             });
         }

@@ -1,53 +1,43 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const ServiceCard = ({ service, showDistance = true }) => {
-    console.log("Service image debug:", {
-        service_id: service.id,
-        first_image_url: service.first_image_url,
-        service_images: service.service_images,
-        service_title: service.title,
-    });
+    const navigate = useNavigate();
+    // console.log("Service image debug:", {
+    //     service_id: service.id,
+    //     first_image_url: service.first_image_url,
+    //     service_images: service.service_images,
+    //     service_title: service.title,
+    // });
 
-    const handleImageError = (e) => {
-        console.error("Image failed to load:", {
-            src: e.target.src,
-            service_id: service.id,
-            error: e,
-            naturalWidth: e.target.naturalWidth,
-            naturalHeight: e.target.naturalHeight,
-        });
-    };
+    // const handleImageError = (e) => {
+    //     console.error("Image failed to load:", {
+    //         src: e.target.src,
+    //         service_id: service.id,
+    //         error: e,
+    //         naturalWidth: e.target.naturalWidth,
+    //         naturalHeight: e.target.naturalHeight,
+    //     });
+    // };
 
-    const handleImageLoad = (e) => {
-        console.log("Image loaded successfully:", {
-            src: e.target.src,
-            service_id: service.id,
-            naturalWidth: e.target.naturalWidth,
-            naturalHeight: e.target.naturalHeight,
-        });
-    };
+    // const handleImageLoad = (e) => {
+    //     console.log("Image loaded successfully:", {
+    //         src: e.target.src,
+    //         service_id: service.id,
+    //         naturalWidth: e.target.naturalWidth,
+    //         naturalHeight: e.target.naturalHeight,
+    //     });
+    // };
 
-    const getImageUrl = (imagePath) => {
-        if (!imagePath) return null;
-
-        // If it's already a full URL, return as is
-        if (imagePath.startsWith("http")) {
-            return imagePath;
-        }
-
-        // If it's a relative path, prepend your app URL
-        if (imagePath.startsWith("/")) {
-            return `${window.location.origin}${imagePath}`;
-        }
-
-        // If it's a storage path, prepend storage URL
-        if (imagePath.startsWith("storage/")) {
-            return `${window.location.origin}/${imagePath}`;
-        }
-
-        return imagePath;
-    };
+    // console.log("Rating data:", {
+    //     service_id: service.id,
+    //     average_rating: service.average_rating,
+    //     reviews_count: service.reviews_count,
+    //     rating_type: typeof service.average_rating,
+    //     reviews_type: typeof service.reviews_count,
+    //     rating_value: service.average_rating || 0,
+    //     reviews_value: service.reviews_count || 0,
+    // });
 
     return (
         <div className="service-card">
@@ -59,7 +49,7 @@ const ServiceCard = ({ service, showDistance = true }) => {
                     {/* Service Image */}
                     <div className="service-image position-relative">
                         {/* Get image URL from multiple possible fields */}
-                        {service.first_image_url ? (
+                        {/* {service.first_image_url ? (
                             <img
                                 src={service.first_image_url}
                                 alt={service.title}
@@ -75,7 +65,53 @@ const ServiceCard = ({ service, showDistance = true }) => {
                             >
                                 <i className="fas fa-image fa-3x text-muted"></i>
                             </div>
-                        )}
+                        )} */}
+                        {(() => {
+                            const imageUrl =
+                                service.first_image_url ||
+                                service.service_image_urls?.[0] ||
+                                service.images?.[0]?.url ||
+                                null;
+
+                            return imageUrl ? (
+                                <>
+                                    <img
+                                        src={imageUrl}
+                                        alt={service.title}
+                                        className="card-img-top"
+                                        style={{
+                                            height: "200px",
+                                            objectFit: "cover",
+                                        }}
+                                        onError={(e) => {
+                                            console.error(
+                                                "Image failed to load:",
+                                                imageUrl
+                                            );
+                                            e.target.style.display = "none";
+                                            e.target.nextSibling.style.display =
+                                                "flex";
+                                        }}
+                                    />
+                                    <div
+                                        className="card-img-top bg-light d-flex align-items-center justify-content-center"
+                                        style={{
+                                            height: "200px",
+                                            display: "none",
+                                        }}
+                                    >
+                                        <i className="fas fa-image fa-3x text-muted"></i>
+                                    </div>
+                                </>
+                            ) : (
+                                <div
+                                    className="card-img-top bg-light d-flex align-items-center justify-content-center"
+                                    style={{ height: "200px" }}
+                                >
+                                    <i className="fas fa-image fa-3x text-muted"></i>
+                                </div>
+                            );
+                        })()}
 
                         {/* Category Badge */}
                         <div className="position-absolute top-0 start-0 m-2">
@@ -109,9 +145,12 @@ const ServiceCard = ({ service, showDistance = true }) => {
 
                         {/* Service Description */}
                         <p className="card-text text-muted small mb-3">
-                            {service.description?.length > 100
-                                ? service.description.substring(0, 100) + "..."
-                                : service.description}
+                            {(service.description ?? "").length > 100
+                                ? (service.description ?? "").substring(
+                                      0,
+                                      100
+                                  ) + "..."
+                                : service.description ?? ""}
                         </p>
 
                         {/* Provider Info */}
@@ -184,11 +223,11 @@ const ServiceCard = ({ service, showDistance = true }) => {
                                 )} */}
                             </div>
 
-                            {showDistance && service.distance && (
+                            {showDistance && service.distance != null && (
                                 <div className="distance">
                                     <small className="text-muted">
                                         <i className="fas fa-map-marker-alt me-1"></i>
-                                        {service.distance}km
+                                        {service.distance} km
                                     </small>
                                 </div>
                             )}
@@ -196,39 +235,17 @@ const ServiceCard = ({ service, showDistance = true }) => {
 
                         {/* Quick Actions */}
                         <div className="quick-actions mt-3 d-flex gap-2">
-                            {/* <button
-                                className="btn btn-purple btn-sm flex-grow-1"
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    // Handle quick book - could open modal or navigate
-                                    window.location.href = `/client/services/${service.id}#book`;
-                                }}
-                            > */}
                             <button
                                 className="btn btn-purple btn-sm flex-grow-1"
                                 onClick={(e) => {
-                                    e.preventDefault();
+                                    e.stopPropagation();
                                     e.stopPropagation(); // Prevent event bubbling
                                     // Navigate to service detail page
-                                    window.location.href = `/client/services/${service.id}`;
+                                    navigate(`/client/services/${service.id}`);
                                 }}
                             >
                                 <i className="fas fa-calendar-plus me-1"></i>
                                 Book Now
-                            </button>
-
-                            <button
-                                className="btn btn-outline-purple btn-sm"
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    // Handle add to favorites
-                                    console.log(
-                                        "Add to favorites:",
-                                        service.id
-                                    );
-                                }}
-                            >
-                                <i className="far fa-heart"></i>
                             </button>
                         </div>
                     </div>
