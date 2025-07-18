@@ -5,15 +5,23 @@ namespace App\Http\Controllers\API\Client;
 use App\Http\Controllers\Controller;
 use App\Models\Service;
 use App\Models\ServiceCategory;
+use App\Models\ServiceSearch;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\RateLimiter;
 
 class ServiceController extends Controller
 {
+    /*
+    |--------------------------------------------------------------------------
+    | Service Browsing Methods
+    |--------------------------------------------------------------------------
+    */
+
     /**
      * Browse all services with optional location filtering
      */
@@ -83,40 +91,6 @@ class ServiceController extends Controller
     /**
      * Get service details with provider information
      */
-    // public function show(Service $service)
-    // {
-    //     try {
-    //         // Increment view count
-    //         $service->incrementViews();
-
-    //         // Load related data
-    //         $service->load([
-    //             'category',
-    //             'provider.providerProfile',
-    //             'appointments' => function ($query) {
-    //                 $query->completed()
-    //                     ->whereNotNull('provider_rating')
-    //                     ->with('client:id,first_name,last_name')
-    //                     ->latest()
-    //                     ->limit(5);
-    //             }
-    //         ]);
-
-    //         $serviceData = $this->formatServiceDetailForClient($service);
-
-    //         return response()->json([
-    //             'success' => true,
-    //             'data' => $serviceData
-    //         ]);
-    //     } catch (\Exception $e) {
-    //         return response()->json([
-    //             'success' => false,
-    //             'message' => 'Failed to fetch service details',
-    //             'error' => $e->getMessage()
-    //         ], 500);
-    //     }
-    // }
-
     public function show(Service $service)
     {
         try {
@@ -173,14 +147,14 @@ class ServiceController extends Controller
                 'profile_image_url' => $provider->profile_picture ? Storage::url($provider->profile_picture) : null,
                 'bio' => $providerProfile->bio ?? null,
                 'is_verified' => $providerProfile->isVerified() ?? false,
-                'city' => $provider->address ?? null, // Adjust based on your User model structure
-                'province' => 'Western Province', // Default or get from profile
+                'city' => $provider->address ?? null,
+                'province' => 'Western Province',
                 'service_radius' => $providerProfile->service_area_radius ?? 25,
-                'travel_fee' => 0, // Add if you have this field
+                'travel_fee' => 0,
                 'average_rating' => $providerProfile->average_rating ?? 0,
                 'reviews_count' => $providerProfile->total_reviews ?? 0,
                 'years_experience' => $providerProfile->years_of_experience ?? 0,
-                'response_time' => '2 hours', // Default or calculate
+                'response_time' => '2 hours',
                 'total_services' => $provider->services()->where('is_active', true)->count(),
                 'completed_bookings' => $provider->providerAppointments()->where('status', 'completed')->count(),
                 'other_services' => $provider->services()
@@ -205,7 +179,7 @@ class ServiceController extends Controller
                 'success' => true,
                 'data' => $serviceData,
                 'provider' => $providerData,
-                'is_favorite' => false, // TODO: Check if user favorited this service
+                'is_favorite' => false,
                 'message' => 'Service details retrieved successfully'
             ]);
         } catch (\Exception $e) {
@@ -217,36 +191,6 @@ class ServiceController extends Controller
         }
     }
 
-    /**
-     * Get popular services
-     */
-    // public function getPopularServices(Request $request)
-    // {
-    //     $request->validate([
-    //         'latitude' => 'nullable|numeric|between:-90,90',
-    //         'longitude' => 'nullable|numeric|between:-180,180',
-    //         'radius' => 'nullable|integer|min:1|max:50',
-    //         'limit' => 'nullable|integer|min:1|max:20'
-    //     ]);
-
-    //     $query = Service::with(['category', 'provider.providerProfile'])
-    //         ->popular($request->get('limit', 10));
-
-    //     // Apply location filter if provided
-    //     if ($request->latitude && $request->longitude) {
-    //         $radius = $request->radius ?? 20; // Wider radius for popular services
-    //         $query->servingLocation($request->latitude, $request->longitude);
-    //     }
-
-    //     $services = $query->get();
-
-    //     return response()->json([
-    //         'success' => true,
-    //         'data' => $services->map(function ($service) {
-    //             return $this->formatServiceForClient($service);
-    //         })
-    //     ]);
-    // }
     /**
      * Get popular services with caching
      */
@@ -289,42 +233,6 @@ class ServiceController extends Controller
         ]);
     }
 
-
-    /**
-     * Get recent services
-     */
-    // public function getRecentServices(Request $request)
-    // {
-    //     $request->validate([
-    //         'latitude' => 'nullable|numeric|between:-90,90',
-    //         'longitude' => 'nullable|numeric|between:-180,180',
-    //         'radius' => 'nullable|integer|min:1|max:50',
-    //         'days' => 'nullable|integer|min:1|max:90',
-    //         'limit' => 'nullable|integer|min:1|max:20'
-    //     ]);
-
-    //     $days = $request->get('days', 30);
-    //     $limit = $request->get('limit', 10);
-
-    //     $query = Service::with(['category', 'provider.providerProfile'])
-    //         ->recent($days)
-    //         ->limit($limit);
-
-    //     // Apply location filter if provided
-    //     if ($request->latitude && $request->longitude) {
-    //         $radius = $request->radius ?? 15;
-    //         $query->servingLocation($request->latitude, $request->longitude);
-    //     }
-
-    //     $services = $query->get();
-
-    //     return response()->json([
-    //         'success' => true,
-    //         'data' => $services->map(function ($service) {
-    //             return $this->formatServiceForClient($service);
-    //         })
-    //     ]);
-    // }
     /**
      * Get recent services with caching
      */
@@ -373,45 +281,6 @@ class ServiceController extends Controller
         ]);
     }
 
-    /**
-     * Get service categories with service counts
-     */
-    // public function getCategories(Request $request)
-    // {
-    //     $request->validate([
-    //         'latitude' => 'nullable|numeric|between:-90,90',
-    //         'longitude' => 'nullable|numeric|between:-180,180',
-    //         'radius' => 'nullable|integer|min:1|max:50',
-    //     ]);
-
-    //     $query = ServiceCategory::with(['activeServices' => function ($serviceQuery) use ($request) {
-    //         if ($request->latitude && $request->longitude) {
-    //             $radius = $request->radius ?? 15;
-    //             $serviceQuery->servingLocation($request->latitude, $request->longitude);
-    //         }
-    //     }])
-    //         ->where('is_active', true)
-    //         ->orderBy('sort_order')
-    //         ->orderBy('name');
-
-    //     $categories = $query->get();
-
-    //     return response()->json([
-    //         'success' => true,
-    //         'data' => $categories->map(function ($category) {
-    //             return [
-    //                 'id' => $category->id,
-    //                 'name' => $category->name,
-    //                 'slug' => $category->slug,
-    //                 'description' => $category->description,
-    //                 'icon' => $category->icon,
-    //                 'color' => $category->color,
-    //                 'service_count' => $category->activeServices->count(),
-    //                 'sort_order' => $category->sort_order,
-    //             ];
-    //         })
-    //     ]);
-    // }
     /**
      * Get service categories with caching
      */
@@ -547,6 +416,224 @@ class ServiceController extends Controller
         }
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Service Search Methods (Merged from SearchController)
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * Search services with location-based filtering
+     */
+    public function searchServices(Request $request)
+    {
+        $request->validate([
+            'search' => 'nullable|string|max:255',
+            'category_id' => 'nullable|exists:service_categories,id',
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
+            'radius' => 'nullable|integer|min:1|max:50',
+            'min_price' => 'nullable|numeric|min:0',
+            'max_price' => 'nullable|numeric|min:0',
+            'min_rating' => 'nullable|numeric|between:1,5',
+            'pricing_type' => 'nullable|in:hourly,fixed,custom',
+            'sort_by' => 'nullable|in:distance,price,rating,popularity,recent',
+            'per_page' => 'nullable|integer|min:1|max:50'
+        ]);
+
+        $filters = $request->only([
+            'search',
+            'category_id',
+            'min_price',
+            'max_price',
+            'min_rating',
+            'pricing_type',
+            'is_active' => true,
+        ]);
+
+        $query = Service::with(['category', 'provider.providerProfile'])
+            ->advancedSearch($filters);
+
+        // Location-based filtering
+        if ($request->latitude && $request->longitude) {
+            $lat = $request->latitude;
+            $lng = $request->longitude;
+            $radius = $request->radius ?? 15;
+
+            Log::info('Location-based search:', [
+                'lat' => $request->latitude,
+                'lng' => $request->longitude,
+                'radius' => $radius,
+                'results_count' => $query->count()
+            ]);
+
+            $query->servingLocation($lat, $lng);
+        }
+
+        // Sorting
+        switch ($request->sort_by) {
+            case 'distance':
+                // Already sorted by distance in servingLocation scope
+                break;
+            case 'price':
+                $query->orderBy('base_price');
+                break;
+            case 'rating':
+                $query->orderByDesc('average_rating');
+                break;
+            case 'popularity':
+                $query->orderByDesc('views_count')->orderByDesc('bookings_count');
+                break;
+            case 'recent':
+                $query->orderByDesc('created_at');
+                break;
+            default:
+                if (!($request->latitude && $request->longitude)) {
+                    $query->orderByDesc('created_at');
+                }
+        }
+
+        // Text search
+        if ($request->search) {
+            $query->where(function ($q) use ($request) {
+                $q->where('title', 'like', "%{$request->search}%")
+                    ->orWhere('description', 'like', "%{$request->search}%");
+            });
+        }
+
+        // Category filter
+        if ($request->category_id) {
+            $query->where('category_id', $request->category_id);
+        }
+
+        $perPage = $request->get('per_page', 12);
+        $services = $query->paginate($perPage);
+
+        // Track search for analytics
+        if ($request->search || $request->category_id) {
+            ServiceSearch::trackSearch(
+                $request->search,
+                $filters,
+                $request->latitude,
+                $request->longitude,
+                $request->radius,
+                $services->total(),
+                Auth::id()
+            );
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $services->through(function ($service) {
+                return $this->formatServiceForClient($service);
+            }),
+            'meta' => [
+                'total' => $services->total(),
+                'per_page' => $services->perPage(),
+                'current_page' => $services->currentPage(),
+                'last_page' => $services->lastPage(),
+                'search_info' => [
+                    'location_based' => $request->latitude && $request->longitude,
+                    'radius' => $request->radius ?? 15,
+                    'filters_applied' => count(array_filter($filters))
+                ]
+            ]
+        ]);
+    }
+
+    /**
+     * Get search suggestions for autocomplete
+     */
+    public function getSearchSuggestions(Request $request)
+    {
+        $query = $request->get('q', '');
+
+        if (strlen($query) < 2) {
+            return response()->json(['success' => true, 'data' => []]);
+        }
+
+        // Service title suggestions
+        $serviceSuggestions = Service::where('title', 'like', "%{$query}%")
+            ->where('is_active', true)
+            ->limit(5)
+            ->get(['id', 'title'])
+            ->map(function ($service) {
+                return [
+                    'type' => 'service',
+                    'id' => $service->id,
+                    'text' => $service->title,
+                    'category' => 'Services'
+                ];
+            });
+
+        // Category suggestions
+        $categorySuggestions = ServiceCategory::where('name', 'like', "%{$query}%")
+            ->where('is_active', true)
+            ->limit(3)
+            ->get(['id', 'name'])
+            ->map(function ($category) {
+                return [
+                    'type' => 'category',
+                    'id' => $category->id,
+                    'text' => $category->name,
+                    'category' => 'Categories'
+                ];
+            });
+
+        $suggestions = $serviceSuggestions->concat($categorySuggestions);
+
+        return response()->json([
+            'success' => true,
+            'data' => $suggestions
+        ]);
+    }
+
+    /**
+     * Get popular searches
+     */
+    public function getPopularSearches()
+    {
+        $popularSearches = ServiceSearch::getPopularSearches(10);
+
+        return response()->json([
+            'success' => true,
+            'data' => $popularSearches
+        ]);
+    }
+
+    /**
+     * Track search (for analytics)
+     */
+    public function trackSearch(Request $request)
+    {
+        $request->validate([
+            'search_term' => 'nullable|string|max:255',
+            'filters' => 'nullable|array',
+            'latitude' => 'nullable|numeric',
+            'longitude' => 'nullable|numeric',
+            'radius' => 'nullable|integer',
+            'results_count' => 'nullable|integer'
+        ]);
+
+        ServiceSearch::trackSearch(
+            $request->search_term,
+            $request->filters,
+            $request->latitude,
+            $request->longitude,
+            $request->radius,
+            $request->results_count ?? 0,
+            Auth::id()
+        );
+
+        return response()->json(['success' => true]);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Private Helper Methods
+    |--------------------------------------------------------------------------
+    */
+
     /**
      * Format service for client listing
      */
@@ -565,6 +652,10 @@ class ServiceController extends Controller
             'provider' => [
                 'id' => $service->provider->id,
                 'name' => $service->provider->full_name,
+                'profile_image_url' => $service->provider->profile_picture
+                    ? Storage::url($service->provider->profile_picture)
+                    : null,
+                'bio' => $service->provider->providerProfile?->bio,
                 'business_name' => $service->provider->providerProfile?->business_name,
                 'average_rating' => $service->provider->providerProfile?->average_rating ?? 0,
                 'total_reviews' => $service->provider->providerProfile?->total_reviews ?? 0,
@@ -577,6 +668,8 @@ class ServiceController extends Controller
             'average_rating' => $service->average_rating,
             'views_count' => $service->views_count,
             'bookings_count' => $service->bookings_count,
+            'service_images' => $service->service_images,
+            'service_image_urls' => $service->service_image_urls,
             'first_image_url' => $service->first_image_url,
             'location' => $service->location,
             'distance' => isset($service->distance) ? round($service->distance, 2) : null,
@@ -597,7 +690,9 @@ class ServiceController extends Controller
             'full_description' => $service->description,
             'includes' => $service->includes,
             'requirements' => $service->requirements,
-            'service_images' => $service->service_image_urls,
+            'service_images' => $service->service_images,
+            'service_image_urls' => $service->service_image_urls,
+            'first_image_url' => $service->first_image_url,
             'provider_details' => [
                 'id' => $service->provider->id,
                 'name' => $service->provider->full_name,

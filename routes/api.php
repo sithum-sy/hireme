@@ -32,6 +32,7 @@ Route::get('/providers/{providerId}/availability/check', [AvailabilityController
 Route::get('/providers/{providerId}/availability/slots', [AvailabilityController::class, 'getAvailableSlots']);
 Route::get('/providers/{providerId}/profile', [ProfileController::class, 'getPublicProviderProfile']);
 
+
 // Protected routes
 Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
     // Authentication
@@ -47,21 +48,21 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
     });
 
     // Appointment Management (all authenticated users)
-    Route::prefix('appointments')->group(function () {
-        Route::get('/', [AppointmentController::class, 'getAppointments']);
-        Route::post('/check-availability', [AppointmentController::class, 'checkAvailability']);
-        Route::get('/upcoming', [AppointmentController::class, 'getUpcomingAppointments']);
-        Route::get('/statistics', [AppointmentController::class, 'getStatistics']);
-        Route::get('/{appointment}', [AppointmentController::class, 'getAppointment']);
-        Route::post('/{appointment}/review', [AppointmentController::class, 'addReview']);
-        Route::post('/{appointment}/cancel', [AppointmentController::class, 'cancelAppointment']);
-    });
+    // Route::prefix('appointments')->group(function () {
+    //     Route::get('/', [AppointmentController::class, 'getAppointments']);
+    //     Route::post('/check-availability', [AppointmentController::class, 'checkAvailability']);
+    //     Route::get('/upcoming', [AppointmentController::class, 'getUpcomingAppointments']);
+    //     Route::get('/statistics', [AppointmentController::class, 'getStatistics']);
+    //     Route::get('/{appointment}', [AppointmentController::class, 'getAppointment']);
+    //     Route::post('/{appointment}/review', [AppointmentController::class, 'addReview']);
+    //     Route::post('/{appointment}/cancel', [AppointmentController::class, 'cancelAppointment']);
+    // });
 
     // Quote Management (all authenticated users)
-    Route::prefix('quotes')->group(function () {
-        Route::get('/', [AppointmentController::class, 'getQuotes']);
-        Route::get('/{quote}', [AppointmentController::class, 'getQuote']);
-    });
+    // Route::prefix('quotes')->group(function () {
+    //     Route::get('/', [AppointmentController::class, 'getQuotes']);
+    //     Route::get('/{quote}', [AppointmentController::class, 'getQuote']);
+    // });
 
     // Review Management
     Route::prefix('appointments/{appointment}')->group(function () {
@@ -91,18 +92,18 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
 
 
 
-    Route::prefix('location')->group(function () {
-        Route::get('/service-areas', [LocationController::class, 'getAllServiceAreas']);
-        Route::post('/nearby-areas', [LocationController::class, 'getNearbyServiceAreas']);
-    });
+    // Route::prefix('location')->group(function () {
+    //     Route::get('/service-areas', [LocationController::class, 'getAllServiceAreas']);
+    //     Route::post('/nearby-areas', [LocationController::class, 'getNearbyServiceAreas']);
+    // });
 
     Route::post('/create-payment-intent', [PaymentController::class, 'createPaymentIntent']);
 
     // Test route to verify auth is working
-    Route::get('/test-auth', function () {
-        return response()->json(['message' => 'Authentication working', 'user' => auth()->user()]);
-    });
+    // Route::get('/test-auth', function () {
+    //     return response()->json(['message' => 'Authentication working', 'user' => auth()->user()]);
+    // });
 
     // Utility routes
-    Route::post('/quotes/mark-expired', [AppointmentController::class, 'markExpiredQuotes']);
+    // Route::post('/quotes/mark-expired', [AppointmentController::class, 'markExpiredQuotes']);
 });

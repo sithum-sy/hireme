@@ -2,6 +2,53 @@ import React from "react";
 import { Link } from "react-router-dom";
 
 const ServiceCard = ({ service, showDistance = true }) => {
+    console.log("Service image debug:", {
+        service_id: service.id,
+        first_image_url: service.first_image_url,
+        service_images: service.service_images,
+        service_title: service.title,
+    });
+
+    const handleImageError = (e) => {
+        console.error("Image failed to load:", {
+            src: e.target.src,
+            service_id: service.id,
+            error: e,
+            naturalWidth: e.target.naturalWidth,
+            naturalHeight: e.target.naturalHeight,
+        });
+    };
+
+    const handleImageLoad = (e) => {
+        console.log("Image loaded successfully:", {
+            src: e.target.src,
+            service_id: service.id,
+            naturalWidth: e.target.naturalWidth,
+            naturalHeight: e.target.naturalHeight,
+        });
+    };
+
+    const getImageUrl = (imagePath) => {
+        if (!imagePath) return null;
+
+        // If it's already a full URL, return as is
+        if (imagePath.startsWith("http")) {
+            return imagePath;
+        }
+
+        // If it's a relative path, prepend your app URL
+        if (imagePath.startsWith("/")) {
+            return `${window.location.origin}${imagePath}`;
+        }
+
+        // If it's a storage path, prepend storage URL
+        if (imagePath.startsWith("storage/")) {
+            return `${window.location.origin}/${imagePath}`;
+        }
+
+        return imagePath;
+    };
+
     return (
         <div className="service-card">
             <Link
@@ -11,12 +58,15 @@ const ServiceCard = ({ service, showDistance = true }) => {
                 <div className="card h-100 border-0 shadow-sm">
                     {/* Service Image */}
                     <div className="service-image position-relative">
+                        {/* Get image URL from multiple possible fields */}
                         {service.first_image_url ? (
                             <img
                                 src={service.first_image_url}
                                 alt={service.title}
                                 className="card-img-top"
                                 style={{ height: "200px", objectFit: "cover" }}
+                                onError={handleImageError}
+                                onLoad={handleImageLoad}
                             />
                         ) : (
                             <div

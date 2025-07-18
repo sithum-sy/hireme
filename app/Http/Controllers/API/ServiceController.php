@@ -9,6 +9,7 @@ use App\Services\ServiceService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class ServiceController extends Controller
 {
@@ -92,29 +93,6 @@ class ServiceController extends Controller
                     'message' => 'Only service providers can create services'
                 ], 403);
             }
-
-            // DEBUG LOGGING
-            \Log::info('=== SERVICE CREATION REQUEST ===', [
-                'user_id' => $user->id,
-                'all_request_data' => $request->all(),
-                'validated_data' => $request->validated(),
-                'location_data' => [
-                    'latitude' => $request->input('latitude'),
-                    'longitude' => $request->input('longitude'),
-                    'location_address' => $request->input('location_address'),
-                    'location_city' => $request->input('location_city'),
-                    'location_neighborhood' => $request->input('location_neighborhood'),
-                    'service_radius' => $request->input('service_radius'),
-                ]
-            ]);
-
-            // Check if provider profile is verified
-            // if (!$user->providerProfile || !$user->providerProfile->isVerified()) {
-            //     return response()->json([
-            //         'success' => false,
-            //         'message' => 'Your provider profile must be verified before creating services'
-            //     ], 403);
-            // }
 
             $service = $this->serviceService->createService($user, $request->validated());
 

@@ -225,7 +225,8 @@ class Service extends Model
             if (str_starts_with($image, 'http')) {
                 return $image; // Already a full URL
             }
-            return asset('storage/services/' . $image);
+            return Storage::url('services/' . $image);
+            // return url('storage/services/' . $image);
         }, $images);
     }
 

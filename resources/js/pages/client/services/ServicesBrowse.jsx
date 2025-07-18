@@ -10,9 +10,10 @@ import LocationSelector from "../../../components/map/LocationSelector";
 import LoadingSpinner from "../../../components/LoadingSpinner";
 
 const ServicesBrowse = () => {
-    const { location, categories } = useClient();
+    const { categories } = useClient();
     const [searchParams, setSearchParams] = useSearchParams();
 
+    const [currentLocation, setCurrentLocation] = useState(null);
     const [services, setServices] = useState([]);
     const [loading, setLoading] = useState(false);
     const [pagination, setPagination] = useState({});
@@ -30,7 +31,33 @@ const ServicesBrowse = () => {
 
     useEffect(() => {
         loadServices();
-    }, [location, filters]);
+    }, [currentLocation, filters]);
+
+    useEffect(() => {
+        // Try to get user's current location on component mount
+        if (!currentLocation && !showLocationSelector) {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const { latitude, longitude } = position.coords;
+                        setCurrentLocation({
+                            lat: latitude,
+                            lng: longitude,
+                            city: "Current Location",
+                            province: "Sri Lanka",
+                            radius: 15,
+                            address: `${latitude.toFixed(
+                                4
+                            )}, ${longitude.toFixed(4)}`,
+                        });
+                    },
+                    (error) => {
+                        console.log("Geolocation error:", error);
+                    }
+                );
+            }
+        }
+    }, []);
 
     const loadServices = async (page = 1) => {
         setLoading(true);
@@ -42,11 +69,12 @@ const ServicesBrowse = () => {
                 per_page: 12,
             };
 
-            // Add location if available
-            if (location) {
-                params.latitude = location.lat;
-                params.longitude = location.lng;
-                params.radius = location.radius || 15;
+            if (currentLocation && currentLocation.lat && currentLocation.lng) {
+                params.latitude = currentLocation.lat;
+                params.longitude = currentLocation.lng;
+                params.radius = currentLocation.radius || 15;
+            } else {
+                // console.log("Loading services without location");
             }
 
             // Remove empty filters
@@ -57,8 +85,8 @@ const ServicesBrowse = () => {
             const response = await clientService.getServices(params);
 
             if (response.success) {
-                setServices(response.data.data);
-                setPagination(response.data.meta || response.meta);
+                setServices(response.data);
+                setPagination(response.data.data || response.meta);
 
                 // Update URL with current filters
                 const newSearchParams = new URLSearchParams();
@@ -79,8 +107,8 @@ const ServicesBrowse = () => {
     };
 
     const handleLocationChange = (newLocation) => {
-        // Location change is handled by ClientContext
-        // This will trigger useEffect to reload services
+        setCurrentLocation(newLocation);
+        setShowLocationSelector(false);
     };
 
     const handlePageChange = (page) => {
@@ -110,8 +138,8 @@ const ServicesBrowse = () => {
                             <h2 className="fw-bold mb-2">Browse Services</h2>
                             <p className="text-muted mb-0">
                                 Discover and book from thousands of services
-                                {location &&
-                                    ` near ${location.city}, ${location.province}`}
+                                {currentLocation &&
+                                    ` near ${currentLocation.city}, ${currentLocation.province}`}
                             </p>
                         </div>
                         <div className="col-md-6 text-end">
@@ -125,7 +153,7 @@ const ServicesBrowse = () => {
                                     }
                                 >
                                     <i className="fas fa-map-marker-alt me-2"></i>
-                                    {location
+                                    {currentLocation
                                         ? "Change Location"
                                         : "Set Location"}
                                 </button>
@@ -140,11 +168,10 @@ const ServicesBrowse = () => {
                         </div>
                     </div>
 
-                    {/* Location Selector */}
                     {showLocationSelector && (
                         <div className="mt-3 p-3 bg-light rounded">
                             <LocationSelector
-                                value={location}
+                                value={currentLocation}
                                 onChange={handleLocationChange}
                             />
                         </div>
@@ -164,7 +191,7 @@ const ServicesBrowse = () => {
                                 categories={categories}
                                 onChange={handleFilterChange}
                                 onClear={clearFilters}
-                                location={location}
+                                location={currentLocation}
                             />
                         </div>
                     </div>
@@ -178,9 +205,9 @@ const ServicesBrowse = () => {
                                     {pagination.total || 0} Services Found
                                 </h5>
                                 <small className="text-muted">
-                                    {location &&
+                                    {currentLocation &&
                                         `Within ${
-                                            location.radius || 15
+                                            currentLocation.radius || 15
                                         }km of your location`}
                                 </small>
                             </div>
@@ -190,75 +217,9 @@ const ServicesBrowse = () => {
                                 onChange={(sort) =>
                                     handleFilterChange({ sort_by: sort })
                                 }
-                                hasLocation={!!location}
+                                hasLocation={!!currentLocation}
                             />
                         </div>
-
-                        {/* Active Filters */}
-                        {Object.values(filters).some(Boolean) && (
-                            <div className="active-filters mb-4">
-                                <div className="d-flex flex-wrap gap-2 align-items-center">
-                                    <small className="text-muted me-2">
-                                        Active filters:
-                                    </small>
-
-                                    {filters.category_id && (
-                                        <span className="badge bg-purple bg-opacity-10 text-purple">
-                                            {categories.find(
-                                                (c) =>
-                                                    c.id == filters.category_id
-                                            )?.name || "Category"}
-                                            <button
-                                                className="btn-close btn-close-sm ms-2"
-                                                onClick={() =>
-                                                    handleFilterChange({
-                                                        category_id: "",
-                                                    })
-                                                }
-                                            ></button>
-                                        </span>
-                                    )}
-
-                                    {(filters.min_price ||
-                                        filters.max_price) && (
-                                        <span className="badge bg-purple bg-opacity-10 text-purple">
-                                            Rs. {filters.min_price || 0} -{" "}
-                                            {filters.max_price || "∞"}
-                                            <button
-                                                className="btn-close btn-close-sm ms-2"
-                                                onClick={() =>
-                                                    handleFilterChange({
-                                                        min_price: "",
-                                                        max_price: "",
-                                                    })
-                                                }
-                                            ></button>
-                                        </span>
-                                    )}
-
-                                    {filters.min_rating && (
-                                        <span className="badge bg-purple bg-opacity-10 text-purple">
-                                            {filters.min_rating}+ Stars
-                                            <button
-                                                className="btn-close btn-close-sm ms-2"
-                                                onClick={() =>
-                                                    handleFilterChange({
-                                                        min_rating: "",
-                                                    })
-                                                }
-                                            ></button>
-                                        </span>
-                                    )}
-
-                                    <button
-                                        className="btn btn-link btn-sm text-decoration-none"
-                                        onClick={clearFilters}
-                                    >
-                                        Clear all
-                                    </button>
-                                </div>
-                            </div>
-                        )}
 
                         {/* Services Grid */}
                         {loading ? (
@@ -443,12 +404,8 @@ const ServicesBrowse = () => {
             </div>
 
             <style>{`
-                .text-purple {
-                    color: #6f42c1 !important;
-                }
-                .bg-purple {
-                    background-color: #6f42c1 !important;
-                }
+                .text-purple { color: #6f42c1 !important; }
+                .bg-purple { background-color: #6f42c1 !important; }
                 .btn-purple {
                     background-color: #6f42c1;
                     border-color: #6f42c1;

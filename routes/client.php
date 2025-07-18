@@ -4,7 +4,6 @@
 // use App\Http\Controllers\API\AppointmentController;
 use App\Http\Controllers\API\AvailabilityController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\API\Client\SearchController;
 use App\Http\Controllers\API\Client\ServiceController;
 use App\Http\Controllers\API\Client\ProviderController;
 use App\Http\Controllers\API\Client\DashboardController;
@@ -20,7 +19,7 @@ use App\Http\Controllers\API\Client\QuoteController;
 
 // Service Discovery & Search
 Route::prefix('services')->group(function () {
-    Route::get('/search', [SearchController::class, 'searchServices']);
+    Route::get('/search', [ServiceController::class, 'searchServices']);
     Route::get('/', [ServiceController::class, 'index']);
     Route::get('/popular', [ServiceController::class, 'getPopularServices']);
     Route::get('/recent', [ServiceController::class, 'getRecentServices']);
@@ -79,9 +78,9 @@ Route::prefix('quotes')->group(function () {
 
 // Search Analytics & Suggestions
 Route::prefix('search')->group(function () {
-    Route::get('/suggestions', [SearchController::class, 'getSearchSuggestions']);
-    Route::get('/popular', [SearchController::class, 'getPopularSearches']);
-    Route::post('/track', [SearchController::class, 'trackSearch']);
+    Route::get('/suggestions', [ServiceController::class, 'getSearchSuggestions']);
+    Route::get('/popular', [ServiceController::class, 'getPopularSearches']);
+    Route::post('/track', [ServiceController::class, 'trackSearch']);
 });
 
 // Dashboard

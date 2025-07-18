@@ -20,6 +20,7 @@ const ServiceSearch = () => {
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [suggestions, setSuggestions] = useState([]);
     const [showLocationSelector, setShowLocationSelector] = useState(location);
+    const [currentLocation, setCurrentLocation] = useState(location);
 
     const [filters, setFilters] = useState({
         category_id: searchParams.get("category_id") || "",
@@ -31,10 +32,13 @@ const ServiceSearch = () => {
     });
 
     const handleLocationChange = (newLocation) => {
-        // Update the ClientContext with new location
-        // This will trigger re-search with location filters
-        if (newLocation) {
-            // Trigger search with new location
+        console.log("New location selected:", newLocation);
+        setCurrentLocation(newLocation);
+        setLocation(newLocation); // Update context
+        setShowLocationSelector(false);
+
+        // Auto-search when location changes
+        if (searchQuery) {
             performSearch(searchQuery, 1, newLocation);
         }
     };

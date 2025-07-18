@@ -47,20 +47,6 @@ class ServiceService
     // }
     public function createService(User $provider, array $data): Service
     {
-        // Add debug logging
-        Log::info('=== CREATING SERVICE IN SERVICE CLASS ===', [
-            'provider_id' => $provider->id,
-            'data_received' => $data,
-            'location_fields' => [
-                'latitude' => $data['latitude'] ?? 'missing',
-                'longitude' => $data['longitude'] ?? 'missing',
-                'location_address' => $data['location_address'] ?? 'missing',
-                'location_city' => $data['location_city'] ?? 'missing',
-                'location_neighborhood' => $data['location_neighborhood'] ?? 'missing',
-                'service_radius' => $data['service_radius'] ?? 'missing',
-            ]
-        ]);
-
         // Handle service images upload
         $imagePaths = [];
         if (isset($data['service_images']) && is_array($data['service_images'])) {
@@ -96,17 +82,6 @@ class ServiceService
             'service_areas' => $data['service_areas'] ?? [],
             'service_images' => $imagePaths,
             'is_active' => $data['is_active'] ?? true,
-        ]);
-
-        Log::info('=== SERVICE CREATED SUCCESSFULLY ===', [
-            'service_id' => $service->id,
-            'location_data_saved' => [
-                'latitude' => $service->latitude,
-                'longitude' => $service->longitude,
-                'location_address' => $service->location_address,
-                'location_city' => $service->location_city,
-                'service_radius' => $service->service_radius,
-            ]
         ]);
 
         return $service->load(['category', 'provider']);
