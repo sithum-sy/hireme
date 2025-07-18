@@ -7,13 +7,12 @@ const QuickActions = ({
     columns = 2,
     className = "",
 }) => {
-    // Default admin actions if none provided
     const defaultActions = [
         {
             title: "Create Staff",
             description: "Add new staff member",
             icon: "fas fa-user-plus",
-            color: "primary",
+            variant: "primary",
             link: "/admin/staff/create",
             permission: "create_staff",
         },
@@ -21,7 +20,7 @@ const QuickActions = ({
             title: "Manage Users",
             description: "View and manage all users",
             icon: "fas fa-users",
-            color: "info",
+            variant: "info",
             link: "/admin/users",
             permission: "manage_users",
         },
@@ -29,7 +28,7 @@ const QuickActions = ({
             title: "View Reports",
             description: "Analytics and insights",
             icon: "fas fa-chart-bar",
-            color: "success",
+            variant: "success",
             link: "/admin/reports",
             permission: "view_reports",
         },
@@ -37,7 +36,7 @@ const QuickActions = ({
             title: "Settings",
             description: "System configuration",
             icon: "fas fa-cogs",
-            color: "warning",
+            variant: "warning",
             link: "/admin/settings",
             permission: "manage_settings",
         },
@@ -45,7 +44,7 @@ const QuickActions = ({
             title: "Staff Overview",
             description: "Manage staff members",
             icon: "fas fa-users-cog",
-            color: "secondary",
+            variant: "secondary",
             link: "/admin/staff",
             permission: "manage_staff",
         },
@@ -53,7 +52,7 @@ const QuickActions = ({
             title: "Export Data",
             description: "Download system reports",
             icon: "fas fa-download",
-            color: "dark",
+            variant: "dark",
             action: "export",
             permission: "export_data",
         },
@@ -61,78 +60,36 @@ const QuickActions = ({
 
     const displayActions = actions.length > 0 ? actions : defaultActions;
 
-    const getColumnClass = () => {
-        switch (columns) {
-            case 1:
-                return "col-12";
-            case 2:
-                return "col-md-6";
-            case 3:
-                return "col-lg-4 col-md-6";
-            case 4:
-                return "col-xl-3 col-lg-4 col-md-6";
-            default:
-                return "col-md-6";
-        }
-    };
-
     const ActionCard = ({ action }) => {
         const cardContent = (
-            <div
-                className={`btn btn-outline-${action.color} w-100 h-100 d-flex flex-column align-items-center justify-content-center py-4 text-decoration-none position-relative overflow-hidden`}
-            >
-                {/* Background Pattern */}
-                <div className="position-absolute top-0 end-0 opacity-10">
-                    <i
-                        className={`${action.icon} fa-3x`}
-                        style={{ transform: "rotate(15deg)" }}
-                    ></i>
-                </div>
-
-                {/* Main Icon */}
+            <div className="action-card">
                 <div
-                    className={`bg-${action.color} bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center mb-3`}
-                    style={{ width: "60px", height: "60px" }}
+                    className={`action-icon ${action.variant} position-relative`}
                 >
-                    <i
-                        className={`${action.icon} fa-2x text-${action.color}`}
-                    ></i>
-                </div>
-
-                {/* Action Text */}
-                <h6 className="mb-1 fw-bold">{action.title}</h6>
-                <small className="text-muted text-center px-2">
-                    {action.description}
-                </small>
-
-                {/* Badge for special actions */}
-                {action.badge && (
-                    <span
-                        className={`badge bg-${
-                            action.badgeColor || "primary"
-                        } position-absolute top-0 start-0 m-2`}
-                    >
-                        {action.badge}
-                    </span>
-                )}
-
-                {/* Loading indicator for actions */}
-                {action.loading && (
-                    <div className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center bg-white bg-opacity-75">
-                        <div
-                            className="spinner-border spinner-border-sm text-primary"
-                            role="status"
+                    <i className={action.icon}></i>
+                    {action.badge && (
+                        <span
+                            className={`action-badge ${
+                                action.badgeColor || "primary"
+                            }`}
                         >
-                            <span className="visually-hidden">Loading...</span>
+                            {action.badge}
+                        </span>
+                    )}
+                    {action.loading && (
+                        <div className="action-loading">
+                            <div className="loading-spinner"></div>
                         </div>
-                    </div>
-                )}
+                    )}
+                </div>
+                <h6 className="action-title">{action.title}</h6>
+                <p className="action-description">{action.description}</p>
             </div>
         );
 
         if (action.link) {
             return (
-                <Link to={action.link} className="text-decoration-none">
+                <Link to={action.link} className="action-card-link">
                     {cardContent}
                 </Link>
             );
@@ -140,7 +97,7 @@ const QuickActions = ({
             return (
                 <button
                     onClick={action.onClick}
-                    className="border-0 p-0 bg-transparent w-100"
+                    className="action-card-btn"
                     disabled={action.disabled || action.loading}
                 >
                     {cardContent}
@@ -152,15 +109,13 @@ const QuickActions = ({
     };
 
     return (
-        <div className={`card border-0 shadow-sm ${className}`}>
-            <div className="card-header bg-white border-bottom">
-                <div className="d-flex justify-content-between align-items-center">
-                    <h5 className="card-title mb-0">
-                        <i className="fas fa-bolt text-warning me-2"></i>
-                        {title}
-                    </h5>
-
-                    {/* Optional toolbar */}
+        <div className={`dashboard-card quick-actions-widget ${className}`}>
+            <div className="dashboard-card-header">
+                <div className="header-content">
+                    <h6 className="dashboard-card-title">
+                        <i className="fas fa-bolt"></i>
+                        <span>{title}</span>
+                    </h6>
                     <div className="dropdown">
                         <button
                             className="btn btn-sm btn-outline-secondary dropdown-toggle"
@@ -172,14 +127,14 @@ const QuickActions = ({
                         <ul className="dropdown-menu dropdown-menu-end">
                             <li>
                                 <button className="dropdown-item">
-                                    <i className="fas fa-plus me-2"></i>
-                                    Add Custom Action
+                                    <i className="fas fa-plus"></i>
+                                    <span>Add Custom Action</span>
                                 </button>
                             </li>
                             <li>
                                 <button className="dropdown-item">
-                                    <i className="fas fa-edit me-2"></i>
-                                    Customize Layout
+                                    <i className="fas fa-edit"></i>
+                                    <span>Customize Layout</span>
                                 </button>
                             </li>
                             <li>
@@ -187,8 +142,8 @@ const QuickActions = ({
                             </li>
                             <li>
                                 <button className="dropdown-item">
-                                    <i className="fas fa-undo me-2"></i>
-                                    Reset to Default
+                                    <i className="fas fa-undo"></i>
+                                    <span>Reset to Default</span>
                                 </button>
                             </li>
                         </ul>
@@ -196,44 +151,34 @@ const QuickActions = ({
                 </div>
             </div>
 
-            <div className="card-body">
-                <div className="row g-3">
+            <div className="dashboard-card-body">
+                <div className={`quick-actions-grid columns-${columns}`}>
                     {displayActions.map((action, index) => (
-                        <div
-                            key={action.id || index}
-                            className={getColumnClass()}
-                        >
-                            <ActionCard action={action} />
-                        </div>
+                        <ActionCard key={action.id || index} action={action} />
                     ))}
                 </div>
             </div>
 
-            {/* Optional Footer with Action Summary */}
-            <div className="card-footer bg-light">
-                <div className="row text-center">
-                    <div className="col-4">
-                        <small className="text-muted d-block">
-                            Total Actions
-                        </small>
-                        <strong className="text-primary">
+            <div className="dashboard-card-footer">
+                <div className="actions-summary">
+                    <div className="summary-item">
+                        <span className="summary-label">Total Actions</span>
+                        <span className="summary-value primary">
                             {displayActions.length}
-                        </strong>
+                        </span>
                     </div>
-                    <div className="col-4">
-                        <small className="text-muted d-block">
-                            Quick Access
-                        </small>
-                        <strong className="text-success">
-                            <i className="fas fa-check-circle me-1"></i>
-                            Available
-                        </strong>
+                    <div className="summary-item">
+                        <span className="summary-label">Quick Access</span>
+                        <span className="summary-value success">
+                            <i className="fas fa-check-circle"></i>
+                            <span>Available</span>
+                        </span>
                     </div>
-                    <div className="col-4">
-                        <small className="text-muted d-block">Most Used</small>
-                        <strong className="text-info">
+                    <div className="summary-item">
+                        <span className="summary-label">Most Used</span>
+                        <span className="summary-value info">
                             {displayActions[0]?.title || "Create Staff"}
-                        </strong>
+                        </span>
                     </div>
                 </div>
             </div>
@@ -249,7 +194,7 @@ export const AdminQuickActions = ({ onAction = null }) => {
             title: "Create Staff",
             description: "Add new staff member to the team",
             icon: "fas fa-user-plus",
-            color: "primary",
+            variant: "primary",
             link: "/admin/staff/create",
         },
         {
@@ -257,7 +202,7 @@ export const AdminQuickActions = ({ onAction = null }) => {
             title: "Manage Users",
             description: "View and manage all platform users",
             icon: "fas fa-users",
-            color: "info",
+            variant: "info",
             link: "/admin/users",
         },
         {
@@ -265,7 +210,7 @@ export const AdminQuickActions = ({ onAction = null }) => {
             title: "Analytics",
             description: "View reports and system insights",
             icon: "fas fa-chart-bar",
-            color: "success",
+            variant: "success",
             link: "/admin/reports",
         },
         {
@@ -273,7 +218,7 @@ export const AdminQuickActions = ({ onAction = null }) => {
             title: "Settings",
             description: "Configure system preferences",
             icon: "fas fa-cogs",
-            color: "warning",
+            variant: "warning",
             link: "/admin/settings",
         },
     ];
@@ -295,7 +240,7 @@ export const StaffQuickActions = ({ onAction = null }) => {
             title: "Service Categories",
             description: "Manage service categories",
             icon: "fas fa-tags",
-            color: "primary",
+            variant: "primary",
             link: "/staff/categories",
         },
         {
@@ -303,7 +248,7 @@ export const StaffQuickActions = ({ onAction = null }) => {
             title: "User Management",
             description: "Handle user accounts and issues",
             icon: "fas fa-users",
-            color: "info",
+            variant: "info",
             link: "/staff/users",
         },
         {
@@ -311,7 +256,7 @@ export const StaffQuickActions = ({ onAction = null }) => {
             title: "Support Tickets",
             description: "View and respond to user issues",
             icon: "fas fa-headset",
-            color: "warning",
+            variant: "warning",
             link: "/staff/support",
             badge: "New",
             badgeColor: "danger",
@@ -321,7 +266,7 @@ export const StaffQuickActions = ({ onAction = null }) => {
             title: "Generate Reports",
             description: "Create user and activity reports",
             icon: "fas fa-file-chart",
-            color: "success",
+            variant: "success",
             link: "/staff/reports",
         },
     ];
@@ -343,7 +288,7 @@ export const ManagerQuickActions = ({ stats = {}, onAction = null }) => {
             title: "Export Users",
             description: "Download user data as CSV",
             icon: "fas fa-download",
-            color: "primary",
+            variant: "primary",
             onClick: () => onAction && onAction("export-users"),
         },
         {
@@ -351,7 +296,7 @@ export const ManagerQuickActions = ({ stats = {}, onAction = null }) => {
             title: "System Backup",
             description: "Create system backup",
             icon: "fas fa-database",
-            color: "success",
+            variant: "success",
             onClick: () => onAction && onAction("backup-system"),
         },
         {
@@ -359,7 +304,7 @@ export const ManagerQuickActions = ({ stats = {}, onAction = null }) => {
             title: "Send Notifications",
             description: "Broadcast message to users",
             icon: "fas fa-bullhorn",
-            color: "warning",
+            variant: "warning",
             onClick: () => onAction && onAction("send-notifications"),
         },
         {
@@ -367,7 +312,7 @@ export const ManagerQuickActions = ({ stats = {}, onAction = null }) => {
             title: "System Health",
             description: "Check system status",
             icon: "fas fa-heartbeat",
-            color: "danger",
+            variant: "danger",
             onClick: () => onAction && onAction("system-health"),
             badge: stats.issues > 0 ? stats.issues : null,
             badgeColor: "danger",
@@ -380,37 +325,6 @@ export const ManagerQuickActions = ({ stats = {}, onAction = null }) => {
             title="Management Tools"
             columns={2}
             className="h-100"
-        />
-    );
-};
-
-// Emergency Actions Component
-export const EmergencyActions = ({ onAction = null }) => {
-    const emergencyActions = [
-        {
-            id: "maintenance-mode",
-            title: "Maintenance Mode",
-            description: "Enable maintenance mode",
-            icon: "fas fa-wrench",
-            color: "warning",
-            onClick: () => onAction && onAction("maintenance-mode"),
-        },
-        {
-            id: "emergency-shutdown",
-            title: "Emergency Stop",
-            description: "Emergency system shutdown",
-            icon: "fas fa-power-off",
-            color: "danger",
-            onClick: () => onAction && onAction("emergency-shutdown"),
-        },
-    ];
-
-    return (
-        <QuickActions
-            actions={emergencyActions}
-            title="Emergency Actions"
-            columns={2}
-            className="border-danger"
         />
     );
 };

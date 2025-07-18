@@ -16,6 +16,8 @@
 @import "pages/provider-dashboard.css";
 @import "pages/staff-dashboard.css";
 @import "components/staff-components.css";
+@import "pages/admin-dashboard.css";
+@import "components/admin-stats-card.css";
 
 /* ============ CSS VARIABLES - COMPLETE DESIGN SYSTEM ============ */
 :root {
