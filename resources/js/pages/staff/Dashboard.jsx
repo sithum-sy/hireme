@@ -1,11 +1,8 @@
-// resources/js/pages/staff/Dashboard.jsx
-// Updated to match AdminDashboard pattern and structure
-
 import React, { useState, useEffect } from "react";
 import { useStaff } from "../../context/StaffContext";
 import StaffLayout from "../../components/layouts/StaffLayout";
 
-// Import dashboard components (we'll create these to match admin components)
+// Import dashboard components
 import {
     UserStatsCard,
     ActiveUsersCard,
@@ -86,7 +83,6 @@ const StaffDashboard = () => {
 
     const handleQuickAction = (actionId) => {
         console.log("Quick action triggered:", actionId);
-        // Handle specific actions
         switch (actionId) {
             case "manage-categories":
                 window.location.href = "/staff/categories";
@@ -109,33 +105,10 @@ const StaffDashboard = () => {
     // Loading skeleton for the entire dashboard
     const DashboardSkeleton = () => (
         <StaffLayout>
-            <div className="d-flex justify-content-between align-items-center mb-4">
-                <div>
-                    <h1 className="h3 mb-1">Staff Dashboard</h1>
-                    <p className="text-muted mb-0">
-                        Welcome back! Here's what's happening on the platform.
-                    </p>
-                </div>
-                <button className="btn btn-outline-primary" disabled>
-                    <i className="fas fa-sync-alt fa-spin me-2"></i>
-                    Loading...
-                </button>
-            </div>
-
-            {/* Stats Cards Row with Skeletons */}
-            <div className="row mb-4">
-                {[1, 2, 3, 4].map((i) => (
-                    <UserStatsCard key={i} users={{}} loading={true} />
-                ))}
-            </div>
-
-            {/* Charts Row with Skeletons */}
-            <div className="row mb-4">
-                <div className="col-lg-8 mb-4">
-                    <PlatformGrowthChart loading={true} />
-                </div>
-                <div className="col-lg-4 mb-4">
-                    <StaffQuickActions />
+            <div className="loading-container">
+                <div className="loading-content">
+                    <div className="loading-spinner large"></div>
+                    <p className="loading-text">Loading dashboard...</p>
                 </div>
             </div>
         </StaffLayout>
@@ -147,61 +120,62 @@ const StaffDashboard = () => {
 
     return (
         <StaffLayout>
-            {/* Dashboard Header */}
-            <div className="d-flex justify-content-between align-items-center mb-4">
-                <div>
-                    <h1 className="h3 mb-1">Staff Dashboard</h1>
-                    <p className="text-muted mb-0">
-                        Welcome back! Here's what's happening on the platform.
-                    </p>
-                </div>
-                <div className="d-flex gap-2">
-                    {lastUpdated && (
-                        <small className="text-muted align-self-center me-3">
-                            Last updated: {lastUpdated.toLocaleTimeString()}
-                        </small>
-                    )}
-                    <button
-                        className="btn btn-outline-primary"
-                        onClick={handleRefresh}
-                        disabled={refreshing}
-                    >
-                        <i
-                            className={`fas fa-sync-alt ${
-                                refreshing ? "fa-spin" : ""
-                            } me-2`}
-                        ></i>
-                        Refresh
-                    </button>
-                </div>
-            </div>
+            <div className="page-content staff-dashboard-content">
+                {/* Dashboard Header */}
+                {/* <div className="dashboard-header">
+                    <div className="header-content">
+                        <h1 className="dashboard-title">Staff Dashboard</h1>
+                        <p className="dashboard-subtitle">
+                            Welcome back! Here's what's happening on the
+                            platform.
+                        </p>
+                    </div>
+                    <div className="header-actions">
+                        {lastUpdated && (
+                            <small className="last-updated">
+                                Last updated: {lastUpdated.toLocaleTimeString()}
+                            </small>
+                        )}
+                        <button
+                            className="btn btn-outline-primary"
+                            onClick={handleRefresh}
+                            disabled={refreshing}
+                        >
+                            <i
+                                className={`fas fa-sync-alt ${
+                                    refreshing ? "fa-spin" : ""
+                                }`}
+                            ></i>
+                            <span>Refresh</span>
+                        </button>
+                    </div>
+                </div> */}
 
-            {/* Error State */}
-            {errors.dashboard && (
-                <div className="alert alert-danger" role="alert">
-                    <i className="fas fa-exclamation-triangle me-2"></i>
-                    {errors.dashboard}
-                    <button
-                        className="btn btn-sm btn-outline-danger ms-3"
-                        onClick={() => loadDashboardData(true)}
-                    >
-                        Retry
-                    </button>
-                </div>
-            )}
+                {/* Error State */}
+                {errors.dashboard && (
+                    <div className="alert alert-danger">
+                        <i className="fas fa-exclamation-triangle"></i>
+                        <span>{errors.dashboard}</span>
+                        <button
+                            className="btn btn-sm btn-outline-danger ms-3"
+                            onClick={() => loadDashboardData(true)}
+                        >
+                            Retry
+                        </button>
+                    </div>
+                )}
 
-            {/* Today's Tasks Priority Section */}
-            {tasks && tasks.length > 0 && (
-                <div className="row mb-4">
-                    <div className="col-12">
-                        <div className="alert alert-info border-0" role="alert">
-                            <div className="d-flex align-items-center">
-                                <i className="fas fa-tasks fa-2x text-info me-3"></i>
-                                <div>
-                                    <h6 className="alert-heading mb-1">
+                {/* Priority Tasks Alert */}
+                {tasks && tasks.length > 0 && (
+                    <div className="priority-tasks-alert">
+                        <div className="alert alert-info">
+                            <div className="alert-content">
+                                <i className="fas fa-tasks"></i>
+                                <div className="alert-text">
+                                    <h6 className="alert-title">
                                         Today's Priority Tasks
                                     </h6>
-                                    <p className="mb-0">
+                                    <p className="alert-description">
                                         You have{" "}
                                         {tasks.high_priority?.length || 0} high
                                         priority tasks,{" "}
@@ -211,188 +185,155 @@ const StaffDashboard = () => {
                                 </div>
                                 <a
                                     href="/staff/dashboard#tasks"
-                                    className="btn btn-info ms-auto"
+                                    className="btn btn-info"
                                 >
                                     View Tasks
                                 </a>
                             </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )}
 
-            {dashboardStats && (
-                <>
-                    {/* Main Statistics Cards Row */}
-                    <div className="row mb-4">
-                        <UserStatsCard
-                            users={dashboardStats.users || {}}
-                            loading={dashboardLoading}
-                        />
-                        <ActiveUsersCard
-                            users={dashboardStats.users || {}}
-                            loading={dashboardLoading}
-                        />
-                        <ProvidersCard
-                            users={dashboardStats.users || {}}
-                            services={dashboardStats.services || {}}
-                            loading={dashboardLoading}
-                        />
-                        <CategoriesCard
-                            categories={dashboardStats.categories || {}}
-                            loading={dashboardLoading}
-                        />
-                    </div>
-                    {/* Secondary Statistics Cards Row */}
-                    <div className="row mb-4">
-                        <ServicesCard
-                            services={dashboardStats.services || {}}
-                            loading={dashboardLoading}
-                        />
-                        <AppointmentsCard
-                            appointments={dashboardStats.appointments || {}}
-                            loading={dashboardLoading}
-                        />
-
-                        {/* System Health Card */}
-                        <div className="col-lg-3 col-md-6 mb-4">
-                            <div className="card border-0 shadow-sm h-100">
-                                <div className="card-header bg-white border-bottom">
-                                    <h6 className="card-title mb-0">
-                                        <i className="fas fa-heartbeat text-success me-2"></i>
-                                        System Health
-                                    </h6>
-                                </div>
-                                <div className="card-body">
-                                    <div className="row g-2">
-                                        <div className="col-6">
-                                            <div className="text-center p-2 bg-success bg-opacity-10 rounded">
-                                                <small className="text-success d-block">
-                                                    <i className="fas fa-check-circle"></i>
-                                                </small>
-                                                <small className="text-muted">
-                                                    API
-                                                </small>
-                                            </div>
-                                        </div>
-                                        <div className="col-6">
-                                            <div className="text-center p-2 bg-success bg-opacity-10 rounded">
-                                                <small className="text-success d-block">
-                                                    <i className="fas fa-database"></i>
-                                                </small>
-                                                <small className="text-muted">
-                                                    Database
-                                                </small>
-                                            </div>
-                                        </div>
-                                        <div className="col-6">
-                                            <div className="text-center p-2 bg-warning bg-opacity-10 rounded">
-                                                <small className="text-warning d-block">
-                                                    85%
-                                                </small>
-                                                <small className="text-muted">
-                                                    Storage
-                                                </small>
-                                            </div>
-                                        </div>
-                                        <div className="col-6">
-                                            <div className="text-center p-2 bg-success bg-opacity-10 rounded">
-                                                <small className="text-success d-block">
-                                                    99.9%
-                                                </small>
-                                                <small className="text-muted">
-                                                    Uptime
-                                                </small>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Platform Alerts Card */}
-                        <div className="col-lg-3 col-md-6 mb-4">
-                            <div className="card border-0 shadow-sm h-100">
-                                <div className="card-header bg-white border-bottom">
-                                    <h6 className="card-title mb-0">
-                                        <i className="fas fa-exclamation-triangle text-warning me-2"></i>
-                                        Platform Alerts
-                                    </h6>
-                                </div>
-                                <div className="card-body">
-                                    <div className="d-flex align-items-center mb-3">
-                                        <div className="me-3">
-                                            <div
-                                                className="bg-warning bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center"
-                                                style={{
-                                                    width: "32px",
-                                                    height: "32px",
-                                                }}
-                                            >
-                                                <i className="fas fa-user-clock text-warning fa-sm"></i>
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <h6 className="mb-0">
-                                                {dashboardStats.users?.providers
-                                                    ?.pending || 0}
-                                            </h6>
-                                            <small className="text-muted">
-                                                Pending Approvals
-                                            </small>
-                                        </div>
-                                    </div>
-                                    <div className="d-flex align-items-center">
-                                        <div className="me-3">
-                                            <div
-                                                className="bg-info bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center"
-                                                style={{
-                                                    width: "32px",
-                                                    height: "32px",
-                                                }}
-                                            >
-                                                <i className="fas fa-tags text-info fa-sm"></i>
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <h6 className="mb-0">
-                                                {dashboardStats.categories
-                                                    ?.overview?.inactive || 0}
-                                            </h6>
-                                            <small className="text-muted">
-                                                Inactive Categories
-                                            </small>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    {/* Charts and Actions Row */}
-                    <div className="row mb-4">
-                        {/* Platform Growth Chart */}
-                        <div className="col-lg-8 mb-4">
-                            <PlatformGrowthChart
-                                data={
-                                    dashboardStats.trends?.user_registrations ||
-                                    []
-                                }
+                {dashboardStats && (
+                    <>
+                        {/* Main Statistics Cards */}
+                        <div className="stats-grid">
+                            <UserStatsCard
+                                users={dashboardStats.users || {}}
                                 loading={dashboardLoading}
-                                period={chartPeriod}
-                                chartType={chartType}
-                                onPeriodChange={handleChartChange}
+                            />
+                            <ActiveUsersCard
+                                users={dashboardStats.users || {}}
+                                loading={dashboardLoading}
+                            />
+                            <ProvidersCard
+                                users={dashboardStats.users || {}}
+                                services={dashboardStats.services || {}}
+                                loading={dashboardLoading}
+                            />
+                            <CategoriesCard
+                                categories={dashboardStats.categories || {}}
+                                loading={dashboardLoading}
                             />
                         </div>
 
-                        {/* Quick Actions */}
-                        <div className="col-lg-4 mb-4">
-                            <StaffQuickActions onAction={handleQuickAction} />
+                        {/* Secondary Statistics Cards */}
+                        <div className="stats-grid">
+                            <ServicesCard
+                                services={dashboardStats.services || {}}
+                                loading={dashboardLoading}
+                            />
+                            <AppointmentsCard
+                                appointments={dashboardStats.appointments || {}}
+                                loading={dashboardLoading}
+                            />
+
+                            {/* System Health Card */}
+                            <div className="dashboard-card system-health-card">
+                                <div className="dashboard-card-header">
+                                    <h6 className="dashboard-card-title">
+                                        <i className="fas fa-heartbeat"></i>
+                                        <span>System Health</span>
+                                    </h6>
+                                </div>
+                                <div className="dashboard-card-body">
+                                    <div className="health-grid">
+                                        <div className="health-item success">
+                                            <i className="fas fa-check-circle"></i>
+                                            <span>API</span>
+                                        </div>
+                                        <div className="health-item success">
+                                            <i className="fas fa-database"></i>
+                                            <span>Database</span>
+                                        </div>
+                                        <div className="health-item warning">
+                                            <span className="health-value">
+                                                85%
+                                            </span>
+                                            <span>Storage</span>
+                                        </div>
+                                        <div className="health-item success">
+                                            <span className="health-value">
+                                                99.9%
+                                            </span>
+                                            <span>Uptime</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Platform Alerts Card */}
+                            <div className="dashboard-card alerts-card">
+                                <div className="dashboard-card-header">
+                                    <h6 className="dashboard-card-title">
+                                        <i className="fas fa-exclamation-triangle"></i>
+                                        <span>Platform Alerts</span>
+                                    </h6>
+                                </div>
+                                <div className="dashboard-card-body">
+                                    <div className="alert-items">
+                                        <div className="alert-item">
+                                            <div className="alert-icon warning">
+                                                <i className="fas fa-user-clock"></i>
+                                            </div>
+                                            <div className="alert-content">
+                                                <h6 className="alert-value">
+                                                    {dashboardStats.users
+                                                        ?.providers?.pending ||
+                                                        0}
+                                                </h6>
+                                                <span className="alert-label">
+                                                    Pending Approvals
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div className="alert-item">
+                                            <div className="alert-icon info">
+                                                <i className="fas fa-tags"></i>
+                                            </div>
+                                            <div className="alert-content">
+                                                <h6 className="alert-value">
+                                                    {dashboardStats.categories
+                                                        ?.overview?.inactive ||
+                                                        0}
+                                                </h6>
+                                                <span className="alert-label">
+                                                    Inactive Categories
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                    {/* Activity and Management Row */}
-                    <div className="row mb-4">
-                        {/* Recent User Activity */}
-                        <div className="col-lg-6 mb-4">
+
+                        {/* Charts and Actions Section */}
+                        <div className="dashboard-content-grid">
+                            {/* Platform Growth Chart */}
+                            <div className="content-main">
+                                <PlatformGrowthChart
+                                    data={
+                                        dashboardStats.trends
+                                            ?.user_registrations || []
+                                    }
+                                    loading={dashboardLoading}
+                                    period={chartPeriod}
+                                    chartType={chartType}
+                                    onPeriodChange={handleChartChange}
+                                />
+                            </div>
+
+                            {/* Quick Actions Sidebar */}
+                            <div className="content-sidebar">
+                                <StaffQuickActions
+                                    onAction={handleQuickAction}
+                                />
+                            </div>
+                        </div>
+
+                        {/* Activity Section */}
+                        <div className="activity-grid">
+                            {/* Recent User Activity */}
                             <UserActivityFeed
                                 users={
                                     dashboardStats.users?.activity
@@ -400,20 +341,17 @@ const StaffDashboard = () => {
                                 }
                                 loading={dashboardLoading}
                             />
-                        </div>
 
-                        {/* Staff Activities */}
-                        <div className="col-lg-6 mb-4">
+                            {/* Staff Activities */}
                             <StaffActivityFeed
                                 activities={systemActivities}
                                 loading={activitiesLoading}
                             />
                         </div>
-                    </div>
-                    {/* Management Tools Row */}
-                    <div className="row mb-4">
-                        {/* Management Quick Actions */}
-                        <div className="col-lg-6 mb-4">
+
+                        {/* Management Tools */}
+                        <div className="management-grid">
+                            {/* Management Quick Actions */}
                             <ManagementQuickActions
                                 stats={{
                                     pendingProviders:
@@ -428,79 +366,66 @@ const StaffDashboard = () => {
                                 }}
                                 onAction={handleQuickAction}
                             />
-                        </div>
 
-                        {/* Today's Tasks Summary */}
-                        <div className="col-lg-6 mb-4">
-                            <div className="card border-0 shadow-sm">
-                                <div className="card-header bg-white border-bottom">
-                                    <h5 className="card-title mb-0">
-                                        <i className="fas fa-tasks text-primary me-2"></i>
-                                        Today's Tasks
-                                    </h5>
+                            {/* Today's Tasks Summary */}
+                            <div className="dashboard-card tasks-card">
+                                <div className="dashboard-card-header">
+                                    <h6 className="dashboard-card-title">
+                                        <i className="fas fa-tasks"></i>
+                                        <span>Today's Tasks</span>
+                                    </h6>
                                 </div>
-                                <div className="card-body">
+                                <div className="dashboard-card-body">
                                     {tasks &&
                                     (tasks.high_priority?.length > 0 ||
                                         tasks.medium_priority?.length > 0 ||
                                         tasks.low_priority?.length > 0) ? (
-                                        <div className="row g-3">
-                                            {/* High Priority */}
-                                            <div className="col-md-4">
-                                                <div className="text-center p-3 bg-danger bg-opacity-10 rounded">
-                                                    <h4 className="text-danger mb-1">
-                                                        {tasks.high_priority
-                                                            ?.length || 0}
-                                                    </h4>
-                                                    <small className="text-muted">
-                                                        High Priority
-                                                    </small>
-                                                </div>
+                                        <div className="tasks-grid">
+                                            <div className="task-priority high">
+                                                <h4 className="task-count">
+                                                    {tasks.high_priority
+                                                        ?.length || 0}
+                                                </h4>
+                                                <span className="task-label">
+                                                    High Priority
+                                                </span>
                                             </div>
-
-                                            {/* Medium Priority */}
-                                            <div className="col-md-4">
-                                                <div className="text-center p-3 bg-warning bg-opacity-10 rounded">
-                                                    <h4 className="text-warning mb-1">
-                                                        {tasks.medium_priority
-                                                            ?.length || 0}
-                                                    </h4>
-                                                    <small className="text-muted">
-                                                        Medium Priority
-                                                    </small>
-                                                </div>
+                                            <div className="task-priority medium">
+                                                <h4 className="task-count">
+                                                    {tasks.medium_priority
+                                                        ?.length || 0}
+                                                </h4>
+                                                <span className="task-label">
+                                                    Medium Priority
+                                                </span>
                                             </div>
-
-                                            {/* Low Priority */}
-                                            <div className="col-md-4">
-                                                <div className="text-center p-3 bg-info bg-opacity-10 rounded">
-                                                    <h4 className="text-info mb-1">
-                                                        {tasks.low_priority
-                                                            ?.length || 0}
-                                                    </h4>
-                                                    <small className="text-muted">
-                                                        Low Priority
-                                                    </small>
-                                                </div>
+                                            <div className="task-priority low">
+                                                <h4 className="task-count">
+                                                    {tasks.low_priority
+                                                        ?.length || 0}
+                                                </h4>
+                                                <span className="task-label">
+                                                    Low Priority
+                                                </span>
                                             </div>
                                         </div>
                                     ) : (
-                                        <div className="text-center py-3">
-                                            <i className="fas fa-check-circle text-success fa-3x mb-3"></i>
-                                            <h6 className="text-success">
+                                        <div className="empty-state-small">
+                                            <div className="empty-state-icon">
+                                                <i className="fas fa-check-circle"></i>
+                                            </div>
+                                            <h6 className="empty-state-title">
                                                 All caught up!
                                             </h6>
-                                            <p className="text-muted mb-0">
+                                            <p className="empty-state-description">
                                                 No pending tasks for today.
                                             </p>
                                         </div>
                                     )}
                                 </div>
-
-                                {/* Tasks Footer */}
-                                <div className="card-footer bg-light">
-                                    <div className="d-flex justify-content-between align-items-center">
-                                        <small className="text-muted">
+                                <div className="dashboard-card-footer">
+                                    <div className="card-footer-content">
+                                        <small className="footer-text">
                                             Tasks updated:{" "}
                                             {new Date().toLocaleTimeString()}
                                         </small>
@@ -508,68 +433,58 @@ const StaffDashboard = () => {
                                             href="/staff/dashboard#tasks"
                                             className="btn btn-sm btn-outline-primary"
                                         >
-                                            <i className="fas fa-list me-1"></i>
-                                            View All Tasks
+                                            <i className="fas fa-list"></i>
+                                            <span>View All Tasks</span>
                                         </a>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </>
-            )}
+                    </>
+                )}
 
-            {/* Welcome Message for New Staff */}
-            {dashboardData?.welcome_message && (
-                <div className="row">
-                    <div className="col-12">
-                        <div
-                            className="card border-0 shadow-sm bg-gradient"
-                            style={{
-                                background:
-                                    "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                            }}
-                        >
-                            <div className="card-body text-white">
-                                <div className="row align-items-center">
-                                    <div className="col-md-8">
-                                        <h5 className="text-white mb-2">
+                {/* Welcome Message for New Staff */}
+                {dashboardData?.welcome_message && (
+                    <div className="welcome-message-card">
+                        <div className="dashboard-card welcome-card">
+                            <div className="dashboard-card-body">
+                                <div className="welcome-content">
+                                    <div className="welcome-text">
+                                        <h5 className="welcome-title">
                                             {
                                                 dashboardData.welcome_message
                                                     .greeting
                                             }
                                         </h5>
-                                        <p className="text-white-50 mb-0">
+                                        <p className="welcome-description">
                                             {
                                                 dashboardData.welcome_message
                                                     .message
                                             }
                                         </p>
                                     </div>
-                                    <div className="col-md-4 text-end">
-                                        <div className="d-flex justify-content-end gap-2">
-                                            <a
-                                                href="/staff/categories"
-                                                className="btn btn-light btn-sm"
-                                            >
-                                                <i className="fas fa-tags me-1"></i>
-                                                Manage Categories
-                                            </a>
-                                            <a
-                                                href="/staff/users"
-                                                className="btn btn-outline-light btn-sm"
-                                            >
-                                                <i className="fas fa-users me-1"></i>
-                                                View Users
-                                            </a>
-                                        </div>
+                                    <div className="welcome-actions">
+                                        <a
+                                            href="/staff/categories"
+                                            className="btn btn-light"
+                                        >
+                                            <i className="fas fa-tags"></i>
+                                            <span>Manage Categories</span>
+                                        </a>
+                                        <a
+                                            href="/staff/users"
+                                            className="btn btn-outline-light"
+                                        >
+                                            <i className="fas fa-users"></i>
+                                            <span>View Users</span>
+                                        </a>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )}
+            </div>
         </StaffLayout>
     );
 };

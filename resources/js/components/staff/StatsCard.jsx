@@ -2,30 +2,20 @@ import React from "react";
 
 // Loading skeleton component
 const StatCardSkeleton = () => (
-    <div className="col-lg-3 col-md-6 mb-4">
-        <div className="card border-0 shadow-sm h-100">
-            <div className="card-body">
-                <div className="d-flex justify-content-between align-items-center">
-                    <div className="flex-grow-1">
-                        <div className="placeholder-glow">
-                            <span className="placeholder col-8"></span>
-                        </div>
-                        <div className="placeholder-glow mt-2">
-                            <span
-                                className="placeholder col-4"
-                                style={{ height: "2rem" }}
-                            ></span>
-                        </div>
+    <div className="dashboard-card stat-card">
+        <div className="dashboard-card-body">
+            <div className="stat-content">
+                <div className="stat-text">
+                    <div className="placeholder-glow">
+                        <span className="placeholder stat-label-placeholder"></span>
                     </div>
                     <div className="placeholder-glow">
-                        <span
-                            className="placeholder col-12"
-                            style={{
-                                width: "3rem",
-                                height: "3rem",
-                                borderRadius: "50%",
-                            }}
-                        ></span>
+                        <span className="placeholder stat-value-placeholder"></span>
+                    </div>
+                </div>
+                <div className="stat-icon-placeholder">
+                    <div className="placeholder-glow">
+                        <span className="placeholder icon-placeholder"></span>
                     </div>
                 </div>
             </div>
@@ -42,43 +32,41 @@ export const UserStatsCard = ({ users = {}, loading = false }) => {
     const newToday = users.overview?.new_today || 0;
 
     return (
-        <div className="col-lg-3 col-md-6 mb-4">
-            <div className="card border-0 shadow-sm h-100">
-                <div className="card-body">
-                    <div className="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 className="card-title text-muted mb-2">
-                                <i className="fas fa-users me-2"></i>
-                                Total Users
-                            </h6>
-                            <h3 className="mb-1">
-                                {totalUsers.toLocaleString()}
-                            </h3>
-                            <div className="d-flex align-items-center">
-                                {growthRate !== 0 && (
-                                    <small
-                                        className={`me-2 ${
-                                            growthRate >= 0
-                                                ? "text-success"
-                                                : "text-danger"
+        <div className="dashboard-card stat-card users-card">
+            <div className="dashboard-card-body">
+                <div className="stat-content">
+                    <div className="stat-text">
+                        <h6 className="stat-label">
+                            <i className="fas fa-users"></i>
+                            <span>Total Users</span>
+                        </h6>
+                        <h3 className="stat-value">
+                            {totalUsers.toLocaleString()}
+                        </h3>
+                        <div className="stat-meta">
+                            {growthRate !== 0 && (
+                                <span
+                                    className={`growth-indicator ${
+                                        growthRate >= 0
+                                            ? "positive"
+                                            : "negative"
+                                    }`}
+                                >
+                                    <i
+                                        className={`fas fa-arrow-${
+                                            growthRate >= 0 ? "up" : "down"
                                         }`}
-                                    >
-                                        <i
-                                            className={`fas fa-arrow-${
-                                                growthRate >= 0 ? "up" : "down"
-                                            } me-1`}
-                                        ></i>
-                                        {Math.abs(growthRate)}%
-                                    </small>
-                                )}
-                                <small className="text-muted">
-                                    {newToday} new today
-                                </small>
-                            </div>
+                                    ></i>
+                                    <span>{Math.abs(growthRate)}%</span>
+                                </span>
+                            )}
+                            <span className="today-count">
+                                {newToday} new today
+                            </span>
                         </div>
-                        <div className="text-primary">
-                            <i className="fas fa-users fa-2x"></i>
-                        </div>
+                    </div>
+                    <div className="stat-icon primary">
+                        <i className="fas fa-users"></i>
                     </div>
                 </div>
             </div>
@@ -96,26 +84,26 @@ export const ActiveUsersCard = ({ users = {}, loading = false }) => {
         totalUsers > 0 ? ((activeUsers / totalUsers) * 100).toFixed(1) : 0;
 
     return (
-        <div className="col-lg-3 col-md-6 mb-4">
-            <div className="card border-0 shadow-sm h-100">
-                <div className="card-body">
-                    <div className="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 className="card-title text-muted mb-2">
-                                <i className="fas fa-user-check me-2"></i>
-                                Active Users
-                            </h6>
-                            <h3 className="mb-1">
-                                {activeUsers.toLocaleString()}
-                            </h3>
-                            <small className="text-success">
-                                <i className="fas fa-percentage me-1"></i>
-                                {activePercentage}% of total
-                            </small>
+        <div className="dashboard-card stat-card active-users-card">
+            <div className="dashboard-card-body">
+                <div className="stat-content">
+                    <div className="stat-text">
+                        <h6 className="stat-label">
+                            <i className="fas fa-user-check"></i>
+                            <span>Active Users</span>
+                        </h6>
+                        <h3 className="stat-value">
+                            {activeUsers.toLocaleString()}
+                        </h3>
+                        <div className="stat-meta">
+                            <span className="percentage-indicator success">
+                                <i className="fas fa-percentage"></i>
+                                <span>{activePercentage}% of total</span>
+                            </span>
                         </div>
-                        <div className="text-success">
-                            <i className="fas fa-user-check fa-2x"></i>
-                        </div>
+                    </div>
+                    <div className="stat-icon success">
+                        <i className="fas fa-user-check"></i>
                     </div>
                 </div>
             </div>
@@ -136,34 +124,34 @@ export const ProvidersCard = ({
     const pendingProviders = users.providers?.pending || 0;
 
     return (
-        <div className="col-lg-3 col-md-6 mb-4">
-            <div className="card border-0 shadow-sm h-100">
-                <div className="card-body">
-                    <div className="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 className="card-title text-muted mb-2">
-                                <i className="fas fa-user-tie me-2"></i>
-                                Service Providers
-                            </h6>
-                            <h3 className="mb-1">
-                                {totalProviders.toLocaleString()}
-                            </h3>
-                            <div className="small">
-                                <span className="text-success me-2">
-                                    <i className="fas fa-check-circle me-1"></i>
-                                    {verifiedProviders} verified
+        <div className="dashboard-card stat-card providers-card">
+            <div className="dashboard-card-body">
+                <div className="stat-content">
+                    <div className="stat-text">
+                        <h6 className="stat-label">
+                            <i className="fas fa-user-tie"></i>
+                            <span>Service Providers</span>
+                        </h6>
+                        <h3 className="stat-value">
+                            {totalProviders.toLocaleString()}
+                        </h3>
+                        <div className="stat-meta">
+                            <div className="stat-meta-inline">
+                                <span className="status-indicator success">
+                                    <i className="fas fa-check-circle"></i>
+                                    <span>{verifiedProviders} verified</span>
                                 </span>
                                 {pendingProviders > 0 && (
-                                    <span className="text-warning">
-                                        <i className="fas fa-clock me-1"></i>
-                                        {pendingProviders} pending
+                                    <span className="status-indicator warning">
+                                        <i className="fas fa-clock"></i>
+                                        <span>{pendingProviders} pending</span>
                                     </span>
                                 )}
                             </div>
                         </div>
-                        <div className="text-info">
-                            <i className="fas fa-user-tie fa-2x"></i>
-                        </div>
+                    </div>
+                    <div className="stat-icon info">
+                        <i className="fas fa-user-tie"></i>
                     </div>
                 </div>
             </div>
@@ -180,34 +168,32 @@ export const CategoriesCard = ({ categories = {}, loading = false }) => {
     const inactiveCategories = categories.overview?.inactive || 0;
 
     return (
-        <div className="col-lg-3 col-md-6 mb-4">
-            <div className="card border-0 shadow-sm h-100">
-                <div className="card-body">
-                    <div className="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 className="card-title text-muted mb-2">
-                                <i className="fas fa-tags me-2"></i>
-                                Categories
-                            </h6>
-                            <h3 className="mb-1">
-                                {totalCategories.toLocaleString()}
-                            </h3>
-                            <div className="small">
-                                <span className="text-success me-2">
-                                    <i className="fas fa-check me-1"></i>
-                                    {activeCategories} active
+        <div className="dashboard-card stat-card categories-card">
+            <div className="dashboard-card-body">
+                <div className="stat-content">
+                    <div className="stat-text">
+                        <h6 className="stat-label">
+                            <i className="fas fa-tags"></i>
+                            <span>Categories</span>
+                        </h6>
+                        <h3 className="stat-value">
+                            {totalCategories.toLocaleString()}
+                        </h3>
+                        <div className="stat-meta">
+                            <span className="status-indicator success">
+                                <i className="fas fa-check"></i>
+                                <span>{activeCategories} active</span>
+                            </span>
+                            {inactiveCategories > 0 && (
+                                <span className="status-indicator secondary">
+                                    <i className="fas fa-pause"></i>
+                                    <span>{inactiveCategories} inactive</span>
                                 </span>
-                                {inactiveCategories > 0 && (
-                                    <span className="text-secondary">
-                                        <i className="fas fa-pause me-1"></i>
-                                        {inactiveCategories} inactive
-                                    </span>
-                                )}
-                            </div>
+                            )}
                         </div>
-                        <div className="text-warning">
-                            <i className="fas fa-tags fa-2x"></i>
-                        </div>
+                    </div>
+                    <div className="stat-icon warning">
+                        <i className="fas fa-tags"></i>
                     </div>
                 </div>
             </div>
@@ -224,35 +210,32 @@ export const ServicesCard = ({ services = {}, loading = false }) => {
     const newThisWeek = services.overview?.new_this_week || 0;
 
     return (
-        <div className="col-lg-3 col-md-6 mb-4">
-            <div className="card border-0 shadow-sm h-100">
-                <div className="card-body">
-                    <div className="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 className="card-title text-muted mb-2">
-                                <i className="fas fa-briefcase me-2"></i>
-                                Services
-                            </h6>
-                            <h3 className="mb-1">
-                                {totalServices.toLocaleString()}
-                            </h3>
-                            <div className="small">
-                                <span className="text-success me-2">
-                                    <i className="fas fa-play me-1"></i>
-                                    {activeServices} active
+        <div className="dashboard-card stat-card services-card">
+            <div className="dashboard-card-body">
+                <div className="stat-content">
+                    <div className="stat-text">
+                        <h6 className="stat-label">
+                            <i className="fas fa-briefcase"></i>
+                            <span>Services</span>
+                        </h6>
+                        <h3 className="stat-value">
+                            {totalServices.toLocaleString()}
+                        </h3>
+                        <div className="stat-meta">
+                            <div className="stat-meta-inline">
+                                <span className="status-indicator success">
+                                    <i className="fas fa-play"></i>
+                                    <span>{activeServices} active</span>
                                 </span>
-                                <span className="text-info">
-                                    <i className="fas fa-plus me-1"></i>
-                                    {newThisWeek} this week
+                                <span className="status-indicator info">
+                                    <i className="fas fa-plus"></i>
+                                    <span>{newThisWeek} this week</span>
                                 </span>
                             </div>
                         </div>
-                        <div className="text-purple">
-                            <i
-                                className="fas fa-briefcase fa-2x"
-                                style={{ color: "#6f42c1" }}
-                            ></i>
-                        </div>
+                    </div>
+                    <div className="stat-icon primary">
+                        <i className="fas fa-briefcase"></i>
                     </div>
                 </div>
             </div>
@@ -269,32 +252,34 @@ export const AppointmentsCard = ({ appointments = {}, loading = false }) => {
     const thisWeekAppointments = appointments.overview?.this_week || 0;
 
     return (
-        <div className="col-lg-3 col-md-6 mb-4">
-            <div className="card border-0 shadow-sm h-100">
-                <div className="card-body">
-                    <div className="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 className="card-title text-muted mb-2">
-                                <i className="fas fa-calendar-alt me-2"></i>
-                                Appointments
-                            </h6>
-                            <h3 className="mb-1">
-                                {totalAppointments.toLocaleString()}
-                            </h3>
-                            <div className="small">
-                                <span className="text-primary me-2">
-                                    <i className="fas fa-calendar-day me-1"></i>
-                                    {todayAppointments} today
+        <div className="dashboard-card stat-card appointments-card">
+            <div className="dashboard-card-body">
+                <div className="stat-content">
+                    <div className="stat-text">
+                        <h6 className="stat-label">
+                            <i className="fas fa-calendar-alt"></i>
+                            <span>Appointments</span>
+                        </h6>
+                        <h3 className="stat-value">
+                            {totalAppointments.toLocaleString()}
+                        </h3>
+                        <div className="stat-meta">
+                            <div className="stat-meta-inline">
+                                <span className="status-indicator primary">
+                                    <i className="fas fa-calendar-day"></i>
+                                    <span>{todayAppointments} today</span>
                                 </span>
-                                <span className="text-info">
-                                    <i className="fas fa-calendar-week me-1"></i>
-                                    {thisWeekAppointments} this week
+                                <span className="status-indicator info">
+                                    <i className="fas fa-calendar-week"></i>
+                                    <span>
+                                        {thisWeekAppointments} this week
+                                    </span>
                                 </span>
                             </div>
                         </div>
-                        <div className="text-danger">
-                            <i className="fas fa-calendar-alt fa-2x"></i>
-                        </div>
+                    </div>
+                    <div className="stat-icon danger">
+                        <i className="fas fa-calendar-alt"></i>
                     </div>
                 </div>
             </div>

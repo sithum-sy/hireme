@@ -3,125 +3,116 @@ import React from "react";
 // User Activity Feed Component
 export const UserActivityFeed = ({ users = [], loading = false }) => {
     const ActivitySkeleton = () => (
-        <div className="d-flex align-items-center mb-3">
-            <div className="placeholder-glow me-3">
-                <span
-                    className="placeholder rounded-circle"
-                    style={{ width: "40px", height: "40px" }}
-                ></span>
+        <div className="activity-item skeleton">
+            <div className="activity-avatar">
+                <div className="placeholder-glow">
+                    <span className="placeholder avatar-placeholder"></span>
+                </div>
             </div>
-            <div className="flex-grow-1 placeholder-glow">
-                <span className="placeholder col-8"></span>
-                <br />
-                <span className="placeholder col-6"></span>
+            <div className="activity-content">
+                <div className="placeholder-glow">
+                    <span className="placeholder content-placeholder-title"></span>
+                    <span className="placeholder content-placeholder-subtitle"></span>
+                </div>
             </div>
         </div>
     );
 
     return (
-        <div className="card border-0 shadow-sm">
-            <div className="card-header bg-white border-bottom">
-                <div className="d-flex justify-content-between align-items-center">
-                    <h5 className="card-title mb-0">
-                        <i className="fas fa-users text-primary me-2"></i>
-                        Recent User Activity
-                    </h5>
-                    <span className="badge bg-primary">{users.length}</span>
+        <div className="dashboard-card activity-feed-card">
+            <div className="dashboard-card-header">
+                <div className="header-content">
+                    <h6 className="dashboard-card-title">
+                        <i className="fas fa-users"></i>
+                        <span>Recent User Activity</span>
+                    </h6>
+                    <span className="badge primary">{users.length}</span>
                 </div>
             </div>
-            <div className="card-body">
+            <div className="dashboard-card-body">
                 {loading ? (
-                    <>
+                    <div className="activity-list">
                         {[1, 2, 3, 4, 5].map((i) => (
                             <ActivitySkeleton key={i} />
                         ))}
-                    </>
+                    </div>
                 ) : users && users.length > 0 ? (
-                    <div className="activity-feed">
+                    <div className="activity-list">
                         {users.slice(0, 8).map((user, index) => (
                             <div
                                 key={user.id || index}
-                                className="d-flex align-items-center mb-3"
+                                className="activity-item"
                             >
-                                <div className="me-3">
-                                    <div
-                                        className="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center"
-                                        style={{
-                                            width: "40px",
-                                            height: "40px",
-                                        }}
-                                    >
-                                        {user.profile_picture ? (
-                                            <img
-                                                src={user.profile_picture}
-                                                alt={
-                                                    user.name || user.full_name
-                                                }
-                                                className="rounded-circle"
-                                                style={{
-                                                    width: "32px",
-                                                    height: "32px",
-                                                    objectFit: "cover",
-                                                }}
-                                            />
-                                        ) : (
-                                            <i className="fas fa-user text-primary"></i>
-                                        )}
-                                    </div>
-                                </div>
-                                <div className="flex-grow-1">
-                                    <div className="d-flex justify-content-between align-items-start">
-                                        <div>
-                                            <h6 className="mb-1">
-                                                {user.name || user.full_name}
-                                                <span
-                                                    className={`badge bg-${getRoleBadgeColor(
-                                                        user.role
-                                                    )} ms-2`}
-                                                >
-                                                    {formatRole(user.role)}
-                                                </span>
-                                            </h6>
-                                            <p className="text-muted mb-0 small">
-                                                {user.activity ||
-                                                    `Joined ${formatDate(
-                                                        user.created_at ||
-                                                            user.last_login
-                                                    )}`}
-                                            </p>
+                                <div className="activity-avatar">
+                                    {user.profile_picture ? (
+                                        <img
+                                            src={user.profile_picture}
+                                            alt={user.name || user.full_name}
+                                            className="avatar-img"
+                                        />
+                                    ) : (
+                                        <div className="avatar-placeholder primary">
+                                            <i className="fas fa-user"></i>
                                         </div>
-                                        <small className="text-muted">
+                                    )}
+                                </div>
+                                <div className="activity-content">
+                                    <div className="activity-header">
+                                        <h6 className="activity-user-name">
+                                            {user.name || user.full_name}
+                                            <span
+                                                className={`role-badge ${getRoleBadgeVariant(
+                                                    user.role
+                                                )}`}
+                                            >
+                                                {formatRole(user.role)}
+                                            </span>
+                                        </h6>
+                                        <small className="activity-time">
                                             {user.last_login ||
                                                 formatTimeAgo(user.created_at)}
                                         </small>
                                     </div>
+                                    <p className="activity-description">
+                                        {user.activity ||
+                                            `Joined ${formatDate(
+                                                user.created_at ||
+                                                    user.last_login
+                                            )}`}
+                                    </p>
                                 </div>
                             </div>
                         ))}
                     </div>
                 ) : (
-                    <div className="text-center py-4">
-                        <i className="fas fa-users fa-3x text-muted mb-3"></i>
-                        <h6 className="text-muted">No recent user activity</h6>
-                        <p className="text-muted small mb-0">
+                    <div className="empty-state-small">
+                        <div className="empty-state-icon">
+                            <i className="fas fa-users"></i>
+                        </div>
+                        <h6 className="empty-state-title">
+                            No recent user activity
+                        </h6>
+                        <p className="empty-state-description">
                             User activity will appear here as users join and
                             interact with the platform.
                         </p>
                     </div>
                 )}
             </div>
-            <div className="card-footer bg-light">
-                <div className="d-flex justify-content-between align-items-center">
-                    <small className="text-muted">
-                        <i className="fas fa-clock me-1"></i>
-                        Last updated: {new Date().toLocaleTimeString()}
+            <div className="dashboard-card-footer">
+                <div className="card-footer-content">
+                    <small className="footer-text">
+                        <i className="fas fa-clock"></i>
+                        <span>
+                            Last updated: {new Date().toLocaleTimeString()}
+                        </span>
                     </small>
                     <a
                         href="/staff/users"
                         className="btn btn-sm btn-outline-primary"
                     >
-                        <i className="fas fa-users me-1"></i>
-                        View All Users
+                        <i className="fas fa-users"></i>
+                        <span>View All Users</span>
                     </a>
                 </div>
             </div>
@@ -132,132 +123,125 @@ export const UserActivityFeed = ({ users = [], loading = false }) => {
 // Staff Activity Feed Component
 export const StaffActivityFeed = ({ activities = [], loading = false }) => {
     const ActivitySkeleton = () => (
-        <div className="d-flex align-items-start mb-3">
-            <div className="placeholder-glow me-3">
-                <span
-                    className="placeholder rounded-circle"
-                    style={{ width: "32px", height: "32px" }}
-                ></span>
+        <div className="activity-item skeleton">
+            <div className="activity-timeline-icon">
+                <div className="placeholder-glow">
+                    <span className="placeholder timeline-icon-placeholder"></span>
+                </div>
             </div>
-            <div className="flex-grow-1 placeholder-glow">
-                <span className="placeholder col-10"></span>
-                <br />
-                <span className="placeholder col-6"></span>
+            <div className="activity-content">
+                <div className="placeholder-glow">
+                    <span className="placeholder content-placeholder-title"></span>
+                    <span className="placeholder content-placeholder-subtitle"></span>
+                </div>
             </div>
         </div>
     );
 
     return (
-        <div className="card border-0 shadow-sm">
-            <div className="card-header bg-white border-bottom">
-                <div className="d-flex justify-content-between align-items-center">
-                    <h5 className="card-title mb-0">
-                        <i className="fas fa-history text-success me-2"></i>
-                        Staff Activities
-                    </h5>
-                    <span className="badge bg-success">
-                        {activities.length}
-                    </span>
+        <div className="dashboard-card staff-activity-card">
+            <div className="dashboard-card-header">
+                <div className="header-content">
+                    <h6 className="dashboard-card-title">
+                        <i className="fas fa-history"></i>
+                        <span>Staff Activities</span>
+                    </h6>
+                    <span className="badge success">{activities.length}</span>
                 </div>
             </div>
-            <div className="card-body">
+            <div className="dashboard-card-body">
                 {loading ? (
-                    <>
+                    <div className="activity-timeline">
                         {[1, 2, 3, 4, 5].map((i) => (
                             <ActivitySkeleton key={i} />
                         ))}
-                    </>
+                    </div>
                 ) : activities && activities.length > 0 ? (
                     <div className="activity-timeline">
                         {activities.slice(0, 8).map((activity, index) => (
                             <div
                                 key={activity.id || index}
-                                className="d-flex align-items-start mb-3"
+                                className="activity-item timeline-item"
                             >
-                                <div className="me-3">
+                                <div className="activity-timeline-icon">
                                     <div
-                                        className={`bg-${
+                                        className={`timeline-icon ${
                                             activity.color ||
-                                            getActivityColor(
+                                            getActivityVariant(
                                                 activity.action_type
                                             )
-                                        } bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center`}
-                                        style={{
-                                            width: "32px",
-                                            height: "32px",
-                                        }}
+                                        }`}
                                     >
                                         <i
-                                            className={`${
+                                            className={
                                                 activity.icon ||
                                                 getActivityIcon(
                                                     activity.action_type
                                                 )
-                                            } text-${
-                                                activity.color ||
-                                                getActivityColor(
-                                                    activity.action_type
-                                                )
-                                            } fa-sm`}
+                                            }
                                         ></i>
                                     </div>
                                 </div>
-                                <div className="flex-grow-1">
-                                    <div className="d-flex justify-content-between align-items-start">
-                                        <div>
-                                            <p className="mb-1">
-                                                <strong>
-                                                    {activity.staff_name ||
-                                                        "Staff Member"}
-                                                </strong>{" "}
-                                                {activity.description ||
-                                                    activity.action}
-                                            </p>
-                                            <div className="d-flex align-items-center">
-                                                <small className="text-muted me-2">
-                                                    <i className="fas fa-clock me-1"></i>
-                                                    {activity.formatted_time ||
-                                                        formatTimeAgo(
-                                                            activity.created_at
-                                                        )}
-                                                </small>
-                                                {activity.target_type && (
-                                                    <span className="badge bg-light text-dark">
-                                                        {formatTargetType(
-                                                            activity.target_type
-                                                        )}
-                                                    </span>
+                                <div className="activity-content">
+                                    <div className="activity-header">
+                                        <p className="activity-description">
+                                            <strong>
+                                                {activity.staff_name ||
+                                                    "Staff Member"}
+                                            </strong>{" "}
+                                            {activity.description ||
+                                                activity.action}
+                                        </p>
+                                    </div>
+                                    <div className="activity-meta">
+                                        <small className="activity-time">
+                                            <i className="fas fa-clock"></i>
+                                            <span>
+                                                {activity.formatted_time ||
+                                                    formatTimeAgo(
+                                                        activity.created_at
+                                                    )}
+                                            </span>
+                                        </small>
+                                        {activity.target_type && (
+                                            <span className="activity-target">
+                                                {formatTargetType(
+                                                    activity.target_type
                                                 )}
-                                            </div>
-                                        </div>
+                                            </span>
+                                        )}
                                     </div>
                                 </div>
                             </div>
                         ))}
                     </div>
                 ) : (
-                    <div className="text-center py-4">
-                        <i className="fas fa-history fa-3x text-muted mb-3"></i>
-                        <h6 className="text-muted">No recent activities</h6>
-                        <p className="text-muted small mb-0">
+                    <div className="empty-state-small">
+                        <div className="empty-state-icon">
+                            <i className="fas fa-history"></i>
+                        </div>
+                        <h6 className="empty-state-title">
+                            No recent activities
+                        </h6>
+                        <p className="empty-state-description">
                             Staff activities will appear here as actions are
                             performed.
                         </p>
                     </div>
                 )}
             </div>
-            <div className="card-footer bg-light">
-                <div className="d-flex justify-content-between align-items-center">
-                    <small className="text-muted">
-                        <i className="fas fa-sync-alt me-1"></i>
-                        Auto-refreshes every 30 seconds
+            <div className="dashboard-card-footer">
+                <div className="card-footer-content">
+                    <small className="footer-text">
+                        <i className="fas fa-sync-alt"></i>
+                        <span>Auto-refreshes every 30 seconds</span>
                     </small>
                     <a
                         href="/staff/activities"
                         className="btn btn-sm btn-outline-success"
                     >
-                        <i className="fas fa-list me-1"></i>
-                        View Full Log
+                        <i className="fas fa-list"></i>
+                        <span>View Full Log</span>
                     </a>
                 </div>
             </div>
@@ -266,14 +250,14 @@ export const StaffActivityFeed = ({ activities = [], loading = false }) => {
 };
 
 // Helper functions
-const getRoleBadgeColor = (role) => {
-    const colors = {
+const getRoleBadgeVariant = (role) => {
+    const variants = {
         client: "primary",
         service_provider: "success",
         staff: "warning",
         admin: "danger",
     };
-    return colors[role] || "secondary";
+    return variants[role] || "secondary";
 };
 
 const formatRole = (role) => {
@@ -286,8 +270,8 @@ const formatRole = (role) => {
     return roles[role] || role;
 };
 
-const getActivityColor = (actionType) => {
-    const colors = {
+const getActivityVariant = (actionType) => {
+    const variants = {
         create: "success",
         update: "warning",
         delete: "danger",
@@ -299,7 +283,7 @@ const getActivityColor = (actionType) => {
         login: "primary",
         logout: "secondary",
     };
-    return colors[actionType] || "primary";
+    return variants[actionType] || "primary";
 };
 
 const getActivityIcon = (actionType) => {

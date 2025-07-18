@@ -68,15 +68,15 @@ const QuickServiceSearch = ({ location }) => {
 
     return (
         <div className="quick-service-search">
-            <div className="search-container position-relative">
-                <form onSubmit={handleSubmit}>
-                    <div className="input-group input-group-lg">
-                        <span className="input-group-text bg-white border-end-0">
-                            <i className="fas fa-search text-purple"></i>
-                        </span>
+            <div className="search-container">
+                <form onSubmit={handleSubmit} className="search-form">
+                    <div className="search-input-group">
+                        <div className="search-icon">
+                            <i className="fas fa-search"></i>
+                        </div>
                         <input
                             type="text"
-                            className="form-control border-start-0 shadow-none"
+                            className="search-input"
                             placeholder="Search for services (e.g., house cleaning, plumbing...)"
                             value={query}
                             onChange={handleInputChange}
@@ -89,13 +89,13 @@ const QuickServiceSearch = ({ location }) => {
                         />
                         <button
                             type="submit"
-                            className="btn btn-purple px-4"
+                            className="search-submit-btn"
                             disabled={loading || !query.trim()}
                         >
                             {loading ? (
-                                <span className="spinner-border spinner-border-sm"></span>
+                                <div className="loading-spinner"></div>
                             ) : (
-                                "Search"
+                                <span>Search</span>
                             )}
                         </button>
                     </div>
@@ -103,34 +103,31 @@ const QuickServiceSearch = ({ location }) => {
 
                 {/* Search Suggestions */}
                 {showSuggestions && suggestions.length > 0 && (
-                    <div
-                        className="search-suggestions position-absolute w-100 bg-white border rounded-bottom shadow-lg"
-                        style={{ top: "100%", zIndex: 1000 }}
-                    >
+                    <div className="search-suggestions">
                         {suggestions.map((suggestion, index) => (
                             <div
                                 key={index}
-                                className="suggestion-item p-3 border-bottom cursor-pointer"
+                                className="suggestion-item"
                                 onClick={() =>
                                     handleSuggestionClick(suggestion)
                                 }
-                                onMouseDown={(e) => e.preventDefault()} // Prevent input blur
+                                onMouseDown={(e) => e.preventDefault()}
                             >
-                                <div className="d-flex align-items-center">
+                                <div className="suggestion-icon">
                                     <i
                                         className={`fas ${
                                             suggestion.type === "service"
                                                 ? "fa-concierge-bell"
                                                 : "fa-tag"
-                                        } text-muted me-3`}
+                                        }`}
                                     ></i>
-                                    <div>
-                                        <div className="fw-semibold">
-                                            {suggestion.text}
-                                        </div>
-                                        <small className="text-muted">
-                                            {suggestion.category}
-                                        </small>
+                                </div>
+                                <div className="suggestion-content">
+                                    <div className="suggestion-text">
+                                        {suggestion.text}
+                                    </div>
+                                    <div className="suggestion-category">
+                                        {suggestion.category}
                                     </div>
                                 </div>
                             </div>
@@ -139,38 +136,14 @@ const QuickServiceSearch = ({ location }) => {
                 )}
             </div>
 
-            {/* Quick Search Tips */}
-            <div className="search-tips mt-2">
-                <small className="text-muted">
-                    💡 Try searching: "house cleaning", "plumbing repair",
+            {/* Search Tips */}
+            <div className="search-tips">
+                <i className="fas fa-lightbulb"></i>
+                <span>
+                    Try searching: "house cleaning", "plumbing repair",
                     "tutoring", "car wash"
-                </small>
+                </span>
             </div>
-
-            <style>{`
-                .cursor-pointer {
-                    cursor: pointer;
-                }
-                .suggestion-item:hover {
-                    background-color: #f8f9fa;
-                }
-                .search-suggestions {
-                    max-height: 300px;
-                    overflow-y: auto;
-                }
-                .btn-purple {
-                    background-color: #6f42c1;
-                    border-color: #6f42c1;
-                    color: white;
-                }
-                .btn-purple:hover {
-                    background-color: #5a2d91;
-                    border-color: #5a2d91;
-                }
-                .text-purple {
-                    color: #6f42c1 !important;
-                }
-            `}</style>
         </div>
     );
 };

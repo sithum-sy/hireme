@@ -14,38 +14,22 @@ const DashboardSidebar = ({
     // Role-specific configurations
     const roleConfig = {
         admin: {
-            primary: "#007bff",
-            accent: "#0056b3",
-            light: "#e3f2fd",
-            sidebar: "#1a2332",
             roleTitle: "Admin Panel",
         },
         staff: {
-            primary: "#28a745",
-            accent: "#1e7e34",
-            light: "#e8f5e8",
-            sidebar: "#1e3a1e",
             roleTitle: "Staff Panel",
         },
         client: {
-            primary: "#6f42c1",
-            accent: "#5a2d91",
-            light: "#f3e5f5",
-            sidebar: "#2a1a3a",
             roleTitle: "Client Dashboard",
         },
         provider: {
-            primary: "#fd7e14",
-            accent: "#e55100",
-            light: "#fff3e0",
-            sidebar: "#3a2418",
             roleTitle: "Provider Dashboard",
         },
     };
 
     const config = roleConfig[role] || roleConfig.admin;
 
-    // Role-specific menu items
+    // Role-specific menu items (keeping your existing structure)
     const getMenuItems = () => {
         const menuItems = {
             admin: [
@@ -283,8 +267,6 @@ const DashboardSidebar = ({
                     children: [
                         { label: "All Services", path: "/client/services" },
                         { label: "Categories", path: "/client/categories" },
-                        // { label: "Favorites", path: "/client/favorites" },
-                        // { label: "Recently Viewed", path: "/client/recent" },
                     ],
                 },
                 {
@@ -292,7 +274,6 @@ const DashboardSidebar = ({
                     icon: "fas fa-calendar-alt",
                     label: "My Appointments",
                     path: "/client/appointments",
-                    badge: "",
                     children: [
                         {
                             label: "Today's Schedule",
@@ -301,7 +282,6 @@ const DashboardSidebar = ({
                         {
                             label: "Upcoming",
                             path: "/client/appointments/upcoming",
-                            badge: "",
                         },
                         {
                             label: "Past Appointments",
@@ -313,45 +293,18 @@ const DashboardSidebar = ({
                         },
                     ],
                 },
-
                 {
                     id: "quotes",
                     icon: "fas fa-quote-left",
                     label: "My Quotes",
                     path: "/client/quotes",
-                    // badge: "2", // You can dynamically set this based on pending quotes
                     children: [
                         {
                             label: "All Quotes",
                             path: "/client/quotes",
                         },
-                        // {
-                        //     label: "Pending",
-                        //     path: "/client/quotes?status=pending",
-                        //     badge: "",
-                        // },
-                        // {
-                        //     label: "Received",
-                        //     path: "/client/quotes?status=quoted",
-                        //     badge: "",
-                        // },
-                        // {
-                        //     label: "Accepted",
-                        //     path: "/client/quotes?status=accepted",
-                        // },
-                        // {
-                        //     label: "Declined",
-                        //     path: "/client/quotes?status=rejected",
-                        // },
                     ],
                 },
-                // {
-                //     id: "messages",
-                //     icon: "fas fa-comments",
-                //     label: "Messages",
-                //     path: "/client/messages",
-                //     badge: "2",
-                // },
                 {
                     id: "payments",
                     icon: "fas fa-credit-card",
@@ -362,10 +315,6 @@ const DashboardSidebar = ({
                             label: "Payment History",
                             path: "/client/payments/history",
                         },
-                        // {
-                        //     label: "Payment Methods",
-                        //     path: "/client/payments/methods",
-                        // },
                         {
                             label: "Invoices",
                             path: "/client/payments/invoices",
@@ -392,10 +341,6 @@ const DashboardSidebar = ({
                             label: "Edit Profile",
                             path: "/client/profile/edit",
                         },
-                        // {
-                        //     label: "Preferences",
-                        //     path: "/client/profile/preferences",
-                        // },
                     ],
                 },
                 {
@@ -417,7 +362,6 @@ const DashboardSidebar = ({
                     icon: "fas fa-calendar-alt",
                     label: "Appointments",
                     path: "/provider/appointments",
-                    badge: "",
                     children: [
                         {
                             label: "Pending Requests",
@@ -430,7 +374,6 @@ const DashboardSidebar = ({
                         {
                             label: "Upcoming",
                             path: "/provider/appointments?status=confirmed",
-                            badge: "",
                         },
                         {
                             label: "Past Appointments",
@@ -443,7 +386,6 @@ const DashboardSidebar = ({
                         {
                             label: "All Appointments",
                             path: "/provider/appointments",
-                            badge: "",
                         },
                     ],
                 },
@@ -452,56 +394,20 @@ const DashboardSidebar = ({
                     icon: "fas fa-concierge-bell",
                     label: "My Services",
                     path: "/provider/services",
-                    badge: "",
                     children: [
                         { label: "All Services", path: "/provider/services" },
                         {
                             label: "Add Service",
                             path: "/provider/services/create",
                         },
-                        // {
-                        //     label: "Service Analytics",
-                        //     path: "/provider/services/analytics",
-                        // },
                     ],
                 },
-
                 {
                     id: "quotes",
                     icon: "fas fa-bell",
                     label: "Quote Requests",
                     path: "/provider/quotes",
-                    badge: "",
-                    // children: [
-                    //     {
-                    //         label: "Quotes List",
-                    //         path: "/provider/quotes",
-                    //         badge: "",
-                    //     },
-                    // ],
                 },
-                // {
-                //     id: "requests",
-                //     icon: "fas fa-bell",
-                //     label: "Service Requests",
-                //     path: "/provider/requests",
-                //     badge: "12",
-                //     children: [
-                //         {
-                //             label: "New Requests",
-                //             path: "/provider/requests/new",
-                //             badge: "7",
-                //         },
-                //         {
-                //             label: "Quotes Sent",
-                //             path: "/provider/requests/quotes",
-                //         },
-                //         {
-                //             label: "Accepted",
-                //             path: "/provider/requests/accepted",
-                //         },
-                //     ],
-                // },
                 {
                     id: "availability",
                     icon: "fas fa-calendar-alt",
@@ -527,10 +433,7 @@ const DashboardSidebar = ({
                     icon: "fas fa-file-invoice",
                     label: "Invoices",
                     path: "/provider/invoices",
-                    // badge:
-                    //     pendingInvoicesCount > 0 ? pendingInvoicesCount : null,
                 },
-
                 {
                     id: "earnings",
                     icon: "fas fa-dollar-sign",
@@ -541,14 +444,6 @@ const DashboardSidebar = ({
                             label: "Overview",
                             path: "/provider/earnings/overview",
                         },
-                        // {
-                        //     label: "Payment History",
-                        //     path: "/provider/earnings/history",
-                        // },
-                        // {
-                        //     label: "Tax Documents",
-                        //     path: "/provider/earnings/tax",
-                        // },
                     ],
                 },
                 {
@@ -577,13 +472,6 @@ const DashboardSidebar = ({
                         },
                     ],
                 },
-                // {
-                //     id: "messages",
-                //     icon: "fas fa-comments",
-                //     label: "Messages",
-                //     path: "/provider/messages",
-                //     badge: "4",
-                // },
                 {
                     id: "analytics",
                     icon: "fas fa-chart-bar",
@@ -604,26 +492,6 @@ const DashboardSidebar = ({
                         },
                     ],
                 },
-                // {
-                //     id: "settings",
-                //     icon: "fas fa-cog",
-                //     label: "Settings",
-                //     path: "/provider/settings",
-                //     children: [
-                //         {
-                //             label: "Business Settings",
-                //             path: "/provider/settings/business",
-                //         },
-                //         {
-                //             label: "Notification Preferences",
-                //             path: "/provider/settings/notifications",
-                //         },
-                //         {
-                //             label: "Payment Settings",
-                //             path: "/provider/settings/payments",
-                //         },
-                //     ],
-                // },
             ],
         };
 
@@ -673,11 +541,6 @@ const DashboardSidebar = ({
         }
     };
 
-    const isMenuItemActive = (item) => {
-        const path = location.pathname;
-        return path === item.path || path.startsWith(item.path + "/");
-    };
-
     const isSubmenuItemActive = (submenuItem) => {
         return location.pathname === submenuItem.path;
     };
@@ -689,304 +552,120 @@ const DashboardSidebar = ({
             className={`dashboard-sidebar ${
                 collapsed ? "collapsed" : ""
             } ${className}`}
-            style={{
-                backgroundColor: config.sidebar,
-                borderRight: `3px solid ${config.accent}`,
-                width: collapsed ? "70px" : "280px",
-                transition: "width 0.3s ease",
-            }}
         >
             {/* Sidebar Header */}
-            <div
-                className="sidebar-header p-3 border-bottom"
-                style={{ borderColor: config.accent + "40" }}
-            >
-                <div className="d-flex align-items-center text-white">
-                    <div className="sidebar-logo me-2">
-                        <i
-                            className="fas fa-handshake"
-                            style={{ color: config.primary }}
-                        ></i>
+            <div className="sidebar-header">
+                <div className="sidebar-brand">
+                    <div className="brand-icon">
+                        <i className="fas fa-handshake"></i>
                     </div>
                     {!collapsed && (
-                        <div>
-                            <h6 className="mb-0 fw-bold">HireMe</h6>
-                            <small className="opacity-75">
+                        <div className="brand-text">
+                            <div className="brand-name">HireMe</div>
+                            <div className="brand-subtitle">
                                 {config.roleTitle}
-                            </small>
+                            </div>
                         </div>
                     )}
                 </div>
             </div>
 
             {/* Navigation Menu */}
-            <div
-                className="sidebar-menu p-2"
-                style={{ height: "calc(100vh - 120px)", overflowY: "auto" }}
-            >
-                {menuItems.map((item) => (
-                    <div key={item.id} className="menu-item mb-1">
-                        {/* Main Menu Item */}
-                        <div
-                            className={`menu-link d-flex align-items-center p-3 rounded text-decoration-none cursor-pointer ${
-                                activeMenuItem === item.id ? "active" : ""
-                            }`}
-                            onClick={() => handleMenuItemClick(item)}
-                            style={{
-                                color:
-                                    activeMenuItem === item.id
-                                        ? config.primary
-                                        : "#ffffff",
-                                backgroundColor:
-                                    activeMenuItem === item.id
-                                        ? "#ffffff20"
-                                        : "transparent",
-                                transition: "all 0.3s ease",
-                            }}
-                        >
-                            <Link
-                                to={item.path}
-                                className="d-flex align-items-center text-decoration-none w-100"
-                                style={{ color: "inherit" }}
+            <div className="sidebar-menu">
+                <div className="menu-list">
+                    {menuItems.map((item) => (
+                        <div key={item.id} className="menu-group">
+                            {/* Main Menu Item */}
+                            <div
+                                className={`menu-item ${
+                                    activeMenuItem === item.id ? "active" : ""
+                                }`}
+                                onClick={() => handleMenuItemClick(item)}
+                                data-tooltip={collapsed ? item.label : ""}
                             >
-                                <div
-                                    className="menu-icon me-3"
-                                    style={{ minWidth: "20px" }}
-                                >
-                                    <i className={item.icon}></i>
-                                </div>
-                                {!collapsed && (
-                                    <>
-                                        <span className="menu-label flex-grow-1">
-                                            {item.label}
-                                        </span>
-                                        <div className="menu-extras d-flex align-items-center">
-                                            {item.badge && (
-                                                <span
-                                                    className="badge rounded-pill me-2"
-                                                    style={{
-                                                        backgroundColor:
-                                                            config.primary,
-                                                        color: "white",
-                                                        fontSize: "0.7rem",
-                                                    }}
-                                                >
-                                                    {item.badge}
-                                                </span>
-                                            )}
-                                            {item.children &&
-                                                item.children.length > 0 && (
-                                                    <i
-                                                        className={`fas fa-chevron-${
-                                                            expandedMenus.has(
-                                                                item.id
-                                                            )
-                                                                ? "down"
-                                                                : "right"
-                                                        } small`}
-                                                        style={{
-                                                            transition:
-                                                                "transform 0.3s ease",
-                                                        }}
-                                                    ></i>
-                                                )}
-                                        </div>
-                                    </>
-                                )}
-                            </Link>
-                        </div>
-
-                        {/* Submenu Items */}
-                        {!collapsed &&
-                            item.children &&
-                            item.children.length > 0 &&
-                            expandedMenus.has(item.id) && (
-                                <div className="submenu ms-4 mt-1">
-                                    {item.children.map((child, index) => (
-                                        <Link
-                                            key={index}
-                                            to={child.path}
-                                            className={`submenu-link d-flex align-items-center p-2 rounded text-decoration-none mb-1 ${
-                                                isSubmenuItemActive(child)
-                                                    ? "active"
-                                                    : ""
-                                            }`}
-                                            style={{
-                                                color: isSubmenuItemActive(
-                                                    child
-                                                )
-                                                    ? config.primary
-                                                    : "#ffffff80",
-                                                backgroundColor:
-                                                    isSubmenuItemActive(child)
-                                                        ? "#ffffff15"
-                                                        : "transparent",
-                                                fontSize: "0.9rem",
-                                                transition: "all 0.3s ease",
-                                            }}
-                                        >
-                                            <div
-                                                className="submenu-icon me-2"
-                                                style={{ minWidth: "15px" }}
-                                            >
-                                                <i
-                                                    className="fas fa-circle"
-                                                    style={{
-                                                        fontSize: "0.4rem",
-                                                    }}
-                                                ></i>
-                                            </div>
-                                            <span className="submenu-label flex-grow-1">
-                                                {child.label}
+                                <Link to={item.path} className="menu-link">
+                                    <div className="menu-icon">
+                                        <i className={item.icon}></i>
+                                    </div>
+                                    {!collapsed && (
+                                        <>
+                                            <span className="menu-label">
+                                                {item.label}
                                             </span>
-                                            {child.badge && (
-                                                <span
-                                                    className="badge rounded-pill"
-                                                    style={{
-                                                        backgroundColor:
-                                                            config.primary,
-                                                        color: "white",
-                                                        fontSize: "0.6rem",
-                                                    }}
-                                                >
-                                                    {child.badge}
+                                            <div className="menu-extras">
+                                                {item.badge && (
+                                                    <span className="menu-badge">
+                                                        {item.badge}
+                                                    </span>
+                                                )}
+                                                {item.children &&
+                                                    item.children.length >
+                                                        0 && (
+                                                        <i
+                                                            className={`fas fa-chevron-${
+                                                                expandedMenus.has(
+                                                                    item.id
+                                                                )
+                                                                    ? "down"
+                                                                    : "right"
+                                                            } menu-chevron`}
+                                                        ></i>
+                                                    )}
+                                            </div>
+                                        </>
+                                    )}
+                                </Link>
+                            </div>
+
+                            {/* Submenu Items */}
+                            {!collapsed &&
+                                item.children &&
+                                item.children.length > 0 &&
+                                expandedMenus.has(item.id) && (
+                                    <div className="submenu">
+                                        {item.children.map((child, index) => (
+                                            <Link
+                                                key={index}
+                                                to={child.path}
+                                                className={`submenu-item ${
+                                                    isSubmenuItemActive(child)
+                                                        ? "active"
+                                                        : ""
+                                                }`}
+                                            >
+                                                <div className="submenu-icon">
+                                                    <i className="fas fa-circle"></i>
+                                                </div>
+                                                <span className="submenu-label">
+                                                    {child.label}
                                                 </span>
-                                            )}
-                                        </Link>
-                                    ))}
-                                </div>
-                            )}
-                    </div>
-                ))}
+                                                {child.badge && (
+                                                    <span className="submenu-badge">
+                                                        {child.badge}
+                                                    </span>
+                                                )}
+                                            </Link>
+                                        ))}
+                                    </div>
+                                )}
+                        </div>
+                    ))}
+                </div>
             </div>
 
             {/* Sidebar Footer */}
-            <div
-                className="sidebar-footer p-3 border-top"
-                style={{ borderColor: config.accent + "40" }}
-            >
+            <div className="sidebar-footer">
                 {!collapsed ? (
-                    <div className="d-flex align-items-center text-white small">
-                        <div
-                            className="status-indicator me-2 rounded-circle"
-                            style={{
-                                width: "8px",
-                                height: "8px",
-                                backgroundColor: "#28a745",
-                            }}
-                        ></div>
-                        <span className="opacity-75">System Online</span>
+                    <div className="status-info">
+                        <div className="status-indicator"></div>
+                        <span className="status-text">System Online</span>
                     </div>
                 ) : (
-                    <div className="text-center">
-                        <div
-                            className="status-indicator rounded-circle mx-auto"
-                            style={{
-                                width: "8px",
-                                height: "8px",
-                                backgroundColor: "#28a745",
-                            }}
-                        ></div>
+                    <div className="status-indicator-collapsed">
+                        <div className="status-indicator"></div>
                     </div>
                 )}
             </div>
-
-            {/* Custom Styles */}
-            <style>{`
-                .dashboard-sidebar {
-                    position: fixed;
-                    top: 60px;
-                    left: 0;
-                    height: calc(100vh - 60px);
-                    z-index: 1025;
-                    box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
-                }
-
-                .sidebar-menu::-webkit-scrollbar {
-                    width: 4px;
-                }
-
-                .sidebar-menu::-webkit-scrollbar-track {
-                    background: transparent;
-                }
-
-                .sidebar-menu::-webkit-scrollbar-thumb {
-                    background: ${config.accent}60;
-                    border-radius: 2px;
-                }
-
-                .sidebar-menu::-webkit-scrollbar-thumb:hover {
-                    background: ${config.accent}80;
-                }
-
-                .menu-link:hover {
-                    background-color: #ffffff10 !important;
-                    color: ${config.primary} !important;
-                }
-
-                .menu-link.active {
-                    background-color: #ffffff20 !important;
-                    color: ${config.primary} !important;
-                    border-left: 3px solid ${config.primary};
-                    margin-left: -8px;
-                    padding-left: 19px !important;
-                }
-
-                .submenu-link:hover {
-                    background-color: #ffffff10 !important;
-                    color: ${config.primary} !important;
-                }
-
-                .submenu-link.active {
-                    background-color: #ffffff15 !important;
-                    color: ${config.primary} !important;
-                }
-
-                .cursor-pointer {
-                    cursor: pointer;
-                }
-
-                .collapsed .menu-link {
-                    justify-content: center;
-                    padding: 12px !important;
-                }
-
-                .collapsed .submenu {
-                    display: none;
-                }
-
-                @media (max-width: 768px) {
-                    .dashboard-sidebar {
-                        transform: translateX(-100%);
-                        transition: transform 0.3s ease;
-                    }
-
-                    .dashboard-sidebar.show {
-                        transform: translateX(0);
-                    }
-                }
-
-                /* Tooltip for collapsed sidebar */
-                .collapsed .menu-link {
-                    position: relative;
-                }
-
-                .collapsed .menu-link:hover::after {
-                    content: attr(data-title);
-                    position: absolute;
-                    left: 70px;
-                    top: 50%;
-                    transform: translateY(-50%);
-                    background: ${config.sidebar};
-                    color: white;
-                    padding: 8px 12px;
-                    border-radius: 4px;
-                    white-space: nowrap;
-                    z-index: 1000;
-                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-                    border: 1px solid ${config.accent}40;
-                }
-            `}</style>
         </div>
     );
 };

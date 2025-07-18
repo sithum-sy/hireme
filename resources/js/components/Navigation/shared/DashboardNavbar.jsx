@@ -28,33 +28,21 @@ const DashboardNavbar = ({
     // Role-specific configurations
     const roleConfig = {
         admin: {
-            primary: "#007bff",
-            accent: "#0056b3",
-            light: "#e3f2fd",
             roleTitle: "Admin Panel",
             searchPlaceholder: "Search users, services, reports...",
             dashboardPath: "/admin/dashboard",
         },
         staff: {
-            primary: "#28a745",
-            accent: "#1e7e34",
-            light: "#e8f5e8",
             roleTitle: "Staff Panel",
             searchPlaceholder: "Search categories, users...",
             dashboardPath: "/staff/dashboard",
         },
         client: {
-            primary: "#6f42c1",
-            accent: "#5a2d91",
-            light: "#f3e5f5",
             roleTitle: "Client Dashboard",
             searchPlaceholder: "Search services, providers...",
             dashboardPath: "/client/dashboard",
         },
         provider: {
-            primary: "#fd7e14",
-            accent: "#e55100",
-            light: "#fff3e0",
             roleTitle: "Provider Dashboard",
             searchPlaceholder: "Search appointments, analytics...",
             dashboardPath: "/provider/dashboard",
@@ -65,19 +53,6 @@ const DashboardNavbar = ({
 
     // Profile menu items based on role
     const getProfileMenuItems = () => {
-        const commonItems = [
-            {
-                label: "Settings",
-                path: `/${role}/settings`,
-                icon: "fas fa-cog",
-            },
-            {
-                label: "Help & Support",
-                path: `/${role}/help`,
-                icon: "fas fa-question-circle",
-            },
-        ];
-
         const roleSpecificItems = {
             admin: [
                 {
@@ -164,7 +139,15 @@ const DashboardNavbar = ({
             ],
         };
 
-        return roleSpecificItems[role] || commonItems;
+        const commonItems = [
+            {
+                label: "Help & Support",
+                path: `/${role}/help`,
+                icon: "fas fa-question-circle",
+            },
+        ];
+
+        return [...(roleSpecificItems[role] || []), ...commonItems];
     };
 
     // Load notifications based on role
@@ -321,7 +304,6 @@ const DashboardNavbar = ({
             if (onSearch) {
                 onSearch(searchQuery);
             }
-            // Navigate to search results page
             navigate(`/${role}/search?q=${encodeURIComponent(searchQuery)}`);
         }
     };
@@ -427,21 +409,14 @@ const DashboardNavbar = ({
     };
 
     return (
-        <nav
-            className={`dashboard-navbar fixed-top ${className}`}
-            style={{
-                backgroundColor: config.primary,
-                borderBottom: `3px solid ${config.accent}`,
-                zIndex: 1030,
-            }}
-        >
-            <div className="container-fluid px-3">
-                <div className="d-flex justify-content-between align-items-center">
+        <nav className={`dashboard-navbar ${className}`}>
+            <div className="navbar-container">
+                <div className="navbar-content">
                     {/* Left Section - Brand & Sidebar Toggle */}
-                    <div className="d-flex align-items-center">
+                    <div className="navbar-left">
                         {/* Sidebar Toggle */}
                         <button
-                            className="btn btn-link text-white p-2 me-3"
+                            className="sidebar-toggle-btn"
                             onClick={onToggleSidebar}
                             title={
                                 sidebarCollapsed
@@ -452,122 +427,105 @@ const DashboardNavbar = ({
                             <i
                                 className={`fas fa-${
                                     sidebarCollapsed ? "bars" : "times"
-                                } fa-lg`}
+                                }`}
                             ></i>
                         </button>
 
                         {/* Brand */}
                         <Link
                             to={config.dashboardPath}
-                            className="navbar-brand text-white text-decoration-none d-flex align-items-center"
+                            className="navbar-brand"
                         >
-                            <div className="brand-icon me-2">
-                                <i className="fas fa-handshake fa-2x"></i>
+                            <div className="brand-icon">
+                                <i className="fas fa-handshake"></i>
                             </div>
-                            <div className="d-none d-md-block">
-                                <div className="fw-bold h5 mb-0">HireMe</div>
-                                <small className="opacity-75">
+                            <div className="brand-text d-none d-md-block">
+                                <div className="brand-name">HireMe</div>
+                                <div className="brand-subtitle">
                                     {config.roleTitle}
-                                </small>
+                                </div>
                             </div>
                         </Link>
                     </div>
 
                     {/* Center Section - Search */}
                     <div
-                        className="flex-grow-1 mx-4 d-none d-lg-block"
-                        style={{ maxWidth: "500px" }}
+                        className="navbar-search d-none d-lg-block"
+                        ref={searchRef}
                     >
-                        <div className="position-relative" ref={searchRef}>
-                            <form onSubmit={handleSearch}>
-                                <div className="input-group">
-                                    <span className="input-group-text bg-white border-0">
-                                        <i className="fas fa-search text-muted"></i>
-                                    </span>
-                                    <input
-                                        type="text"
-                                        className="form-control border-0 shadow-none"
-                                        placeholder={config.searchPlaceholder}
-                                        value={searchQuery}
-                                        onChange={(e) =>
-                                            setSearchQuery(e.target.value)
-                                        }
-                                        onFocus={() =>
-                                            setShowSearchResults(true)
-                                        }
-                                    />
-                                    {searchQuery && (
-                                        <button
-                                            type="button"
-                                            className="btn btn-link text-muted p-2"
-                                            onClick={() => {
-                                                setSearchQuery("");
-                                                setShowSearchResults(false);
-                                            }}
-                                        >
-                                            <i className="fas fa-times"></i>
-                                        </button>
+                        {/* <form onSubmit={handleSearch} className="search-form">
+                            <div className="search-input-group">
+                                <div className="search-icon">
+                                    <i className="fas fa-search"></i>
+                                </div>
+                                <input
+                                    type="text"
+                                    className="search-input"
+                                    placeholder={config.searchPlaceholder}
+                                    value={searchQuery}
+                                    onChange={(e) =>
+                                        setSearchQuery(e.target.value)
+                                    }
+                                    onFocus={() => setShowSearchResults(true)}
+                                />
+                                {searchQuery && (
+                                    <button
+                                        type="button"
+                                        className="search-clear"
+                                        onClick={() => {
+                                            setSearchQuery("");
+                                            setShowSearchResults(false);
+                                        }}
+                                    >
+                                        <i className="fas fa-times"></i>
+                                    </button>
+                                )}
+                            </div>
+                        </form> */}
+
+                        {/* Search Results Dropdown */}
+                        {/* {showSearchResults && searchQuery && (
+                            <div className="search-results">
+                                <div className="search-results-header">
+                                    <span>Search Results</span>
+                                    <small>Press Enter to search</small>
+                                </div>
+                                <div className="search-results-list">
+                                    {getRoleSpecificQuickActions().map(
+                                        (action, index) => (
+                                            <Link
+                                                key={index}
+                                                to={action.path}
+                                                className="search-result-item"
+                                                onClick={() =>
+                                                    setShowSearchResults(false)
+                                                }
+                                            >
+                                                <i className={action.icon}></i>
+                                                <span>{action.label}</span>
+                                            </Link>
+                                        )
                                     )}
                                 </div>
-                            </form>
-
-                            {/* Search Results Dropdown */}
-                            {showSearchResults && searchQuery && (
-                                <div
-                                    className="position-absolute w-100 bg-white border rounded shadow-lg mt-1"
-                                    style={{ zIndex: 1050 }}
-                                >
-                                    <div className="p-3">
-                                        <div className="d-flex justify-content-between align-items-center mb-2">
-                                            <small className="text-muted">
-                                                Search Results
-                                            </small>
-                                            <small className="text-muted">
-                                                Press Enter to search
-                                            </small>
-                                        </div>
-                                        <div className="list-group list-group-flush">
-                                            {getRoleSpecificQuickActions().map(
-                                                (action, index) => (
-                                                    <Link
-                                                        key={index}
-                                                        to={action.path}
-                                                        className="list-group-item list-group-item-action border-0 py-2"
-                                                        onClick={() =>
-                                                            setShowSearchResults(
-                                                                false
-                                                            )
-                                                        }
-                                                    >
-                                                        <i
-                                                            className={`${action.icon} me-2 text-muted`}
-                                                        ></i>
-                                                        {action.label}
-                                                    </Link>
-                                                )
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
+                            </div>
+                        )} */}
                     </div>
 
-                    {/* Right Section - Notifications & Profile */}
-                    <div className="d-flex align-items-center gap-3">
+                    {/* Right Section - Actions & Profile */}
+                    <div className="navbar-right">
                         {/* Mobile Search Toggle */}
-                        <button className="btn btn-link text-white p-2 d-lg-none">
-                            <i className="fas fa-search fa-lg"></i>
+                        <button className="navbar-action-btn d-lg-none">
+                            <i className="fas fa-search"></i>
                         </button>
 
                         {/* Quick Actions Dropdown */}
-                        <div className="dropdown d-none d-md-block">
+                        <div className="navbar-dropdown d-none d-md-block">
                             <button
-                                className="btn btn-link text-white p-2"
+                                className="navbar-action-btn"
                                 data-bs-toggle="dropdown"
                                 title="Quick Actions"
                             >
-                                <i className="fas fa-plus fa-lg"></i>
+                                <i className="fas fa-plus"></i>
                             </button>
                             <ul className="dropdown-menu dropdown-menu-end">
                                 <li>
@@ -582,10 +540,8 @@ const DashboardNavbar = ({
                                                 to={action.path}
                                                 className="dropdown-item"
                                             >
-                                                <i
-                                                    className={`${action.icon} me-2`}
-                                                ></i>
-                                                {action.label}
+                                                <i className={action.icon}></i>
+                                                <span>{action.label}</span>
                                             </Link>
                                         </li>
                                     )
@@ -594,23 +550,17 @@ const DashboardNavbar = ({
                         </div>
 
                         {/* Notifications */}
-                        <div
-                            className="position-relative"
-                            ref={notificationRef}
-                        >
+                        <div className="navbar-dropdown" ref={notificationRef}>
                             <button
-                                className="btn btn-link text-white p-2 position-relative"
+                                className="navbar-action-btn notification-btn"
                                 onClick={() =>
                                     setShowNotifications(!showNotifications)
                                 }
                                 title="Notifications"
                             >
-                                <i className="fas fa-bell fa-lg"></i>
+                                <i className="fas fa-bell"></i>
                                 {unreadCount > 0 && (
-                                    <span
-                                        className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
-                                        style={{ fontSize: "0.75rem" }}
-                                    >
+                                    <span className="notification-badge">
                                         {unreadCount > 9 ? "9+" : unreadCount}
                                     </span>
                                 )}
@@ -618,88 +568,65 @@ const DashboardNavbar = ({
 
                             {/* Notifications Dropdown */}
                             {showNotifications && (
-                                <div
-                                    className="position-absolute end-0 bg-white border rounded shadow-lg mt-2"
-                                    style={{ width: "350px", zIndex: 1050 }}
-                                >
-                                    <div className="p-3 border-bottom">
-                                        <div className="d-flex justify-content-between align-items-center">
-                                            <h6 className="mb-0">
-                                                Notifications
-                                            </h6>
-                                            {unreadCount > 0 && (
-                                                <span className="badge bg-primary">
-                                                    {unreadCount} new
-                                                </span>
-                                            )}
-                                        </div>
+                                <div className="notifications-dropdown">
+                                    <div className="notifications-header">
+                                        <h6>Notifications</h6>
+                                        {unreadCount > 0 && (
+                                            <span className="notifications-count">
+                                                {unreadCount} new
+                                            </span>
+                                        )}
                                     </div>
-                                    <div
-                                        className="notifications-list"
-                                        style={{
-                                            maxHeight: "400px",
-                                            overflowY: "auto",
-                                        }}
-                                    >
+                                    <div className="notifications-list">
                                         {notifications.length > 0 ? (
                                             notifications.map(
                                                 (notification) => (
                                                     <div
                                                         key={notification.id}
-                                                        className={`p-3 border-bottom notification-item ${
+                                                        className={`notification-item ${
                                                             !notification.read
-                                                                ? "bg-light"
+                                                                ? "unread"
                                                                 : ""
                                                         }`}
                                                     >
-                                                        <div className="d-flex">
-                                                            <div className="me-3">
-                                                                <i
-                                                                    className={getNotificationIcon(
-                                                                        notification.type
-                                                                    )}
-                                                                ></i>
-                                                            </div>
-                                                            <div className="flex-grow-1">
-                                                                <div className="fw-semibold mb-1">
-                                                                    {
-                                                                        notification.title
-                                                                    }
-                                                                </div>
-                                                                <div className="text-muted small mb-1">
-                                                                    {
-                                                                        notification.message
-                                                                    }
-                                                                </div>
-                                                                <div className="text-muted small">
-                                                                    {
-                                                                        notification.time
-                                                                    }
-                                                                </div>
-                                                            </div>
-                                                            {!notification.read && (
-                                                                <div className="ms-2">
-                                                                    <span
-                                                                        className="badge bg-primary rounded-pill"
-                                                                        style={{
-                                                                            width: "8px",
-                                                                            height: "8px",
-                                                                        }}
-                                                                    ></span>
-                                                                </div>
-                                                            )}
+                                                        <div className="notification-icon">
+                                                            <i
+                                                                className={getNotificationIcon(
+                                                                    notification.type
+                                                                )}
+                                                            ></i>
                                                         </div>
+                                                        <div className="notification-content">
+                                                            <div className="notification-title">
+                                                                {
+                                                                    notification.title
+                                                                }
+                                                            </div>
+                                                            <div className="notification-message">
+                                                                {
+                                                                    notification.message
+                                                                }
+                                                            </div>
+                                                            <div className="notification-time">
+                                                                {
+                                                                    notification.time
+                                                                }
+                                                            </div>
+                                                        </div>
+                                                        {!notification.read && (
+                                                            <div className="notification-unread-indicator"></div>
+                                                        )}
                                                     </div>
                                                 )
                                             )
                                         ) : (
-                                            <div className="text-center py-4 text-muted">
-                                                <i className="fas fa-bell-slash fa-2x mb-2"></i>
-                                                <div>No notifications</div>
+                                            <div className="notifications-empty">
+                                                <i className="fas fa-bell-slash"></i>
+                                                <span>No notifications</span>
                                             </div>
                                         )}
                                     </div>
-                                    <div className="p-3 border-top">
+                                    <div className="notifications-footer">
                                         <Link
                                             to={`/${role}/notifications`}
                                             className="btn btn-outline-primary btn-sm w-100"
@@ -715,114 +642,79 @@ const DashboardNavbar = ({
                         </div>
 
                         {/* Profile Dropdown */}
-                        <div className="position-relative" ref={profileRef}>
+                        <div className="navbar-dropdown" ref={profileRef}>
                             <button
-                                className="btn btn-link text-white p-0 d-flex align-items-center"
+                                className="profile-btn"
                                 onClick={() =>
                                     setShowProfileMenu(!showProfileMenu)
                                 }
                             >
-                                <div className="d-flex align-items-center">
+                                <div className="profile-avatar">
                                     {user?.profile_picture ? (
                                         <img
                                             src={user.profile_picture}
                                             alt="Profile"
-                                            className="rounded-circle me-2"
-                                            style={{
-                                                width: "32px",
-                                                height: "32px",
-                                                objectFit: "cover",
-                                            }}
+                                            className="avatar-img"
                                         />
                                     ) : (
-                                        <div
-                                            className="rounded-circle me-2 d-flex align-items-center justify-content-center text-white fw-bold"
-                                            style={{
-                                                width: "32px",
-                                                height: "32px",
-                                                backgroundColor: config.accent,
-                                            }}
-                                        >
+                                        <div className="avatar-placeholder">
                                             {user?.first_name?.charAt(0)}
                                             {user?.last_name?.charAt(0)}
                                         </div>
                                     )}
-                                    <div className="d-none d-md-block text-start">
-                                        <div className="fw-semibold small">
-                                            {user?.first_name} {user?.last_name}
-                                        </div>
-                                        <div className="small opacity-75 text-capitalize">
-                                            {role}
-                                        </div>
-                                    </div>
-                                    <i className="fas fa-chevron-down ms-2 small"></i>
                                 </div>
+                                <div className="profile-info d-none d-md-block">
+                                    <div className="profile-name">
+                                        {user?.first_name} {user?.last_name}
+                                    </div>
+                                    <div className="profile-role text-capitalize">
+                                        {role}
+                                    </div>
+                                </div>
+                                <i className="fas fa-chevron-down profile-chevron"></i>
                             </button>
 
                             {/* Profile Menu Dropdown */}
                             {showProfileMenu && (
-                                <div
-                                    className="position-absolute end-0 bg-white border rounded shadow-lg mt-2"
-                                    style={{ width: "250px", zIndex: 1050 }}
-                                >
-                                    <div className="p-3 border-bottom">
-                                        <div className="d-flex align-items-center">
+                                <div className="profile-dropdown">
+                                    <div className="profile-dropdown-header">
+                                        <div className="profile-dropdown-avatar">
                                             {user?.profile_picture ? (
                                                 <img
                                                     src={user.profile_picture}
                                                     alt="Profile"
-                                                    className="rounded-circle me-3"
-                                                    style={{
-                                                        width: "40px",
-                                                        height: "40px",
-                                                        objectFit: "cover",
-                                                    }}
+                                                    className="avatar-img"
                                                 />
                                             ) : (
-                                                <div
-                                                    className="rounded-circle me-3 d-flex align-items-center justify-content-center text-white fw-bold"
-                                                    style={{
-                                                        width: "40px",
-                                                        height: "40px",
-                                                        backgroundColor:
-                                                            config.primary,
-                                                    }}
-                                                >
+                                                <div className="avatar-placeholder">
                                                     {user?.first_name?.charAt(
                                                         0
                                                     )}
                                                     {user?.last_name?.charAt(0)}
                                                 </div>
                                             )}
-                                            <div>
-                                                <div className="fw-semibold">
-                                                    {user?.first_name}{" "}
-                                                    {user?.last_name}
-                                                </div>
-                                                <div className="small text-muted">
-                                                    {user?.email}
-                                                </div>
-                                                <div
-                                                    className="small text-capitalize"
-                                                    style={{
-                                                        color: config.primary,
-                                                    }}
-                                                >
-                                                    {role
-                                                        .charAt(0)
-                                                        .toUpperCase() +
-                                                        role.slice(1)}
-                                                </div>
+                                        </div>
+                                        <div className="profile-dropdown-info">
+                                            <div className="profile-dropdown-name">
+                                                {user?.first_name}{" "}
+                                                {user?.last_name}
+                                            </div>
+                                            <div className="profile-dropdown-email">
+                                                {user?.email}
+                                            </div>
+                                            <div className="profile-dropdown-role text-capitalize">
+                                                {role.charAt(0).toUpperCase() +
+                                                    role.slice(1)}
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="py-2">
+                                    <div className="profile-dropdown-menu">
                                         {getProfileMenuItems().map(
                                             (item, index) => (
                                                 <Link
                                                     key={index}
                                                     to={item.path}
-                                                    className="dropdown-item d-flex align-items-center py-2"
+                                                    className="profile-dropdown-item"
                                                     onClick={() =>
                                                         setShowProfileMenu(
                                                             false
@@ -830,19 +722,19 @@ const DashboardNavbar = ({
                                                     }
                                                 >
                                                     <i
-                                                        className={`${item.icon} me-3 text-muted`}
+                                                        className={item.icon}
                                                     ></i>
-                                                    {item.label}
+                                                    <span>{item.label}</span>
                                                 </Link>
                                             )
                                         )}
-                                        <hr className="my-2" />
+                                        <hr className="dropdown-divider" />
                                         <button
-                                            className="dropdown-item d-flex align-items-center py-2 text-danger"
+                                            className="profile-dropdown-item logout-btn"
                                             onClick={handleLogout}
                                         >
-                                            <i className="fas fa-sign-out-alt me-3"></i>
-                                            Sign Out
+                                            <i className="fas fa-sign-out-alt"></i>
+                                            <span>Sign Out</span>
                                         </button>
                                     </div>
                                 </div>
@@ -851,48 +743,6 @@ const DashboardNavbar = ({
                     </div>
                 </div>
             </div>
-
-            {/* Custom Styles */}
-            <style>{`
-                .dashboard-navbar {
-                    height: 60px;
-                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-                }
-
-                .notification-item:hover {
-                    background-color: #f8f9fa !important;
-                }
-
-                .dropdown-item:hover {
-                    background-color: ${config.light};
-                    color: ${config.primary};
-                }
-
-                .brand-icon {
-                    transition: transform 0.3s ease;
-                }
-
-                .brand-icon:hover {
-                    transform: scale(1.1);
-                }
-
-                .input-group-text {
-                    border-top-left-radius: 20px;
-                    border-bottom-left-radius: 20px;
-                }
-
-                .form-control {
-                    border-top-right-radius: 20px;
-                    border-bottom-right-radius: 20px;
-                }
-
-                @media (max-width: 768px) {
-                    .dashboard-navbar .container-fluid {
-                        padding-left: 1rem;
-                        padding-right: 1rem;
-                    }
-                }
-            `}</style>
         </nav>
     );
 };

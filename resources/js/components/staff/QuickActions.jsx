@@ -8,7 +8,7 @@ export const StaffQuickActions = ({ onAction }) => {
             title: "Manage Categories",
             description: "Create and manage service categories",
             icon: "fas fa-tags",
-            color: "primary",
+            variant: "primary",
             count: null,
         },
         {
@@ -16,7 +16,7 @@ export const StaffQuickActions = ({ onAction }) => {
             title: "Review Providers",
             description: "Approve pending service providers",
             icon: "fas fa-user-check",
-            color: "warning",
+            variant: "warning",
             count: null,
         },
         {
@@ -24,7 +24,7 @@ export const StaffQuickActions = ({ onAction }) => {
             title: "View Reports",
             description: "Access platform analytics and reports",
             icon: "fas fa-chart-bar",
-            color: "success",
+            variant: "success",
             count: null,
         },
         {
@@ -32,7 +32,7 @@ export const StaffQuickActions = ({ onAction }) => {
             title: "Handle Disputes",
             description: "Resolve user disputes and issues",
             icon: "fas fa-balance-scale",
-            color: "danger",
+            variant: "danger",
             count: null,
         },
     ];
@@ -44,37 +44,37 @@ export const StaffQuickActions = ({ onAction }) => {
     };
 
     return (
-        <div className="card border-0 shadow-sm">
-            <div className="card-header bg-white border-bottom">
-                <h5 className="card-title mb-0">
-                    <i className="fas fa-bolt text-warning me-2"></i>
-                    Quick Actions
-                </h5>
+        <div className="dashboard-card quick-actions-card">
+            <div className="dashboard-card-header">
+                <h6 className="dashboard-card-title">
+                    <i className="fas fa-bolt"></i>
+                    <span>Quick Actions</span>
+                </h6>
             </div>
-            <div className="card-body">
-                <div className="d-grid gap-3">
+            <div className="dashboard-card-body">
+                <div className="quick-actions-grid">
                     {quickActions.map((action) => (
                         <button
                             key={action.id}
-                            className={`btn btn-outline-${action.color} text-start`}
+                            className={`action-btn ${action.variant}`}
                             onClick={() => handleActionClick(action)}
                         >
-                            <div className="d-flex align-items-center">
-                                <div className="me-3">
-                                    <i className={`${action.icon} fa-lg`}></i>
+                            <div className="action-btn-content">
+                                <div className="action-btn-icon">
+                                    <i className={action.icon}></i>
                                 </div>
-                                <div className="flex-grow-1">
-                                    <div className="fw-semibold">
+                                <div className="action-btn-text">
+                                    <div className="action-btn-title">
                                         {action.title}
                                     </div>
-                                    <small className="text-muted">
+                                    <div className="action-btn-description">
                                         {action.description}
-                                    </small>
+                                    </div>
                                 </div>
                                 {action.count && (
-                                    <div className="ms-2">
+                                    <div className="action-btn-badge">
                                         <span
-                                            className={`badge bg-${action.color}`}
+                                            className={`badge ${action.variant}`}
                                         >
                                             {action.count}
                                         </span>
@@ -85,11 +85,11 @@ export const StaffQuickActions = ({ onAction }) => {
                     ))}
                 </div>
             </div>
-            <div className="card-footer bg-light">
-                <div className="text-center">
-                    <small className="text-muted">
-                        <i className="fas fa-info-circle me-1"></i>
-                        Click any action to get started
+            <div className="dashboard-card-footer">
+                <div className="card-footer-content">
+                    <small className="footer-text">
+                        <i className="fas fa-info-circle"></i>
+                        <span>Click any action to get started</span>
                     </small>
                 </div>
             </div>
@@ -107,7 +107,7 @@ export const ManagementQuickActions = ({ stats = {}, onAction }) => {
                 stats.pendingProviders || 0
             } providers awaiting approval`,
             icon: "fas fa-user-check",
-            color: stats.pendingProviders > 0 ? "warning" : "success",
+            variant: stats.pendingProviders > 0 ? "warning" : "success",
             urgent: stats.pendingProviders > 5,
             count: stats.pendingProviders || 0,
         },
@@ -118,7 +118,7 @@ export const ManagementQuickActions = ({ stats = {}, onAction }) => {
                 stats.inactiveCategories || 0
             } categories are inactive`,
             icon: "fas fa-tags",
-            color: stats.inactiveCategories > 0 ? "info" : "success",
+            variant: stats.inactiveCategories > 0 ? "info" : "success",
             urgent: false,
             count: stats.inactiveCategories || 0,
         },
@@ -127,7 +127,7 @@ export const ManagementQuickActions = ({ stats = {}, onAction }) => {
             title: "Welcome New Users",
             description: `${stats.newUsers || 0} new users joined today`,
             icon: "fas fa-user-plus",
-            color: stats.newUsers > 0 ? "primary" : "secondary",
+            variant: stats.newUsers > 0 ? "primary" : "secondary",
             urgent: false,
             count: stats.newUsers || 0,
         },
@@ -136,7 +136,7 @@ export const ManagementQuickActions = ({ stats = {}, onAction }) => {
             title: "System Health Check",
             description: "Monitor platform performance",
             icon: "fas fa-heartbeat",
-            color: "success",
+            variant: "success",
             urgent: false,
             count: null,
         },
@@ -149,86 +149,73 @@ export const ManagementQuickActions = ({ stats = {}, onAction }) => {
     };
 
     return (
-        <div className="card border-0 shadow-sm">
-            <div className="card-header bg-white border-bottom">
-                <div className="d-flex justify-content-between align-items-center">
-                    <h5 className="card-title mb-0">
-                        <i className="fas fa-tasks text-primary me-2"></i>
-                        Management Tasks
-                    </h5>
-                    <span className="badge bg-primary">
+        <div className="dashboard-card management-actions-card">
+            <div className="dashboard-card-header">
+                <div className="header-content">
+                    <h6 className="dashboard-card-title">
+                        <i className="fas fa-tasks"></i>
+                        <span>Management Tasks</span>
+                    </h6>
+                    <span className="badge primary">
                         {managementActions.filter((a) => a.count > 0).length}{" "}
                         active
                     </span>
                 </div>
             </div>
-            <div className="card-body">
-                <div className="list-group list-group-flush">
+            <div className="dashboard-card-body">
+                <div className="management-actions-list">
                     {managementActions.map((action) => (
                         <div
                             key={action.id}
-                            className={`list-group-item list-group-item-action border-0 ${
-                                action.urgent ? "bg-warning bg-opacity-10" : ""
+                            className={`management-action-item ${
+                                action.urgent ? "urgent" : ""
                             }`}
-                            style={{ cursor: "pointer" }}
                             onClick={() => handleActionClick(action)}
                         >
-                            <div className="d-flex align-items-center">
-                                <div className="me-3">
-                                    <div
-                                        className={`bg-${action.color} bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center`}
-                                        style={{
-                                            width: "40px",
-                                            height: "40px",
-                                        }}
-                                    >
-                                        <i
-                                            className={`${action.icon} text-${action.color}`}
-                                        ></i>
+                            <div className="action-item-icon">
+                                <div
+                                    className={`icon-container ${action.variant}`}
+                                >
+                                    <i className={action.icon}></i>
+                                </div>
+                            </div>
+                            <div className="action-item-content">
+                                <div className="action-item-header">
+                                    <h6 className="action-item-title">
+                                        {action.title}
+                                        {action.urgent && (
+                                            <i className="fas fa-exclamation-triangle urgent-indicator"></i>
+                                        )}
+                                    </h6>
+                                    <div className="action-item-meta">
+                                        {action.count !== null &&
+                                            action.count > 0 && (
+                                                <span
+                                                    className={`badge ${action.variant}`}
+                                                >
+                                                    {action.count}
+                                                </span>
+                                            )}
+                                        <i className="fas fa-chevron-right action-arrow"></i>
                                     </div>
                                 </div>
-                                <div className="flex-grow-1">
-                                    <div className="d-flex justify-content-between align-items-start">
-                                        <div>
-                                            <h6 className="mb-1">
-                                                {action.title}
-                                                {action.urgent && (
-                                                    <i className="fas fa-exclamation-triangle text-warning ms-2"></i>
-                                                )}
-                                            </h6>
-                                            <p className="text-muted mb-0 small">
-                                                {action.description}
-                                            </p>
-                                        </div>
-                                        <div className="text-end">
-                                            {action.count !== null &&
-                                                action.count > 0 && (
-                                                    <span
-                                                        className={`badge bg-${action.color} mb-1`}
-                                                    >
-                                                        {action.count}
-                                                    </span>
-                                                )}
-                                            <div>
-                                                <i className="fas fa-chevron-right text-muted"></i>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                                <p className="action-item-description">
+                                    {action.description}
+                                </p>
                             </div>
                         </div>
                     ))}
                 </div>
             </div>
-            <div className="card-footer bg-light">
-                <div className="d-flex justify-content-between align-items-center">
-                    <small className="text-muted">
-                        <i className="fas fa-clock me-1"></i>
-                        Updated: {new Date().toLocaleTimeString()}
+            <div className="dashboard-card-footer">
+                <div className="card-footer-content">
+                    <small className="footer-text">
+                        <i className="fas fa-clock"></i>
+                        <span>Updated: {new Date().toLocaleTimeString()}</span>
                     </small>
                     <button className="btn btn-sm btn-outline-primary">
-                        <i className="fas fa-list me-1"></i>
-                        View All Tasks
+                        <i className="fas fa-list"></i>
+                        <span>View All Tasks</span>
                     </button>
                 </div>
             </div>

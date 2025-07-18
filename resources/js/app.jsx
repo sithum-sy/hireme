@@ -1,6 +1,15 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
+import "bootstrap/dist/css/bootstrap.min.css";
+import "react-toastify/dist/ReactToastify.css";
+import "leaflet/dist/leaflet.css";
+import "../css/app.css";
+import "../css/auth.css";
+
+// Import Bootstrap
+import "./bootstrap";
+
 import { AuthProvider } from "./context/AuthContext";
 import { AdminProvider } from "./context/AdminContext";
 import { ServicesProvider } from "./context/ServicesContext";
@@ -10,10 +19,7 @@ import { ClientProvider } from "./context/ClientContext";
 import { LocationProvider } from "./context/LocationContext";
 import { DynamicAreasProvider } from "./context/DynamicAreasContext";
 import ProtectedRoute from "./components/ProtectedRoute";
-import DashboardLayout from "./components/DashboardLayout";
-import "react-toastify/dist/ReactToastify.css";
-import "leaflet/dist/leaflet.css";
-import "../css/auth.css";
+import PlaceholderPage from "./components/Navigation/shared/PlaceholderPage";
 
 // Public Pages
 import LandingPage from "./pages/LandingPage";
@@ -66,9 +72,6 @@ import CategoriesList from "./pages/staff/categories/CategoriesList";
 import CreateCategory from "./pages/staff/categories/CreateCategory";
 import EditCategory from "./pages/staff/categories/EditCategory";
 import CategoryDetails from "./pages/staff/categories/CategoryDetails";
-
-// Import Bootstrap
-import "./bootstrap";
 
 function App() {
     return (
@@ -134,31 +137,25 @@ function App() {
                                             <Route
                                                 path="services/categories"
                                                 element={
-                                                    <DashboardLayout>
-                                                        <div className="container-fluid">
-                                                            <h2 className="fw-bold mb-4">
-                                                                Service
-                                                                Categories
-                                                            </h2>
-                                                            <div className="card border-0 shadow-sm">
-                                                                <div className="card-body text-center py-5">
-                                                                    <i className="fas fa-th-large fa-4x text-muted mb-3"></i>
-                                                                    <h4>
-                                                                        Categories
-                                                                        page
-                                                                        coming
-                                                                        soon
-                                                                    </h4>
-                                                                    <p className="text-muted">
-                                                                        Browse
-                                                                        services
-                                                                        by
-                                                                        category.
-                                                                    </p>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </DashboardLayout>
+                                                    <PlaceholderPage
+                                                        title="Service Categories"
+                                                        subtitle="Browse services by category"
+                                                        icon="fas fa-th-large"
+                                                        description="Discover services organized by categories to find exactly what you need."
+                                                        variant="info"
+                                                        actions={
+                                                            <Link
+                                                                to="/client/services"
+                                                                className="btn btn-primary"
+                                                            >
+                                                                <i className="fas fa-search"></i>
+                                                                <span>
+                                                                    Browse All
+                                                                    Services
+                                                                </span>
+                                                            </Link>
+                                                        }
+                                                    />
                                                 }
                                             />
 
@@ -178,63 +175,39 @@ function App() {
                                             <Route
                                                 path="providers"
                                                 element={
-                                                    <DashboardLayout>
-                                                        <div className="container-fluid">
-                                                            <h2 className="fw-bold mb-4">
-                                                                Browse Providers
-                                                            </h2>
-                                                            <div className="card border-0 shadow-sm">
-                                                                <div className="card-body text-center py-5">
-                                                                    <i className="fas fa-users fa-4x text-muted mb-3"></i>
-                                                                    <h4>
-                                                                        Provider
-                                                                        browsing
-                                                                        coming
-                                                                        soon
-                                                                    </h4>
-                                                                    <p className="text-muted">
-                                                                        Find and
-                                                                        connect
-                                                                        with
-                                                                        service
-                                                                        providers.
-                                                                    </p>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </DashboardLayout>
+                                                    <PlaceholderPage
+                                                        title="Browse Providers"
+                                                        subtitle="Find trusted service professionals"
+                                                        icon="fas fa-users"
+                                                        description="Find and connect with verified service providers in your area."
+                                                        variant="success"
+                                                        actions={
+                                                            <Link
+                                                                to="/client/services"
+                                                                className="btn btn-primary"
+                                                            >
+                                                                <i className="fas fa-search"></i>
+                                                                <span>
+                                                                    Browse
+                                                                    Services
+                                                                    Instead
+                                                                </span>
+                                                            </Link>
+                                                        }
+                                                    />
                                                 }
                                             />
 
                                             <Route
                                                 path="providers/:id"
                                                 element={
-                                                    <DashboardLayout>
-                                                        <div className="container-fluid">
-                                                            <h2 className="fw-bold mb-4">
-                                                                Provider Details
-                                                            </h2>
-                                                            <div className="card border-0 shadow-sm">
-                                                                <div className="card-body text-center py-5">
-                                                                    <i className="fas fa-user-circle fa-4x text-muted mb-3"></i>
-                                                                    <h4>
-                                                                        Provider
-                                                                        details
-                                                                        page
-                                                                        coming
-                                                                        soon
-                                                                    </h4>
-                                                                    <p className="text-muted">
-                                                                        View
-                                                                        provider
-                                                                        profile
-                                                                        and
-                                                                        services.
-                                                                    </p>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </DashboardLayout>
+                                                    <PlaceholderPage
+                                                        title="Provider Details"
+                                                        subtitle="View provider profile and services"
+                                                        icon="fas fa-user-circle"
+                                                        description="View detailed provider profile, services, and customer reviews."
+                                                        variant="info"
+                                                    />
                                                 }
                                             />
 
@@ -242,30 +215,25 @@ function App() {
                                             <Route
                                                 path="booking/new/:serviceId"
                                                 element={
-                                                    <DashboardLayout>
-                                                        <div className="container-fluid">
-                                                            <h2 className="fw-bold mb-4">
-                                                                Book Service
-                                                            </h2>
-                                                            <div className="card border-0 shadow-sm">
-                                                                <div className="card-body text-center py-5">
-                                                                    <i className="fas fa-calendar-plus fa-4x text-primary mb-3"></i>
-                                                                    <h4>
-                                                                        Booking
-                                                                        wizard
-                                                                        coming
-                                                                        soon
-                                                                    </h4>
-                                                                    <p className="text-muted">
-                                                                        Complete
-                                                                        your
-                                                                        service
-                                                                        booking.
-                                                                    </p>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </DashboardLayout>
+                                                    <PlaceholderPage
+                                                        title="Book Service"
+                                                        subtitle="Complete your service booking"
+                                                        icon="fas fa-calendar-plus"
+                                                        description="Complete your service booking with our easy-to-use booking wizard."
+                                                        variant="success"
+                                                        actions={
+                                                            <Link
+                                                                to="/client/services"
+                                                                className="btn btn-primary"
+                                                            >
+                                                                <i className="fas fa-arrow-left"></i>
+                                                                <span>
+                                                                    Back to
+                                                                    Services
+                                                                </span>
+                                                            </Link>
+                                                        }
+                                                    />
                                                 }
                                             />
 
@@ -273,31 +241,25 @@ function App() {
                                             <Route
                                                 path="book/:category"
                                                 element={
-                                                    <DashboardLayout>
-                                                        <div className="container-fluid">
-                                                            <h2 className="fw-bold mb-4">
-                                                                Book Service
-                                                            </h2>
-                                                            <div className="card border-0 shadow-sm">
-                                                                <div className="card-body text-center py-5">
-                                                                    <i className="fas fa-calendar-plus fa-4x text-primary mb-3"></i>
-                                                                    <h4>
-                                                                        Service
-                                                                        booking
-                                                                        coming
-                                                                        soon
-                                                                    </h4>
-                                                                    <p className="text-muted">
-                                                                        Quick
-                                                                        booking
-                                                                        functionality
-                                                                        is under
-                                                                        development.
-                                                                    </p>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </DashboardLayout>
+                                                    <PlaceholderPage
+                                                        title="Book Service"
+                                                        subtitle="Quick service booking"
+                                                        icon="fas fa-calendar-plus"
+                                                        description="Quick booking functionality is under development."
+                                                        variant="warning"
+                                                        actions={
+                                                            <Link
+                                                                to="/client/services"
+                                                                className="btn btn-primary"
+                                                            >
+                                                                <i className="fas fa-search"></i>
+                                                                <span>
+                                                                    Browse
+                                                                    Services
+                                                                </span>
+                                                            </Link>
+                                                        }
+                                                    />
                                                 }
                                             />
 
@@ -314,7 +276,7 @@ function App() {
 
                                             <Route
                                                 path="appointments/upcoming"
-                                                element={<AppointmentsList />} // Will use URL params to filter
+                                                element={<AppointmentsList />}
                                             />
 
                                             <Route
@@ -331,160 +293,220 @@ function App() {
                                             <Route
                                                 path="notifications"
                                                 element={
-                                                    <DashboardLayout>
-                                                        <div className="container-fluid">
-                                                            <h2 className="fw-bold mb-4">
-                                                                Notifications
-                                                            </h2>
-                                                            <div className="card border-0 shadow-sm">
-                                                                <div className="card-body text-center py-5">
-                                                                    <i className="fas fa-bell fa-4x text-muted mb-3"></i>
-                                                                    <h4>
-                                                                        Notifications
-                                                                        coming
-                                                                        soon
-                                                                    </h4>
-                                                                    <p className="text-muted">
-                                                                        Stay
-                                                                        updated
-                                                                        with
-                                                                        booking
-                                                                        alerts
-                                                                        and
-                                                                        updates.
-                                                                    </p>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </DashboardLayout>
+                                                    <PlaceholderPage
+                                                        title="Notifications"
+                                                        subtitle="Stay updated with your latest alerts"
+                                                        icon="fas fa-bell"
+                                                        description="Stay updated with booking alerts, appointment reminders, and important updates."
+                                                        variant="info"
+                                                        actions={
+                                                            <Link
+                                                                to="/client/appointments"
+                                                                className="btn btn-primary"
+                                                            >
+                                                                <i className="fas fa-calendar-alt"></i>
+                                                                <span>
+                                                                    View
+                                                                    Appointments
+                                                                </span>
+                                                            </Link>
+                                                        }
+                                                    />
                                                 }
                                             />
 
                                             <Route
                                                 path="profile"
                                                 element={
-                                                    <DashboardLayout>
-                                                        <div className="container-fluid">
-                                                            <h2 className="fw-bold mb-4">
-                                                                My Profile
-                                                            </h2>
-                                                            <div className="card border-0 shadow-sm">
-                                                                <div className="card-body text-center py-5">
-                                                                    <i className="fas fa-user-edit fa-4x text-muted mb-3"></i>
-                                                                    <h4>
-                                                                        Profile
-                                                                        management
-                                                                        coming
-                                                                        soon
-                                                                    </h4>
-                                                                    <p className="text-muted">
+                                                    <PlaceholderPage
+                                                        title="My Profile"
+                                                        subtitle="Manage your account information"
+                                                        icon="fas fa-user-edit"
+                                                        description="Edit your profile information, preferences, and account settings."
+                                                        variant="info"
+                                                        actions={
+                                                            <>
+                                                                <button className="btn btn-primary">
+                                                                    <i className="fas fa-edit"></i>
+                                                                    <span>
                                                                         Edit
-                                                                        your
-                                                                        profile
-                                                                        information
-                                                                        and
-                                                                        preferences.
-                                                                    </p>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </DashboardLayout>
+                                                                        Profile
+                                                                    </span>
+                                                                </button>
+                                                                <button className="btn btn-outline-primary">
+                                                                    <i className="fas fa-cog"></i>
+                                                                    <span>
+                                                                        Settings
+                                                                    </span>
+                                                                </button>
+                                                            </>
+                                                        }
+                                                    />
                                                 }
                                             />
 
                                             <Route
                                                 path="reviews"
                                                 element={
-                                                    <DashboardLayout>
-                                                        <div className="container-fluid">
-                                                            <h2 className="fw-bold mb-4">
-                                                                Reviews &
-                                                                Ratings
-                                                            </h2>
-                                                            <div className="card border-0 shadow-sm">
-                                                                <div className="card-body text-center py-5">
-                                                                    <i className="fas fa-star fa-4x text-warning mb-3"></i>
-                                                                    <h4>
-                                                                        Review
-                                                                        system
-                                                                        coming
-                                                                        soon
-                                                                    </h4>
-                                                                    <p className="text-muted">
-                                                                        Rate and
-                                                                        review
-                                                                        your
-                                                                        service
-                                                                        providers.
-                                                                    </p>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </DashboardLayout>
+                                                    <PlaceholderPage
+                                                        title="Reviews & Ratings"
+                                                        subtitle="Manage your service reviews"
+                                                        icon="fas fa-star"
+                                                        description="Rate and review your service providers to help other clients make informed decisions."
+                                                        variant="warning"
+                                                        actions={
+                                                            <Link
+                                                                to="/client/appointments"
+                                                                className="btn btn-primary"
+                                                            >
+                                                                <i className="fas fa-calendar-check"></i>
+                                                                <span>
+                                                                    View
+                                                                    Completed
+                                                                    Services
+                                                                </span>
+                                                            </Link>
+                                                        }
+                                                    />
                                                 }
                                             />
 
                                             <Route
                                                 path="support"
                                                 element={
-                                                    <DashboardLayout>
-                                                        <div className="container-fluid">
-                                                            <h2 className="fw-bold mb-4">
-                                                                Help & Support
-                                                            </h2>
-                                                            <div className="card border-0 shadow-sm">
-                                                                <div className="card-body text-center py-5">
-                                                                    <i className="fas fa-headset fa-4x text-info mb-3"></i>
-                                                                    <h4>
+                                                    <PlaceholderPage
+                                                        title="Help & Support"
+                                                        subtitle="Get assistance when you need it"
+                                                        icon="fas fa-headset"
+                                                        description="Get help from our support team or browse our help documentation."
+                                                        variant="success"
+                                                        actions={
+                                                            <>
+                                                                <button className="btn btn-primary">
+                                                                    <i className="fas fa-comments"></i>
+                                                                    <span>
+                                                                        Contact
                                                                         Support
-                                                                        system
-                                                                        coming
-                                                                        soon
-                                                                    </h4>
-                                                                    <p className="text-muted">
-                                                                        Get help
-                                                                        and
-                                                                        contact
-                                                                        our
-                                                                        support
-                                                                        team.
-                                                                    </p>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </DashboardLayout>
+                                                                    </span>
+                                                                </button>
+                                                                <button className="btn btn-outline-primary">
+                                                                    <i className="fas fa-book"></i>
+                                                                    <span>
+                                                                        Help
+                                                                        Center
+                                                                    </span>
+                                                                </button>
+                                                            </>
+                                                        }
+                                                    />
                                                 }
                                             />
 
                                             <Route
                                                 path="favorites"
                                                 element={
-                                                    <DashboardLayout>
-                                                        <div className="container-fluid">
-                                                            <h2 className="fw-bold mb-4">
-                                                                Favorite
-                                                                Providers
-                                                            </h2>
-                                                            <div className="card border-0 shadow-sm">
-                                                                <div className="card-body text-center py-5">
-                                                                    <i className="fas fa-heart fa-4x text-danger mb-3"></i>
-                                                                    <h4>
-                                                                        Favorites
-                                                                        page
-                                                                        coming
-                                                                        soon
-                                                                    </h4>
-                                                                    <p className="text-muted">
-                                                                        Manage
-                                                                        your
-                                                                        favorite
-                                                                        service
-                                                                        providers.
-                                                                    </p>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </DashboardLayout>
+                                                    <PlaceholderPage
+                                                        title="Favorite Providers"
+                                                        subtitle="Your saved service providers"
+                                                        icon="fas fa-heart"
+                                                        description="Manage your favorite service providers for quick and easy booking."
+                                                        variant="danger"
+                                                        actions={
+                                                            <Link
+                                                                to="/client/services"
+                                                                className="btn btn-primary"
+                                                            >
+                                                                <i className="fas fa-search"></i>
+                                                                <span>
+                                                                    Find
+                                                                    Providers
+                                                                </span>
+                                                            </Link>
+                                                        }
+                                                    />
+                                                }
+                                            />
+
+                                            {/* Payment Routes */}
+                                            <Route
+                                                path="payments/history"
+                                                element={
+                                                    <PlaceholderPage
+                                                        title="Payment History"
+                                                        subtitle="View your transaction history"
+                                                        icon="fas fa-history"
+                                                        description="Track all your payments and transaction history."
+                                                        variant="success"
+                                                        actions={
+                                                            <Link
+                                                                to="/client/appointments"
+                                                                className="btn btn-primary"
+                                                            >
+                                                                <i className="fas fa-calendar-alt"></i>
+                                                                <span>
+                                                                    View
+                                                                    Appointments
+                                                                </span>
+                                                            </Link>
+                                                        }
+                                                    />
+                                                }
+                                            />
+
+                                            <Route
+                                                path="payments/methods"
+                                                element={
+                                                    <PlaceholderPage
+                                                        title="Payment Methods"
+                                                        subtitle="Manage your payment options"
+                                                        icon="fas fa-credit-card"
+                                                        description="Add, edit, or remove your payment methods for easy booking."
+                                                        variant="info"
+                                                        actions={
+                                                            <>
+                                                                <button className="btn btn-primary">
+                                                                    <i className="fas fa-plus"></i>
+                                                                    <span>
+                                                                        Add
+                                                                        Payment
+                                                                        Method
+                                                                    </span>
+                                                                </button>
+                                                                <button className="btn btn-outline-primary">
+                                                                    <i className="fas fa-shield-alt"></i>
+                                                                    <span>
+                                                                        Security
+                                                                        Settings
+                                                                    </span>
+                                                                </button>
+                                                            </>
+                                                        }
+                                                    />
+                                                }
+                                            />
+
+                                            <Route
+                                                path="payments/invoices"
+                                                element={
+                                                    <PlaceholderPage
+                                                        title="Invoices"
+                                                        subtitle="Download and manage your invoices"
+                                                        icon="fas fa-file-invoice-dollar"
+                                                        description="View, download, and manage all your service invoices."
+                                                        variant="info"
+                                                        actions={
+                                                            <Link
+                                                                to="/client/appointments"
+                                                                className="btn btn-primary"
+                                                            >
+                                                                <i className="fas fa-calendar-check"></i>
+                                                                <span>
+                                                                    View
+                                                                    Services
+                                                                </span>
+                                                            </Link>
+                                                        }
+                                                    />
                                                 }
                                             />
 
@@ -516,6 +538,7 @@ function App() {
                                                         <ProviderDashboard />
                                                     }
                                                 />
+
                                                 {/* Provider Services Management */}
                                                 <Route
                                                     path="services"
@@ -535,6 +558,7 @@ function App() {
                                                     path="services/:id/edit"
                                                     element={<EditService />}
                                                 />
+
                                                 {/* Provider Availability Management */}
                                                 <Route
                                                     path="availability"
@@ -550,6 +574,7 @@ function App() {
                                                     path="availability/blocked"
                                                     element={<BlockedTimes />}
                                                 />
+
                                                 {/* Provider Appointment Management */}
                                                 <Route
                                                     path="appointments"
@@ -567,6 +592,7 @@ function App() {
                                                         <ProviderAppointmentDetail />
                                                     }
                                                 />
+
                                                 {/* Provider quote routes */}
                                                 <Route
                                                     path="quotes"
@@ -604,6 +630,148 @@ function App() {
                                                     path="earnings"
                                                     element={
                                                         <EarningsOverview />
+                                                    }
+                                                />
+
+                                                {/* Provider Profile Routes */}
+                                                <Route
+                                                    path="profile/business"
+                                                    element={
+                                                        <PlaceholderPage
+                                                            title="Business Profile"
+                                                            subtitle="Manage your business information"
+                                                            icon="fas fa-briefcase"
+                                                            description="Update your business profile, description, and professional details."
+                                                            variant="info"
+                                                            actions={
+                                                                <>
+                                                                    <button className="btn btn-primary">
+                                                                        <i className="fas fa-edit"></i>
+                                                                        <span>
+                                                                            Edit
+                                                                            Profile
+                                                                        </span>
+                                                                    </button>
+                                                                    <button className="btn btn-outline-primary">
+                                                                        <i className="fas fa-camera"></i>
+                                                                        <span>
+                                                                            Upload
+                                                                            Photos
+                                                                        </span>
+                                                                    </button>
+                                                                </>
+                                                            }
+                                                        />
+                                                    }
+                                                />
+
+                                                <Route
+                                                    path="profile/personal"
+                                                    element={
+                                                        <PlaceholderPage
+                                                            title="Personal Information"
+                                                            subtitle="Manage your personal details"
+                                                            icon="fas fa-user"
+                                                            description="Update your personal information and contact details."
+                                                            variant="info"
+                                                        />
+                                                    }
+                                                />
+
+                                                <Route
+                                                    path="profile/verification"
+                                                    element={
+                                                        <PlaceholderPage
+                                                            title="Account Verification"
+                                                            subtitle="Verify your professional credentials"
+                                                            icon="fas fa-shield-check"
+                                                            description="Complete your profile verification to build trust with clients."
+                                                            variant="success"
+                                                            actions={
+                                                                <button className="btn btn-primary">
+                                                                    <i className="fas fa-upload"></i>
+                                                                    <span>
+                                                                        Upload
+                                                                        Documents
+                                                                    </span>
+                                                                </button>
+                                                            }
+                                                        />
+                                                    }
+                                                />
+
+                                                {/* Provider Analytics Routes */}
+                                                <Route
+                                                    path="analytics/performance"
+                                                    element={
+                                                        <PlaceholderPage
+                                                            title="Performance Analytics"
+                                                            subtitle="Track your business performance"
+                                                            icon="fas fa-chart-line"
+                                                            description="View detailed analytics about your service performance and customer satisfaction."
+                                                            variant="success"
+                                                        />
+                                                    }
+                                                />
+
+                                                <Route
+                                                    path="analytics/services"
+                                                    element={
+                                                        <PlaceholderPage
+                                                            title="Service Insights"
+                                                            subtitle="Analyze your service performance"
+                                                            icon="fas fa-chart-bar"
+                                                            description="Get insights into which services are most popular and profitable."
+                                                            variant="info"
+                                                        />
+                                                    }
+                                                />
+
+                                                <Route
+                                                    path="analytics/customers"
+                                                    element={
+                                                        <PlaceholderPage
+                                                            title="Customer Insights"
+                                                            subtitle="Understand your customer base"
+                                                            icon="fas fa-users-cog"
+                                                            description="Learn about your customers and their preferences to improve your services."
+                                                            variant="info"
+                                                        />
+                                                    }
+                                                />
+
+                                                {/* Provider Reviews */}
+                                                <Route
+                                                    path="reviews"
+                                                    element={
+                                                        <PlaceholderPage
+                                                            title="Reviews & Ratings"
+                                                            subtitle="Manage customer feedback"
+                                                            icon="fas fa-star"
+                                                            description="View and respond to customer reviews and ratings."
+                                                            variant="warning"
+                                                            actions={
+                                                                <Link
+                                                                    to="/provider/appointments"
+                                                                    className="btn btn-primary"
+                                                                >
+                                                                    <i className="fas fa-calendar-check"></i>
+                                                                    <span>
+                                                                        View
+                                                                        Completed
+                                                                        Jobs
+                                                                    </span>
+                                                                </Link>
+                                                            }
+                                                        />
+                                                    }
+                                                />
+
+                                                {/* Default provider route redirect */}
+                                                <Route
+                                                    path="*"
+                                                    element={
+                                                        <ProviderDashboard />
                                                     }
                                                 />
                                             </Routes>
@@ -644,7 +812,95 @@ function App() {
                                                 element={<EditStaff />}
                                             />
 
-                                            {/* Other admin routes... */}
+                                            {/* Admin placeholder routes */}
+                                            <Route
+                                                path="users"
+                                                element={
+                                                    <PlaceholderPage
+                                                        title="User Management"
+                                                        subtitle="Manage platform users"
+                                                        icon="fas fa-users-cog"
+                                                        description="View, edit, and manage all platform users including clients and providers."
+                                                        variant="info"
+                                                        actions={
+                                                            <>
+                                                                <button className="btn btn-primary">
+                                                                    <i className="fas fa-user-plus"></i>
+                                                                    <span>
+                                                                        Add User
+                                                                    </span>
+                                                                </button>
+                                                                <button className="btn btn-outline-primary">
+                                                                    <i className="fas fa-download"></i>
+                                                                    <span>
+                                                                        Export
+                                                                        Users
+                                                                    </span>
+                                                                </button>
+                                                            </>
+                                                        }
+                                                    />
+                                                }
+                                            />
+
+                                            <Route
+                                                path="services"
+                                                element={
+                                                    <PlaceholderPage
+                                                        title="Service Management"
+                                                        subtitle="Oversee platform services"
+                                                        icon="fas fa-concierge-bell"
+                                                        description="Review, approve, and manage services offered on the platform."
+                                                        variant="success"
+                                                    />
+                                                }
+                                            />
+
+                                            <Route
+                                                path="reports"
+                                                element={
+                                                    <PlaceholderPage
+                                                        title="Reports & Analytics"
+                                                        subtitle="Platform insights and reports"
+                                                        icon="fas fa-chart-pie"
+                                                        description="Generate comprehensive reports and view platform analytics."
+                                                        variant="info"
+                                                        actions={
+                                                            <>
+                                                                <button className="btn btn-primary">
+                                                                    <i className="fas fa-chart-bar"></i>
+                                                                    <span>
+                                                                        View
+                                                                        Analytics
+                                                                    </span>
+                                                                </button>
+                                                                <button className="btn btn-outline-primary">
+                                                                    <i className="fas fa-file-export"></i>
+                                                                    <span>
+                                                                        Generate
+                                                                        Report
+                                                                    </span>
+                                                                </button>
+                                                            </>
+                                                        }
+                                                    />
+                                                }
+                                            />
+
+                                            <Route
+                                                path="settings"
+                                                element={
+                                                    <PlaceholderPage
+                                                        title="System Settings"
+                                                        subtitle="Configure platform settings"
+                                                        icon="fas fa-cogs"
+                                                        description="Manage platform-wide settings, configurations, and preferences."
+                                                        variant="warning"
+                                                    />
+                                                }
+                                            />
+
+                                            {/* Default admin route redirect */}
                                             <Route
                                                 path="*"
                                                 element={<AdminDashboard />}
@@ -667,6 +923,7 @@ function App() {
                                                 path="dashboard"
                                                 element={<StaffDashboard />}
                                             />
+
                                             {/* Service Categories Management */}
                                             <Route
                                                 path="categories"
@@ -685,7 +942,55 @@ function App() {
                                                 element={<CategoryDetails />}
                                             />
 
-                                            {/* Other staff routes... */}
+                                            {/* Staff placeholder routes */}
+                                            <Route
+                                                path="users"
+                                                element={
+                                                    <PlaceholderPage
+                                                        title="User Management"
+                                                        subtitle="Assist with user support"
+                                                        icon="fas fa-users"
+                                                        description="Help manage users and provide customer support."
+                                                        variant="info"
+                                                    />
+                                                }
+                                            />
+
+                                            <Route
+                                                path="services"
+                                                element={
+                                                    <PlaceholderPage
+                                                        title="Service Review"
+                                                        subtitle="Review pending services"
+                                                        icon="fas fa-clipboard-check"
+                                                        description="Review and approve pending service submissions."
+                                                        variant="warning"
+                                                    />
+                                                }
+                                            />
+
+                                            <Route
+                                                path="support"
+                                                element={
+                                                    <PlaceholderPage
+                                                        title="Customer Support"
+                                                        subtitle="Handle customer inquiries"
+                                                        icon="fas fa-headset"
+                                                        description="Manage customer support tickets and inquiries."
+                                                        variant="success"
+                                                        actions={
+                                                            <button className="btn btn-primary">
+                                                                <i className="fas fa-ticket-alt"></i>
+                                                                <span>
+                                                                    View Tickets
+                                                                </span>
+                                                            </button>
+                                                        }
+                                                    />
+                                                }
+                                            />
+
+                                            {/* Default staff route redirect */}
                                             <Route
                                                 path="*"
                                                 element={<StaffDashboard />}
@@ -701,43 +1006,37 @@ function App() {
                         <Route
                             path="*"
                             element={
-                                <div className="min-vh-100 d-flex align-items-center justify-content-center bg-light">
-                                    <div className="text-center">
-                                        <div
-                                            className="card shadow-lg border-0"
-                                            style={{ maxWidth: "500px" }}
-                                        >
-                                            <div className="card-body py-5">
-                                                <i className="fas fa-exclamation-triangle fa-4x text-warning mb-4"></i>
-                                                <h1 className="display-4 fw-bold text-dark">
-                                                    404
-                                                </h1>
-                                                <h4 className="mb-3">
-                                                    Page Not Found
-                                                </h4>
-                                                <p className="text-muted mb-4">
-                                                    The page you're looking for
-                                                    doesn't exist or has been
-                                                    moved.
-                                                </p>
-                                                <div className="d-flex gap-2 justify-content-center">
-                                                    <button
-                                                        onClick={() =>
-                                                            window.history.back()
-                                                        }
-                                                        className="btn btn-outline-secondary"
-                                                    >
-                                                        <i className="fas fa-arrow-left me-2"></i>
-                                                        Go Back
-                                                    </button>
-                                                    <a
-                                                        href="/"
-                                                        className="btn btn-primary"
-                                                    >
-                                                        <i className="fas fa-home me-2"></i>
-                                                        Go Home
-                                                    </a>
-                                                </div>
+                                <div className="error-page">
+                                    <div className="error-container">
+                                        <div className="dashboard-card text-center">
+                                            <div className="error-icon">
+                                                <i className="fas fa-exclamation-triangle"></i>
+                                            </div>
+                                            <h1 className="error-code">404</h1>
+                                            <h4 className="error-title">
+                                                Page Not Found
+                                            </h4>
+                                            <p className="error-description">
+                                                The page you're looking for
+                                                doesn't exist or has been moved.
+                                            </p>
+                                            <div className="error-actions">
+                                                <button
+                                                    onClick={() =>
+                                                        window.history.back()
+                                                    }
+                                                    className="btn btn-secondary"
+                                                >
+                                                    <i className="fas fa-arrow-left"></i>
+                                                    <span>Go Back</span>
+                                                </button>
+                                                <a
+                                                    href="/"
+                                                    className="btn btn-primary"
+                                                >
+                                                    <i className="fas fa-home"></i>
+                                                    <span>Go Home</span>
+                                                </a>
                                             </div>
                                         </div>
                                     </div>

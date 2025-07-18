@@ -19,6 +19,14 @@ const PublicLayout = ({
     const [isLoading, setIsLoading] = useState(false);
     const [dropdownOpen, setDropdownOpen] = useState(false);
 
+    // Set public body class
+    useEffect(() => {
+        document.body.className = "public-layout";
+        return () => {
+            document.body.className = "";
+        };
+    }, []);
+
     // Handle scroll effect
     useEffect(() => {
         const handleScroll = () => {
@@ -534,11 +542,6 @@ const PublicLayout = ({
                                             src="/images/hireme-logo.png"
                                             alt="HireMe"
                                             className="logo-img"
-                                            onLoad={() =>
-                                                console.log(
-                                                    "Footer logo loaded successfully"
-                                                )
-                                            }
                                             onError={(e) => {
                                                 e.target.style.display = "none";
                                                 e.target.nextSibling.style.display =

@@ -1,0 +1,1101 @@
+/* ============ PROVIDER DASHBOARD STYLES ============ */
+
+/* Main Dashboard Content */
+.provider-dashboard-content {
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Quick Actions Section */
+.quick-actions-section {
+    margin-bottom: var(--space-8);
+}
+
+.quick-action-card {
+    position: relative;
+    transition: var(--transition);
+    border: 2px solid transparent;
+}
+
+.quick-action-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--current-role-primary);
+}
+
+.action-badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: var(--danger-color);
+    color: white;
+    font-size: var(--text-xs);
+    font-weight: var(--font-bold);
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--border-radius-xl);
+    min-width: 20px;
+    text-align: center;
+    line-height: 1;
+}
+
+/* Main Content Grid */
+.dashboard-content-grid {
+    display: grid;
+    grid-template-columns: 1fr 350px;
+    gap: var(--space-6);
+    margin-bottom: var(--space-8);
+}
+
+.content-main {
+    min-width: 0;
+}
+
+.content-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+}
+
+/* Availability Widget */
+.availability-widget {
+    margin-bottom: var(--space-6);
+}
+
+.widget-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: var(--space-8);
+}
+
+.loading-spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--border-color);
+    border-top-color: var(--current-role-primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: var(--space-2);
+}
+
+.loading-spinner.large {
+    width: 40px;
+    height: 40px;
+    border-width: 4px;
+}
+
+.loading-text {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    margin: 0;
+}
+
+.availability-status {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin-bottom: var(--space-4);
+}
+
+.status-indicator {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--text-lg);
+    flex-shrink: 0;
+}
+
+.status-indicator.success {
+    background: rgba(5, 150, 105, 0.1);
+    color: var(--success-color);
+}
+
+.status-indicator.warning {
+    background: rgba(217, 119, 6, 0.1);
+    color: var(--warning-color);
+}
+
+.status-indicator.danger {
+    background: rgba(220, 38, 38, 0.1);
+    color: var(--danger-color);
+}
+
+.status-indicator.info {
+    background: rgba(2, 132, 199, 0.1);
+    color: var(--info-color);
+}
+
+.status-indicator.secondary {
+    background: var(--bg-light);
+    color: var(--text-muted);
+}
+
+.status-content {
+    flex: 1;
+}
+
+.status-title {
+    font-weight: var(--font-semibold);
+    font-size: var(--text-base);
+    margin-bottom: var(--space-1);
+}
+
+.status-subtitle {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+}
+
+.availability-summary {
+    margin-bottom: var(--space-4);
+}
+
+.availability-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-4);
+    text-align: center;
+    margin-bottom: var(--space-4);
+}
+
+.stat-item {
+    padding: var(--space-3);
+    background: var(--bg-light);
+    border-radius: var(--border-radius);
+}
+
+.stat-value {
+    font-size: var(--text-xl);
+    font-weight: var(--font-bold);
+    margin-bottom: var(--space-1);
+}
+
+.stat-value.primary {
+    color: var(--current-role-primary);
+}
+
+.stat-value.info {
+    color: var(--info-color);
+}
+
+.stat-label {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+}
+
+.availability-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-2);
+}
+
+/* Performance Card */
+.performance-card {
+    margin-bottom: var(--space-6);
+}
+
+.performance-metrics {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.metric-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-2) 0;
+}
+
+.metric-label {
+    color: var(--text-secondary);
+    font-size: var(--text-sm);
+}
+
+.metric-badge {
+    font-size: var(--text-sm);
+    font-weight: var(--font-semibold);
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--border-radius-sm);
+}
+
+.metric-badge.primary {
+    background: var(--current-role-light);
+    color: var(--current-role-primary);
+}
+
+.metric-badge.success {
+    background: rgba(5, 150, 105, 0.1);
+    color: var(--success-color);
+}
+
+.metric-badge.warning {
+    background: rgba(217, 119, 6, 0.1);
+    color: var(--warning-color);
+}
+
+.metric-badge.danger {
+    background: rgba(220, 38, 38, 0.1);
+    color: var(--danger-color);
+}
+
+.metric-badge.info {
+    background: rgba(2, 132, 199, 0.1);
+    color: var(--info-color);
+}
+
+/* Reviews Card */
+.reviews-card {
+    margin-bottom: var(--space-6);
+}
+
+.reviews-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.review-item {
+    display: flex;
+    gap: var(--space-3);
+    padding-bottom: var(--space-4);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.review-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.review-avatar {
+    width: 40px;
+    height: 40px;
+    background: var(--warning-color);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: var(--font-bold);
+    font-size: var(--text-sm);
+    flex-shrink: 0;
+}
+
+.review-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.review-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-bottom: var(--space-1);
+}
+
+.review-client {
+    color: var(--text-primary);
+    font-size: var(--text-sm);
+}
+
+.review-rating {
+    color: var(--warning-color);
+    font-size: var(--text-sm);
+}
+
+.review-comment {
+    color: var(--text-secondary);
+    font-size: var(--text-sm);
+    margin: var(--space-1) 0;
+    font-style: italic;
+}
+
+.review-meta {
+    color: var(--text-muted);
+    font-size: var(--text-xs);
+}
+
+/* Tips Card */
+.tips-card {
+    margin-bottom: var(--space-6);
+}
+
+.tips-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.tip-item {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    padding: var(--space-2);
+    border-radius: var(--border-radius);
+    transition: var(--transition);
+}
+
+.tip-item:hover {
+    background: var(--current-role-light);
+    transform: translateX(2px);
+}
+
+.tip-icon {
+    font-size: var(--text-sm);
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+.tip-icon.success {
+    color: var(--success-color);
+}
+
+.tip-icon.warning {
+    color: var(--warning-color);
+}
+
+.tip-icon.info {
+    color: var(--info-color);
+}
+
+.tip-icon.primary {
+    color: var(--current-role-primary);
+}
+
+.tip-text {
+    color: var(--text-secondary);
+    font-size: var(--text-sm);
+    line-height: 1.4;
+}
+
+/* Achievements Section */
+.achievements-section {
+    margin-bottom: var(--space-6);
+}
+
+.achievements-card {
+    width: 100%;
+}
+
+.achievements-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: var(--space-4);
+}
+
+.achievement-item {
+    text-align: center;
+    padding: var(--space-4);
+    border-radius: var(--border-radius);
+    transition: var(--transition);
+}
+
+.achievement-item:hover {
+    background: var(--bg-light);
+    transform: translateY(-2px);
+}
+
+.achievement-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto var(--space-3);
+    font-size: var(--text-xl);
+}
+
+.achievement-icon.success {
+    background: rgba(5, 150, 105, 0.1);
+    color: var(--success-color);
+}
+
+.achievement-icon.info {
+    background: rgba(2, 132, 199, 0.1);
+    color: var(--info-color);
+}
+
+.achievement-icon.warning {
+    background: rgba(217, 119, 6, 0.1);
+    color: var(--warning-color);
+}
+
+.achievement-icon.primary {
+    background: var(--current-role-light);
+    color: var(--current-role-primary);
+}
+
+.achievement-value {
+    font-size: var(--text-2xl);
+    font-weight: var(--font-bold);
+    color: var(--text-primary);
+    margin-bottom: var(--space-1);
+}
+
+.achievement-label {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+}
+
+/* Loading Container */
+.loading-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 400px;
+}
+
+.loading-content {
+    text-align: center;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .dashboard-content-grid {
+        grid-template-columns: 1fr 300px;
+    }
+}
+
+@media (max-width: 992px) {
+    .dashboard-content-grid {
+        grid-template-columns: 1fr;
+        gap: var(--space-4);
+    }
+
+    .content-sidebar {
+        order: -1;
+    }
+
+    .achievements-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .availability-stats {
+        grid-template-columns: 1fr;
+        gap: var(--space-2);
+    }
+
+    .availability-actions {
+        grid-template-columns: 1fr;
+    }
+
+    .achievements-grid {
+        grid-template-columns: 1fr;
+        gap: var(--space-3);
+    }
+
+    .achievement-item {
+        padding: var(--space-3);
+    }
+
+    .achievement-icon {
+        width: 40px;
+        height: 40px;
+        font-size: var(--text-lg);
+    }
+
+    .achievement-value {
+        font-size: var(--text-xl);
+    }
+
+    .quick-action-card:hover {
+        transform: translateY(-2px);
+    }
+}
+
+@media (max-width: 576px) {
+    .availability-status {
+        flex-direction: column;
+        text-align: center;
+        gap: var(--space-2);
+    }
+
+    .metric-.metric-item {
+        flex-direction: column;
+        gap: var(--space-1);
+        text-align: center;
+        padding: var(--space-3);
+        background: var(--bg-light);
+        border-radius: var(--border-radius);
+    }
+
+    .review-item {
+        flex-direction: column;
+        gap: var(--space-2);
+    }
+
+    .review-header {
+        justify-content: center;
+    }
+
+    .tip-item {
+        flex-direction: column;
+        text-align: center;
+        gap: var(--space-2);
+    }
+}
+
+/* Accessibility Improvements */
+@media (prefers-reduced-motion: reduce) {
+    .provider-dashboard-content,
+    .quick-action-card,
+    .achievement-item,
+    .tip-item {
+        animation: none;
+        transition: none;
+    }
+
+    .quick-action-card:hover,
+    .achievement-item:hover,
+    .tip-item:hover {
+        transform: none;
+    }
+
+    .loading-spinner {
+        animation: none;
+    }
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+    .status-indicator,
+    .achievement-icon {
+        border: 2px solid currentColor;
+    }
+
+    .metric-badge {
+        border: 1px solid currentColor;
+    }
+
+    .quick-action-card {
+        border-width: 3px;
+    }
+}
+
+/* Focus States for Accessibility */
+.action-card-link:focus .quick-action-card,
+.btn:focus,
+.dashboard-card:focus-within {
+    outline: 2px solid var(--current-role-primary);
+    outline-offset: 2px;
+}
+
+/* Print Styles */
+@media print {
+    .provider-dashboard-content {
+        animation: none;
+    }
+
+    .quick-action-card,
+    .achievement-item {
+        break-inside: avoid;
+    }
+
+    .dashboard-content-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .btn {
+        display: none;
+    }
+}
+
+/* Dark Mode Support (if needed in the future) */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg-white: #1a1a1a;
+        --bg-light: #2d2d2d;
+        --text-primary: #ffffff;
+        --text-secondary: #cccccc;
+        --text-muted: #999999;
+        --border-color: #404040;
+    }
+}
+
+/* Custom Scrollbar for Sidebar */
+.content-sidebar {
+    overflow-y: auto;
+    max-height: calc(100vh - 200px);
+}
+
+.content-sidebar::-webkit-scrollbar {
+    width: 4px;
+}
+
+.content-sidebar::-webkit-scrollbar-track {
+    background: var(--bg-light);
+    border-radius: var(--border-radius-sm);
+}
+
+.content-sidebar::-webkit-scrollbar-thumb {
+    background: var(--current-role-primary);
+    border-radius: var(--border-radius-sm);
+}
+
+.content-sidebar::-webkit-scrollbar-thumb:hover {
+    background: var(--current-role-secondary);
+}
+
+/* Animation Delays for Staggered Loading */
+.quick-action-card:nth-child(1) {
+    animation-delay: 0.1s;
+}
+
+.quick-action-card:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.quick-action-card:nth-child(3) {
+    animation-delay: 0.3s;
+}
+
+.quick-action-card:nth-child(4) {
+    animation-delay: 0.4s;
+}
+
+.achievement-item:nth-child(1) {
+    animation-delay: 0.1s;
+}
+
+.achievement-item:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.achievement-item:nth-child(3) {
+    animation-delay: 0.3s;
+}
+
+.achievement-item:nth-child(4) {
+    animation-delay: 0.4s;
+}
+
+/* Enhanced Alert Styles for Provider Dashboard */
+.alert {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--border-radius);
+    font-size: var(--text-sm);
+    margin: 0;
+}
+
+.alert.alert-warning {
+    background: rgba(217, 119, 6, 0.1);
+    border: 1px solid var(--warning-color);
+    color: var(--warning-color);
+}
+
+.alert i {
+    font-size: var(--text-sm);
+}
+
+/* Enhanced Widget Styles */
+.dashboard-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-4);
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-white);
+}
+
+.dashboard-card-title {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin: 0;
+    font-weight: var(--font-semibold);
+    color: var(--text-primary);
+    font-size: var(--text-base);
+}
+
+.dashboard-card-title i {
+    color: var(--current-role-primary);
+    font-size: var(--text-lg);
+}
+
+.dashboard-card-body {
+    padding: var(--space-4);
+}
+
+/* Empty State for Widgets */
+.empty-state-small {
+    text-align: center;
+    padding: var(--space-6) var(--space-4);
+}
+
+.empty-state-icon {
+    width: 50px;
+    height: 50px;
+    background: var(--bg-light);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto var(--space-3);
+    color: var(--text-muted);
+    font-size: var(--text-xl);
+}
+
+.empty-state-text {
+    color: var(--text-secondary);
+    font-weight: var(--font-medium);
+    margin-bottom: var(--space-1);
+    font-size: var(--text-sm);
+}
+
+.empty-state-subtext {
+    color: var(--text-muted);
+    font-size: var(--text-xs);
+    line-height: 1.4;
+}
+
+/* Alert Enhancements */
+.alert {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--border-radius);
+    font-size: var(--text-sm);
+    margin-bottom: var(--space-3);
+    border: 1px solid;
+}
+
+.alert.alert-warning {
+    background: rgba(217, 119, 6, 0.1);
+    border-color: var(--warning-color);
+    color: var(--warning-color);
+}
+
+.alert.alert-info {
+    background: rgba(2, 132, 199, 0.1);
+    border-color: var(--info-color);
+    color: var(--info-color);
+}
+
+.alert.alert-success {
+    background: rgba(5, 150, 105, 0.1);
+    border-color: var(--success-color);
+    color: var(--success-color);
+}
+
+.alert i {
+    font-size: var(--text-sm);
+    flex-shrink: 0;
+}
+
+/* Widget Loading States */
+.widget-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: var(--space-6);
+}
+
+.loading-spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--border-color);
+    border-top-color: var(--current-role-primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: var(--space-2);
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Performance Metrics Enhancements */
+.performance-metrics {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.metric-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-2) 0;
+}
+
+.metric-label {
+    color: var(--text-secondary);
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
+}
+
+.metric-badge {
+    font-size: var(--text-sm);
+    font-weight: var(--font-semibold);
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--border-radius-sm);
+    border: 1px solid transparent;
+}
+
+.metric-badge.primary {
+    background: var(--current-role-light);
+    color: var(--current-role-primary);
+    border-color: var(--current-role-primary);
+}
+
+.metric-badge.success {
+    background: rgba(5, 150, 105, 0.1);
+    color: var(--success-color);
+    border-color: var(--success-color);
+}
+
+.metric-badge.warning {
+    background: rgba(217, 119, 6, 0.1);
+    color: var(--warning-color);
+    border-color: var(--warning-color);
+}
+
+.metric-badge.danger {
+    background: rgba(220, 38, 38, 0.1);
+    color: var(--danger-color);
+    border-color: var(--danger-color);
+}
+
+.metric-badge.info {
+    background: rgba(2, 132, 199, 0.1);
+    color: var(--info-color);
+    border-color: var(--info-color);
+}
+
+.metric-badge.secondary {
+    background: var(--bg-light);
+    color: var(--text-muted);
+    border-color: var(--border-color);
+}
+
+/* Responsive Adjustments for Widgets */
+@media (max-width: 768px) {
+    .dashboard-card-header {
+        flex-direction: column;
+        gap: var(--space-2);
+        text-align: center;
+    }
+
+    .metric-item {
+        flex-direction: column;
+        gap: var(--space-1);
+        text-align: center;
+        padding: var(--space-3);
+        background: var(--bg-light);
+        border-radius: var(--border-radius);
+    }
+
+    .availability-actions {
+        grid-template-columns: 1fr;
+        gap: var(--space-2);
+    }
+}
+
+/* Text Color Utilities */
+.text-success {
+    color: var(--success-color) !important;
+}
+
+.text-warning {
+    color: var(--warning-color) !important;
+}
+
+.text-danger {
+    color: var(--danger-color) !important;
+}
+
+.text-info {
+    color: var(--info-color) !important;
+}
+
+.text-primary {
+    color: var(--current-role-primary) !important;
+}
+
+.text-secondary {
+    color: var(--text-secondary) !important;
+}
+
+/* Ensure tips always show properly */
+.tips-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    min-height: 200px; /* Ensure minimum height */
+}
+
+.tip-item {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    padding: var(--space-3);
+    border-radius: var(--border-radius);
+    transition: var(--transition);
+    background: var(--bg-white);
+}
+
+.tip-item:hover {
+    background: var(--current-role-light);
+    transform: translateX(4px);
+}
+
+.tip-icon {
+    font-size: var(--text-base);
+    margin-top: 2px;
+    flex-shrink: 0;
+    width: 20px;
+    text-align: center;
+}
+
+.tip-text {
+    color: var(--text-secondary);
+    font-size: var(--text-sm);
+    line-height: 1.5;
+    flex: 1;
+}
+
+/* Enhanced review display */
+.review-rating {
+    color: var(--warning-color);
+    font-size: var(--text-sm);
+    line-height: 1;
+}
+
+/* Performance metrics visual improvements */
+.performance-metrics .metric-item:not(:last-child) {
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: var(--space-3);
+    margin-bottom: var(--space-3);
+}
+/* Updated layout styles */
+
+/* Today's Schedule Section - Now prominent */
+.todays-schedule-section {
+    margin-bottom: var(--space-8);
+}
+
+/* Widgets Grid Layout */
+.widgets-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: var(--space-6);
+    margin-bottom: var(--space-8);
+}
+
+.widget-item {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Remove old content grid styles */
+.dashboard-content-grid {
+    display: none; /* Remove the old grid layout */
+}
+
+.content-main,
+.content-sidebar {
+    display: none; /* Remove old layout classes */
+}
+
+/* Responsive adjustments for new layout */
+@media (max-width: 1200px) {
+    .widgets-grid {
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: var(--space-4);
+    }
+}
+
+@media (max-width: 768px) {
+    .widgets-grid {
+        grid-template-columns: 1fr;
+        gap: var(--space-4);
+    }
+
+    .todays-schedule-section {
+        margin-bottom: var(--space-6);
+    }
+
+    .widget-item {
+        margin-bottom: 0;
+    }
+}
+
+@media (max-width: 576px) {
+    .widgets-grid {
+        gap: var(--space-3);
+    }
+
+    .todays-schedule-section {
+        margin-bottom: var(--space-4);
+    }
+}
+
+/* Enhanced today's schedule styling */
+.todays-schedule-section .dashboard-card {
+    border-left: 4px solid var(--current-role-primary);
+}
+
+.todays-schedule-section .section-title {
+    color: var(--current-role-primary);
+}
+
+/* Widget cards styling */
+.widget-item .dashboard-card {
+    height: 100%;
+    transition: var(--transition);
+}
+
+.widget-item .dashboard-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+/* Ensure consistent widget heights */
+.widget-item {
+    min-height: 300px;
+}
+
+.availability-widget,
+.performance-card,
+.reviews-card,
+.tips-card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.availability-widget .dashboard-card-body,
+.performance-card .dashboard-card-body,
+.reviews-card .dashboard-card-body,
+.tips-card .dashboard-card-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Tips card specific adjustments */
+.tips-card .tips-list {
+    flex: 1;
+    justify-content: space-around;
+}

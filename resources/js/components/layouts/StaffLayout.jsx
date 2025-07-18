@@ -1,6 +1,3 @@
-// resources/js/components/layouts/StaffLayout.jsx
-// New Staff Layout using Universal Navigation Components
-
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useStaff } from "../../context/StaffContext";
@@ -22,9 +19,15 @@ const StaffLayout = ({ children }) => {
 
     // Sidebar state
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-
-    // Check for mobile screen
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+    // Set role-specific body class
+    useEffect(() => {
+        document.body.className = "dashboard-staff";
+        return () => {
+            document.body.className = "";
+        };
+    }, []);
 
     // Handle window resize
     useEffect(() => {
@@ -47,12 +50,29 @@ const StaffLayout = ({ children }) => {
         }
     }, [location.pathname, isMobile]);
 
-    // Sidebar toggle handler
+    // Auto-dismiss notifications after timeout
+    useEffect(() => {
+        const timers = [];
+
+        state.ui.notifications.forEach((notification) => {
+            if (notification.duration && notification.duration > 0) {
+                const timer = setTimeout(() => {
+                    removeNotification(notification.id);
+                }, notification.duration);
+                timers.push(timer);
+            }
+        });
+
+        return () => {
+            timers.forEach((timer) => clearTimeout(timer));
+        };
+    }, [state.ui.notifications, removeNotification]);
+
+    // Handlers
     const handleToggleSidebar = () => {
         setSidebarCollapsed(!sidebarCollapsed);
     };
 
-    // Search handler
     const handleSearch = (query) => {
         if (query.trim()) {
             navigate(`/staff/search?q=${encodeURIComponent(query)}`);
@@ -60,53 +80,42 @@ const StaffLayout = ({ children }) => {
         }
     };
 
-    // Menu item click handler
     const handleMenuItemClick = (item) => {
-        console.log("Staff menu clicked:", item);
-
-        // Add any staff-specific menu click handling here
         if (item.id === "categories") {
-            // Example: Track category section access
             addNotification("Accessing Service Categories", "info", 2000);
         }
 
-        // Close sidebar on mobile after clicking
         if (isMobile) {
             setSidebarCollapsed(true);
         }
     };
 
-    // Generate breadcrumbs from current path
+    // Generate breadcrumbs
     const generateBreadcrumbs = () => {
         const pathSegments = location.pathname
             .split("/")
             .filter((segment) => segment);
         const breadcrumbs = [];
 
-        // Remove 'staff' from path segments for cleaner breadcrumbs
         const staffIndex = pathSegments.indexOf("staff");
         if (staffIndex > -1) {
             pathSegments.splice(staffIndex, 1);
         }
 
-        // Add Home breadcrumb
         breadcrumbs.push({
             title: "Staff Dashboard",
             path: "/staff/dashboard",
             active: pathSegments.length === 0,
         });
 
-        // Generate breadcrumbs from path
         let currentPath = "/staff";
         pathSegments.forEach((segment, index) => {
             currentPath += `/${segment}`;
             const isLast = index === pathSegments.length - 1;
 
-            // Convert segment to readable title
             let title = segment.charAt(0).toUpperCase() + segment.slice(1);
             title = title.replace(/-/g, " ");
 
-            // Special cases for better readability
             const titleMappings = {
                 categories: "Service Categories",
                 create: "Create New",
@@ -132,25 +141,7 @@ const StaffLayout = ({ children }) => {
         return breadcrumbs;
     };
 
-    // Auto-dismiss notifications after timeout
-    useEffect(() => {
-        const timers = [];
-
-        state.ui.notifications.forEach((notification) => {
-            if (notification.duration && notification.duration > 0) {
-                const timer = setTimeout(() => {
-                    removeNotification(notification.id);
-                }, notification.duration);
-                timers.push(timer);
-            }
-        });
-
-        return () => {
-            timers.forEach((timer) => clearTimeout(timer));
-        };
-    }, [state.ui.notifications, removeNotification]);
-
-    // Get notification count for different types
+    // Get notification counts
     const getNotificationCounts = () => {
         return {
             total: state.ui.notifications.length,
@@ -168,7 +159,7 @@ const StaffLayout = ({ children }) => {
     const notificationCounts = getNotificationCounts();
 
     return (
-        <div className="staff-dashboard-layout">
+        <div className="dashboard-layout staff-dashboard-layout">
             {/* Universal Navigation Bar */}
             <DashboardNavbar
                 role="staff"
@@ -179,7 +170,7 @@ const StaffLayout = ({ children }) => {
             />
 
             {/* Main Layout Container */}
-            <div className="d-flex">
+            <div className="dashboard-container">
                 {/* Universal Sidebar */}
                 <DashboardSidebar
                     role="staff"
@@ -205,7 +196,7 @@ const StaffLayout = ({ children }) => {
 
                 {/* Main Content Area */}
                 <div
-                    className="main-content flex-grow-1"
+                    className="main-content"
                     style={{
                         marginLeft: isMobile
                             ? "0"
@@ -213,15 +204,12 @@ const StaffLayout = ({ children }) => {
                             ? "70px"
                             : "280px",
                         marginTop: "60px",
-                        transition: "margin-left 0.3s ease",
-                        minHeight: "calc(100vh - 60px)",
-                        backgroundColor: "#f8f9fa",
                     }}
                 >
-                    <div className="content-container p-4">
-                        {/* Breadcrumb Navigation */}
+                    <div className="content-container">
+                        {/* Enhanced Breadcrumb Navigation */}
                         <nav aria-label="breadcrumb" className="mb-4">
-                            <ol className="breadcrumb bg-white px-3 py-2 rounded shadow-sm">
+                            <ol className="breadcrumb">
                                 {generateBreadcrumbs().map((crumb, index) => (
                                     <li
                                         key={index}
@@ -236,7 +224,7 @@ const StaffLayout = ({ children }) => {
                                         ) : (
                                             <Link
                                                 to={crumb.path}
-                                                className="text-decoration-none text-success"
+                                                className="text-decoration-none"
                                             >
                                                 {crumb.title}
                                             </Link>
@@ -246,12 +234,46 @@ const StaffLayout = ({ children }) => {
                             </ol>
                         </nav>
 
+                        {/* Welcome Banner (Dashboard only) */}
+                        {location.pathname === "/staff/dashboard" && (
+                            <div className="welcome-banner">
+                                <div className="row align-items-center">
+                                    <div className="col-md-8">
+                                        <h3 className="fw-bold mb-2">
+                                            Welcome back, {user?.first_name}! 👨‍💼
+                                        </h3>
+                                        <p className="mb-3 opacity-90">
+                                            You have staff-level access to
+                                            manage content and support
+                                            customers.
+                                        </p>
+                                        <div className="d-flex gap-2">
+                                            <Link
+                                                to="/staff/categories"
+                                                className="btn btn-light btn-lg"
+                                            >
+                                                <i className="fas fa-th-large me-2"></i>
+                                                Manage Categories
+                                            </Link>
+                                            <Link
+                                                to="/staff/support"
+                                                className="btn btn-outline-light"
+                                            >
+                                                <i className="fas fa-headset me-2"></i>
+                                                Customer Support
+                                            </Link>
+                                        </div>
+                                    </div>
+                                    <div className="col-md-4 text-center d-none d-md-block">
+                                        <i className="fas fa-user-tie fa-4x opacity-50"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
                         {/* System Status Banner */}
                         {(state.dashboard.error || state.categories.error) && (
-                            <div
-                                className="alert alert-warning alert-dismissible fade show mb-4"
-                                role="alert"
-                            >
+                            <div className="alert alert-warning alert-dismissible fade show">
                                 <div className="d-flex align-items-center">
                                     <i className="fas fa-exclamation-triangle me-3 fa-lg"></i>
                                     <div className="flex-grow-1">
@@ -283,7 +305,6 @@ const StaffLayout = ({ children }) => {
                                     <div
                                         key={notification.id}
                                         className="alert alert-success alert-dismissible fade show mb-2"
-                                        role="alert"
                                     >
                                         <div className="d-flex align-items-center">
                                             <i className="fas fa-check-circle me-3"></i>
@@ -310,7 +331,6 @@ const StaffLayout = ({ children }) => {
                                     <div
                                         key={notification.id}
                                         className="alert alert-danger alert-dismissible fade show mb-2"
-                                        role="alert"
                                     >
                                         <div className="d-flex align-items-center">
                                             <i className="fas fa-exclamation-circle me-3"></i>
@@ -338,7 +358,6 @@ const StaffLayout = ({ children }) => {
                                     <div
                                         key={notification.id}
                                         className="alert alert-warning alert-dismissible fade show mb-2"
-                                        role="alert"
                                     >
                                         <div className="d-flex align-items-center">
                                             <i className="fas fa-exclamation-triangle me-3"></i>
@@ -366,7 +385,6 @@ const StaffLayout = ({ children }) => {
                                     <div
                                         key={notification.id}
                                         className="alert alert-info alert-dismissible fade show mb-2"
-                                        role="alert"
                                     >
                                         <div className="d-flex align-items-center">
                                             <i className="fas fa-info-circle me-3"></i>
@@ -387,70 +405,12 @@ const StaffLayout = ({ children }) => {
                                 ))}
                         </div>
 
-                        {/* Dashboard Specific Errors */}
-                        {state.dashboard.error && (
-                            <div
-                                className="alert alert-danger alert-dismissible fade show mb-4"
-                                role="alert"
-                            >
-                                <div className="d-flex align-items-center">
-                                    <i className="fas fa-exclamation-circle me-3 fa-lg"></i>
-                                    <div className="flex-grow-1">
-                                        <strong>Dashboard Error:</strong>{" "}
-                                        {state.dashboard.error}
-                                        <br />
-                                        <small className="text-muted">
-                                            Try refreshing the page or contact
-                                            support if the issue persists.
-                                        </small>
-                                    </div>
-                                </div>
-                                <button
-                                    type="button"
-                                    className="btn-close"
-                                    onClick={() => clearErrors()}
-                                ></button>
-                            </div>
-                        )}
-
-                        {/* Categories Specific Errors */}
-                        {state.categories.error && (
-                            <div
-                                className="alert alert-danger alert-dismissible fade show mb-4"
-                                role="alert"
-                            >
-                                <div className="d-flex align-items-center">
-                                    <i className="fas fa-exclamation-circle me-3 fa-lg"></i>
-                                    <div className="flex-grow-1">
-                                        <strong>Categories Error:</strong>{" "}
-                                        {state.categories.error}
-                                        <br />
-                                        <small className="text-muted">
-                                            Unable to load category data. Please
-                                            try again.
-                                        </small>
-                                    </div>
-                                </div>
-                                <button
-                                    type="button"
-                                    className="btn-close"
-                                    onClick={() => clearErrors()}
-                                ></button>
-                            </div>
-                        )}
-
                         {/* Loading Indicator */}
                         {(state.dashboard.loading ||
                             state.categories.loading) && (
-                            <div
-                                className="alert alert-info border-0 shadow-sm mb-4"
-                                role="alert"
-                            >
+                            <div className="alert alert-info border-0 shadow-sm">
                                 <div className="d-flex align-items-center">
-                                    <div
-                                        className="spinner-border spinner-border-sm text-success me-3"
-                                        role="status"
-                                    >
+                                    <div className="spinner-border spinner-border-sm me-3">
                                         <span className="visually-hidden">
                                             Loading...
                                         </span>
@@ -472,16 +432,13 @@ const StaffLayout = ({ children }) => {
                             </div>
                         )}
 
-                        {/* Quick Stats Bar (Optional - only on dashboard) */}
+                        {/* Quick Stats Bar (Dashboard only) */}
                         {location.pathname === "/staff/dashboard" &&
                             notificationCounts.total > 0 && (
-                                <div
-                                    className="alert alert-light border-start border-success border-4 mb-4"
-                                    role="alert"
-                                >
+                                <div className="alert alert-light border-start border-4">
                                     <div className="d-flex align-items-center justify-content-between">
                                         <div className="d-flex align-items-center">
-                                            <i className="fas fa-bell text-success me-3"></i>
+                                            <i className="fas fa-bell me-3"></i>
                                             <div>
                                                 <strong>
                                                     Active Notifications:
@@ -506,7 +463,7 @@ const StaffLayout = ({ children }) => {
                                         </div>
                                         <div className="d-flex gap-2">
                                             <button
-                                                className="btn btn-outline-success btn-sm"
+                                                className="btn btn-outline-primary btn-sm"
                                                 onClick={() => {
                                                     state.ui.notifications.forEach(
                                                         (n) =>
@@ -526,8 +483,8 @@ const StaffLayout = ({ children }) => {
                         {/* Main Page Content */}
                         <div className="page-content">{children}</div>
 
-                        {/* Footer Information */}
-                        <footer className="content-footer mt-5 pt-4 border-top">
+                        {/* Enhanced Footer */}
+                        <footer className="content-footer">
                             <div className="row align-items-center">
                                 <div className="col-md-6">
                                     <small className="text-muted">
@@ -556,89 +513,6 @@ const StaffLayout = ({ children }) => {
                     </div>
                 </div>
             </div>
-
-            {/* Custom Styles for Staff Layout */}
-            <style jsx>{`
-                .staff-dashboard-layout {
-                    min-height: 100vh;
-                    background-color: #f8f9fa;
-                }
-
-                .main-content {
-                    transition: margin-left 0.3s ease;
-                }
-
-                .content-container {
-                    max-width: 100%;
-                }
-
-                .notifications-container {
-                    position: relative;
-                    z-index: 1010;
-                }
-
-                .alert {
-                    border: none;
-                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-                }
-
-                .breadcrumb {
-                    background-color: white;
-                    margin-bottom: 0;
-                }
-
-                .breadcrumb-item + .breadcrumb-item::before {
-                    color: #28a745;
-                }
-
-                .content-footer {
-                    background-color: white;
-                    margin: 0 -1.5rem -1.5rem -1.5rem;
-                    padding: 1.5rem;
-                    border-radius: 0.5rem 0.5rem 0 0;
-                }
-
-                @media (max-width: 768px) {
-                    .main-content {
-                        margin-left: 0 !important;
-                    }
-
-                    .staff-sidebar.mobile-overlay {
-                        position: fixed;
-                        top: 60px;
-                        left: 0;
-                        z-index: 1025;
-                        height: calc(100vh - 60px);
-                    }
-                }
-
-                /* Smooth animations */
-                .alert {
-                    animation: slideIn 0.3s ease-out;
-                }
-
-                @keyframes slideIn {
-                    from {
-                        opacity: 0;
-                        transform: translateY(-10px);
-                    }
-                    to {
-                        opacity: 1;
-                        transform: translateY(0);
-                    }
-                }
-
-                /* Loading state improvements */
-                .spinner-border-sm {
-                    width: 1rem;
-                    height: 1rem;
-                }
-
-                /* Custom notification styling */
-                .alert-dismissible .btn-close {
-                    padding: 0.75rem 1rem;
-                }
-            `}</style>
         </div>
     );
 };

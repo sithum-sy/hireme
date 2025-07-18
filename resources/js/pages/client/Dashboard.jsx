@@ -47,12 +47,11 @@ const ClientDashboard = () => {
         }
     };
 
-    // ✅ FIXED: Simple location change handler (like ServicesBrowse)
+    // Location change handler
     const handleLocationChange = useCallback((newLocation) => {
         console.log("📍 Dashboard: Location changed");
         setLocation(newLocation);
 
-        // ✅ Close selector after success
         if (newLocation) {
             setTimeout(() => setShowLocationSelector(false), 1500);
         }
@@ -64,82 +63,81 @@ const ClientDashboard = () => {
             title: "Browse All Services",
             description: "Explore all available services",
             path: "/client/services",
-            color: "purple",
+            variant: "primary",
         },
         {
             icon: "fas fa-map-marker-alt",
             title: "Find Nearby Services",
             description: "Services in your area",
             path: "/client/services/search",
-            color: "info",
+            variant: "info",
         },
         {
             icon: "fas fa-calendar-alt",
             title: "My Appointments",
             description: "Manage your bookings",
             path: "/client/appointments",
-            color: "success",
+            variant: "success",
         },
         {
             icon: "fas fa-users",
             title: "Find Providers",
             description: "Browse service providers",
             path: "/client/services",
-            color: "warning",
+            variant: "warning",
         },
     ];
 
     return (
         <ClientLayout>
-            <div className="client-dashboard-content">
-                <div className="location-bar bg-white rounded-4 shadow-sm p-4 mb-4">
-                    <div className="row align-items-center">
-                        <div className="col-md-8">
-                            <div className="d-flex align-items-center">
-                                <i className="fas fa-map-marker-alt text-purple me-2"></i>
-                                <span className="text-muted me-2">
-                                    Services near:
-                                </span>
-                                {location ? (
-                                    <span className="fw-semibold">
+            <div className="page-content">
+                {/* Location Selection Bar */}
+                <div className="dashboard-card location-selector-card">
+                    <div className="location-selector-main">
+                        <div className="location-info">
+                            <i className="fas fa-map-marker-alt location-icon"></i>
+                            <span className="location-label">
+                                Services near:
+                            </span>
+                            {location ? (
+                                <div className="location-display">
+                                    <span className="location-text">
                                         {location.city}, {location.province}
-                                        <small className="text-muted ms-2">
-                                            ({location.radius}km radius)
-                                        </small>
                                     </span>
-                                ) : (
-                                    <span className="text-muted">
-                                        Select your location
-                                    </span>
-                                )}
-                            </div>
+                                    <small className="location-radius">
+                                        ({location.radius}km radius)
+                                    </small>
+                                </div>
+                            ) : (
+                                <span className="location-placeholder">
+                                    Select your location
+                                </span>
+                            )}
                         </div>
-                        <div className="col-md-4 text-end">
-                            <button
-                                className="btn btn-outline-purple btn-sm"
-                                onClick={() =>
-                                    setShowLocationSelector(
-                                        !showLocationSelector
-                                    )
-                                }
-                                type="button"
-                            >
-                                <i className="fas fa-edit me-1"></i>
+                        <button
+                            className="btn btn-outline-primary btn-sm location-change-btn"
+                            onClick={() =>
+                                setShowLocationSelector(!showLocationSelector)
+                            }
+                            type="button"
+                        >
+                            <i className="fas fa-edit"></i>
+                            <span>
                                 {location ? "Change Location" : "Set Location"}
-                            </button>
-                        </div>
+                            </span>
+                        </button>
                     </div>
 
-                    {/* Simple Location Selector (like ServicesBrowse) */}
+                    {/* Location Selector Expanded */}
                     {showLocationSelector && (
-                        <div className="mt-3 p-3 bg-light rounded">
-                            <div className="d-flex justify-content-between align-items-center mb-3">
-                                <h6 className="mb-0 fw-semibold">
-                                    <i className="fas fa-map-marker-alt me-2 text-purple"></i>
-                                    Select Your Location
+                        <div className="location-selector-expanded">
+                            <div className="location-selector-header">
+                                <h6 className="location-selector-title">
+                                    <i className="fas fa-map-marker-alt"></i>
+                                    <span>Select Your Location</span>
                                 </h6>
                                 <button
-                                    className="btn btn-sm btn-outline-secondary"
+                                    className="btn btn-sm btn-outline-secondary location-close-btn"
                                     onClick={() =>
                                         setShowLocationSelector(false)
                                     }
@@ -148,21 +146,23 @@ const ClientDashboard = () => {
                                     <i className="fas fa-times"></i>
                                 </button>
                             </div>
-                            <SimpleLocationSelector
-                                value={location}
-                                onChange={handleLocationChange}
-                            />
+                            <div className="location-selector-content">
+                                <SimpleLocationSelector
+                                    value={location}
+                                    onChange={handleLocationChange}
+                                />
+                            </div>
                         </div>
                     )}
                 </div>
 
-                {/* Quick Service Search */}
-                <div className="service-search-section mb-4">
-                    <div className="text-center mb-3">
-                        <h4 className="fw-bold text-dark mb-2">
+                {/* Service Search Section */}
+                <div className="search-section">
+                    <div className="search-header">
+                        <h1 className="search-title">
                             What service do you need?
-                        </h4>
-                        <p className="text-muted">
+                        </h1>
+                        <p className="search-subtitle">
                             Search thousands of services from verified providers
                         </p>
                     </div>
@@ -170,216 +170,158 @@ const ClientDashboard = () => {
                 </div>
 
                 {/* Service Categories Grid */}
-                <div className="service-categories-section mb-5">
-                    <div className="d-flex justify-content-between align-items-center mb-3">
-                        <h5 className="fw-bold mb-0">Browse by Category</h5>
+                <div className="categories-section">
+                    <div className="section-header">
+                        <h2 className="section-title">Browse by Category</h2>
                         <Link
                             to="/client/services/categories"
-                            className="btn btn-outline-purple btn-sm"
+                            className="btn btn-outline-primary btn-sm"
                         >
                             View All Categories
                         </Link>
                     </div>
 
                     {loading.services ? (
-                        <LoadingSpinner
-                            size="small"
-                            message="Loading categories..."
-                        />
+                        <div className="loading-container">
+                            <LoadingSpinner
+                                size="small"
+                                message="Loading categories..."
+                            />
+                        </div>
                     ) : (
-                        <div className="row g-3">
+                        <div className="dashboard-grid dashboard-grid-6">
                             {categories.slice(0, 12).map((category) => (
-                                <div
+                                <Link
                                     key={category.id}
-                                    className="col-6 col-md-3 col-lg-2"
+                                    to={`/client/services?category_id=${category.id}`}
+                                    className="category-card-link"
                                 >
-                                    <Link
-                                        to={`/client/services?category_id=${category.id}`}
-                                        className="text-decoration-none"
-                                    >
-                                        <div className="category-card text-center p-3 bg-white rounded-3 shadow-sm h-100">
-                                            <div
-                                                className={`category-icon text-${category.color} mb-2`}
-                                            >
-                                                <i
-                                                    className={`${category.icon} fa-2x`}
-                                                ></i>
-                                            </div>
-                                            <h6 className="fw-semibold mb-1 text-dark">
-                                                {category.name}
-                                            </h6>
-                                            <small className="text-muted">
-                                                {category.service_count}{" "}
-                                                services
-                                            </small>
+                                    <div className="action-card category-card">
+                                        <div
+                                            className={`action-icon category-icon text-${category.color}`}
+                                        >
+                                            <i className={category.icon}></i>
                                         </div>
-                                    </Link>
-                                </div>
+                                        <h6 className="action-title category-title">
+                                            {category.name}
+                                        </h6>
+                                        <p className="action-description category-count">
+                                            {category.service_count} services
+                                        </p>
+                                    </div>
+                                </Link>
                             ))}
                         </div>
                     )}
                 </div>
 
                 {/* Quick Actions */}
-                <div className="quick-actions-section mb-5">
-                    <h5 className="fw-bold mb-3">Quick Actions</h5>
-                    <div className="row g-3">
+                <div className="quick-actions-section">
+                    <h2 className="section-title">Quick Actions</h2>
+                    <div className="dashboard-grid dashboard-grid-4">
                         {quickActions.map((action, index) => (
-                            <div key={index} className="col-6 col-md-3">
-                                <Link
-                                    to={action.path}
-                                    className="text-decoration-none"
-                                >
-                                    <div className="action-card bg-white rounded-3 shadow-sm p-3 text-center h-100">
-                                        <div
-                                            className={`action-icon bg-${action.color} bg-opacity-10 text-${action.color} rounded-3 p-3 mb-3 d-inline-block`}
-                                        >
-                                            <i
-                                                className={`${action.icon} fa-2x`}
-                                            ></i>
-                                        </div>
-                                        <h6 className="fw-bold mb-2 text-dark">
-                                            {action.title}
-                                        </h6>
-                                        <p className="text-muted small mb-0">
-                                            {action.description}
-                                        </p>
+                            <Link
+                                key={index}
+                                to={action.path}
+                                className="action-card-link"
+                            >
+                                <div className="action-card">
+                                    <div
+                                        className={`action-icon ${action.variant}`}
+                                    >
+                                        <i className={action.icon}></i>
                                     </div>
-                                </Link>
-                            </div>
+                                    <h6 className="action-title">
+                                        {action.title}
+                                    </h6>
+                                    <p className="action-description">
+                                        {action.description}
+                                    </p>
+                                </div>
+                            </Link>
                         ))}
                     </div>
                 </div>
 
                 {/* Popular Services */}
-                <div className="popular-services-section mb-5">
-                    <div className="d-flex justify-content-between align-items-center mb-3">
-                        <h5 className="fw-bold mb-0">Popular Services</h5>
+                <div className="popular-services-section">
+                    <div className="section-header">
+                        <h2 className="section-title">Popular Services</h2>
                         <Link
                             to="/client/services?sort_by=popularity"
-                            className="btn btn-outline-purple btn-sm"
+                            className="btn btn-outline-primary btn-sm"
                         >
                             View More
                         </Link>
                     </div>
 
                     {loading.services ? (
-                        <LoadingSpinner
-                            size="small"
-                            message="Loading popular services..."
-                        />
+                        <div className="loading-container">
+                            <LoadingSpinner
+                                size="small"
+                                message="Loading popular services..."
+                            />
+                        </div>
                     ) : (
-                        <div className="row g-3">
+                        <div className="dashboard-grid dashboard-grid-4">
                             {popularServices.slice(0, 4).map((service) => (
-                                <div
+                                <Link
                                     key={service.id}
-                                    className="col-md-6 col-lg-3"
+                                    to={`/client/services/${service.id}`}
+                                    className="service-card-link"
                                 >
-                                    <Link
-                                        to={`/client/services/${service.id}`}
-                                        className="text-decoration-none"
-                                    >
-                                        <div className="service-card bg-white rounded-3 shadow-sm h-100">
-                                            <div className="service-image">
-                                                {service.first_image_url ? (
-                                                    <img
-                                                        src={
-                                                            service.first_image_url
-                                                        }
-                                                        alt={service.title}
-                                                        className="w-100 rounded-top"
-                                                        style={{
-                                                            height: "150px",
-                                                            objectFit: "cover",
-                                                        }}
-                                                    />
-                                                ) : (
-                                                    <div
-                                                        className="bg-light rounded-top d-flex align-items-center justify-content-center"
-                                                        style={{
-                                                            height: "150px",
-                                                        }}
-                                                    >
-                                                        <i className="fas fa-image fa-2x text-muted"></i>
-                                                    </div>
-                                                )}
-                                            </div>
-                                            <div className="card-body p-3">
-                                                <h6 className="fw-bold mb-2 text-dark">
-                                                    {service.title}
-                                                </h6>
-                                                <p className="text-muted small mb-2">
-                                                    {service.description}
-                                                </p>
-                                                <div className="d-flex justify-content-between align-items-center">
-                                                    <span className="fw-bold text-purple">
-                                                        {
-                                                            service.formatted_price
-                                                        }
-                                                    </span>
-                                                    <div className="rating">
-                                                        <i className="fas fa-star text-warning me-1"></i>
-                                                        <small>
-                                                            {service.average_rating ||
-                                                                0}
-                                                        </small>
-                                                    </div>
+                                    <div className="dashboard-card service-card">
+                                        <div className="service-image">
+                                            {service.first_image_url ? (
+                                                <img
+                                                    src={
+                                                        service.first_image_url
+                                                    }
+                                                    alt={service.title}
+                                                    className="service-img"
+                                                />
+                                            ) : (
+                                                <div className="service-img-placeholder">
+                                                    <i className="fas fa-image"></i>
                                                 </div>
-                                                {service.distance && (
-                                                    <small className="text-muted">
-                                                        <i className="fas fa-map-marker-alt me-1"></i>
+                                            )}
+                                        </div>
+                                        <div className="service-content">
+                                            <h6 className="service-title">
+                                                {service.title}
+                                            </h6>
+                                            <p className="service-description">
+                                                {service.description}
+                                            </p>
+                                            <div className="service-footer">
+                                                <span className="service-price">
+                                                    {service.formatted_price}
+                                                </span>
+                                                <div className="service-rating">
+                                                    <i className="fas fa-star"></i>
+                                                    <span>
+                                                        {service.average_rating ||
+                                                            0}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            {service.distance && (
+                                                <div className="service-distance">
+                                                    <i className="fas fa-map-marker-alt"></i>
+                                                    <span>
                                                         {service.distance}km
                                                         away
-                                                    </small>
-                                                )}
-                                            </div>
+                                                    </span>
+                                                </div>
+                                            )}
                                         </div>
-                                    </Link>
-                                </div>
+                                    </div>
+                                </Link>
                             ))}
                         </div>
                     )}
                 </div>
             </div>
-
-            <style>{`
-                .text-purple {
-                    color: #6f42c1 !important;
-                }
-                .bg-purple {
-                    background-color: #6f42c1 !important;
-                }
-                .btn-purple {
-                    background-color: #6f42c1;
-                    border-color: #6f42c1;
-                    color: white;
-                }
-                .btn-purple:hover {
-                    background-color: #5a2d91;
-                    border-color: #5a2d91;
-                    color: white;
-                }
-                .btn-outline-purple {
-                    color: #6f42c1;
-                    border-color: #6f42c1;
-                }
-                .btn-outline-purple:hover {
-                    background-color: #6f42c1;
-                    border-color: #6f42c1;
-                    color: white;
-                }
-                .category-card,
-                .action-card,
-                .service-card {
-                    transition: transform 0.2s ease, box-shadow 0.2s ease;
-                }
-                .category-card:hover,
-                .action-card:hover,
-                .service-card:hover {
-                    transform: translateY(-2px);
-                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
-                }
-            `}</style>
         </ClientLayout>
     );
 };
