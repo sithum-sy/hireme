@@ -356,9 +356,6 @@ class ProviderController extends Controller
         }
     }
 
-    /**
-     * Get available time slots for a specific date
-     */
     // public function getAvailableSlots(Request $request, User $provider)
     // {
     //     if ($provider->role !== 'service_provider') {
@@ -371,53 +368,53 @@ class ProviderController extends Controller
     //     $request->validate([
     //         'date' => 'required|date|after_or_equal:today',
     //         'service_id' => 'nullable|exists:services,id',
-    //         'duration' => 'nullable|numeric|min:0.5|max:8',
+    //         // 'duration' => 'nullable|numeric|min:0.5|max:8',
+    //         'service_duration' => 'nullable|numeric|min:0.5|max:8',
     //     ]);
 
     //     try {
     //         $date = $request->input('date');
     //         $duration = $request->input('duration', 1);
 
-    //         $requestDate = Carbon::parse($date);
-    //         $dayOfWeek = $requestDate->dayOfWeek;
+    //         // Use the AvailabilityService for proper availability checking
+    //         $availabilityService = app(\App\Services\AvailabilityService::class);
 
-    //         // Get provider's availability for this day
-    //         $dayAvailability = ProviderAvailability::where('provider_id', $provider->id)
-    //             ->where('day_of_week', $dayOfWeek)
-    //             ->where('is_available', true)
-    //             ->first();
-
-    //         if (!$dayAvailability) {
-    //             return response()->json([
-    //                 'success' => true,
-    //                 'data' => [],
-    //                 'message' => 'Provider not available on this day'
-    //             ]);
-    //         }
-
-    //         // Generate time slots
-    //         $slots = $this->generateTimeSlots(
-    //             $dayAvailability->start_time,
-    //             $dayAvailability->end_time,
+    //         $slots = $availabilityService->getAvailableSlots(
+    //             $provider,
+    //             $date,
     //             $duration
     //         );
 
-    //         // TODO: Filter out already booked slots from appointments table
-    //         // For now, return all generated slots
+    //         // Also get working hours for context
+    //         $workingHours = $availabilityService->getWorkingHours($provider, $date);
 
     //         return response()->json([
     //             'success' => true,
-    //             'data' => $slots,
-    //             'message' => 'Available slots retrieved successfully'
+    //             'data' => [
+    //                 'date' => $date,
+    //                 'available_slots' => $slots,
+    //                 'total_slots' => count($slots),
+    //                 'service_duration_hours' => $duration,
+    //                 'working_hours' => $workingHours,
+    //                 'provider_id' => $provider->id,
+    //                 'day_of_week' => Carbon::parse($date)->dayOfWeek
+    //             ],
+    //             'message' => count($slots) > 0
+    //                 ? 'Available slots found'
+    //                 : 'No available slots for this date'
     //         ]);
     //     } catch (\Exception $e) {
+    //         Log::error('Error getting available slots in ProviderController: ' . $e->getMessage());
     //         return response()->json([
     //             'success' => false,
     //             'message' => 'Failed to retrieve available slots',
-    //             'error' => $e->getMessage()
+    //             'error' => config('app.debug') ? $e->getMessage() : 'Server error'
     //         ], 500);
     //     }
     // }
+    /**
+     * Get available time slots for a specific date
+     */
     public function getAvailableSlots(Request $request, User $provider)
     {
         if ($provider->role !== 'service_provider') {
@@ -430,13 +427,12 @@ class ProviderController extends Controller
         $request->validate([
             'date' => 'required|date|after_or_equal:today',
             'service_id' => 'nullable|exists:services,id',
-            // 'duration' => 'nullable|numeric|min:0.5|max:8',
             'service_duration' => 'nullable|numeric|min:0.5|max:8',
         ]);
 
         try {
             $date = $request->input('date');
-            $duration = $request->input('duration', 1);
+            $duration = $request->input('service_duration', 1);
 
             // Use the AvailabilityService for proper availability checking
             $availabilityService = app(\App\Services\AvailabilityService::class);
@@ -447,6 +443,9 @@ class ProviderController extends Controller
                 $duration
             );
 
+            // ✅ ADD: Filter past slots if date is today
+            $filteredSlots = $this->filterPastSlots($slots, $date);
+
             // Also get working hours for context
             $workingHours = $availabilityService->getWorkingHours($provider, $date);
 
@@ -454,14 +453,18 @@ class ProviderController extends Controller
                 'success' => true,
                 'data' => [
                     'date' => $date,
-                    'available_slots' => $slots,
-                    'total_slots' => count($slots),
+                    'available_slots' => $filteredSlots,
+                    'total_slots' => count($filteredSlots),
                     'service_duration_hours' => $duration,
                     'working_hours' => $workingHours,
                     'provider_id' => $provider->id,
-                    'day_of_week' => Carbon::parse($date)->dayOfWeek
+                    'day_of_week' => Carbon::parse($date)->dayOfWeek,
+                    // ✅ ADD: Debug info
+                    'original_slots_count' => count($slots),
+                    'filtered_slots_count' => count($filteredSlots),
+                    'is_today' => $date === now('Asia/Colombo')->format('Y-m-d'),
                 ],
-                'message' => count($slots) > 0
+                'message' => count($filteredSlots) > 0
                     ? 'Available slots found'
                     : 'No available slots for this date'
             ]);
@@ -473,6 +476,60 @@ class ProviderController extends Controller
                 'error' => config('app.debug') ? $e->getMessage() : 'Server error'
             ], 500);
         }
+    }
+
+    /**
+     * ✅ ADD: Filter out past time slots for today
+     */
+    private function filterPastSlots($slots, $date)
+    {
+        // Only filter if the selected date is today
+        $today = now('Asia/Colombo')->format('Y-m-d');
+        if ($date !== $today) {
+            return $slots;
+        }
+
+        // Add buffer time (configurable - you can move this to config)
+        $bufferHours = 1; // Minimum 1 hour advance booking
+        $cutoffTime = now('Asia/Colombo')->addHours($bufferHours);
+        $cutoffTimeString = $cutoffTime->format('H:i');
+
+        Log::info('Filtering past slots for today', [
+            'date' => $date,
+            'current_time' => now('Asia/Colombo')->format('H:i:s'),
+            'cutoff_time' => $cutoffTimeString,
+            'buffer_hours' => $bufferHours,
+            'original_slots_count' => count($slots)
+        ]);
+
+        $filteredSlots = array_filter($slots, function ($slot) use ($cutoffTimeString) {
+            // Handle different slot data structures
+            $slotTime = $slot['start_time'] ?? $slot['time'] ?? null;
+
+            if (!$slotTime) {
+                return false; // Invalid slot
+            }
+
+            $isAvailable = $slotTime >= $cutoffTimeString;
+
+            if (!$isAvailable) {
+                Log::debug('Filtered out past slot', [
+                    'slot_time' => $slotTime,
+                    'cutoff_time' => $cutoffTimeString
+                ]);
+            }
+
+            return $isAvailable;
+        });
+
+        Log::info('Slot filtering completed', [
+            'original_count' => count($slots),
+            'filtered_count' => count($filteredSlots),
+            'removed_count' => count($slots) - count($filteredSlots)
+        ]);
+
+        // Reset array keys to maintain proper indexing
+        return array_values($filteredSlots);
     }
 
     /**

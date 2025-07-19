@@ -239,8 +239,8 @@ const ServiceDetail = () => {
         return displayValue === 1 ? "1 hour" : `${displayValue} hours`;
     };
 
-    console.log("View Count:", service?.views_count);
-    console.log("Booking Count:", service?.bookings_count);
+    // console.log("View Count:", service?.views_count);
+    // console.log("Booking Count:", service?.bookings_count);
 
     if (loading) {
         return (
@@ -1134,7 +1134,7 @@ const ServiceDetail = () => {
                                                         Request Quote
                                                     </button>
 
-                                                    <button
+                                                    {/* <button
                                                         className="btn btn-outline-purple"
                                                         onClick={
                                                             handleContactProvider
@@ -1142,7 +1142,7 @@ const ServiceDetail = () => {
                                                     >
                                                         <i className="fas fa-comments me-2"></i>
                                                         Chat with Provider
-                                                    </button>
+                                                    </button> */}
                                                 </div>
                                             </div>
                                         )}
@@ -1334,6 +1334,12 @@ const ServiceDetail = () => {
                 .nav-pills .nav-link.active {
                     background-color: #6f42c1;
                     border-color: #6f42c1;
+                }
+                .nav-pills.nav-fill {
+                    gap: 0.5rem;
+                }
+                .nav-pills .nav-link:not(.active) {
+                    border: 1px solid #dee2e6;
                 }
 
                 /* Provider Tab Specific Fixes */

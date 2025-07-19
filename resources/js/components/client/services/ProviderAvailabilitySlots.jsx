@@ -46,8 +46,10 @@ const ProviderAvailabilitySlots = ({
         // Fix timezone issues by setting to noon
         start.setHours(12, 0, 0, 0);
 
-        // Go to the start of the week (Sunday)
-        start.setDate(start.getDate() - start.getDay());
+        // Go to the start of the week (Monday)
+        const day = start.getDay();
+        const diff = (day === 0 ? -6 : 1) - day; // If Sunday (0), go back 6 days; else, go back to Monday
+        start.setDate(start.getDate() + diff);
 
         // console.log("🔍 Frontend: Generating week starting from:", start);
 
@@ -156,7 +158,7 @@ const ProviderAvailabilitySlots = ({
                                         isSelected
                                             ? "btn-purple"
                                             : isDisabled
-                                            ? "btn-light disabled"
+                                            ? "btn-outline-secondary disabled"
                                             : "btn-outline-secondary"
                                     }`}
                                     onClick={() =>
@@ -238,11 +240,11 @@ const ProviderAvailabilitySlots = ({
                                                 <div className="slot-time fw-semibold">
                                                     {slot.formatted_time}
                                                 </div>
-                                                {slot.is_popular && (
+                                                {/* {slot.is_popular && (
                                                     <small className="badge bg-warning mt-1">
                                                         Popular
                                                     </small>
-                                                )}
+                                                )} */}
                                             </button>
                                         </div>
                                     ))}

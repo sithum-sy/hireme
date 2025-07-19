@@ -41,4 +41,10 @@ return [
         ],
     ],
 
+    'booking' => [
+        'min_advance_hours' => env('BOOKING_MIN_ADVANCE_HOURS', 1),
+        'max_advance_days' => env('BOOKING_MAX_ADVANCE_DAYS', 90),
+        'timezone' => env('APP_TIMEZONE', 'Asia/Colombo'),
+    ],
+
 ];

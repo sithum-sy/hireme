@@ -18,7 +18,8 @@ class ClientAvailabilityService {
             return {
                 success: true,
                 data: this.formatAvailabilitySlots(
-                    response.data.data?.available_slots || []
+                    response.data.data?.available_slots || [],
+                    params.date
                 ),
                 working_hours: response.data.data?.working_hours,
                 message: response.data.message,
@@ -103,20 +104,23 @@ class ClientAvailabilityService {
     }
 
     // Format availability slots from Laravel backend
-    formatAvailabilitySlots(slotsData) {
+    formatAvailabilitySlots(slotsData, selectedDate) {
         if (!Array.isArray(slotsData)) {
             return [];
         }
 
-        return slotsData.map((slot) => ({
+        const formattedSlots = slotsData.map((slot) => ({
             time: slot.start_time || slot.time,
             end_time: slot.end_time,
             formatted_time:
                 slot.formatted_time ||
                 this.formatTimeForDisplay(slot.start_time || slot.time),
             is_popular: slot.is_popular || false,
-            is_available: slot.is_available !== false, // Default to true unless explicitly false
+            is_available: slot.is_available !== false,
         }));
+
+        // Filter out past slots if the selected date is today
+        return this.filterPastSlots(formattedSlots, selectedDate);
     }
 
     // Format weekly availability from Laravel backend
@@ -137,6 +141,55 @@ class ClientAvailabilityService {
         }));
     }
 
+    filterPastSlots(slots, selectedDate) {
+        if (!selectedDate) return slots;
+
+        const today = new Date();
+        const selectedDateObj = new Date(selectedDate);
+
+        // Only filter if the selected date is today
+        if (selectedDateObj.toDateString() !== today.toDateString()) {
+            return slots;
+        }
+
+        // Get current time plus buffer (e.g., 1 hour minimum advance booking)
+        const now = new Date();
+        const bufferHours = 1; // Minimum 1 hour advance booking
+        const cutoffTime = new Date(
+            now.getTime() + bufferHours * 60 * 60 * 1000
+        );
+
+        const currentHour = cutoffTime.getHours();
+        const currentMinute = cutoffTime.getMinutes();
+
+        // console.log(
+        //     `Current time + ${bufferHours}h buffer:`,
+        //     cutoffTime.toLocaleTimeString()
+        // );
+        // console.log(
+        //     "Filtering slots for today, cutoff time:",
+        //     `${currentHour}:${currentMinute.toString().padStart(2, "0")}`
+        // );
+
+        return slots.filter((slot) => {
+            const [slotHour, slotMinute] = slot.time.split(":").map(Number);
+
+            // Convert slot time to minutes for easier comparison
+            const slotTotalMinutes = slotHour * 60 + slotMinute;
+            const cutoffTotalMinutes = currentHour * 60 + currentMinute;
+
+            const isAvailable = slotTotalMinutes >= cutoffTotalMinutes;
+
+            // if (!isAvailable) {
+            //     console.log(
+            //         `Filtered out past slot: ${slot.formatted_time} (${slot.time})`
+            //     );
+            // }
+
+            return isAvailable;
+        });
+    }
+
     // Fallback data methods for development
     getFallbackAvailableSlots(date) {
         const slots = [
@@ -147,15 +200,17 @@ class ClientAvailabilityService {
             { time: "14:00", formatted_time: "2:00 PM", is_popular: true },
             { time: "15:00", formatted_time: "3:00 PM", is_popular: false },
             { time: "16:00", formatted_time: "4:00 PM", is_popular: false },
+            { time: "17:00", formatted_time: "5:00 PM", is_popular: false },
+            { time: "18:00", formatted_time: "6:00 PM", is_popular: false },
         ];
 
         // Simulate fewer slots on weekends
         const dayOfWeek = new Date(date).getDay();
         if (dayOfWeek === 0 || dayOfWeek === 6) {
-            return slots.slice(0, 3); // Only morning slots on weekends
+            return this.filterPastSlots(slots.slice(0, 3), date); // Only morning slots on weekends
         }
 
-        return slots;
+        return this.filterPastSlots(slots, date);
     }
 
     getFallbackProviderAvailability() {
