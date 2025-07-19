@@ -60,7 +60,7 @@ Route::prefix('appointments')->group(function () {
 
 // Booking Management
 Route::prefix('bookings')->group(function () {
-    // Route::post('/', [AppointmentController::class, 'store']); // Create new booking
+    Route::post('/', [AppointmentController::class, 'store']); // Create new booking
     // Route::get('/', [AppointmentController::class, 'index']); // List user's bookings
     Route::get('/{booking}', [AppointmentController::class, 'show']); // Get booking details
     Route::patch('/{booking}/cancel', [AppointmentController::class, 'cancel']); // Cancel booking

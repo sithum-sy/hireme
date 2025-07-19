@@ -18,6 +18,7 @@
 @import "components/staff-components.css";
 @import "pages/admin-dashboard.css";
 @import "components/admin-stats-card.css";
+@import "pages/booking-modal.css";
 
 /* ============ CSS VARIABLES - COMPLETE DESIGN SYSTEM ============ */
 :root {

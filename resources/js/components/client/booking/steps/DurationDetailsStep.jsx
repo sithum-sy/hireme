@@ -1,0 +1,611 @@
+import React, { useState, useEffect } from "react";
+import clientService from "../../../../services/clientService.js";
+
+const DurationDetailsStep = ({
+    service,
+    provider,
+    bookingData,
+    onStepComplete,
+    onPrevious,
+    selectedSlot,
+}) => {
+    const [duration, setDuration] = useState(
+        bookingData.duration_hours || service?.duration_hours || 1
+    );
+    const [maxDuration, setMaxDuration] = useState(8);
+    const [specialRequirements, setSpecialRequirements] = useState(
+        bookingData.special_requirements || ""
+    );
+    const [loading, setLoading] = useState(false);
+    const [errors, setErrors] = useState({});
+
+    // Calculate max duration based on provider availability
+    useEffect(() => {
+        if (selectedSlot?.date && selectedSlot?.time) {
+            calculateMaxDuration();
+        }
+    }, [selectedSlot, provider.id]);
+
+    const calculateMaxDuration = async () => {
+        setLoading(true);
+        try {
+            const response = await fetch(
+                `/api/client/providers/${provider.id}/availability/working-hours?date=${selectedSlot.date}`
+            );
+
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success && data.data.is_available) {
+                    const maxHours = calculateHoursBetween(
+                        selectedSlot.time,
+                        data.data.end_time
+                    );
+                    setMaxDuration(Math.min(maxHours, 12)); // Cap at 12 hours
+                }
+            }
+        } catch (error) {
+            console.warn("Could not calculate max duration:", error);
+            setMaxDuration(8); // Fallback to 8 hours
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const calculateHoursBetween = (startTime, endTime) => {
+        const start = new Date(`2000-01-01T${startTime}`);
+        const end = new Date(`2000-01-01T${endTime}`);
+        return Math.floor((end - start) / (1000 * 60 * 60));
+    };
+
+    const handleDurationChange = (newDuration) => {
+        const validDuration = Math.max(1, Math.min(maxDuration, newDuration));
+        setDuration(validDuration);
+        setErrors((prev) => ({ ...prev, duration: null }));
+    };
+
+    const validateAndContinue = () => {
+        const newErrors = {};
+
+        if (duration < 1) {
+            newErrors.duration = "Duration must be at least 1 hour";
+        } else if (duration > maxDuration) {
+            newErrors.duration = `Duration cannot exceed ${maxDuration} hours`;
+        }
+
+        if (Object.keys(newErrors).length > 0) {
+            setErrors(newErrors);
+            return;
+        }
+
+        // Calculate pricing
+        const basePrice = service?.base_price || service?.price || 0;
+        const totalPrice = basePrice * duration;
+
+        const stepData = {
+            duration_hours: duration,
+            total_price: totalPrice,
+            special_requirements: specialRequirements.trim(),
+            client_notes: specialRequirements.trim(),
+        };
+
+        onStepComplete(stepData);
+    };
+
+    const formatPrice = (amount) => {
+        return new Intl.NumberFormat("en-LK", {
+            style: "currency",
+            currency: "LKR",
+            minimumFractionDigits: 0,
+        })
+            .format(amount)
+            .replace("LKR", "Rs.");
+    };
+
+    const basePrice = service?.base_price || service?.price || 0;
+    const totalPrice = basePrice * duration;
+
+    return (
+        <div className="duration-details-step">
+            <div className="container-fluid py-4">
+                <div className="row">
+                    <div className="col-lg-8">
+                        {/* Selected Service Summary */}
+                        <div className="service-summary mb-4">
+                            <div className="card border-0 shadow-sm">
+                                <div className="card-body">
+                                    <div className="row align-items-center">
+                                        <div className="col-md-8">
+                                            <h5 className="fw-bold text-purple mb-2">
+                                                {service?.title}
+                                            </h5>
+                                            <p className="text-muted mb-2">
+                                                {service?.description}
+                                            </p>
+
+                                            {/* Selected Time Display */}
+                                            <div className="selected-time-info">
+                                                <div className="d-flex align-items-center mb-2">
+                                                    <i className="fas fa-calendar text-success me-2" />
+                                                    <span className="fw-semibold">
+                                                        {selectedSlot?.formatted_date ||
+                                                            bookingData.appointment_date}
+                                                    </span>
+                                                </div>
+                                                <div className="d-flex align-items-center">
+                                                    <i className="fas fa-clock text-info me-2" />
+                                                    <span className="fw-semibold">
+                                                        {selectedSlot?.formatted_time ||
+                                                            bookingData.appointment_time}
+                                                    </span>
+                                                    <button
+                                                        className="btn btn-sm btn-link text-purple"
+                                                        onClick={onPrevious}
+                                                    >
+                                                        Change Time
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="col-md-4 text-end">
+                                            {service?.first_image_url && (
+                                                <img
+                                                    src={
+                                                        service.first_image_url
+                                                    }
+                                                    alt={service.title}
+                                                    className="service-thumbnail rounded"
+                                                    style={{
+                                                        width: "100px",
+                                                        height: "100px",
+                                                        objectFit: "cover",
+                                                    }}
+                                                />
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Duration Selection */}
+                        <div className="duration-selection mb-4">
+                            <div className="card border-0 shadow-sm">
+                                <div className="card-body">
+                                    <h6 className="fw-bold mb-3">
+                                        <i className="fas fa-hourglass-half text-purple me-2" />
+                                        How many hours do you need?
+                                    </h6>
+
+                                    {loading && (
+                                        <div className="text-center py-3">
+                                            <div
+                                                className="spinner-border text-purple"
+                                                role="status"
+                                            >
+                                                <span className="visually-hidden">
+                                                    Loading...
+                                                </span>
+                                            </div>
+                                            <div className="mt-2 text-muted">
+                                                Calculating available time...
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {!loading && (
+                                        <>
+                                            {/* Duration Controls */}
+                                            <div className="duration-controls mb-4">
+                                                <div className="row align-items-center">
+                                                    <div className="col-md-6">
+                                                        <div className="d-flex align-items-center justify-content-center">
+                                                            <button
+                                                                className="btn btn-outline-secondary duration-btn"
+                                                                onClick={() =>
+                                                                    handleDurationChange(
+                                                                        duration -
+                                                                            1
+                                                                    )
+                                                                }
+                                                                disabled={
+                                                                    duration <=
+                                                                    1
+                                                                }
+                                                            >
+                                                                <i className="fas fa-minus" />
+                                                            </button>
+
+                                                            <div className="duration-display mx-4 text-center">
+                                                                <div className="duration-number display-6 fw-bold text-purple">
+                                                                    {duration}
+                                                                </div>
+                                                                <div className="duration-unit text-muted">
+                                                                    hour
+                                                                    {duration >
+                                                                    1
+                                                                        ? "s"
+                                                                        : ""}
+                                                                </div>
+                                                            </div>
+
+                                                            <button
+                                                                className="btn btn-outline-secondary duration-btn"
+                                                                onClick={() =>
+                                                                    handleDurationChange(
+                                                                        duration +
+                                                                            1
+                                                                    )
+                                                                }
+                                                                disabled={
+                                                                    duration >=
+                                                                    maxDuration
+                                                                }
+                                                            >
+                                                                <i className="fas fa-plus" />
+                                                            </button>
+                                                        </div>
+
+                                                        <div className="text-center mt-2">
+                                                            <small className="text-muted">
+                                                                Maximum
+                                                                available:{" "}
+                                                                {maxDuration}{" "}
+                                                                hours
+                                                            </small>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="col-md-6">
+                                                        <div className="price-calculation p-3 bg-light rounded">
+                                                            <div className="price-breakdown">
+                                                                <div className="d-flex justify-content-between mb-2">
+                                                                    <span>
+                                                                        Base
+                                                                        rate per
+                                                                        hour:
+                                                                    </span>
+                                                                    <span>
+                                                                        {formatPrice(
+                                                                            basePrice
+                                                                        )}
+                                                                    </span>
+                                                                </div>
+                                                                <div className="d-flex justify-content-between mb-2">
+                                                                    <span>
+                                                                        Duration:
+                                                                    </span>
+                                                                    <span>
+                                                                        {
+                                                                            duration
+                                                                        }{" "}
+                                                                        hour
+                                                                        {duration >
+                                                                        1
+                                                                            ? "s"
+                                                                            : ""}
+                                                                    </span>
+                                                                </div>
+                                                                <hr />
+                                                                <div className="d-flex justify-content-between fw-bold">
+                                                                    <span>
+                                                                        Total:
+                                                                    </span>
+                                                                    <span className="text-purple h5 mb-0">
+                                                                        {formatPrice(
+                                                                            totalPrice
+                                                                        )}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Quick Duration Presets */}
+                                            <div className="duration-presets mb-4">
+                                                <div className="row g-2">
+                                                    {[1, 2, 3, 4, 6, 8]
+                                                        .filter(
+                                                            (h) =>
+                                                                h <= maxDuration
+                                                        )
+                                                        .map((hours) => (
+                                                            <div
+                                                                key={hours}
+                                                                className="col-4 col-md-2"
+                                                            >
+                                                                <button
+                                                                    className={`btn w-100 ${
+                                                                        duration ===
+                                                                        hours
+                                                                            ? "btn-purple"
+                                                                            : "btn-outline-secondary"
+                                                                    }`}
+                                                                    onClick={() =>
+                                                                        handleDurationChange(
+                                                                            hours
+                                                                        )
+                                                                    }
+                                                                >
+                                                                    {hours}h
+                                                                </button>
+                                                            </div>
+                                                        ))}
+                                                </div>
+                                            </div>
+
+                                            {/* Error Display */}
+                                            {errors.duration && (
+                                                <div className="alert alert-danger">
+                                                    <i className="fas fa-exclamation-triangle me-2" />
+                                                    {errors.duration}
+                                                </div>
+                                            )}
+                                        </>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Special Requirements */}
+                        <div className="special-requirements mb-4">
+                            <div className="card border-0 shadow-sm">
+                                <div className="card-body">
+                                    <h6 className="fw-bold mb-3">
+                                        <i className="fas fa-clipboard-list text-purple me-2" />
+                                        Special Requirements{" "}
+                                        <span className="text-muted fw-normal">
+                                            (Optional)
+                                        </span>
+                                    </h6>
+
+                                    <textarea
+                                        className="form-control"
+                                        rows="4"
+                                        placeholder="Any specific requirements, preferences, or important details the provider should know..."
+                                        value={specialRequirements}
+                                        onChange={(e) =>
+                                            setSpecialRequirements(
+                                                e.target.value
+                                            )
+                                        }
+                                        maxLength={1000}
+                                    />
+
+                                    <div className="d-flex justify-content-between mt-2">
+                                        <small className="text-muted">
+                                            Examples: Preferred cleaning
+                                            products, areas needing special
+                                            attention, access instructions,
+                                            allergies, etc.
+                                        </small>
+                                        <small className="text-muted">
+                                            {specialRequirements.length}/1000
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Booking Summary Sidebar */}
+                    <div className="col-lg-4">
+                        <div
+                            className="booking-summary position-sticky"
+                            style={{ top: "2rem" }}
+                        >
+                            <div className="card border-0 shadow">
+                                <div className="card-header bg-purple text-white">
+                                    <h6 className="fw-bold mb-0">
+                                        <i className="fas fa-receipt me-2" />
+                                        Booking Summary
+                                    </h6>
+                                </div>
+                                <div className="card-body">
+                                    {/* Service */}
+                                    <div className="summary-section mb-3">
+                                        <h6 className="fw-semibold text-purple">
+                                            Service
+                                        </h6>
+                                        <div className="text-muted small">
+                                            {service?.title}
+                                        </div>
+                                    </div>
+
+                                    {/* Provider */}
+                                    <div className="summary-section mb-3">
+                                        <h6 className="fw-semibold text-purple">
+                                            Provider
+                                        </h6>
+                                        <div className="d-flex align-items-center">
+                                            {provider?.profile_image_url && (
+                                                <img
+                                                    src={
+                                                        provider.profile_image_url
+                                                    }
+                                                    alt={provider.name}
+                                                    className="rounded-circle me-2"
+                                                    style={{
+                                                        width: "30px",
+                                                        height: "30px",
+                                                        objectFit: "cover",
+                                                    }}
+                                                />
+                                            )}
+                                            <div>
+                                                <div className="text-muted small">
+                                                    {provider?.name}
+                                                </div>
+                                                {provider?.is_verified && (
+                                                    <div className="text-success small">
+                                                        <i className="fas fa-check-circle me-1" />
+                                                        Verified
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Schedule */}
+                                    <div className="summary-section mb-3">
+                                        <h6 className="fw-semibold text-purple">
+                                            Schedule
+                                        </h6>
+                                        <div className="text-muted small">
+                                            <div>
+                                                <i className="fas fa-calendar me-1" />
+                                                {selectedSlot?.formatted_date}
+                                            </div>
+                                            <div>
+                                                <i className="fas fa-clock me-1" />
+                                                {selectedSlot?.formatted_time}
+                                            </div>
+                                            <div>
+                                                <i className="fas fa-hourglass-half me-1" />
+                                                {duration} hour
+                                                {duration > 1 ? "s" : ""}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <hr />
+
+                                    {/* Price Breakdown */}
+                                    <div className="price-breakdown">
+                                        <div className="d-flex justify-content-between mb-2">
+                                            <span>Service rate:</span>
+                                            <span>
+                                                {formatPrice(basePrice)}/hour
+                                            </span>
+                                        </div>
+                                        <div className="d-flex justify-content-between mb-2">
+                                            <span>Duration:</span>
+                                            <span>
+                                                {duration} hour
+                                                {duration > 1 ? "s" : ""}
+                                            </span>
+                                        </div>
+                                        <hr />
+                                        <div className="d-flex justify-content-between fw-bold">
+                                            <span>Total:</span>
+                                            <span className="text-purple h5 mb-0">
+                                                {formatPrice(totalPrice)}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Provider Info */}
+                            <div className="card border-0 shadow-sm mt-3">
+                                <div className="card-body">
+                                    <h6 className="fw-bold mb-2">
+                                        <i className="fas fa-info-circle text-info me-2" />
+                                        Important Notes
+                                    </h6>
+                                    <ul className="list-unstyled small text-muted mb-0">
+                                        <li className="mb-1">
+                                            <i className="fas fa-check text-success me-2" />
+                                            Provider will confirm within 2 hours
+                                        </li>
+                                        <li className="mb-1">
+                                            <i className="fas fa-clock text-warning me-2" />
+                                            Free cancellation up to 24 hours
+                                            before
+                                        </li>
+                                        <li className="mb-1">
+                                            <i className="fas fa-shield-alt text-primary me-2" />
+                                            All bookings are insured
+                                        </li>
+                                        <li className="mb-1">
+                                            <i className="fas fa-calculator text-info me-2" />
+                                            Final price may include travel fees
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Navigation */}
+                <div className="step-navigation d-flex justify-content-between mt-4 pt-4 border-top">
+                    <button
+                        className="btn btn-outline-secondary btn-lg"
+                        onClick={onPrevious}
+                    >
+                        <i className="fas fa-arrow-left me-2" />
+                        Back to Time Selection
+                    </button>
+
+                    <button
+                        className="btn btn-purple btn-lg"
+                        onClick={validateAndContinue}
+                        disabled={
+                            loading || duration < 1 || duration > maxDuration
+                        }
+                    >
+                        Continue to Location & Contact
+                        <i className="fas fa-arrow-right ms-2" />
+                    </button>
+                </div>
+            </div>
+
+            <style>{`
+               .duration-btn {
+                   width: 50px;
+                   height: 50px;
+                   border-radius: 50%;
+                   display: flex;
+                   align-items: center;
+                   justify-content: center;
+                   font-size: 1.1rem;
+               }
+
+               .duration-display {
+                   min-width: 120px;
+               }
+
+               .service-thumbnail {
+                   border: 2px solid #f8f9fa;
+                   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+               }
+
+               .text-purple { color: #6f42c1 !important; }
+               .bg-purple { background-color: #6f42c1 !important; }
+               .btn-purple {
+                   background-color: #6f42c1;
+                   border-color: #6f42c1;
+                   color: white;
+               }
+               .btn-purple:hover {
+                   background-color: #5a2d91;
+                   border-color: #5a2d91;
+                   color: white;
+               }
+
+               .summary-section:last-child {
+                   margin-bottom: 0 !important;
+               }
+
+               @media (max-width: 768px) {
+                   .duration-display {
+                       min-width: 100px;
+                   }
+                   .duration-btn {
+                       width: 40px;
+                       height: 40px;
+                   }
+                   .booking-summary {
+                       position: static !important;
+                       margin-top: 2rem;
+                   }
+               }
+           `}</style>
+        </div>
+    );
+};
+
+export default DurationDetailsStep;

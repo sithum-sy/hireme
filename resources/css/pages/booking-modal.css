@@ -1,0 +1,685 @@
+/* Step Indicator Styles */
+.step-indicator .step-circle {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.step-indicator .step-item.clickable:hover .step-circle {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(111, 66, 193, 0.3);
+}
+
+.step-indicator .step-connector {
+    width: 80px;
+    height: 2px;
+    background: #dee2e6;
+    margin: 0 1rem;
+    transition: all 0.3s ease;
+}
+
+.step-indicator .step-connector.completed {
+    background: #28a745;
+}
+
+/* Duration Controls Enhancements */
+.duration-controls .duration-btn {
+    transition: all 0.2s ease;
+    border-width: 2px;
+}
+
+.duration-controls .duration-btn:hover:not(:disabled) {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.duration-controls .duration-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.duration-display .duration-number {
+    background: linear-gradient(135deg, #6f42c1 0%, #8b5fbf 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Payment Method Cards */
+.payment-card {
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.payment-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.form-check-input:checked + .form-check-label .payment-card {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(111, 66, 193, 0.15);
+}
+
+/* Booking Summary Enhancements */
+.booking-summary .card {
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.booking-summary .card-header {
+    background: linear-gradient(135deg, #6f42c1 0%, #8b5fbf 100%);
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .step-indicator .step-connector {
+        width: 40px;
+        margin: 0 0.5rem;
+    }
+
+    .step-indicator .step-circle {
+        width: 40px;
+        height: 40px;
+        font-size: 14px;
+    }
+
+    .duration-controls .duration-btn {
+        width: 45px;
+        height: 45px;
+    }
+
+    .modal-dialog {
+        margin: 0;
+        height: 100vh;
+        max-width: 100%;
+    }
+
+    .modal-content {
+        height: 100vh;
+        border-radius: 0;
+    }
+
+    .booking-summary,
+    .final-summary {
+        position: static !important;
+        top: auto !important;
+    }
+}
+
+/* Loading States */
+.btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.spinner-border-sm {
+    width: 1rem;
+    height: 1rem;
+}
+
+/* Form Validation */
+.is-invalid {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+
+.invalid-feedback {
+    display: block;
+    width: 100%;
+    margin-top: 0.25rem;
+    font-size: 0.875rem;
+    color: #dc3545;
+}
+
+/* Animations */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.step-content > div {
+    animation: slideIn 0.3s ease-out;
+}
+
+/* Color Variables */
+:root {
+    --purple-primary: #6f42c1;
+    --purple-hover: #5a2d91;
+    --purple-light: rgba(111, 66, 193, 0.1);
+    --success-color: #28a745;
+    --warning-color: #ffc107;
+    --danger-color: #dc3545;
+    --info-color: #17a2b8;
+    --light-gray: #f8f9fa;
+    --border-color: #dee2e6;
+}
+
+/* Enhanced Typography */
+.fw-bold {
+    font-weight: 600 !important;
+}
+
+.text-purple {
+    color: var(--purple-primary) !important;
+}
+
+.bg-purple {
+    background-color: var(--purple-primary) !important;
+}
+
+/* Button Enhancements */
+.btn-purple {
+    background: linear-gradient(
+        135deg,
+        var(--purple-primary) 0%,
+        var(--purple-hover) 100%
+    );
+    border: none;
+    color: white;
+    font-weight: 500;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.btn-purple:hover {
+    background: linear-gradient(135deg, var(--purple-hover) 0%, #4a2674 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(111, 66, 193, 0.3);
+    color: white;
+}
+
+.btn-purple:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(111, 66, 193, 0.3);
+}
+
+.btn-outline-purple {
+    color: var(--purple-primary);
+    border: 2px solid var(--purple-primary);
+    background: transparent;
+    font-weight: 500;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.btn-outline-purple:hover {
+    background: var(--purple-primary);
+    border-color: var(--purple-primary);
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(111, 66, 193, 0.3);
+}
+
+/* Card Enhancements */
+.card {
+    border: none;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.card.shadow-sm {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07) !important;
+}
+
+.card.shadow {
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1) !important;
+}
+
+.card.shadow-lg {
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Form Control Enhancements */
+.form-control {
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus {
+    border-color: var(--purple-primary);
+    box-shadow: 0 0 0 0.2rem rgba(111, 66, 193, 0.25);
+}
+
+.form-check-input {
+    border: 2px solid var(--border-color);
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+.form-check-input:checked {
+    background-color: var(--purple-primary);
+    border-color: var(--purple-primary);
+}
+
+.form-check-input:focus {
+    border-color: var(--purple-primary);
+    box-shadow: 0 0 0 0.25rem rgba(111, 66, 193, 0.25);
+}
+
+/* Badge Enhancements */
+.badge {
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 0.35rem 0.65rem;
+    border-radius: 6px;
+}
+
+/* Alert Enhancements */
+.alert {
+    border: none;
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+}
+
+.alert-danger {
+    background-color: rgba(220, 53, 69, 0.1);
+    color: #721c24;
+    border-left: 4px solid var(--danger-color);
+}
+
+.alert-warning {
+    background-color: rgba(255, 193, 7, 0.1);
+    color: #856404;
+    border-left: 4px solid var(--warning-color);
+}
+
+.alert-success {
+    background-color: rgba(40, 167, 69, 0.1);
+    color: #155724;
+    border-left: 4px solid var(--success-color);
+}
+
+/* Specific Component Styles */
+
+/* Selected Slot Banner */
+.selected-slot-banner {
+    background: linear-gradient(135deg, var(--light-gray) 0%, #e9ecef 100%);
+    border-left: 4px solid var(--purple-primary);
+    border-radius: 0 8px 8px 0;
+}
+
+/* Service Thumbnail */
+.service-thumbnail {
+    border: 3px solid var(--light-gray);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.service-thumbnail:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* Duration Presets */
+.duration-presets .btn {
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.duration-presets .btn-purple {
+    background: var(--purple-primary);
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(111, 66, 193, 0.3);
+}
+
+/* Location Options */
+.location-option .option-card {
+    border-radius: 10px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.location-option .option-card:hover {
+    border-color: var(--purple-primary);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+}
+
+.form-check-input:checked + .form-check-label .option-card {
+    border-color: var(--purple-primary);
+    background: var(--purple-light);
+    transform: translateY(-2px);
+}
+
+/* Travel Fee Notice */
+.travel-fee-notice {
+    background: rgba(255, 193, 7, 0.1);
+    border: 1px solid rgba(255, 193, 7, 0.3);
+    border-radius: 10px;
+    border-left: 4px solid var(--warning-color);
+}
+
+/* Provider Location Info */
+.provider-location-info {
+    background: rgba(40, 167, 69, 0.05);
+    border-radius: 10px;
+    padding: 1rem;
+}
+
+/* Price Breakdown */
+.price-breakdown {
+    background: var(--light-gray);
+    padding: 1rem;
+    border-radius: 10px;
+}
+
+.price-breakdown hr {
+    border-color: var(--border-color);
+    margin: 0.75rem 0;
+}
+
+/* Payment Method Cards */
+.payment-method-section .payment-card {
+    border: 2px solid var(--border-color);
+    transition: all 0.3s ease;
+}
+
+.payment-method-section
+    .form-check-input:checked
+    + .form-check-label
+    .payment-card {
+    border-color: var(--purple-primary);
+    background: var(--purple-light);
+    box-shadow: 0 6px 20px rgba(111, 66, 193, 0.15);
+}
+
+.payment-method-section .payment-icon {
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--light-gray);
+    border-radius: 8px;
+}
+
+/* Terms Section */
+.terms-summary {
+    background: var(--light-gray);
+    border-radius: 8px;
+    border-left: 4px solid var(--info-color);
+}
+
+/* Navigation Buttons */
+.step-navigation {
+    background: var(--light-gray);
+    margin: 0 -1rem -1rem -1rem;
+    padding: 1rem 2rem;
+    border-radius: 0 0 12px 12px;
+}
+
+.step-navigation .btn-lg {
+    padding: 0.875rem 2rem;
+    font-size: 1rem;
+    font-weight: 500;
+    border-radius: 8px;
+}
+
+/* Final Summary Sidebar */
+.final-summary .card-header {
+    background: linear-gradient(
+        135deg,
+        var(--purple-primary) 0%,
+        var(--purple-hover) 100%
+    );
+    border-radius: 16px 16px 0 0;
+}
+
+.final-summary .detail-item {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.final-summary .detail-item:last-child {
+    border-bottom: none;
+}
+
+/* Security Notice */
+.security-notice {
+    background: linear-gradient(
+        135deg,
+        rgba(40, 167, 69, 0.05) 0%,
+        rgba(40, 167, 69, 0.1) 100%
+    );
+    border: 1px solid rgba(40, 167, 69, 0.2);
+    border-radius: 10px;
+}
+
+/* Loading States */
+.loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    z-index: 10;
+}
+
+.loading-spinner {
+    color: var(--purple-primary);
+}
+
+/* Responsive Enhancements */
+@media (max-width: 1200px) {
+    .container-fluid {
+        padding: 0 1rem;
+    }
+}
+
+@media (max-width: 992px) {
+    .booking-summary,
+    .final-summary {
+        position: static !important;
+        top: auto !important;
+        margin-top: 2rem;
+    }
+
+    .step-navigation {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .step-navigation .btn {
+        width: 100%;
+    }
+}
+
+@media (max-width: 768px) {
+    .modal-dialog {
+        margin: 0;
+        max-width: 100%;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .modal-content {
+        height: 100vh;
+        border-radius: 0;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .modal-body {
+        flex: 1;
+        overflow-y: auto;
+    }
+
+    .step-content {
+        min-height: auto;
+    }
+
+    .container-fluid {
+        padding: 0 0.75rem;
+    }
+
+    .card-body {
+        padding: 1rem;
+    }
+
+    .duration-controls {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .duration-display {
+        order: -1;
+        margin: 0;
+    }
+
+    .price-calculation {
+        margin-top: 1rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .step-indicator .step-info {
+        display: none !important;
+    }
+
+    .step-indicator .step-circle {
+        width: 35px;
+        height: 35px;
+        font-size: 12px;
+    }
+
+    .step-indicator .step-connector {
+        width: 30px;
+        margin: 0 0.25rem;
+    }
+
+    .duration-controls .duration-btn {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+    }
+
+    .modal-title {
+        font-size: 1.1rem;
+    }
+
+    .btn-lg {
+        padding: 0.75rem 1.5rem;
+        font-size: 0.95rem;
+    }
+}
+
+/* Print Styles */
+@media print {
+    .modal-backdrop,
+    .step-navigation,
+    .btn {
+        display: none !important;
+    }
+
+    .modal-dialog {
+        width: 100%;
+        height: auto;
+        margin: 0;
+        padding: 0;
+    }
+
+    .modal-content {
+        border: none;
+        box-shadow: none;
+    }
+
+    .card {
+        border: 1px solid #000;
+        break-inside: avoid;
+    }
+}
+
+/* Accessibility Enhancements */
+.btn:focus,
+.form-control:focus,
+.form-check-input:focus {
+    outline: 2px solid var(--purple-primary);
+    outline-offset: 2px;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+    .card {
+        border: 2px solid #000;
+    }
+
+    .btn-purple {
+        background: #000;
+        border: 2px solid #000;
+    }
+
+    .text-purple {
+        color: #000 !important;
+    }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* Dark Mode Support (if needed) */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --light-gray: #2d3748;
+        --border-color: #4a5568;
+    }
+
+    .modal-content {
+        background-color: #1a202c;
+        color: #e2e8f0;
+    }
+
+    .card {
+        background-color: #2d3748;
+        color: #e2e8f0;
+    }
+
+    .form-control {
+        background-color: #4a5568;
+        border-color: #718096;
+        color: #e2e8f0;
+    }
+
+    .text-muted {
+        color: #a0aec0 !important;
+    }
+}
