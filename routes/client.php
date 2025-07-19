@@ -59,8 +59,8 @@ Route::prefix('appointments')->group(function () {
 
 // Booking Management
 Route::prefix('bookings')->group(function () {
-    Route::post('/', [AppointmentController::class, 'store']); // Create new booking
-    Route::get('/', [AppointmentController::class, 'index']); // List user's bookings
+    // Route::post('/', [AppointmentController::class, 'store']); // Create new booking
+    // Route::get('/', [AppointmentController::class, 'index']); // List user's bookings
     Route::get('/{booking}', [AppointmentController::class, 'show']); // Get booking details
     Route::patch('/{booking}/cancel', [AppointmentController::class, 'cancel']); // Cancel booking
 });
@@ -85,6 +85,8 @@ Route::prefix('search')->group(function () {
 });
 
 // Dashboard
-Route::get('/dashboard/stats', [DashboardController::class, 'getStats']);
-Route::get('/dashboard/recommendations', [DashboardController::class, 'getRecommendations']);
-Route::get('/dashboard/recent-activity', [DashboardController::class, 'getRecentActivity']);
+Route::prefix('dashboard')->group(function () {
+    Route::get('/stats', [DashboardController::class, 'getStats']);
+    Route::get('/recommendations', [DashboardController::class, 'getRecommendations']);
+    Route::get('/recent-activity', [DashboardController::class, 'getRecentActivity']);
+});

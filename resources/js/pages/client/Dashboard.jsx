@@ -31,16 +31,27 @@ const ClientDashboard = () => {
 
     const loadAppointmentData = async () => {
         try {
-            const upcomingResponse = await fetch("/api/appointments/upcoming", {
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem("token")}`,
-                    "Content-Type": "application/json",
-                },
-            });
+            // Use the existing appointments endpoint with filters for upcoming
+            const today = new Date().toISOString().split("T")[0];
+            const nextWeek = new Date();
+            nextWeek.setDate(new Date().getDate() + 7);
+            const nextWeekStr = nextWeek.toISOString().split("T")[0];
+
+            const upcomingResponse = await fetch(
+                `/api/client/appointments?status=confirmed,pending&date_from=${today}&date_to=${nextWeekStr}&per_page=5`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${localStorage.getItem(
+                            "token"
+                        )}`,
+                        "Content-Type": "application/json",
+                    },
+                }
+            );
 
             if (upcomingResponse.ok) {
                 const data = await upcomingResponse.json();
-                setUpcomingAppointments(data.data || []);
+                setUpcomingAppointments(data.data?.data || data.data || []);
             }
         } catch (error) {
             console.error("Failed to load appointment data:", error);

@@ -230,11 +230,13 @@ class DashboardController extends Controller
 
     private function getAverageRatingGiven($user)
     {
-        $ratings = $user->clientAppointments()
-            ->whereNotNull('provider_rating')
-            ->pluck('provider_rating');
-
-        return $ratings->isEmpty() ? 0 : round($ratings->average(), 1);
+        try {
+            return $user->reviewsGiven()
+                ->where('review_type', \App\Models\Review::TYPE_CLIENT_TO_PROVIDER)
+                ->avg('rating') ?: 0;
+        } catch (\Exception $e) {
+            return 0;
+        }
     }
 
     private function getPreviousBookingCategories($user)
