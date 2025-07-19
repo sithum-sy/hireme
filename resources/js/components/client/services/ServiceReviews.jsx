@@ -20,9 +20,13 @@ const ServiceReviews = ({ serviceId }) => {
             const params = {
                 page,
                 sort_by: sortBy,
-                rating: filterRating,
                 per_page: 10,
             };
+
+            // Add rating filter if selected
+            if (filterRating) {
+                params.rating = filterRating;
+            }
 
             const response = await clientService.getServiceReviews(
                 serviceId,
@@ -30,11 +34,18 @@ const ServiceReviews = ({ serviceId }) => {
             );
 
             if (response.success) {
-                setReviews(response.data.data);
-                setPagination(response.data.meta);
+                // Handle both direct data and nested data structure
+                const reviewsData = response.data.data || response.data;
+                const reviewsMeta = response.data.meta || response.meta;
+
+                setReviews(Array.isArray(reviewsData) ? reviewsData : []);
+                setPagination(reviewsMeta || {});
             }
         } catch (error) {
             console.error("Failed to load reviews:", error);
+            // Set empty reviews on error
+            setReviews([]);
+            setPagination({});
         } finally {
             setLoading(false);
         }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API\Client;
 
 use App\Http\Controllers\Controller;
 use App\Models\ProviderProfile;
+use App\Models\Review;
 use App\Models\Service;
 use App\Models\ServiceCategory;
 use App\Models\ServiceSearch;
@@ -108,13 +109,6 @@ class ServiceController extends Controller
             $service->load([
                 'category',
                 'provider.providerProfile',
-                'appointments' => function ($query) {
-                    $query->completed()
-                        ->whereNotNull('provider_rating')
-                        ->with('client:id,first_name,last_name')
-                        ->latest()
-                        ->limit(5);
-                }
             ]);
 
             $distance = null;
@@ -136,6 +130,20 @@ class ServiceController extends Controller
                 ]);
             }
 
+            // Calculate reviews count from Review model
+            $reviewsCount = Review::where('service_id', $service->id)
+                ->where('review_type', Review::TYPE_CLIENT_TO_PROVIDER)
+                ->where('status', Review::STATUS_PUBLISHED)
+                ->where('is_hidden', false)
+                ->count();
+
+            // Calculate average rating from Review model  
+            $averageRating = Review::where('service_id', $service->id)
+                ->where('review_type', Review::TYPE_CLIENT_TO_PROVIDER)
+                ->where('status', Review::STATUS_PUBLISHED)
+                ->where('is_hidden', false)
+                ->avg('rating');
+
             // Format service data
             $serviceData = [
                 'id' => $service->id,
@@ -147,8 +155,8 @@ class ServiceController extends Controller
                 'duration_hours' => $service->duration_hours,
                 'service_image_urls' => $service->service_image_urls,
                 'first_image_url' => $service->first_image_url,
-                'average_rating' => $service->average_rating,
-                'reviews_count' => $service->appointments()->completed()->whereNotNull('provider_rating')->count(),
+                'average_rating' => round($averageRating ?: 0, 1),
+                'reviews_count' => $reviewsCount,
                 'includes' => $service->includes,
                 'requirements' => $service->requirements,
                 'category' => [
@@ -727,11 +735,18 @@ class ServiceController extends Controller
      */
     private function formatServiceForClient($service)
     {
-        // Calculate service-specific review count
-        $serviceReviewsCount = $service->appointments()
-            ->completed()
-            ->whereNotNull('provider_rating')
+        // Calculate service-specific review count from Review model
+        $serviceReviewsCount = Review::where('service_id', $service->id)
+            ->where('review_type', Review::TYPE_CLIENT_TO_PROVIDER)
+            ->where('status', Review::STATUS_PUBLISHED)
+            ->where('is_hidden', false)
             ->count();
+
+        $averageRating = Review::where('service_id', $service->id)
+            ->where('review_type', Review::TYPE_CLIENT_TO_PROVIDER)
+            ->where('status', Review::STATUS_PUBLISHED)
+            ->where('is_hidden', false)
+            ->avg('rating') ?: 0;
 
         return [
             'id' => $service->id,
@@ -755,8 +770,8 @@ class ServiceController extends Controller
             'base_price' => $service->base_price,
             'formatted_price' => $service->formatted_price,
             'duration_hours' => $service->duration_hours,
-            'average_rating' => $service->average_rating ?? 0,
-            'reviews_count' => $serviceReviewsCount,
+            'average_rating' => round($averageRating, 1), // From Review model
+            'reviews_count' => $serviceReviewsCount, // From Review model
             'views_count' => $service->views_count,
             'bookings_count' => $service->bookings_count,
             'first_image_url' => $service->first_image_url,
@@ -856,6 +871,125 @@ class ServiceController extends Controller
             return round($averageMinutes) . ' minutes';
         } else {
             return round($averageMinutes / 60, 1) . ' hours';
+        }
+    }
+
+    /**
+     * Get service reviews with filtering and pagination
+     */
+    public function getServiceReviews(Service $service, Request $request)
+    {
+        $request->validate([
+            'page' => 'nullable|integer|min:1',
+            'per_page' => 'nullable|integer|min:1|max:50',
+            'sort_by' => 'nullable|in:recent,rating_high,rating_low,helpful',
+            'rating' => 'nullable|integer|between:1,5',
+        ]);
+
+        try {
+            Log::info('Getting reviews for service:', ['service_id' => $service->id]);
+
+            // Query reviews for this service where clients reviewed providers
+            $query = Review::where('service_id', $service->id)
+                ->where('review_type', Review::TYPE_CLIENT_TO_PROVIDER)
+                ->where('status', Review::STATUS_PUBLISHED)
+                ->where('is_hidden', false)
+                ->with([
+                    'reviewer:id,first_name,last_name,profile_picture',
+                    'appointment:id,appointment_date,completed_at'
+                ])
+                ->whereHas('reviewer');
+
+            // Apply rating filter
+            if ($request->rating) {
+                $query->where('rating', $request->rating);
+            }
+
+            // Apply sorting
+            switch ($request->sort_by) {
+                case 'rating_high':
+                    $query->orderByDesc('rating')->orderByDesc('created_at');
+                    break;
+                case 'rating_low':
+                    $query->orderBy('rating')->orderByDesc('created_at');
+                    break;
+                case 'helpful':
+                    $query->orderByDesc('helpful_count')->orderByDesc('created_at');
+                    break;
+                case 'recent':
+                default:
+                    $query->orderByDesc('created_at');
+                    break;
+            }
+
+            $perPage = $request->get('per_page', 10);
+            $reviews = $query->paginate($perPage);
+
+            Log::info('Reviews query results:', [
+                'total_reviews' => $reviews->total(),
+                'current_page' => $reviews->currentPage()
+            ]);
+
+            // Format the reviews
+            $formattedReviews = $reviews->through(function ($review) {
+                // Handle case where reviewer might be null
+                $reviewerName = 'Anonymous User';
+                $reviewerImage = null;
+
+                if ($review->reviewer) {
+                    $reviewerName = $review->reviewer->first_name . ' ' . substr($review->reviewer->last_name, 0, 1) . '.';
+                    $reviewerImage = $review->reviewer->profile_picture
+                        ? Storage::url($review->reviewer->profile_picture)
+                        : null;
+                }
+
+                return [
+                    'id' => $review->id,
+                    'rating' => (int) $review->rating,
+                    'comment' => $review->comment,
+                    'client' => [
+                        'name' => $reviewerName,
+                        'profile_image_url' => $reviewerImage,
+                    ],
+                    'is_verified_purchase' => $review->is_verified,
+                    'created_at' => $review->created_at,
+                    'helpful_count' => $review->helpful_count,
+                    'images' => $review->review_images ?: [],
+                    'provider_response' => $review->provider_response ? [
+                        'message' => $review->provider_response,
+                        'created_at' => $review->provider_responded_at
+                    ] : null,
+                    // Additional rating breakdowns if available
+                    'quality_rating' => $review->quality_rating,
+                    'punctuality_rating' => $review->punctuality_rating,
+                    'communication_rating' => $review->communication_rating,
+                    'value_rating' => $review->value_rating,
+                    'would_recommend' => $review->would_recommend,
+                ];
+            });
+
+            return response()->json([
+                'success' => true,
+                'data' => $formattedReviews,
+                'meta' => [
+                    'current_page' => $reviews->currentPage(),
+                    'last_page' => $reviews->lastPage(),
+                    'per_page' => $reviews->perPage(),
+                    'total' => $reviews->total(),
+                ],
+                'message' => 'Service reviews retrieved successfully'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to get service reviews:', [
+                'service_id' => $service->id,
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve service reviews',
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
 }

@@ -73,6 +73,19 @@ class Service extends Model
         return $this->hasMany(Appointment::class)->where('status', 'completed');
     }
 
+    public function reviews()
+    {
+        return $this->hasMany(Review::class);
+    }
+
+    public function clientReviews()
+    {
+        return $this->hasMany(Review::class)
+            ->where('review_type', Review::TYPE_CLIENT_TO_PROVIDER)
+            ->where('status', Review::STATUS_PUBLISHED)
+            ->where('is_hidden', false);
+    }
+
     // Scopes
     public function scopeActive($query)
     {
@@ -330,11 +343,11 @@ class Service extends Model
 
     public function updateRating($newRating)
     {
-        $completedCount = $this->completedAppointments()->count();
-        if ($completedCount > 0) {
-            $this->average_rating = $this->completedAppointments()
-                ->whereNotNull('provider_rating')
-                ->avg('provider_rating');
+        // Use reviews instead of appointments for rating calculation
+        $averageRating = $this->clientReviews()->avg('rating');
+
+        if ($averageRating !== null) {
+            $this->average_rating = round($averageRating, 2);
             $this->save();
         }
     }

@@ -206,133 +206,6 @@ class ClientService {
         }
     }
 
-    // async getServiceDetail(serviceId) {
-    //     try {
-    //         const response = await axios.get(
-    //             `${API_BASE}/services/${serviceId}`
-    //         );
-
-    //         // console.log("Raw API response:", response.data);
-
-    //         // Check if the response has the expected structure
-    //         if (response.data && response.data.success !== false) {
-    //             return {
-    //                 success: true,
-    //                 data: {
-    //                     service: response.data.data || response.data, // Handle both structures
-    //                     provider:
-    //                         response.data.provider ||
-    //                         this.getFallbackProvider(),
-    //                     is_favorite: response.data.is_favorite || false,
-    //                 },
-    //                 message:
-    //                     response.data.message || "Service loaded successfully",
-    //             };
-    //         } else {
-    //             throw new Error(response.data.message || "Service not found");
-    //         }
-    //     } catch (error) {
-    //         console.warn("Service detail endpoint error:", error);
-    //         console.log("Using fallback data for service ID:", serviceId);
-
-    //         // Return fallback service detail for development
-    //         return {
-    //             success: true,
-    //             data: {
-    //                 service: this.getFallbackServiceDetail(serviceId),
-    //                 provider: this.getFallbackProvider(),
-    //                 is_favorite: false,
-    //             },
-    //             message: "Service loaded (fallback mode)",
-    //             fallback: true,
-    //         };
-    //     }
-    // }
-
-    // async getServiceDetail(serviceId) {
-    //     try {
-    //         const response = await axios.get(
-    //             `${API_BASE}/services/${serviceId}`
-    //         );
-
-    //         console.log("Raw API response:", response.data);
-
-    //         if (response.data && response.data.success !== false) {
-    //             // Handle the response structure from your Laravel backend
-    //             const serviceData = response.data.data || response.data;
-
-    //             return {
-    //                 success: true,
-    //                 data: {
-    //                     service: this.formatServiceData(serviceData),
-    //                     provider: this.formatProviderData(
-    //                         serviceData.provider || serviceData.provider_profile
-    //                     ),
-    //                     is_favorite: response.data.is_favorite || false,
-    //                 },
-    //                 message:
-    //                     response.data.message || "Service loaded successfully",
-    //             };
-    //         } else {
-    //             throw new Error(response.data.message || "Service not found");
-    //         }
-    //     } catch (error) {
-    //         console.warn("Service detail endpoint error:", error);
-    //         console.log("Using fallback data for service ID:", serviceId);
-
-    //         // Return fallback only in development
-    //         return {
-    //             success: true,
-    //             data: {
-    //                 service: this.getFallbackServiceDetail(serviceId),
-    //                 provider: this.getFallbackProvider(),
-    //                 is_favorite: false,
-    //             },
-    //             message: "Service loaded (fallback mode)",
-    //             fallback: true,
-    //         };
-    //     }
-    // }
-
-    // async getServiceDetail(serviceId) {
-    //     try {
-    //         const response = await axios.get(
-    //             `${API_BASE}/services/${serviceId}`
-    //         );
-
-    //         // console.log("Raw API response:", response.data);
-
-    //         if (response.data && response.data.success) {
-    //             return {
-    //                 success: true,
-    //                 data: {
-    //                     service: response.data.data,
-    //                     provider: response.data.provider,
-    //                     is_favorite: response.data.is_favorite || false,
-    //                 },
-    //                 message: response.data.message,
-    //             };
-    //         } else {
-    //             throw new Error(response.data.message || "Service not found");
-    //         }
-    //     } catch (error) {
-    //         console.warn("Service detail endpoint error:", error);
-    //         console.log("Using fallback data for service ID:", serviceId);
-
-    //         // Return fallback only in development
-    //         return {
-    //             success: true,
-    //             data: {
-    //                 service: this.getFallbackServiceDetail(serviceId),
-    //                 provider: this.getFallbackProvider(),
-    //                 is_favorite: false,
-    //             },
-    //             message: "Service loaded (fallback mode)",
-    //             fallback: true,
-    //         };
-    //     }
-    // }
-
     async getServiceDetail(serviceId, locationParams = null) {
         try {
             // ✅ Build URL with location parameters if provided
@@ -398,7 +271,7 @@ class ClientService {
         }
     }
 
-    // ✅ Add distance calculation helper method
+    // distance calculation helper method
     calculateDistance(lat1, lon1, lat2, lon2) {
         const earthRadius = 6371; // Earth radius in kilometers
 
@@ -453,46 +326,6 @@ class ClientService {
             };
         }
     }
-
-    // Helper method to format quote data consistently
-    // formatQuoteData(quoteData) {
-    //     return {
-    //         id: quoteData.id,
-    //         quote_number: quoteData.quote_number,
-    //         status: quoteData.status,
-    //         service_title: quoteData.service?.title || quoteData.service_title,
-    //         service_description:
-    //             quoteData.service?.description ||
-    //             "Service description not available",
-    //         service_image: quoteData.service?.first_image_url,
-    //         provider_id: quoteData.provider_id,
-    //         provider_name: quoteData.provider?.name || quoteData.provider_name,
-    //         provider_image: quoteData.provider?.profile_image_url,
-    //         provider_rating: quoteData.provider?.average_rating || 0,
-    //         provider_reviews: quoteData.provider?.reviews_count || 0,
-    //         message: quoteData.message,
-    //         special_requirements: quoteData.special_requirements,
-    //         location_summary:
-    //             quoteData.location_summary ||
-    //             `${quoteData.city || "Not specified"}`,
-    //         urgency: quoteData.urgency,
-    //         requested_date: quoteData.requested_date,
-    //         requested_time: quoteData.requested_time,
-    //         quoted_price: quoteData.quoted_price,
-    //         travel_fee: quoteData.travel_fee || 0,
-    //         estimated_duration: quoteData.estimated_duration,
-    //         provider_response: quoteData.provider_response,
-    //         quote_notes: quoteData.quote_notes,
-    //         validity_days: quoteData.validity_days,
-    //         expires_at: quoteData.expires_at,
-    //         created_at: quoteData.created_at,
-    //         updated_at: quoteData.updated_at,
-    //         quoted_at: quoteData.quoted_at,
-    //         accepted_at: quoteData.accepted_at,
-    //         declined_at: quoteData.declined_at,
-    //         withdrawn_at: quoteData.withdrawn_at,
-    //     };
-    // }
 
     formatQuoteData(quoteData) {
         return {
@@ -565,43 +398,6 @@ class ClientService {
         };
     }
 
-    // Fallback data for development
-    // getFallbackQuoteDetail(quoteId) {
-    //     return {
-    //         id: quoteId,
-    //         quote_number: `Q${String(quoteId).padStart(6, "0")}`,
-    //         status: "quoted",
-    //         service_title: "Professional House Cleaning Service",
-    //         service_description:
-    //             "Complete house cleaning including all rooms, kitchen, and bathrooms",
-    //         service_image: null,
-    //         provider_id: 1,
-    //         provider_name: "Clean Masters",
-    //         provider_image: null,
-    //         provider_rating: 4.8,
-    //         provider_reviews: 45,
-    //         message:
-    //             "I need a thorough cleaning of my 3-bedroom house. Kitchen needs deep cleaning and bathrooms need sanitization.",
-    //         special_requirements:
-    //             "Please use eco-friendly products. I have a pet cat.",
-    //         location_summary: "Colombo 07",
-    //         urgency: "normal",
-    //         requested_date: "2025-07-20",
-    //         requested_time: "10:00 AM",
-    //         quoted_price: 4500,
-    //         travel_fee: 300,
-    //         estimated_duration: 3,
-    //         provider_response:
-    //             "Thank you for your request. I can provide a comprehensive cleaning service for your 3-bedroom house using eco-friendly products that are safe for pets.",
-    //         quote_notes:
-    //             "I will bring all necessary equipment and eco-friendly cleaning supplies.",
-    //         validity_days: 7,
-    //         expires_at: "2025-07-25T23:59:59Z",
-    //         created_at: "2025-07-12T10:00:00Z",
-    //         updated_at: "2025-07-13T14:30:00Z",
-    //         quoted_at: "2025-07-13T14:30:00Z",
-    //     };
-    // }
     getFallbackQuoteDetail(quoteId) {
         return {
             id: quoteId,
@@ -760,22 +556,61 @@ class ClientService {
         return response.data;
     }
 
+    // async getServiceReviews(serviceId, params = {}) {
+    //     try {
+    //         const response = await axios.get(
+    //             `${API_BASE}/services/${serviceId}/reviews`,
+    //             { params }
+    //         );
+
+    //         return {
+    //             success: true,
+    //             data: response.data.data || response.data,
+    //             meta: response.data.meta,
+    //             message: response.data.message || "Reviews loaded successfully",
+    //         };
+    //     } catch (error) {
+    //         console.error("Failed to load service reviews:", error);
+
+    //         // If the endpoint fails, you can still return fallback data
+    //         return {
+    //             success: true,
+    //             data: {
+    //                 data: this.getFallbackReviews(),
+    //                 meta: { current_page: 1, last_page: 1, total: 2 },
+    //             },
+    //             message: "Reviews loaded (fallback mode)",
+    //             fallback: true,
+    //         };
+    //     }
+    // }
+
+    // Update your getServiceReviews method in clientService.js
     async getServiceReviews(serviceId, params = {}) {
+        console.log("🔍 Getting service reviews for service ID:", serviceId);
+        console.log("🔍 With params:", params);
+
         try {
-            const response = await axios.get(
-                `${API_BASE}/services/${serviceId}/reviews`,
-                { params }
-            );
+            const url = `${API_BASE}/services/${serviceId}/reviews`;
+            console.log("🔍 Request URL:", url);
+
+            const response = await axios.get(url, { params });
+
+            console.log("🔍 Response status:", response.status);
+            console.log("🔍 Response data:", response.data);
+
             return {
                 success: true,
-                data: response.data,
-                message: response.data.message,
+                data: response.data.data || response.data,
+                meta: response.data.meta,
+                message: response.data.message || "Reviews loaded successfully",
             };
         } catch (error) {
-            console.warn(
-                "Service reviews endpoint not available, using fallback"
-            );
+            console.error("🚨 Service reviews error:", error);
+            console.error("🚨 Error response:", error.response?.data);
+            console.error("🚨 Error status:", error.response?.status);
 
+            // Return fallback data
             return {
                 success: true,
                 data: {
@@ -787,53 +622,6 @@ class ClientService {
             };
         }
     }
-
-    // async getSimilarServices(params = {}) {
-    //     try {
-    //         // Use the regular services endpoint with category filter
-    //         const searchParams = {
-    //             category_id: params.category_id,
-    //             limit: params.limit || 8,
-    //             exclude_id: params.exclude_service_id, // Changed from exclude_service_id
-    //             sort_by: "popularity",
-    //         };
-
-    //         // Add location if provided
-    //         if (params.latitude && params.longitude) {
-    //             searchParams.latitude = params.latitude;
-    //             searchParams.longitude = params.longitude;
-    //             searchParams.radius = params.radius || 25;
-    //         }
-
-    //         // Remove undefined values
-    //         Object.keys(searchParams).forEach((key) => {
-    //             if (searchParams[key] === undefined) {
-    //                 delete searchParams[key];
-    //             }
-    //         });
-
-    //         const response = await axios.get(`${API_BASE}/services`, {
-    //             params: searchParams,
-    //         });
-
-    //         return {
-    //             success: true,
-    //             data: response.data.data || response.data,
-    //             message: response.data.message || "Similar services loaded",
-    //         };
-    //     } catch (error) {
-    //         console.warn(
-    //             "Services endpoint not available for similar services, using fallback"
-    //         );
-
-    //         return {
-    //             success: true,
-    //             data: this.getFallbackSimilarServices(),
-    //             message: "Similar services loaded (fallback mode)",
-    //             fallback: true,
-    //         };
-    //     }
-    // }
 
     async getSimilarServices(params = {}) {
         try {

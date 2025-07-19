@@ -27,6 +27,7 @@ Route::prefix('services')->group(function () {
     Route::get('/{service}', [ServiceController::class, 'show']);
     Route::get('/{service}/similar', [ServiceController::class, 'getSimilarServices']);
     Route::get('/{service}/availability', [ServiceController::class, 'checkAvailability']);
+    Route::get('/{service}/reviews', [ServiceController::class, 'getServiceReviews']);
 });
 
 // Provider Discovery  
