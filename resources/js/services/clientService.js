@@ -294,13 +294,59 @@ class ClientService {
     //     }
     // }
 
-    async getServiceDetail(serviceId) {
-        try {
-            const response = await axios.get(
-                `${API_BASE}/services/${serviceId}`
-            );
+    // async getServiceDetail(serviceId) {
+    //     try {
+    //         const response = await axios.get(
+    //             `${API_BASE}/services/${serviceId}`
+    //         );
 
-            // console.log("Raw API response:", response.data);
+    //         // console.log("Raw API response:", response.data);
+
+    //         if (response.data && response.data.success) {
+    //             return {
+    //                 success: true,
+    //                 data: {
+    //                     service: response.data.data,
+    //                     provider: response.data.provider,
+    //                     is_favorite: response.data.is_favorite || false,
+    //                 },
+    //                 message: response.data.message,
+    //             };
+    //         } else {
+    //             throw new Error(response.data.message || "Service not found");
+    //         }
+    //     } catch (error) {
+    //         console.warn("Service detail endpoint error:", error);
+    //         console.log("Using fallback data for service ID:", serviceId);
+
+    //         // Return fallback only in development
+    //         return {
+    //             success: true,
+    //             data: {
+    //                 service: this.getFallbackServiceDetail(serviceId),
+    //                 provider: this.getFallbackProvider(),
+    //                 is_favorite: false,
+    //             },
+    //             message: "Service loaded (fallback mode)",
+    //             fallback: true,
+    //         };
+    //     }
+    // }
+
+    async getServiceDetail(serviceId, locationParams = null) {
+        try {
+            // ✅ Build URL with location parameters if provided
+            let url = `${API_BASE}/services/${serviceId}`;
+
+            if (locationParams && locationParams.lat && locationParams.lng) {
+                const params = new URLSearchParams({
+                    latitude: locationParams.lat,
+                    longitude: locationParams.lng,
+                });
+                url += `?${params.toString()}`;
+            }
+
+            const response = await axios.get(url);
 
             if (response.data && response.data.success) {
                 return {
@@ -319,11 +365,30 @@ class ClientService {
             console.warn("Service detail endpoint error:", error);
             console.log("Using fallback data for service ID:", serviceId);
 
-            // Return fallback only in development
+            // ✅ Enhanced fallback to include distance calculation if location provided
+            const fallbackService = this.getFallbackServiceDetail(serviceId);
+
+            // Calculate distance for fallback if location is provided
+            if (
+                locationParams &&
+                locationParams.lat &&
+                locationParams.lng &&
+                fallbackService.location
+            ) {
+                const distance = this.calculateDistance(
+                    locationParams.lat,
+                    locationParams.lng,
+                    parseFloat(fallbackService.location.lat),
+                    parseFloat(fallbackService.location.lng)
+                );
+                fallbackService.distance = distance;
+                console.log("Fallback calculated distance:", distance);
+            }
+
             return {
                 success: true,
                 data: {
-                    service: this.getFallbackServiceDetail(serviceId),
+                    service: fallbackService,
                     provider: this.getFallbackProvider(),
                     is_favorite: false,
                 },
@@ -331,6 +396,26 @@ class ClientService {
                 fallback: true,
             };
         }
+    }
+
+    // ✅ Add distance calculation helper method
+    calculateDistance(lat1, lon1, lat2, lon2) {
+        const earthRadius = 6371; // Earth radius in kilometers
+
+        const latDiff = (lat2 - lat1) * (Math.PI / 180);
+        const lonDiff = (lon2 - lon1) * (Math.PI / 180);
+
+        const a =
+            Math.sin(latDiff / 2) * Math.sin(latDiff / 2) +
+            Math.cos(lat1 * (Math.PI / 180)) *
+                Math.cos(lat2 * (Math.PI / 180)) *
+                Math.sin(lonDiff / 2) *
+                Math.sin(lonDiff / 2);
+
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        const distance = earthRadius * c;
+
+        return Math.round(distance * 100) / 100; // Round to 2 decimal places
     }
 
     async getQuoteDetail(quoteId) {

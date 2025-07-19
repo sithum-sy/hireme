@@ -227,7 +227,7 @@ const ServiceCard = ({ service, showDistance = true }) => {
                                 <div className="distance">
                                     <small className="text-muted">
                                         <i className="fas fa-map-marker-alt me-1"></i>
-                                        {service.distance} km
+                                        {service.distance} km away
                                     </small>
                                 </div>
                             )}

@@ -1003,7 +1003,7 @@ function App() {
 
                         {/* ===== ERROR ROUTES ===== */}
                         {/* 404 Route */}
-                        {/* <Route
+                        <Route
                             path="*"
                             element={
                                 <div className="error-page">
@@ -1042,7 +1042,7 @@ function App() {
                                     </div>
                                 </div>
                             }
-                        /> */}
+                        />
                     </Routes>
                 </Router>
             </LocationProvider>

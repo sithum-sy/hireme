@@ -93,8 +93,13 @@ class ServiceController extends Controller
     /**
      * Get service details with provider information
      */
-    public function show(Service $service)
+    public function show(Service $service, Request $request)
     {
+        $request->validate([
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
+        ]);
+
         try {
             // Increment view count
             $service->incrementViews();
@@ -111,6 +116,25 @@ class ServiceController extends Controller
                         ->limit(5);
                 }
             ]);
+
+            $distance = null;
+            if ($request->latitude && $request->longitude && $service->latitude && $service->longitude) {
+                $distance = $this->calculateDistance(
+                    $request->latitude,
+                    $request->longitude,
+                    $service->latitude,
+                    $service->longitude
+                );
+
+                Log::info('Distance calculated for service detail:', [
+                    'service_id' => $service->id,
+                    'client_lat' => $request->latitude,
+                    'client_lng' => $request->longitude,
+                    'service_lat' => $service->latitude,
+                    'service_lng' => $service->longitude,
+                    'distance' => $distance
+                ]);
+            }
 
             // Format service data
             $serviceData = [
@@ -134,7 +158,7 @@ class ServiceController extends Controller
                     'color' => $service->category->color,
                 ],
                 'location' => $service->location,
-                'distance' => $service->distance ?? null,
+                'distance' => $distance,
             ];
 
             // Format provider data
@@ -191,6 +215,23 @@ class ServiceController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+    private function calculateDistance($lat1, $lon1, $lat2, $lon2)
+    {
+        $earthRadius = 6371; // Earth radius in kilometers
+
+        $latDiff = deg2rad($lat2 - $lat1);
+        $lonDiff = deg2rad($lon2 - $lon1);
+
+        $a = sin($latDiff / 2) * sin($latDiff / 2) +
+            cos(deg2rad($lat1)) * cos(deg2rad($lat2)) *
+            sin($lonDiff / 2) * sin($lonDiff / 2);
+
+        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+        $distance = $earthRadius * $c;
+
+        return round($distance, 2);
     }
 
     /**

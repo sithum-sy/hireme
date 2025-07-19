@@ -30,66 +30,59 @@ const ServiceDetail = () => {
     const [selectedSlot, setSelectedSlot] = useState(null);
     const [showQuoteModal, setShowQuoteModal] = useState(false);
     const [activeBookingTab, setActiveBookingTab] = useState("availability");
+    const [clientLocation, setClientLocation] = useState(null);
+
+    useEffect(() => {
+        if (navigator.geolocation && !clientLocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const { latitude, longitude } = position.coords;
+                    setClientLocation({
+                        lat: latitude,
+                        lng: longitude,
+                    });
+                },
+                (error) => {
+                    console.log("Geolocation error:", error);
+                }
+            );
+        }
+    }, []);
 
     // useEffect(() => {
-    //     loadServiceDetail();
+    //     // console.log("=== DEBUG INFO ===");
+    //     // console.log("Service ID:", id);
+    //     // console.log("Current URL:", window.location.href);
 
-    //     // Check if URL has booking hash
-    //     if (window.location.hash === "#book") {
-    //         setShowBookingModal(true);
+    //     // Test the API call directly
+    //     const testAPICall = async () => {
+    //         try {
+    //             const response = await fetch(`/api/client/services/${id}`, {
+    //                 headers: {
+    //                     Authorization: `Bearer ${localStorage.getItem(
+    //                         "token"
+    //                     )}`,
+    //                     "Content-Type": "application/json",
+    //                 },
+    //             });
+    //             const data = await response.json();
+    //             // console.log("Direct API call result:", data);
+    //             // console.log("Response status:", response.status);
+    //             // console.log("Response headers:", response.headers);
+    //         } catch (error) {
+    //             console.log("Direct API call error:", error);
+    //         }
+    //     };
+
+    //     // testAPICall();
+
+    //     if (id) {
+    //         loadServiceDetail();
+    //     } else {
+    //         console.error("No service ID provided");
+    //         navigate("/client/services", { replace: true });
     //     }
     // }, [id]);
-
-    useEffect(() => {
-        // console.log("ServiceDetail useEffect triggered, ID:", id);
-        if (id) {
-            loadServiceDetail();
-        } else {
-            console.error("No service ID provided");
-            navigate("/client/services", { replace: true });
-        }
-
-        // Check if URL has booking hash
-        if (window.location.hash === "#book") {
-            setShowBookingModal(true);
-        }
-    }, [id]);
-
-    // Add this right after the useEffect
-    useEffect(() => {
-        // console.log("=== DEBUG INFO ===");
-        // console.log("Service ID:", id);
-        // console.log("Current URL:", window.location.href);
-
-        // Test the API call directly
-        const testAPICall = async () => {
-            try {
-                const response = await fetch(`/api/client/services/${id}`, {
-                    headers: {
-                        Authorization: `Bearer ${localStorage.getItem(
-                            "token"
-                        )}`,
-                        "Content-Type": "application/json",
-                    },
-                });
-                const data = await response.json();
-                // console.log("Direct API call result:", data);
-                // console.log("Response status:", response.status);
-                // console.log("Response headers:", response.headers);
-            } catch (error) {
-                console.log("Direct API call error:", error);
-            }
-        };
-
-        testAPICall();
-
-        if (id) {
-            loadServiceDetail();
-        } else {
-            console.error("No service ID provided");
-            navigate("/client/services", { replace: true });
-        }
-    }, [id]);
 
     // const loadServiceDetail = async () => {
     //     setLoading(true);
@@ -112,24 +105,23 @@ const ServiceDetail = () => {
     //     }
     // };
     const loadServiceDetail = async () => {
-        // console.log("Loading service detail for ID:", id);
         setLoading(true);
 
         try {
-            const response = await clientService.getServiceDetail(id);
-            // console.log("Service detail response:", response);
-            // console.log("Service data structure:", response.data);
+            // ✅ Pass client location to service
+            const response = await clientService.getServiceDetail(
+                id,
+                clientLocation
+            );
 
             if (response.success && response.data) {
                 // Handle different possible data structures
                 let serviceData, providerData;
 
                 if (response.data.service) {
-                    // Expected structure: { service: {...}, provider: {...} }
                     serviceData = response.data.service;
                     providerData = response.data.provider;
                 } else if (response.data.id) {
-                    // Direct service data: { id: 1, title: "...", ... }
                     serviceData = response.data;
                     providerData =
                         response.data.provider || getFallbackProvider();
@@ -137,9 +129,6 @@ const ServiceDetail = () => {
                     console.error("Unexpected data structure:", response.data);
                     throw new Error("Invalid service data structure");
                 }
-
-                // console.log("Setting service:", serviceData.title);
-                // console.log("Setting provider:", providerData?.name);
 
                 setService(serviceData);
                 setProvider(providerData);
@@ -155,6 +144,18 @@ const ServiceDetail = () => {
             setLoading(false);
         }
     };
+
+    useEffect(() => {
+        if (id) {
+            loadServiceDetail();
+        }
+    }, [id, clientLocation]);
+
+    useEffect(() => {
+        if (window.location.hash === "#book") {
+            setShowBookingModal(true);
+        }
+    }, []);
 
     // Add this helper function inside the component
     const getFallbackProvider = () => {
@@ -180,18 +181,6 @@ const ServiceDetail = () => {
     const handleBookNow = () => {
         setShowBookingModal(true);
         window.history.pushState(null, "", `#book`);
-    };
-
-    const handleToggleFavorite = async () => {
-        try {
-            // API call to toggle favorite
-            const response = await clientService.toggleFavorite(id);
-            if (response.success) {
-                setIsFavorite(!isFavorite);
-            }
-        } catch (error) {
-            console.error("Failed to toggle favorite:", error);
-        }
     };
 
     const handleContactProvider = () => {
@@ -256,28 +245,6 @@ const ServiceDetail = () => {
     return (
         <ClientLayout>
             <div className="service-detail-page">
-                {/* Breadcrumb */}
-                <nav aria-label="breadcrumb" className="mb-4">
-                    <ol className="breadcrumb">
-                        <li className="breadcrumb-item">
-                            <Link to="/client/dashboard">Dashboard</Link>
-                        </li>
-                        <li className="breadcrumb-item">
-                            <Link to="/client/services">Services</Link>
-                        </li>
-                        <li className="breadcrumb-item">
-                            <Link
-                                to={`/client/services?category_id=${service.category.id}`}
-                            >
-                                {service.category.name}
-                            </Link>
-                        </li>
-                        <li className="breadcrumb-item active">
-                            {service.title}
-                        </li>
-                    </ol>
-                </nav>
-
                 <div className="row">
                     {/* Main Content */}
                     <div className="col-lg-8">
@@ -327,11 +294,21 @@ const ServiceDetail = () => {
                                             </span>
                                         </div>
 
-                                        {location && service.distance && (
+                                        {/* Show distance only if user's location is available and service.distance is provided */}
+                                        {/* {location && service.distance && (
                                             <div className="distance">
                                                 <i className="fas fa-map-marker-alt text-muted me-1"></i>
                                                 <span className="text-muted">
-                                                    {service.distance}km away
+                                                    {service.distance} km away
+                                                </span>
+                                            </div>
+                                        )} */}
+
+                                        {service?.distance != null && (
+                                            <div className="distance">
+                                                <i className="fas fa-map-marker-alt text-muted me-1"></i>
+                                                <span className="text-muted">
+                                                    {service.distance} km away
                                                 </span>
                                             </div>
                                         )}
@@ -339,7 +316,7 @@ const ServiceDetail = () => {
                                 </div>
 
                                 <div className="service-actions d-flex gap-2">
-                                    <button
+                                    {/* <button
                                         className={`btn ${
                                             isFavorite
                                                 ? "btn-danger"
@@ -352,7 +329,7 @@ const ServiceDetail = () => {
                                                 isFavorite ? "fas" : "far"
                                             } fa-heart`}
                                         ></i>
-                                    </button>
+                                    </button> */}
 
                                     <button
                                         className="btn btn-outline-secondary"
@@ -372,7 +349,7 @@ const ServiceDetail = () => {
                             {/* Service Images */}
                             <ServiceGallery
                                 images={service.images || []}
-                                title={service.title}
+                                title={service.title || "Service Gallery"}
                             />
                         </div>
 
