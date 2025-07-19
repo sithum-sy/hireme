@@ -41,6 +41,7 @@ Route::prefix('providers')->group(function () {
     Route::get('/{provider}/availability/slots', [ProviderController::class, 'getAvailableSlots']);
     Route::get('/{provider}/availability/weekly', [ProviderController::class, 'getWeeklyAvailability']);
     Route::get('/{provider}/availability/check', [ProviderController::class, 'checkAvailability']);
+    Route::get('/{provider}/availability/working-hours', [ProviderController::class, 'getWorkingHours']);
 });
 
 // Booking/Appointment Management

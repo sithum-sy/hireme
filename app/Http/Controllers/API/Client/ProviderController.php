@@ -522,11 +522,11 @@ class ProviderController extends Controller
             return $isAvailable;
         });
 
-        Log::info('Slot filtering completed', [
-            'original_count' => count($slots),
-            'filtered_count' => count($filteredSlots),
-            'removed_count' => count($slots) - count($filteredSlots)
-        ]);
+        // Log::info('Slot filtering completed', [
+        //     'original_count' => count($slots),
+        //     'filtered_count' => count($filteredSlots),
+        //     'removed_count' => count($slots) - count($filteredSlots)
+        // ]);
 
         // Reset array keys to maintain proper indexing
         return array_values($filteredSlots);
@@ -582,7 +582,103 @@ class ProviderController extends Controller
         }
     }
 
+    /**
+     * Get provider's working hours for a specific date
+     */
+    public function getWorkingHours(User $provider, Request $request)
+    {
+        if ($provider->role !== 'service_provider') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Provider not found'
+            ], 404);
+        }
 
+        $request->validate([
+            'date' => 'required|date|after_or_equal:today'
+        ]);
+
+        try {
+            $availabilityService = app(\App\Services\AvailabilityService::class);
+            $workingHours = $availabilityService->getWorkingHours($provider, $request->date);
+
+            if (!$workingHours) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Provider not available on selected date',
+                    'data' => [
+                        'is_available' => false,
+                        'start_time' => null,
+                        'end_time' => null
+                    ]
+                ]);
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'date' => $request->date,
+                    'is_available' => $workingHours['is_available'] ?? true,
+                    'start_time' => $workingHours['start_time'],
+                    'end_time' => $workingHours['end_time'],
+                    'formatted_time_range' => $workingHours['formatted_time_range'] ??
+                        $this->formatTimeRange($workingHours['start_time'], $workingHours['end_time']),
+                    'max_hours_from_now' => $this->calculateMaxHoursFromTime(
+                        $request->date,
+                        $workingHours['start_time'],
+                        $workingHours['end_time']
+                    )
+                ],
+                'message' => 'Working hours retrieved successfully'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve working hours',
+                'error' => config('app.debug') ? $e->getMessage() : 'Server error'
+            ], 500);
+        }
+    }
+
+    /**
+     * Helper method to format time range
+     */
+    private function formatTimeRange($startTime, $endTime)
+    {
+        if (!$startTime || !$endTime) return 'Not available';
+
+        $start = Carbon::parse($startTime)->format('g:i A');
+        $end = Carbon::parse($endTime)->format('g:i A');
+
+        return "{$start} - {$end}";
+    }
+
+    /**
+     * Helper method to calculate maximum hours available from current time
+     */
+    private function calculateMaxHoursFromTime($date, $startTime, $endTime)
+    {
+        $today = now()->format('Y-m-d');
+        $selectedDate = Carbon::parse($date)->format('Y-m-d');
+
+        // If selected date is today, calculate from current time
+        if ($selectedDate === $today) {
+            $now = now();
+            $endDateTime = Carbon::parse($date . ' ' . $endTime);
+
+            if ($now->gte($endDateTime)) {
+                return 0; // No time left today
+            }
+
+            return max(0, $now->diffInHours($endDateTime));
+        }
+
+        // For future dates, calculate full working day
+        $start = Carbon::parse($date . ' ' . $startTime);
+        $end = Carbon::parse($date . ' ' . $endTime);
+
+        return $start->diffInHours($end);
+    }
 
     /**
      * Get day name from day number

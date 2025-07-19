@@ -530,25 +530,73 @@ class AvailabilityService
     /**
      * Get provider's working hours for a specific day
      */
-    public function getWorkingHours(User $provider, $date): ?array
+    // public function getWorkingHours(User $provider, $date): ?array
+    // {
+    //     $dayOfWeek = Carbon::parse($date)->dayOfWeek;
+
+    //     $weeklyAvailability = ProviderAvailability::where('provider_id', $provider->id)
+    //         ->where('day_of_week', $dayOfWeek)
+    //         ->where('is_available', true)
+    //         ->first();
+
+    //     if (!$weeklyAvailability || !$weeklyAvailability->start_time || !$weeklyAvailability->end_time) {
+    //         return null;
+    //     }
+
+    //     return [
+    //         'start' => $weeklyAvailability->start_time->format('H:i'),
+    //         'end' => $weeklyAvailability->end_time->format('H:i'),
+    //         'formatted' => $weeklyAvailability->formatted_time_range,
+    //         'day_name' => $this->getDayName($dayOfWeek)
+    //     ];
+    // }
+
+    public function getWorkingHours($provider, $date)
     {
-        $dayOfWeek = Carbon::parse($date)->dayOfWeek;
+        try {
+            $dayOfWeek = Carbon::parse($date)->dayOfWeek;
 
-        $weeklyAvailability = ProviderAvailability::where('provider_id', $provider->id)
-            ->where('day_of_week', $dayOfWeek)
-            ->where('is_available', true)
-            ->first();
+            // Get provider's weekly availability
+            $availability = ProviderAvailability::where('provider_id', $provider->id)
+                ->where('day_of_week', $dayOfWeek)
+                ->first();
 
-        if (!$weeklyAvailability || !$weeklyAvailability->start_time || !$weeklyAvailability->end_time) {
+            if (!$availability || !$availability->is_available) {
+                return null; // Not available on this day
+            }
+
+            // Check for blocked times on this specific date
+            $blockedTimes = BlockedTime::where('provider_id', $provider->id)
+                ->where('start_date', '<=', $date)
+                ->where('end_date', '>=', $date)
+                ->where('is_active', true)
+                ->get();
+
+            // If there's an all-day block, provider is not available
+            foreach ($blockedTimes as $blockedTime) {
+                if ($blockedTime->all_day) {
+                    return null;
+                }
+            }
+
+            return [
+                'is_available' => true,
+                'start_time' => $availability->start_time->format('H:i'),
+                'end_time' => $availability->end_time->format('H:i'),
+                'day_of_week' => $dayOfWeek,
+                'blocked_times' => $blockedTimes->map(function ($block) {
+                    return [
+                        'start_time' => $block->start_time ? $block->start_time->format('H:i') : null,
+                        'end_time' => $block->end_time ? $block->end_time->format('H:i') : null,
+                        'all_day' => $block->all_day,
+                        'reason' => $block->reason
+                    ];
+                })
+            ];
+        } catch (\Exception $e) {
+            Log::error('Error getting working hours: ' . $e->getMessage());
             return null;
         }
-
-        return [
-            'start' => $weeklyAvailability->start_time->format('H:i'),
-            'end' => $weeklyAvailability->end_time->format('H:i'),
-            'formatted' => $weeklyAvailability->formatted_time_range,
-            'day_name' => $this->getDayName($dayOfWeek)
-        ];
     }
 
     /**

@@ -86,6 +86,21 @@ class AppointmentController extends Controller
                 $validatedData['appointment_time']
             );
 
+            $durationValidationError = $this->validateServiceDuration(
+                $validatedData['provider_id'],
+                $validatedData['appointment_date'],
+                $validatedData['appointment_time'],
+                $validatedData['duration_hours']
+            );
+
+            if ($durationValidationError) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $durationValidationError,
+                    'errors' => ['duration_hours' => [$durationValidationError]]
+                ], 422);
+            }
+
             if ($validationError) {
                 return response()->json([
                     'success' => false,
@@ -94,7 +109,7 @@ class AppointmentController extends Controller
                 ], 422);
             }
 
-            // ✅ ADD: Check provider availability
+            // ADD: Check provider availability
             $availabilityError = $this->checkProviderAvailability(
                 $validatedData['provider_id'],
                 $validatedData['appointment_date'],
@@ -367,6 +382,57 @@ class AppointmentController extends Controller
                 'time' => $appointmentTime
             ]);
             return null;
+        }
+    }
+
+    /**
+     * Enhanced duration validation based on provider's daily availability
+     */
+    private function validateServiceDuration($providerId, $appointmentDate, $appointmentTime, $durationHours)
+    {
+        try {
+            $provider = User::find($providerId);
+            if (!$provider || $provider->role !== 'service_provider') {
+                return 'Provider not found';
+            }
+
+            // Get provider's working hours for the selected date
+            $availabilityService = app(\App\Services\AvailabilityService::class);
+            $workingHours = $availabilityService->getWorkingHours($provider, $appointmentDate);
+
+            if (!$workingHours || !$workingHours['is_available']) {
+                return 'Provider is not available on the selected date';
+            }
+
+            // Calculate if the service duration fits within working hours
+            $appointmentStartTime = Carbon::parse($appointmentDate . ' ' . $appointmentTime);
+            $appointmentEndTime = $appointmentStartTime->copy()->addHours($durationHours);
+
+            // Parse provider's end time for the day
+            $providerEndTime = Carbon::parse($appointmentDate . ' ' . $workingHours['end_time']);
+
+            if ($appointmentEndTime->gt($providerEndTime)) {
+                $maxPossibleHours = $appointmentStartTime->diffInHours($providerEndTime);
+                return "Service duration exceeds provider's working hours. Maximum available duration: {$maxPossibleHours} hours";
+            }
+
+            // Check for existing appointments that might conflict
+            $conflictingAppointments = Appointment::where('provider_id', $providerId)
+                ->where('appointment_date', $appointmentDate)
+                ->where('status', '!=', 'cancelled_by_client')
+                ->where('status', '!=', 'cancelled_by_provider')
+                ->whereTime('appointment_time', '>', $appointmentTime)
+                ->whereTime('appointment_time', '<', $appointmentEndTime->format('H:i:s'))
+                ->count();
+
+            if ($conflictingAppointments > 0) {
+                return 'Selected duration conflicts with existing appointments';
+            }
+
+            return null; // No errors
+        } catch (\Exception $e) {
+            Log::error('Duration validation error: ' . $e->getMessage());
+            return 'Unable to validate service duration';
         }
     }
 

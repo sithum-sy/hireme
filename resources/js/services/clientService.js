@@ -208,7 +208,7 @@ class ClientService {
 
     async getServiceDetail(serviceId, locationParams = null) {
         try {
-            // ✅ Build URL with location parameters if provided
+            // Build URL with location parameters if provided
             let url = `${API_BASE}/services/${serviceId}`;
 
             if (locationParams && locationParams.lat && locationParams.lng) {
@@ -238,7 +238,7 @@ class ClientService {
             console.warn("Service detail endpoint error:", error);
             console.log("Using fallback data for service ID:", serviceId);
 
-            // ✅ Enhanced fallback to include distance calculation if location provided
+            // Enhanced fallback to include distance calculation if location provided
             const fallbackService = this.getFallbackServiceDetail(serviceId);
 
             // Calculate distance for fallback if location is provided
@@ -587,17 +587,17 @@ class ClientService {
 
     // Update your getServiceReviews method in clientService.js
     async getServiceReviews(serviceId, params = {}) {
-        console.log("🔍 Getting service reviews for service ID:", serviceId);
-        console.log("🔍 With params:", params);
+        // console.log(" Getting service reviews for service ID:", serviceId);
+        // console.log(" With params:", params);
 
         try {
             const url = `${API_BASE}/services/${serviceId}/reviews`;
-            console.log("🔍 Request URL:", url);
+            // console.log(" Request URL:", url);
 
             const response = await axios.get(url, { params });
 
-            console.log("🔍 Response status:", response.status);
-            console.log("🔍 Response data:", response.data);
+            // console.log(" Response status:", response.status);
+            // console.log(" Response data:", response.data);
 
             return {
                 success: true,
@@ -606,9 +606,9 @@ class ClientService {
                 message: response.data.message || "Reviews loaded successfully",
             };
         } catch (error) {
-            console.error("🚨 Service reviews error:", error);
-            console.error("🚨 Error response:", error.response?.data);
-            console.error("🚨 Error status:", error.response?.status);
+            console.error("Service reviews error:", error);
+            console.error("Error response:", error.response?.data);
+            console.error("Error status:", error.response?.status);
 
             // Return fallback data
             return {
