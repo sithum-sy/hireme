@@ -21,6 +21,10 @@ const QuoteRequestModal = ({
         city: "",
         special_requirements: "",
         urgency: "normal",
+        service_id: service.id,
+        provider_id: provider.id,
+        preferred_date: selectedSlot?.date || "",
+        preferred_time: selectedSlot?.time || "",
     });
 
     const handleSubmit = async (e) => {
@@ -101,6 +105,14 @@ const QuoteRequestModal = ({
                         </div>
 
                         <div className="modal-body">
+                            {selectedSlot && (
+                                <div className="alert alert-info">
+                                    <i className="fas fa-info-circle me-2"></i>
+                                    <strong>Quote request for:</strong>{" "}
+                                    {selectedSlot.formatted_date} at{" "}
+                                    {selectedSlot.formatted_time}
+                                </div>
+                            )}
                             <form onSubmit={handleSubmit}>
                                 {/* Service Summary */}
                                 <div className="service-summary mb-4 p-3 bg-light rounded">

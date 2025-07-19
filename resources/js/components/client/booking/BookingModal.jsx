@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import BookingWizard from "./BookingWizard";
 
-const BookingModal = ({ show, onHide, service, provider }) => {
+const BookingModal = ({ show, onHide, service, provider, selectedSlot }) => {
     const navigate = useNavigate();
     const [currentStep, setCurrentStep] = useState(1);
 
@@ -98,10 +98,16 @@ const BookingModal = ({ show, onHide, service, provider }) => {
     const handleFullBookingFlow = () => {
         console.log("Switching to full booking flow");
         onHide();
-        navigate(`/client/booking/new/${normalizedService.id}`);
+        navigate(`/client/booking/new/${normalizedService.id}`, {
+            state: {
+                selectedSlot: selectedSlot,
+            },
+        });
     };
 
     if (!show) return null;
+
+    console.log("BookingModal - Selected slot:", selectedSlot);
 
     return (
         <>
@@ -127,6 +133,19 @@ const BookingModal = ({ show, onHide, service, provider }) => {
                                 </h5>
                                 <p className="text-muted mb-0 small">
                                     {normalizedService.title}
+                                    {selectedSlot && (
+                                        <span className="ms-2 text-purple">
+                                            •{" "}
+                                            {new Date(
+                                                selectedSlot.date
+                                            ).toLocaleDateString("en-US", {
+                                                weekday: "short",
+                                                month: "short",
+                                                day: "numeric",
+                                            })}{" "}
+                                            at {selectedSlot.formatted_time}
+                                        </span>
+                                    )}
                                 </p>
                             </div>
                             <button
@@ -141,6 +160,7 @@ const BookingModal = ({ show, onHide, service, provider }) => {
                             <BookingWizard
                                 service={normalizedService}
                                 provider={normalizedProvider}
+                                selectedSlot={selectedSlot}
                                 onComplete={handleBookingComplete}
                                 onFullFlow={handleFullBookingFlow}
                                 currentStep={currentStep}

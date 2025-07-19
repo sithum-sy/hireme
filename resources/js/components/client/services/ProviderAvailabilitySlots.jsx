@@ -87,13 +87,42 @@ const ProviderAvailabilitySlots = ({
         onDateChange(dateString);
     };
 
+    // const handleSlotSelect = (slot) => {
+    //     onSlotSelect({
+    //         date: selectedDate,
+    //         time: slot.time,
+    //         formatted_time: slot.formatted_time,
+    //         slot: slot,
+    //     });
+    // };
+
     const handleSlotSelect = (slot) => {
-        onSlotSelect({
+        const selectedSlotData = {
             date: selectedDate,
             time: slot.time,
             formatted_time: slot.formatted_time,
             slot: slot,
-        });
+            // Additional formatted data for easy use
+            formatted_date: new Date(selectedDate).toLocaleDateString("en-US", {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+            }),
+            formatted_date_short: new Date(selectedDate).toLocaleDateString(
+                "en-US",
+                {
+                    weekday: "short",
+                    month: "short",
+                    day: "numeric",
+                }
+            ),
+            // ISO datetime for backend
+            datetime_iso: `${selectedDate}T${slot.time}:00`,
+        };
+
+        console.log("Selected slot data:", selectedSlotData);
+        onSlotSelect(selectedSlotData);
     };
 
     // Function to handle contact provider
@@ -121,8 +150,6 @@ const ProviderAvailabilitySlots = ({
             document.body.classList.remove("modal-open");
         };
     }, [showContactModal]);
-
-    console.log("Provider data:", provider);
 
     return (
         <div className="provider-availability-slots">
@@ -297,7 +324,6 @@ const ProviderAvailabilitySlots = ({
                                             }
                                         })()}
                                     </p>
-                                    {/* ✅ UPDATE: Make button functional */}
                                     <button
                                         className="btn btn-outline-purple btn-sm"
                                         onClick={handleContactProvider}

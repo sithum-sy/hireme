@@ -7,6 +7,7 @@ import BookingConfirmation from "./BookingConfirmation";
 const BookingWizard = ({
     service,
     provider,
+    selectedSlot, // ✅ ADD: Accept selected slot
     onComplete,
     onFullFlow,
     currentStep = 1,
@@ -38,75 +39,29 @@ const BookingWizard = ({
         );
     }
 
-    // Initialize booking data with normalized service structure
-    // const [bookingData, setBookingData] = useState({
-    //     service_id: service?.id || initialData.service_id,
-    //     provider_id: provider?.id || initialData.provider_id,
-
-    //     // Date and time (to be filled in step 2)
-    //     date: "",
-    //     time: "",
-    //     appointment_date: "",
-    //     appointment_time: "",
-
-    //     // Service details with proper field mapping
-    //     duration: service.duration_hours || service.default_duration || 1,
-    //     duration_hours: service.duration_hours || service.default_duration || 1,
-
-    //     // Pricing with consistent structure
-    //     base_price: service.price || service.base_price || 0,
-    //     total_price: service.price || service.base_price || 0,
-    //     pricing_type: service.pricing_type || "fixed",
-
-    //     // Service customization
-    //     additional_services: [],
-    //     requirements: "",
-    //     special_instructions: "",
-
-    //     // Location details (to be filled in step 3)
-    //     location: {
-    //         type: "client_address",
-    //         address: "",
-    //         city: "",
-    //         postal_code: "",
-    //         instructions: "",
-    //     },
-    //     client_address: "", // Laravel backend expects this field
-    //     client_location: null, // For GPS coordinates
-    //     client_notes: "",
-
-    //     // Contact preferences (to be filled in step 3)
-    //     contact_preference: "phone",
-    //     phone: "",
-    //     email: "",
-    //     emergency_contact: "",
-
-    //     // Booking type and payment
-    //     request_quote: false,
-    //     booking_type: "standard",
-    //     payment_method: "cash",
-    //     agreed_to_terms: false,
-
-    //     // Additional fees
-    //     estimated_travel_fee: 0,
-    //     total_price_with_travel: service.price || service.base_price || 0,
-
-    //     ...initialData,
-    // });
+    // ✅ UPDATE: Initialize with selected slot data
     const [bookingData, setBookingData] = useState(() => {
-        // Create the base state first
         const baseState = {
             // Ensure these core IDs are always set first
             service_id: service?.id || initialData.service_id,
             provider_id: provider?.id || initialData.provider_id,
 
-            // Other default values
-            appointment_date: "",
-            appointment_time: "",
-            duration: service?.duration_hours || 1,
-            duration_hours: service?.duration_hours || 1,
+            // ✅ UPDATE: Initialize with selected slot data
+            date: selectedSlot?.date || "",
+            time: selectedSlot?.time || "",
+            appointment_date: selectedSlot?.date || "",
+            appointment_time: selectedSlot?.time || "",
+            formatted_time: selectedSlot?.formatted_time || "",
+            formatted_date: selectedSlot?.formatted_date || "",
+            datetime_iso: selectedSlot?.datetime_iso || "",
+
+            // Service details
+            duration: service?.duration_hours || service?.default_duration || 1,
+            duration_hours:
+                service?.duration_hours || service?.default_duration || 1,
             total_price: service?.price || service?.base_price || 0,
             base_price: service?.price || service?.base_price || 0,
+            pricing_type: service?.pricing_type || "fixed",
             travel_fee: 0,
 
             // Location defaults
@@ -147,14 +102,38 @@ const BookingWizard = ({
         }
 
         console.log("BookingWizard initialized with:", mergedState);
-        console.log("Quote-related fields in initial state:", {
-            quote_id: mergedState.quote_id,
-            isFromQuote: mergedState.isFromQuote,
-            booking_source: mergedState.booking_source,
-        });
+        console.log("Selected slot data:", selectedSlot);
 
         return mergedState;
     });
+
+    // ✅ UPDATE: Handle selected slot changes
+    useEffect(() => {
+        if (selectedSlot) {
+            console.log(
+                "Updating booking data with selected slot:",
+                selectedSlot
+            );
+
+            setBookingData((prev) => ({
+                ...prev,
+                date: selectedSlot.date,
+                time: selectedSlot.time,
+                appointment_date: selectedSlot.date,
+                appointment_time: selectedSlot.time,
+                formatted_time: selectedSlot.formatted_time,
+                formatted_date:
+                    selectedSlot.formatted_date ||
+                    selectedSlot.formatted_date_short,
+                datetime_iso: selectedSlot.datetime_iso,
+            }));
+
+            // ✅ AUTO-ADVANCE: Skip to step 3 (Details) if date/time already selected
+            if (currentStep === 1 || currentStep === 2) {
+                setCurrentStep(3);
+            }
+        }
+    }, [selectedSlot, currentStep, setCurrentStep]);
 
     // Add a validation check
     useEffect(() => {
@@ -200,60 +179,10 @@ const BookingWizard = ({
         }
     };
 
-    // Enhanced update function with data validation
-    // const updateBookingData = (updates) => {
-    //     // console.log("Updating booking data:", updates);
-
-    //     setBookingData((prev) => {
-    //         const newData = { ...prev, ...updates };
-
-    //         // Auto-calculate total price when relevant fields change
-    //         if (
-    //             updates.duration !== undefined ||
-    //             updates.base_price !== undefined ||
-    //             updates.additional_services !== undefined
-    //         ) {
-    //             const basePrice = newData.base_price || service.price || 0;
-    //             const duration = newData.duration || 1;
-    //             const addOnsTotal = (newData.additional_services || []).reduce(
-    //                 (sum, addon) => sum + (addon.price || 0),
-    //                 0
-    //             );
-    //             const travelFee = newData.estimated_travel_fee || 0;
-
-    //             newData.total_price = basePrice * duration + addOnsTotal;
-    //             newData.total_price_with_travel =
-    //                 newData.total_price + travelFee;
-    //         }
-
-    //         // Sync date/time fields for Laravel backend compatibility
-    //         if (updates.date) {
-    //             newData.appointment_date = updates.date;
-    //         }
-    //         if (updates.time) {
-    //             newData.appointment_time = updates.time;
-    //         }
-
-    //         // Sync location fields
-    //         if (updates.location?.address) {
-    //             newData.client_address = updates.location.address;
-    //         }
-
-    //         // Sync notes fields
-    //         if (updates.requirements) {
-    //             newData.client_notes = updates.requirements;
-    //         }
-
-    //         // console.log("Updated booking data:", newData);
-    //         return newData;
-    //     });
-    // };
     const updateBookingData = (updates) => {
-        // console.log("UpdateBookingData called with:", updates);
-        // console.log("Current initialData:", initialData);
-
         setBookingData((prev) => {
             console.log("Previous bookingData:", prev);
+            console.log("Updates:", updates);
 
             const newData = { ...prev, ...updates };
 
@@ -282,7 +211,21 @@ const BookingWizard = ({
                 newData.booking_source = initialData.booking_source;
             }
 
-            // Rest of your existing logic...
+            // ✅ UPDATE: Sync date/time fields
+            if (updates.date) {
+                newData.appointment_date = updates.date;
+            }
+            if (updates.time) {
+                newData.appointment_time = updates.time;
+            }
+            if (updates.appointment_date) {
+                newData.date = updates.appointment_date;
+            }
+            if (updates.appointment_time) {
+                newData.time = updates.appointment_time;
+            }
+
+            // Parse numeric fields
             if (updates.duration !== undefined) {
                 newData.duration = parseFloat(updates.duration);
                 newData.duration_hours = parseFloat(updates.duration);
@@ -304,7 +247,8 @@ const BookingWizard = ({
             if (
                 updates.duration !== undefined ||
                 updates.base_price !== undefined ||
-                updates.additional_services !== undefined
+                updates.additional_services !== undefined ||
+                updates.travel_fee !== undefined
             ) {
                 const basePrice =
                     newData.base_price ||
@@ -325,17 +269,11 @@ const BookingWizard = ({
             }
 
             console.log("Final newData:", newData);
-            console.log("Quote-related fields after update:", {
-                quote_id: newData.quote_id,
-                isFromQuote: newData.isFromQuote,
-                booking_source: newData.booking_source,
-            });
-
             return newData;
         });
     };
 
-    // Enhanced step completion validation
+    // ✅ UPDATE: Enhanced step completion validation
     const isStepComplete = (stepId) => {
         switch (stepId) {
             case 1:
@@ -345,7 +283,10 @@ const BookingWizard = ({
                     bookingData.duration
                 );
             case 2:
-                return bookingData.date && bookingData.time;
+                return (
+                    (bookingData.date || bookingData.appointment_date) &&
+                    (bookingData.time || bookingData.appointment_time)
+                );
             case 3:
                 // Check if required location and contact info is provided
                 if (
@@ -367,6 +308,33 @@ const BookingWizard = ({
 
     return (
         <div className="booking-wizard">
+            {/* ✅ ADD: Show selected date/time banner at top */}
+            {selectedSlot && (
+                <div className="selected-slot-banner bg-light border-bottom p-3">
+                    <div className="container-fluid">
+                        <div className="d-flex align-items-center justify-content-between">
+                            <div className="selected-slot-info">
+                                <i className="fas fa-calendar-check text-success me-2"></i>
+                                <strong>Selected Time: </strong>
+                                <span className="text-purple fw-semibold">
+                                    {selectedSlot.formatted_date ||
+                                        selectedSlot.formatted_date_short}{" "}
+                                    at {selectedSlot.formatted_time}
+                                </span>
+                            </div>
+                            <button
+                                className="btn btn-sm btn-outline-secondary"
+                                onClick={() => setCurrentStep(2)}
+                                title="Change selected date/time"
+                            >
+                                <i className="fas fa-edit me-1"></i>
+                                Change Time
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Progress Steps with enhanced visual feedback */}
             <div className="wizard-header bg-light border-bottom p-4">
                 <div className="steps-container">
@@ -456,6 +424,8 @@ const BookingWizard = ({
                         updateBookingData={updateBookingData}
                         onNext={handleNext}
                         onPrevious={handlePrevious}
+                        // ✅ ADD: Pass selected slot to show pre-selected time
+                        selectedSlot={selectedSlot}
                     />
                 )}
 
@@ -487,7 +457,10 @@ const BookingWizard = ({
                 <div className="debug-info bg-light p-2 mt-3">
                     <small className="text-muted">
                         Debug: Step {currentStep}, Service ID: {service.id},
-                        Total Price: Rs. {bookingData.total_price_with_travel}
+                        Selected Slot: {selectedSlot ? "Yes" : "No"}, Date:{" "}
+                        {bookingData.date || bookingData.appointment_date},
+                        Time: {bookingData.time || bookingData.appointment_time}
+                        , Total Price: Rs. {bookingData.total_price}
                     </small>
                 </div>
             )}
@@ -517,10 +490,20 @@ const BookingWizard = ({
                 .bg-purple {
                     background-color: #6f42c1 !important;
                 }
+                .text-purple {
+                    color: #6f42c1 !important;
+                }
+                .selected-slot-banner {
+                    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+                    border-left: 4px solid #6f42c1;
+                }
                 @media (max-width: 768px) {
                     .step-connector {
                         width: 30px;
                         margin: 0 0.5rem;
+                    }
+                    .booking-summary-sidebar {
+                        display: none !important;
                     }
                 }
             `}</style>

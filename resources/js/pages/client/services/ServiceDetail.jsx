@@ -1281,6 +1281,7 @@ const ServiceDetail = () => {
                     }}
                     service={service}
                     provider={provider}
+                    selectedSlot={selectedSlot}
                 />
 
                 {/* Quote Request Modal */}
