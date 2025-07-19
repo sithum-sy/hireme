@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import clientAvailabilityService from "../../../services/clientAvailabilityService";
+import { createPortal } from "react-dom";
 
 const ProviderAvailabilitySlots = ({
     service,
@@ -11,6 +12,7 @@ const ProviderAvailabilitySlots = ({
     const [availableSlots, setAvailableSlots] = useState([]);
     const [loading, setLoading] = useState(false);
     const [currentWeek, setCurrentWeek] = useState(new Date());
+    const [showContactModal, setShowContactModal] = useState(false);
 
     useEffect(() => {
         if (selectedDate) {
@@ -94,8 +96,33 @@ const ProviderAvailabilitySlots = ({
         });
     };
 
+    // Function to handle contact provider
+    const handleContactProvider = () => {
+        setShowContactModal(true);
+    };
+
     const weekDates = getWeekDates(currentWeek);
     const today = new Date();
+
+    useEffect(() => {
+        if (showContactModal) {
+            // Prevent body scroll when modal is open
+            document.body.style.overflow = "hidden";
+            document.body.classList.add("modal-open");
+        } else {
+            // Restore body scroll when modal is closed
+            document.body.style.overflow = "unset";
+            document.body.classList.remove("modal-open");
+        }
+
+        // Cleanup on unmount
+        return () => {
+            document.body.style.overflow = "unset";
+            document.body.classList.remove("modal-open");
+        };
+    }, [showContactModal]);
+
+    console.log("Provider data:", provider);
 
     return (
         <div className="provider-availability-slots">
@@ -256,10 +283,25 @@ const ProviderAvailabilitySlots = ({
                                         No available times
                                     </h6>
                                     <p className="text-muted small mb-3">
-                                        Please select a different date or
-                                        contact the provider directly.
+                                        {(() => {
+                                            const today = new Date()
+                                                .toISOString()
+                                                .split("T")[0];
+                                            const isToday =
+                                                selectedDate === today;
+
+                                            if (isToday) {
+                                                return "No more slots available today. Try selecting tomorrow or contact the provider for urgent bookings.";
+                                            } else {
+                                                return "Please select a different date or contact the provider directly.";
+                                            }
+                                        })()}
                                     </p>
-                                    <button className="btn btn-outline-purple btn-sm">
+                                    {/* ✅ UPDATE: Make button functional */}
+                                    <button
+                                        className="btn btn-outline-purple btn-sm"
+                                        onClick={handleContactProvider}
+                                    >
                                         <i className="fas fa-phone me-2"></i>
                                         Contact Provider
                                     </button>
@@ -270,6 +312,108 @@ const ProviderAvailabilitySlots = ({
                 </div>
             )}
 
+            {showContactModal &&
+                createPortal(
+                    <div
+                        className="contact-modal-overlay"
+                        onClick={() => setShowContactModal(false)}
+                    >
+                        <div
+                            className="contact-modal-content"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <div className="contact-modal-header">
+                                <h5>
+                                    <i className="fas fa-address-book me-2"></i>
+                                    Contact Provider
+                                </h5>
+                                <button
+                                    className="contact-modal-close"
+                                    onClick={() => setShowContactModal(false)}
+                                >
+                                    &times;
+                                </button>
+                            </div>
+
+                            <div className="contact-modal-body">
+                                <div className="text-center mb-3">
+                                    <h6 className="fw-bold">
+                                        {provider.business_name ||
+                                            `${provider.first_name || ""} ${
+                                                provider.last_name || ""
+                                            }`.trim() ||
+                                            provider.name ||
+                                            "Service Provider"}
+                                    </h6>
+                                </div>
+
+                                {/* Email */}
+                                {provider.email && (
+                                    <div className="mb-3">
+                                        <label className="fw-semibold">
+                                            Email:
+                                        </label>
+                                        <div className="d-flex align-items-center mt-1">
+                                            <input
+                                                type="text"
+                                                className="form-control"
+                                                value={provider.email}
+                                                readOnly
+                                            />
+                                            <button
+                                                className="btn btn-outline-secondary ms-2"
+                                                onClick={() =>
+                                                    navigator.clipboard.writeText(
+                                                        provider.email
+                                                    )
+                                                }
+                                            >
+                                                <i className="fas fa-copy"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Phone */}
+                                {provider.contact_number && (
+                                    <div className="mb-3">
+                                        <label className="fw-semibold">
+                                            Phone Number:
+                                        </label>
+                                        <div className="d-flex align-items-center mt-1">
+                                            <input
+                                                type="text"
+                                                className="form-control"
+                                                value={provider.contact_number}
+                                                readOnly
+                                            />
+                                            <button
+                                                className="btn btn-outline-secondary ms-2"
+                                                onClick={() =>
+                                                    navigator.clipboard.writeText(
+                                                        provider.contact_number
+                                                    )
+                                                }
+                                            >
+                                                <i className="fas fa-copy"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="contact-modal-footer">
+                                <button
+                                    className="btn btn-secondary"
+                                    onClick={() => setShowContactModal(false)}
+                                >
+                                    Close
+                                </button>
+                            </div>
+                        </div>
+                    </div>,
+                    document.body
+                )}
             <style>{`
                 .text-purple {
                     color: #6f42c1 !important;
@@ -303,6 +447,57 @@ const ProviderAvailabilitySlots = ({
                     flex-direction: column;
                     align-items: center;
                     justify-content: center;
+                }
+                .modal.show {
+                    display: block !important;
+                }
+                .contact-modal-overlay {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background-color: rgba(0, 0, 0, 0.5);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    z-index: 1050;
+                }
+
+                .contact-modal-content {
+                    background: white;
+                    border-radius: 8px;
+                    max-width: 500px;
+                    width: 90%;
+                    max-height: 90vh;
+                    overflow-y: auto;
+                    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+                }
+
+                .contact-modal-header {
+                    padding: 1rem 1.5rem;
+                    border-bottom: 1px solid #dee2e6;
+                    display: flex;
+                    justify-content: between;
+                    align-items: center;
+                }
+
+                .contact-modal-close {
+                    background: none;
+                    border: none;
+                    font-size: 1.5rem;
+                    cursor: pointer;
+                    margin-left: auto;
+                }
+
+                .contact-modal-body {
+                    padding: 1.5rem;
+                }
+
+                .contact-modal-footer {
+                    padding: 1rem 1.5rem;
+                    border-top: 1px solid #dee2e6;
+                    text-align: right;
                 }
             `}</style>
         </div>

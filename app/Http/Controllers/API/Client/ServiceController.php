@@ -180,6 +180,8 @@ class ServiceController extends Controller
                 'first_name' => $provider->first_name,
                 'last_name' => $provider->last_name,
                 'business_name' => $providerProfile->business_name ?? null,
+                'email' => $provider->email,
+                'contact_number' => $provider->contact_number,
                 'profile_image_url' => $provider->profile_picture ? Storage::url($provider->profile_picture) : null,
                 'bio' => $providerProfile->bio ?? null,
                 'is_verified' => $providerProfile->isVerified() ?? false,
