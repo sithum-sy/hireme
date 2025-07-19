@@ -167,6 +167,8 @@ class ServiceController extends Controller
                 ],
                 'location' => $service->location,
                 'distance' => $distance,
+                'views_count' => $service->views_count,
+                'bookings_count' => $service->bookings_count,
             ];
 
             // Format provider data
@@ -772,8 +774,8 @@ class ServiceController extends Controller
             'duration_hours' => $service->duration_hours,
             'average_rating' => round($averageRating, 1), // From Review model
             'reviews_count' => $serviceReviewsCount, // From Review model
-            'views_count' => $service->views_count,
-            'bookings_count' => $service->bookings_count,
+            'views_count' => $service->views_count ?? 0,
+            'bookings_count' => $service->bookings_count ?? 0,
             'first_image_url' => $service->first_image_url,
             'location' => $service->location,
             'distance' => isset($service->distance) ? round($service->distance, 2) : null,

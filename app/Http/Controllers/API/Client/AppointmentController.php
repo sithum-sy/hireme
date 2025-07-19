@@ -149,6 +149,12 @@ class AppointmentController extends Controller
                 'updated_at' => now(),
             ]);
 
+            // INCREMENT BOOKING COUNT when appointment is created
+            $service = Service::find($appointment->service_id);
+            if ($service) {
+                $service->incrementBookings();
+            }
+
             // Log::info('Appointment created', [
             //     'appointment_id' => $appointment->id,
             //     'quote_id' => $appointment->quote_id

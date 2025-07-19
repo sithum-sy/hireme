@@ -217,6 +217,31 @@ const ServiceDetail = () => {
         return [];
     };
 
+    const formatDuration = (duration) => {
+        if (duration == null || duration === "") return "Flexible";
+
+        const durationNum = parseFloat(duration);
+
+        if (isNaN(durationNum)) return "Flexible";
+
+        // Handle minutes for durations less than 1 hour
+        if (durationNum < 1) {
+            const minutes = Math.round(durationNum * 60);
+            return minutes === 1 ? "1 minute" : `${minutes} minutes`;
+        }
+
+        // Handle hours
+        const isWholeNumber = durationNum % 1 === 0;
+        const displayValue = isWholeNumber
+            ? Math.floor(durationNum)
+            : durationNum;
+
+        return displayValue === 1 ? "1 hour" : `${displayValue} hours`;
+    };
+
+    console.log("View Count:", service?.views_count);
+    console.log("Booking Count:", service?.bookings_count);
+
     if (loading) {
         return (
             <ClientLayout>
@@ -510,14 +535,18 @@ const ServiceDetail = () => {
                                 <div className="provider-tab">
                                     <div className="card border-0 shadow-sm">
                                         <div className="card-body">
-                                            <div className="d-flex align-items-start mb-4">
-                                                <div className="provider-avatar me-3">
+                                            {/* Provider Header - Fixed Layout */}
+                                            <div className="provider-header d-flex align-items-start mb-4">
+                                                <div className="provider-avatar me-3 flex-shrink-0">
                                                     {provider.profile_image_url ? (
                                                         <img
                                                             src={
                                                                 provider.profile_image_url
                                                             }
-                                                            alt={provider.name}
+                                                            alt={
+                                                                provider.business_name ||
+                                                                provider.name
+                                                            }
                                                             className="rounded-circle"
                                                             style={{
                                                                 width: "80px",
@@ -539,134 +568,305 @@ const ServiceDetail = () => {
                                                     )}
                                                 </div>
 
-                                                <div className="provider-info flex-grow-1">
-                                                    <h5 className="fw-bold mb-1">
-                                                        {service.business_name ||
-                                                            provider.name}
+                                                <div className="provider-info flex-grow-1 min-width-0">
+                                                    <div className="d-flex align-items-center flex-wrap mb-2">
+                                                        <h5 className="fw-bold mb-0 me-2">
+                                                            {provider.business_name ||
+                                                                `${
+                                                                    provider.first_name ||
+                                                                    ""
+                                                                } ${
+                                                                    provider.last_name ||
+                                                                    ""
+                                                                }`.trim() ||
+                                                                provider.name ||
+                                                                "Service Provider"}
+                                                        </h5>
                                                         {provider.is_verified && (
-                                                            <span className="badge bg-success ms-2">
+                                                            <span className="badge bg-success">
                                                                 <i className="fas fa-check-circle me-1"></i>
                                                                 Verified
                                                             </span>
                                                         )}
-                                                    </h5>
-                                                    <p className="text-muted mb-2">
-                                                        {provider.bio}
-                                                    </p>
+                                                    </div>
 
-                                                    <div className="provider-stats row">
-                                                        <div className="col-6 col-md-3 mb-2">
-                                                            <div className="stat">
-                                                                <div className="stat-value fw-bold">
-                                                                    {provider.total_services ||
+                                                    <div className="provider-meta mb-3">
+                                                        {/* Provider Rating */}
+                                                        <div className="provider-rating mb-2">
+                                                            <div className="d-flex align-items-center">
+                                                                <div className="stars me-2">
+                                                                    {[
+                                                                        1, 2, 3,
+                                                                        4, 5,
+                                                                    ].map(
+                                                                        (
+                                                                            star
+                                                                        ) => (
+                                                                            <i
+                                                                                key={
+                                                                                    star
+                                                                                }
+                                                                                className={`fas fa-star ${
+                                                                                    star <=
+                                                                                    (provider.average_rating ||
+                                                                                        0)
+                                                                                        ? "text-warning"
+                                                                                        : "text-muted"
+                                                                                }`}
+                                                                                style={{
+                                                                                    fontSize:
+                                                                                        "0.9rem",
+                                                                                }}
+                                                                            ></i>
+                                                                        )
+                                                                    )}
+                                                                </div>
+                                                                <span className="fw-semibold me-1">
+                                                                    {provider.average_rating ||
                                                                         0}
-                                                                </div>
-                                                                <div className="stat-label text-muted small">
-                                                                    Services
-                                                                </div>
+                                                                </span>
+                                                                <span className="text-muted">
+                                                                    (
+                                                                    {provider.reviews_count ||
+                                                                        0}{" "}
+                                                                    reviews)
+                                                                </span>
                                                             </div>
                                                         </div>
-                                                        <div className="col-6 col-md-3 mb-2">
-                                                            <div className="stat">
-                                                                <div className="stat-value fw-bold">
-                                                                    {provider.completed_bookings ||
-                                                                        0}
-                                                                </div>
-                                                                <div className="stat-label text-muted small">
-                                                                    Completed
-                                                                    Jobs
-                                                                </div>
+
+                                                        {/* Provider Location */}
+                                                        <div className="provider-location mb-2">
+                                                            <div className="d-flex align-items-center text-muted">
+                                                                <i className="fas fa-map-marker-alt me-2"></i>
+                                                                <span>
+                                                                    {provider.city &&
+                                                                    provider.province
+                                                                        ? `${provider.city}, ${provider.province}`
+                                                                        : provider.city ||
+                                                                          provider.province ||
+                                                                          "Location not specified"}
+                                                                </span>
+                                                                {provider.service_radius && (
+                                                                    <span className="ms-2">
+                                                                        •{" "}
+                                                                        {
+                                                                            provider.service_radius
+                                                                        }
+                                                                        km
+                                                                        service
+                                                                        radius
+                                                                    </span>
+                                                                )}
                                                             </div>
                                                         </div>
-                                                        <div className="col-6 col-md-3 mb-2">
-                                                            <div className="stat">
-                                                                <div className="stat-value fw-bold">
-                                                                    {provider.years_experience ||
-                                                                        0}
-                                                                </div>
-                                                                <div className="stat-label text-muted small">
-                                                                    Years
-                                                                    Experience
-                                                                </div>
+
+                                                        {/* Provider Bio */}
+                                                        {provider.bio && (
+                                                            <p className="text-muted mb-0">
+                                                                {provider.bio}
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Provider Statistics Grid */}
+                                            <div className="provider-stats">
+                                                <h6 className="fw-bold mb-3">
+                                                    Provider Statistics
+                                                </h6>
+                                                <div className="row g-3">
+                                                    <div className="col-6 col-md-3">
+                                                        <div className="stat-card text-center p-3 bg-light rounded">
+                                                            <div className="stat-value h5 fw-bold text-primary mb-1">
+                                                                {provider.total_services ||
+                                                                    0}
+                                                            </div>
+                                                            <div className="stat-label small text-muted">
+                                                                Total Services
                                                             </div>
                                                         </div>
-                                                        <div className="col-6 col-md-3 mb-2">
-                                                            <div className="stat">
-                                                                <div className="stat-value fw-bold">
-                                                                    {provider.response_time ||
-                                                                        "N/A"}
-                                                                </div>
-                                                                <div className="stat-label text-muted small">
-                                                                    Response
-                                                                    Time
-                                                                </div>
+                                                    </div>
+                                                    <div className="col-6 col-md-3">
+                                                        <div className="stat-card text-center p-3 bg-light rounded">
+                                                            <div className="stat-value h5 fw-bold text-success mb-1">
+                                                                {provider.completed_bookings ||
+                                                                    0}
+                                                            </div>
+                                                            <div className="stat-label small text-muted">
+                                                                Completed Jobs
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div className="col-6 col-md-3">
+                                                        <div className="stat-card text-center p-3 bg-light rounded">
+                                                            <div className="stat-value h5 fw-bold text-info mb-1">
+                                                                {provider.years_experience ||
+                                                                    0}
+                                                            </div>
+                                                            <div className="stat-label small text-muted">
+                                                                Years Experience
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div className="col-6 col-md-3">
+                                                        <div className="stat-card text-center p-3 bg-light rounded">
+                                                            <div className="stat-value h5 fw-bold text-warning mb-1">
+                                                                {provider.response_time ||
+                                                                    "N/A"}
+                                                            </div>
+                                                            <div className="stat-label small text-muted">
+                                                                Response Time
                                                             </div>
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
 
-                                            {/* Provider Services */}
-                                            <div className="provider-services">
-                                                <h6 className="fw-bold mb-3">
-                                                    Other Services by{" "}
-                                                    {provider.name}
-                                                </h6>
+                                            {/* Additional Provider Info */}
+                                            <div className="provider-details mt-4">
                                                 <div className="row">
-                                                    {provider.other_services
-                                                        ?.slice(0, 3)
-                                                        .map((otherService) => (
-                                                            <div
-                                                                key={
-                                                                    otherService.id
-                                                                }
-                                                                className="col-md-4 mb-3"
-                                                            >
-                                                                <Link
-                                                                    to={`/client/services/${otherService.id}`}
-                                                                    className="text-decoration-none"
-                                                                >
-                                                                    <div className="card border">
-                                                                        <div className="card-body p-3">
-                                                                            <h6 className="card-title small mb-1">
-                                                                                {
-                                                                                    otherService.title
-                                                                                }
-                                                                            </h6>
-                                                                            <div className="d-flex justify-content-between">
-                                                                                <small className="text-muted">
-                                                                                    {
-                                                                                        otherService
-                                                                                            .category
-                                                                                            .name
-                                                                                    }
-                                                                                </small>
-                                                                                <small className="fw-bold text-purple">
-                                                                                    {
-                                                                                        otherService.formatted_price
-                                                                                    }
-                                                                                </small>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                </Link>
-                                                            </div>
-                                                        ))}
+                                                    <div className="col-md-6">
+                                                        <div className="detail-item mb-3">
+                                                            <h6 className="fw-semibold mb-2">
+                                                                <i className="fas fa-phone text-primary me-2"></i>
+                                                                Contact
+                                                                Preferences
+                                                            </h6>
+                                                            <p className="text-muted mb-0">
+                                                                Typically
+                                                                responds within{" "}
+                                                                {provider.response_time ||
+                                                                    "2 hours"}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="col-md-6">
+                                                        <div className="detail-item mb-3">
+                                                            <h6 className="fw-semibold mb-2">
+                                                                <i className="fas fa-truck text-primary me-2"></i>
+                                                                Service Area
+                                                            </h6>
+                                                            <p className="text-muted mb-0">
+                                                                Serves within{" "}
+                                                                {provider.service_radius ||
+                                                                    25}
+                                                                km radius
+                                                                {provider.travel_fee >
+                                                                    0 && (
+                                                                    <span className="ms-1">
+                                                                        • Rs.{" "}
+                                                                        {
+                                                                            provider.travel_fee
+                                                                        }{" "}
+                                                                        travel
+                                                                        fee
+                                                                    </span>
+                                                                )}
+                                                            </p>
+                                                        </div>
+                                                    </div>
                                                 </div>
+                                            </div>
 
-                                                {provider.total_services >
-                                                    3 && (
-                                                    <Link
-                                                        to={`/client/providers/${provider.id}`}
-                                                        className="btn btn-outline-purple btn-sm"
-                                                    >
-                                                        View All Services (
-                                                        {
-                                                            provider.total_services
-                                                        }
-                                                        )
-                                                    </Link>
+                                            {/* Other Services */}
+                                            {provider.other_services &&
+                                                provider.other_services.length >
+                                                    0 && (
+                                                    <div className="provider-services mt-4">
+                                                        <div className="d-flex justify-content-between align-items-center mb-3">
+                                                            <h6 className="fw-bold mb-0">
+                                                                Other Services
+                                                                by{" "}
+                                                                {provider.business_name ||
+                                                                    provider.name}
+                                                            </h6>
+                                                            {provider.total_services >
+                                                                3 && (
+                                                                <Link
+                                                                    to={`/client/providers/${provider.id}`}
+                                                                    className="btn btn-outline-purple btn-sm"
+                                                                >
+                                                                    View All (
+                                                                    {
+                                                                        provider.total_services
+                                                                    }
+                                                                    )
+                                                                </Link>
+                                                            )}
+                                                        </div>
+
+                                                        <div className="row g-3">
+                                                            {provider.other_services
+                                                                .slice(0, 3)
+                                                                .map(
+                                                                    (
+                                                                        otherService
+                                                                    ) => (
+                                                                        <div
+                                                                            key={
+                                                                                otherService.id
+                                                                            }
+                                                                            className="col-md-4"
+                                                                        >
+                                                                            <Link
+                                                                                to={`/client/services/${otherService.id}`}
+                                                                                className="text-decoration-none"
+                                                                            >
+                                                                                <div className="card border-0 bg-light h-100 service-card-hover">
+                                                                                    <div className="card-body p-3">
+                                                                                        <h6 className="card-title mb-2 text-dark">
+                                                                                            {
+                                                                                                otherService.title
+                                                                                            }
+                                                                                        </h6>
+                                                                                        <div className="d-flex justify-content-between align-items-center">
+                                                                                            <small className="text-muted">
+                                                                                                {otherService
+                                                                                                    .category
+                                                                                                    ?.name ||
+                                                                                                    "Service"}
+                                                                                            </small>
+                                                                                            <span className="fw-bold text-purple">
+                                                                                                {
+                                                                                                    otherService.formatted_price
+                                                                                                }
+                                                                                            </span>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </Link>
+                                                                        </div>
+                                                                    )
+                                                                )}
+                                                        </div>
+                                                    </div>
                                                 )}
+
+                                            {/* Contact Actions */}
+                                            <div className="provider-actions mt-4 pt-3 border-top">
+                                                <div className="row g-2">
+                                                    <div className="col-md-6">
+                                                        <button
+                                                            className="btn btn-outline-purple w-100"
+                                                            onClick={
+                                                                handleContactProvider
+                                                            }
+                                                        >
+                                                            <i className="fas fa-comments me-2"></i>
+                                                            Contact Provider
+                                                        </button>
+                                                    </div>
+                                                    <div className="col-md-6">
+                                                        <Link
+                                                            to={`/client/providers/${provider.id}`}
+                                                            className="btn btn-purple w-100"
+                                                        >
+                                                            <i className="fas fa-user me-2"></i>
+                                                            View Profile
+                                                        </Link>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -984,10 +1184,10 @@ const ServiceDetail = () => {
                                             Duration:
                                         </span>
                                         <span className="fw-semibold">
-                                            {service.duration ||
-                                                (service.duration_hours
-                                                    ? `${service.duration_hours} hours`
-                                                    : "Flexible")}
+                                            {formatDuration(
+                                                service.duration ||
+                                                    service.duration_hours
+                                            )}
                                         </span>
                                     </div>
 
@@ -1007,7 +1207,7 @@ const ServiceDetail = () => {
                                         </span>
                                     </div>
 
-                                    <div className="info-item d-flex justify-content-between mb-2">
+                                    {/* <div className="info-item d-flex justify-content-between mb-2">
                                         <span className="text-muted">
                                             Service Location:
                                         </span>
@@ -1015,7 +1215,7 @@ const ServiceDetail = () => {
                                             {service.service_location ||
                                                 "At your location"}
                                         </span>
-                                    </div>
+                                    </div> */}
 
                                     <div className="info-item d-flex justify-content-between mb-2">
                                         <span className="text-muted">
@@ -1027,23 +1227,6 @@ const ServiceDetail = () => {
                                         </span>
                                     </div>
 
-                                    {service.languages && (
-                                        <div className="info-item d-flex justify-content-between mb-2">
-                                            <span className="text-muted">
-                                                Languages:
-                                            </span>
-                                            <span className="fw-semibold">
-                                                {Array.isArray(
-                                                    service.languages
-                                                )
-                                                    ? service.languages.join(
-                                                          ", "
-                                                      )
-                                                    : service.languages}
-                                            </span>
-                                        </div>
-                                    )}
-
                                     {/* Service Stats */}
                                     <hr className="my-3" />
                                     <div className="service-stats">
@@ -1051,16 +1234,22 @@ const ServiceDetail = () => {
                                             <small className="text-muted">
                                                 Views:
                                             </small>
-                                            <small className="fw-semibold">
-                                                {service.views_count || 0}
+                                            <small
+                                                className="fw-semibold"
+                                                style={{ color: "#000" }}
+                                            >
+                                                {service?.views_count || 0}
                                             </small>
                                         </div>
                                         <div className="stat-item d-flex justify-content-between">
                                             <small className="text-muted">
                                                 Bookings:
                                             </small>
-                                            <small className="fw-semibold">
-                                                {service.bookings_count || 0}
+                                            <small
+                                                className="fw-semibold"
+                                                style={{ color: "#000" }}
+                                            >
+                                                {service?.bookings_count || 0}
                                             </small>
                                         </div>
                                     </div>
@@ -1146,12 +1335,86 @@ const ServiceDetail = () => {
                     background-color: #6f42c1;
                     border-color: #6f42c1;
                 }
-                .breadcrumb-item a {
-                    color: #6f42c1;
-                    text-decoration: none;
+
+                /* Provider Tab Specific Fixes */
+                .provider-header {
+                    align-items: flex-start !important;
                 }
-                .breadcrumb-item a:hover {
-                    text-decoration: underline;
+
+                .provider-avatar {
+                    flex-shrink: 0;
+                    min-width: 80px;
+                }
+
+                .provider-info {
+                    min-width: 0;
+                    overflow: hidden;
+                }
+
+                .provider-avatar img {
+                    border: 3px solid #f8f9fa;
+                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                }
+
+                .stars i {
+                    margin-right: 2px;
+                }
+
+                .stat-card {
+                    transition: transform 0.2s ease;
+                }
+
+                .stat-card:hover {
+                    transform: translateY(-2px);
+                }
+
+                .service-card-hover {
+                    transition: transform 0.2s ease, box-shadow 0.2s ease;
+                }
+
+                .service-card-hover:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
+                }
+
+                .detail-item h6 i {
+                    width: 20px;
+                    text-align: center;
+                }
+
+                /* Responsive behavior */
+                @media (max-width: 768px) {
+                    .provider-header {
+                        flex-direction: column !important;
+                        align-items: flex-start !important;
+                    }
+
+                    .provider-avatar {
+                        margin-bottom: 1rem;
+                        margin-right: 0 !important;
+                        align-self: center;
+                    }
+
+                    .provider-info {
+                        width: 100%;
+                    }
+                }
+
+                /* Ensure proper flex behavior */
+                .d-flex.align-items-start {
+                    align-items: flex-start !important;
+                }
+
+                .flex-shrink-0 {
+                    flex-shrink: 0 !important;
+                }
+
+                .flex-grow-1 {
+                    flex-grow: 1 !important;
+                }
+
+                .min-width-0 {
+                    min-width: 0 !important;
                 }
             `}</style>
         </ClientLayout>

@@ -351,4 +351,28 @@ class Service extends Model
             $this->save();
         }
     }
+
+    /**
+     * Get total bookings count from appointments
+     */
+    public function getActualBookingsCountAttribute()
+    {
+        return $this->appointments()
+            ->whereIn('status', ['confirmed', 'completed'])
+            ->count();
+    }
+
+    /**
+     * Sync booking count with actual appointments
+     */
+    public function syncBookingCount()
+    {
+        $actualCount = $this->appointments()
+            ->whereIn('status', ['confirmed', 'completed'])
+            ->count();
+
+        $this->update(['bookings_count' => $actualCount]);
+
+        return $actualCount;
+    }
 }
