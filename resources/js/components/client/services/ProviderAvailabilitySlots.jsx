@@ -125,6 +125,23 @@ const ProviderAvailabilitySlots = ({
         onSlotSelect(selectedSlotData);
     };
 
+    // Filter out past time slots for today
+    const filterAvailableSlots = (slots) => {
+        const today = new Date().toISOString().split("T")[0];
+        
+        // If selected date is today, filter out past times
+        if (selectedDate === today) {
+            const now = new Date();
+            return slots.filter((slot) => {
+                const slotDateTime = new Date(`${selectedDate}T${slot.time}`);
+                return slotDateTime > now;
+            });
+        }
+        
+        // For future dates, return all slots
+        return slots;
+    };
+
     // Function to handle contact provider
     const handleContactProvider = () => {
         setShowContactModal(true);
@@ -278,9 +295,11 @@ const ProviderAvailabilitySlots = ({
                         </div>
                     ) : (
                         <div className="time-slots">
-                            {availableSlots.length > 0 ? (
+                            {(() => {
+                                const filteredSlots = filterAvailableSlots(availableSlots);
+                                return filteredSlots.length > 0 ? (
                                 <div className="row g-2">
-                                    {availableSlots.map((slot, index) => (
+                                    {filteredSlots.map((slot, index) => (
                                         <div
                                             key={index}
                                             className="col-6 col-md-4 col-lg-3"
@@ -304,6 +323,35 @@ const ProviderAvailabilitySlots = ({
                                     ))}
                                 </div>
                             ) : (
+                                (() => {
+                                    const today = new Date().toISOString().split('T')[0];
+                                    const isToday = selectedDate === today;
+                                    const hasOriginalSlots = availableSlots.length > 0;
+                                    
+                                    // If we had slots but they were filtered out (past times)
+                                    if (isToday && hasOriginalSlots) {
+                                        return (
+                                            <div className="no-slots text-center py-4">
+                                                <i className="fas fa-clock fa-2x text-muted mb-2"></i>
+                                                <h6 className="text-muted">
+                                                    All time slots have passed
+                                                </h6>
+                                                <p className="text-muted small mb-3">
+                                                    No more slots available today. Try selecting tomorrow or contact the provider for urgent bookings.
+                                                </p>
+                                                <button
+                                                    className="btn btn-outline-purple btn-sm"
+                                                    onClick={handleContactProvider}
+                                                >
+                                                    <i className="fas fa-phone me-2"></i>
+                                                    Contact Provider
+                                                </button>
+                                            </div>
+                                        );
+                                    }
+                                    
+                                    // Original no slots message
+                                    return (
                                 <div className="no-slots text-center py-4">
                                     <i className="fas fa-calendar-times fa-2x text-muted mb-2"></i>
                                     <h6 className="text-muted">
@@ -332,7 +380,10 @@ const ProviderAvailabilitySlots = ({
                                         Contact Provider
                                     </button>
                                 </div>
-                            )}
+                                    );
+                                })()
+                            );
+                            })()}
                         </div>
                     )}
                 </div>
