@@ -24,9 +24,9 @@ const StepIndicator = ({
                                         ? "completed"
                                         : "pending"
                                 } ${isClickable ? "clickable" : ""}`}
-                                onClick={() =>
-                                    isClickable && onStepClick(step.id)
-                                }
+                                // onClick={() =>
+                                //     isClickable && onStepClick(step.id)
+                                // }
                                 style={{
                                     cursor: isClickable ? "pointer" : "default",
                                 }}

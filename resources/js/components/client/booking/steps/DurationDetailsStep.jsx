@@ -9,9 +9,11 @@ const DurationDetailsStep = ({
     onPrevious,
     selectedSlot,
 }) => {
-    const [duration, setDuration] = useState(
-        bookingData.duration_hours || service?.duration_hours || 1
-    );
+    const [duration, setDuration] = useState(() => {
+        const initialDuration =
+            bookingData.duration_hours || service?.duration_hours || 1;
+        return Math.round(Number(initialDuration)); // Ensure it's a whole number
+    });
     const [maxDuration, setMaxDuration] = useState(8);
     const [specialRequirements, setSpecialRequirements] = useState(
         bookingData.special_requirements || ""
@@ -35,12 +37,17 @@ const DurationDetailsStep = ({
 
             if (response.ok) {
                 const data = await response.json();
+                console.log("Working hours response:", data);
                 if (data.success && data.data.is_available) {
                     const maxHours = calculateHoursBetween(
                         selectedSlot.time,
                         data.data.end_time
                     );
                     setMaxDuration(Math.min(maxHours, 12)); // Cap at 12 hours
+                    console.log(
+                        "Calculated max duration:",
+                        Math.min(maxHours, 12)
+                    );
                 }
             }
         } catch (error) {
@@ -58,9 +65,34 @@ const DurationDetailsStep = ({
     };
 
     const handleDurationChange = (newDuration) => {
-        const validDuration = Math.max(1, Math.min(maxDuration, newDuration));
+        const integerDuration = Math.round(Number(newDuration));
+        const validDuration = Math.max(
+            1,
+            Math.min(maxDuration, integerDuration)
+        );
+
+        // console.log("Duration change:", {
+        //     input: newDuration,
+        //     integer: integerDuration,
+        //     valid: validDuration,
+        // });
+
         setDuration(validDuration);
         setErrors((prev) => ({ ...prev, duration: null }));
+    };
+
+    const incrementDuration = () => {
+        const newDuration = duration + 1;
+        if (newDuration <= maxDuration) {
+            handleDurationChange(newDuration);
+        }
+    };
+
+    const decrementDuration = () => {
+        const newDuration = duration - 1;
+        if (newDuration >= 1) {
+            handleDurationChange(newDuration);
+        }
     };
 
     const validateAndContinue = () => {
@@ -79,7 +111,7 @@ const DurationDetailsStep = ({
 
         // Calculate pricing
         const basePrice = service?.base_price || service?.price || 0;
-        const totalPrice = basePrice * duration;
+        const totalPrice = Math.round(basePrice * duration);
 
         const stepData = {
             duration_hours: duration,
@@ -102,7 +134,7 @@ const DurationDetailsStep = ({
     };
 
     const basePrice = service?.base_price || service?.price || 0;
-    const totalPrice = basePrice * duration;
+    const totalPrice = Math.round(basePrice * duration);
 
     return (
         <div className="duration-details-step">
@@ -116,14 +148,26 @@ const DurationDetailsStep = ({
                                     <div className="row align-items-center">
                                         <div className="col-md-8">
                                             <h5 className="fw-bold text-purple mb-2">
-                                                {service?.title}
+                                                {service?.title} by{" "}
+                                                {provider?.business_name}
                                             </h5>
+                                            <span
+                                                className={`badge bg-${
+                                                    service.category.color ||
+                                                    "primary"
+                                                }`}
+                                            >
+                                                <i
+                                                    className={`${service.category.icon} me-1`}
+                                                ></i>
+                                                {service.category.name}
+                                            </span>
                                             <p className="text-muted mb-2">
                                                 {service?.description}
                                             </p>
 
                                             {/* Selected Time Display */}
-                                            <div className="selected-time-info">
+                                            {/* <div className="selected-time-info">
                                                 <div className="d-flex align-items-center mb-2">
                                                     <i className="fas fa-calendar text-success me-2" />
                                                     <span className="fw-semibold">
@@ -144,7 +188,7 @@ const DurationDetailsStep = ({
                                                         Change Time
                                                     </button>
                                                 </div>
-                                            </div>
+                                            </div> */}
                                         </div>
 
                                         <div className="col-md-4 text-end">
@@ -202,16 +246,14 @@ const DurationDetailsStep = ({
                                                         <div className="d-flex align-items-center justify-content-center">
                                                             <button
                                                                 className="btn btn-outline-secondary duration-btn"
-                                                                onClick={() =>
-                                                                    handleDurationChange(
-                                                                        duration -
-                                                                            1
-                                                                    )
+                                                                onClick={
+                                                                    decrementDuration
                                                                 }
                                                                 disabled={
                                                                     duration <=
                                                                     1
                                                                 }
+                                                                type="button"
                                                             >
                                                                 <i className="fas fa-minus" />
                                                             </button>
@@ -221,26 +263,23 @@ const DurationDetailsStep = ({
                                                                     {duration}
                                                                 </div>
                                                                 <div className="duration-unit text-muted">
-                                                                    hour
                                                                     {duration >
                                                                     1
-                                                                        ? "s"
-                                                                        : ""}
+                                                                        ? "hours"
+                                                                        : "hour"}
                                                                 </div>
                                                             </div>
 
                                                             <button
                                                                 className="btn btn-outline-secondary duration-btn"
-                                                                onClick={() =>
-                                                                    handleDurationChange(
-                                                                        duration +
-                                                                            1
-                                                                    )
+                                                                onClick={
+                                                                    incrementDuration
                                                                 }
                                                                 disabled={
                                                                     duration >=
                                                                     maxDuration
                                                                 }
+                                                                type="button"
                                                             >
                                                                 <i className="fas fa-plus" />
                                                             </button>
@@ -251,7 +290,9 @@ const DurationDetailsStep = ({
                                                                 Maximum
                                                                 available:{" "}
                                                                 {maxDuration}{" "}
-                                                                hours
+                                                                {maxDuration > 1
+                                                                    ? "hours"
+                                                                    : "hour"}
                                                             </small>
                                                         </div>
                                                     </div>
@@ -279,11 +320,10 @@ const DurationDetailsStep = ({
                                                                         {
                                                                             duration
                                                                         }{" "}
-                                                                        hour
                                                                         {duration >
                                                                         1
-                                                                            ? "s"
-                                                                            : ""}
+                                                                            ? "hours"
+                                                                            : "hour"}
                                                                     </span>
                                                                 </div>
                                                                 <hr />
@@ -302,7 +342,6 @@ const DurationDetailsStep = ({
                                                     </div>
                                                 </div>
                                             </div>
-
                                             {/* Quick Duration Presets */}
                                             <div className="duration-presets mb-4">
                                                 <div className="row g-2">
@@ -328,6 +367,7 @@ const DurationDetailsStep = ({
                                                                             hours
                                                                         )
                                                                     }
+                                                                    type="button"
                                                                 >
                                                                     {hours}h
                                                                 </button>
@@ -335,7 +375,6 @@ const DurationDetailsStep = ({
                                                         ))}
                                                 </div>
                                             </div>
-
                                             {/* Error Display */}
                                             {errors.duration && (
                                                 <div className="alert alert-danger">
@@ -390,7 +429,7 @@ const DurationDetailsStep = ({
                         </div>
                     </div>
 
-                    {/* Booking Summary Sidebar */}
+                    {/* Appointment Summary Sidebar */}
                     <div className="col-lg-4">
                         <div
                             className="booking-summary position-sticky"
@@ -400,7 +439,7 @@ const DurationDetailsStep = ({
                                 <div className="card-header bg-purple text-white">
                                     <h6 className="fw-bold mb-0">
                                         <i className="fas fa-receipt me-2" />
-                                        Booking Summary
+                                        Appointment Summary
                                     </h6>
                                 </div>
                                 <div className="card-body">
@@ -411,6 +450,16 @@ const DurationDetailsStep = ({
                                         </h6>
                                         <div className="text-muted small">
                                             {service?.title}
+                                        </div>
+                                    </div>
+
+                                    {/* Service Category*/}
+                                    <div className="summary-section mb-3">
+                                        <h6 className="fw-semibold text-purple">
+                                            Service Category
+                                        </h6>
+                                        <div className="text-muted small">
+                                            {service?.category?.name}
                                         </div>
                                     </div>
 
@@ -436,7 +485,7 @@ const DurationDetailsStep = ({
                                             )}
                                             <div>
                                                 <div className="text-muted small">
-                                                    {provider?.name}
+                                                    {provider?.business_name}
                                                 </div>
                                                 {provider?.is_verified && (
                                                     <div className="text-success small">
@@ -508,16 +557,12 @@ const DurationDetailsStep = ({
                                     <ul className="list-unstyled small text-muted mb-0">
                                         <li className="mb-1">
                                             <i className="fas fa-check text-success me-2" />
-                                            Provider will confirm within 2 hours
+                                            Provider will confirm within an hour
                                         </li>
                                         <li className="mb-1">
                                             <i className="fas fa-clock text-warning me-2" />
                                             Free cancellation up to 24 hours
                                             before
-                                        </li>
-                                        <li className="mb-1">
-                                            <i className="fas fa-shield-alt text-primary me-2" />
-                                            All bookings are insured
                                         </li>
                                         <li className="mb-1">
                                             <i className="fas fa-calculator text-info me-2" />

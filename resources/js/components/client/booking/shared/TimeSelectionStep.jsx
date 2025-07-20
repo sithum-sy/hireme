@@ -15,13 +15,52 @@ const TimeSelectionStep = ({
     const [currentSelectedSlot, setCurrentSelectedSlot] =
         useState(selectedSlot);
 
+    const formatTime = (timeString) => {
+        if (!timeString) return "";
+        try {
+            const [hours, minutes] = timeString.split(":");
+            const hour = parseInt(hours);
+            const ampm = hour >= 12 ? "PM" : "AM";
+            const displayHour = hour % 12 || 12;
+            return `${displayHour}:${minutes} ${ampm}`;
+        } catch (error) {
+            return timeString;
+        }
+    };
+
+    const formatDate = (dateString) => {
+        if (!dateString) return "";
+        try {
+            return new Date(dateString).toLocaleDateString("en-US", {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+            });
+        } catch (error) {
+            return dateString;
+        }
+    };
+
     const handleSlotSelect = (slot) => {
-        setCurrentSelectedSlot(slot);
+        // Create a properly formatted slot object
+        const formattedSlot = {
+            ...slot,
+            formatted_date: formatDate(slot.date),
+            formatted_time: formatTime(slot.time),
+        };
+
+        setCurrentSelectedSlot(formattedSlot);
 
         const stepData = {
             appointment_date: slot.date,
             appointment_time: slot.time,
+            //  Include formatted versions for display
+            formatted_appointment_date: formatDate(slot.date),
+            formatted_appointment_time: formatTime(slot.time),
         };
+
+        console.log("Time selection step data:", stepData); // Debug log
 
         // Auto-advance when time is selected
         onStepComplete(stepData);

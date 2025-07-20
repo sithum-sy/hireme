@@ -413,7 +413,7 @@ const Login = () => {
             </div>
 
             {/* Updated Styles */}
-            <style jsx>{`
+            <style>{`
                 .auth-layout {
                     min-height: 100vh;
                     background: linear-gradient(

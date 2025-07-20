@@ -569,7 +569,6 @@ class AvailabilityService
             $blockedTimes = BlockedTime::where('provider_id', $provider->id)
                 ->where('start_date', '<=', $date)
                 ->where('end_date', '>=', $date)
-                ->where('is_active', true)
                 ->get();
 
             // If there's an all-day block, provider is not available

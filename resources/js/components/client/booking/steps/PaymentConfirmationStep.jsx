@@ -141,13 +141,13 @@ const PaymentConfirmationStep = ({
                             </div>
                         )}
 
-                        {/* Booking Summary */}
+                        {/* Appointment Summary */}
                         <div className="booking-summary-section mb-4">
                             <div className="card border-0 shadow-sm">
                                 <div className="card-header bg-light">
                                     <h5 className="fw-bold mb-0">
                                         <i className="fas fa-check-circle me-2 text-success" />
-                                        Confirm Your Booking
+                                        Confirm Your Appointment
                                     </h5>
                                 </div>
                                 <div className="card-body">

@@ -9,12 +9,15 @@ import StepIndicator from "./shared/StepIndicator";
 const BookingModal = ({ show, onHide, service, provider, selectedSlot }) => {
     const navigate = useNavigate();
     const [currentStep, setCurrentStep] = useState(1);
+    const [currentSelectedSlot, setCurrentSelectedSlot] =
+        useState(selectedSlot);
 
     // Determine starting step based on whether time slot is pre-selected
     useEffect(() => {
         if (selectedSlot && selectedSlot.date && selectedSlot.time) {
             // If time is already selected, start with duration step
             setCurrentStep(1);
+            setCurrentSelectedSlot(selectedSlot);
         } else {
             // If no time selected, start with time selection
             setCurrentStep(0); // Step 0 for time selection
@@ -98,9 +101,51 @@ const BookingModal = ({ show, onHide, service, provider, selectedSlot }) => {
     const handleStepComplete = (stepData) => {
         updateBookingData(stepData);
 
+        // Update selected slot if date/time is provided
+        if (stepData.appointment_date || stepData.appointment_time) {
+            const updatedSlot = {
+                date: stepData.appointment_date || bookingData.appointment_date,
+                time: stepData.appointment_time || bookingData.appointment_time,
+                formatted_date: formatDate(
+                    stepData.appointment_date || bookingData.appointment_date
+                ),
+                formatted_time: formatTime(
+                    stepData.appointment_time || bookingData.appointment_time
+                ),
+            };
+            setCurrentSelectedSlot(updatedSlot);
+        }
+
         // Auto-advance to next step
         if (currentStep < steps.length) {
             setCurrentStep(currentStep + 1);
+        }
+    };
+
+    const formatDate = (dateString) => {
+        if (!dateString) return "";
+        try {
+            return new Date(dateString).toLocaleDateString("en-US", {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+            });
+        } catch (error) {
+            return dateString;
+        }
+    };
+
+    const formatTime = (timeString) => {
+        if (!timeString) return "";
+        try {
+            const [hours, minutes] = timeString.split(":");
+            const hour = parseInt(hours);
+            const ampm = hour >= 12 ? "PM" : "AM";
+            const displayHour = hour % 12 || 12;
+            return `${displayHour}:${minutes} ${ampm}`;
+        } catch (error) {
+            return timeString;
         }
     };
 
@@ -167,16 +212,9 @@ const BookingModal = ({ show, onHide, service, provider, selectedSlot }) => {
                                 <h5 className="modal-title fw-bold mb-1">
                                     Book Service
                                 </h5>
-                                <p className="text-muted mb-0 small">
-                                    {service?.title}
-                                    {selectedSlot && (
-                                        <span className="ms-2 text-purple">
-                                            •{" "}
-                                            {selectedSlot.formatted_date_short}{" "}
-                                            at {selectedSlot.formatted_time}
-                                        </span>
-                                    )}
-                                </p>
+                                {/* <p className="text-muted mb-0 small">
+                                    {service?.title} - {service?.category?.name}
+                                </p> */}
                             </div>
                             <button
                                 type="button"
@@ -204,7 +242,7 @@ const BookingModal = ({ show, onHide, service, provider, selectedSlot }) => {
                             </div>
 
                             {/* Selected Slot Banner (if applicable) */}
-                            {selectedSlot && currentStep > 0 && (
+                            {currentSelectedSlot && currentStep > 0 && (
                                 <div className="selected-slot-banner bg-light border-bottom">
                                     <div className="container-fluid py-2">
                                         <div className="d-flex align-items-center justify-content-between">
@@ -212,25 +250,29 @@ const BookingModal = ({ show, onHide, service, provider, selectedSlot }) => {
                                                 <i className="fas fa-calendar-check text-success me-2" />
                                                 <strong>Selected Time: </strong>
                                                 <span className="text-purple fw-semibold">
-                                                    {
-                                                        selectedSlot.formatted_date
-                                                    }{" "}
+                                                    {currentSelectedSlot.formatted_date ||
+                                                        formatDate(
+                                                            bookingData.appointment_date
+                                                        )}{" "}
                                                     at{" "}
-                                                    {
-                                                        selectedSlot.formatted_time
-                                                    }
+                                                    {currentSelectedSlot.formatted_time ||
+                                                        formatTime(
+                                                            bookingData.appointment_time
+                                                        )}
                                                 </span>
                                             </div>
-                                            <button
-                                                className="btn btn-sm btn-outline-secondary"
-                                                onClick={() =>
-                                                    setCurrentStep(0)
-                                                }
-                                                title="Change selected date/time"
-                                            >
-                                                <i className="fas fa-edit me-1" />
-                                                Change Time
-                                            </button>
+                                            {/* {currentStep === 1 && (
+                                                <button
+                                                    className="btn btn-sm btn-outline-secondary"
+                                                    onClick={() =>
+                                                        setCurrentStep(0)
+                                                    }
+                                                    title="Change selected date/time"
+                                                >
+                                                    <i className="fas fa-edit me-1" />
+                                                    Change Time
+                                                </button>
+                                            )} */}
                                         </div>
                                     </div>
                                 </div>
@@ -244,7 +286,7 @@ const BookingModal = ({ show, onHide, service, provider, selectedSlot }) => {
                                         provider={provider}
                                         bookingData={bookingData}
                                         onStepComplete={handleStepComplete}
-                                        selectedSlot={selectedSlot}
+                                        selectedSlot={currentSelectedSlot}
                                     />
                                 )}
 

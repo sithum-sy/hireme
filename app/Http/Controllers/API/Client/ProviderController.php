@@ -587,6 +587,12 @@ class ProviderController extends Controller
      */
     public function getWorkingHours(User $provider, Request $request)
     {
+        Log::info('Working hours request:', [
+            'provider_id' => $provider->id,
+            'date' => $request->date,
+            'provider_role' => $provider->role
+        ]);
+
         if ($provider->role !== 'service_provider') {
             return response()->json([
                 'success' => false,
@@ -601,6 +607,8 @@ class ProviderController extends Controller
         try {
             $availabilityService = app(\App\Services\AvailabilityService::class);
             $workingHours = $availabilityService->getWorkingHours($provider, $request->date);
+
+            Log::info('Working hours result:', ['working_hours' => $workingHours]);
 
             if (!$workingHours) {
                 return response()->json([
@@ -632,6 +640,11 @@ class ProviderController extends Controller
                 'message' => 'Working hours retrieved successfully'
             ]);
         } catch (\Exception $e) {
+            Log::error('Working hours error:', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to retrieve working hours',

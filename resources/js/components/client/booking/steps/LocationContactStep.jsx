@@ -614,7 +614,7 @@ const LocationContactStep = ({
                         </div>
                     </div>
 
-                    {/* Booking Summary Sidebar */}
+                    {/* Appointment Summary Sidebar */}
                     <div className="col-lg-4">
                         <div
                             className="booking-summary position-sticky"
@@ -624,7 +624,7 @@ const LocationContactStep = ({
                                 <div className="card-header bg-purple text-white">
                                     <h6 className="fw-bold mb-0">
                                         <i className="fas fa-receipt me-2" />
-                                        Booking Summary
+                                        Appointment Summary
                                     </h6>
                                 </div>
                                 <div className="card-body">
