@@ -35,12 +35,77 @@ const ServiceDetail = () => {
     useEffect(() => {
         if (navigator.geolocation && !clientLocation) {
             navigator.geolocation.getCurrentPosition(
-                (position) => {
+                async (position) => {
                     const { latitude, longitude } = position.coords;
-                    setClientLocation({
-                        lat: latitude,
-                        lng: longitude,
-                    });
+
+                    try {
+                        // ✅ Use Nominatim reverse geocoding (same as LocationSelector)
+                        const response = await fetch(
+                            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=16&addressdetails=1&accept-language=en`
+                        );
+
+                        if (response.ok) {
+                            const data = await response.json();
+                            const address = data.address || {};
+
+                            const city =
+                                address.city ||
+                                address.town ||
+                                address.village ||
+                                address.municipality ||
+                                address.county ||
+                                "Unknown City";
+                            const province =
+                                address.state ||
+                                address.province ||
+                                address.state_district ||
+                                "Sri Lanka";
+
+                            let readableAddress = "";
+                            if (address.house_number && address.road) {
+                                readableAddress = `${address.house_number} ${address.road}, ${city}`;
+                            } else if (address.road) {
+                                readableAddress = `${address.road}, ${city}`;
+                            } else {
+                                readableAddress = `${city}, ${province}`;
+                            }
+
+                            const locationData = {
+                                lat: latitude,
+                                lng: longitude,
+                                address: readableAddress,
+                                neighborhood:
+                                    address.suburb ||
+                                    address.neighbourhood ||
+                                    "",
+                                city: city,
+                                province: province,
+                                country: "Sri Lanka",
+                                radius: 15,
+                                accuracy: "nominatim_geocoded",
+                            };
+
+                            setClientLocation(locationData);
+                            console.log(
+                                "📍 Client location detected:",
+                                locationData.address
+                            );
+                        } else {
+                            throw new Error("Geocoding failed");
+                        }
+                    } catch (error) {
+                        console.error("Geocoding failed:", error);
+                        // Fallback to basic location
+                        setClientLocation({
+                            lat: latitude,
+                            lng: longitude,
+                            city: "Current Location",
+                            province: "Sri Lanka",
+                            radius: 15,
+                            address: "Your Current Location",
+                            accuracy: "gps_fallback",
+                        });
+                    }
                 },
                 (error) => {
                     console.log("Geolocation error:", error);
@@ -48,6 +113,47 @@ const ServiceDetail = () => {
             );
         }
     }, []);
+
+    const reverseGeocode = async (lat, lng) => {
+        try {
+            // Try using a free geocoding service first
+            const response = await fetch(
+                `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`
+            );
+
+            if (response.ok) {
+                const data = await response.json();
+                return {
+                    lat,
+                    lng,
+                    address: data.locality
+                        ? `${data.locality}, ${
+                              data.city || data.principalSubdivision
+                          }, ${data.countryName}`
+                        : `${data.city || data.principalSubdivision}, ${
+                              data.countryName
+                          }`,
+                    neighborhood: data.locality || "",
+                    city:
+                        data.city ||
+                        data.principalSubdivision ||
+                        "Unknown City",
+                    province: data.principalSubdivision || "Sri Lanka",
+                    country: data.countryName || "Sri Lanka",
+                    radius: 15,
+                    accuracy: "gps_geocoded",
+                };
+            }
+        } catch (error) {
+            console.warn(
+                "Online geocoding failed, using offline fallback:",
+                error
+            );
+        }
+
+        // Fallback to offline geocoding with Sri Lankan cities
+        return reverseGeocodeOffline(lat, lng);
+    };
 
     // useEffect(() => {
     //     // console.log("=== DEBUG INFO ===");
@@ -1282,6 +1388,7 @@ const ServiceDetail = () => {
                     service={service}
                     provider={provider}
                     selectedSlot={selectedSlot}
+                    clientLocation={clientLocation}
                 />
 
                 {/* Quote Request Modal */}

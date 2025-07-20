@@ -3,7 +3,7 @@ import EnhancedLocationSelector from "./EnhancedLocationSelector";
 import LocationSearch from "./LocationSearch";
 
 const LocationSelector = ({ value, onChange, error }) => {
-    console.log("🗺️ LocationSelector: Component rendering", {
+    console.log("LocationSelector: Component rendering", {
         hasValue: !!value,
         valueCity: value?.city || "none",
         hasOnChange: !!onChange,
@@ -15,75 +15,321 @@ const LocationSelector = ({ value, onChange, error }) => {
     const [currentLocation, setCurrentLocation] = useState(null);
     const [selectedCity, setSelectedCity] = useState(null);
     const [useAdvancedMap, setUseAdvancedMap] = useState(false);
-
-    // ✅ FIXED: Use useState instead of useRef for hasInitialized
     const [hasInitialized, setHasInitialized] = useState(false);
     const isUserInteraction = useRef(false);
 
-    console.log("🎯 LocationSelector: Current state", {
-        locationState,
-        hasCurrentLocation: !!currentLocation,
-        currentLocationCity: currentLocation?.city || "none",
-        selectedCityName: selectedCity?.name || "none",
-        useAdvancedMap,
-        hasInitialized,
-        timestamp: new Date().toISOString(),
-    });
+    // Centralized reverse geocoding using Nominatim (same as Leaflet)
+    const reverseGeocode = useCallback(async (lat, lng) => {
+        console.log(`Reverse geocoding coordinates: ${lat}, ${lng}`);
 
-    const sriLankanCities = [
-        {
-            name: "Colombo",
-            lat: 6.9271,
-            lng: 79.8612,
-            province: "Western Province",
-        },
-        {
-            name: "Kandy",
-            lat: 7.2906,
-            lng: 80.6337,
-            province: "Central Province",
-        },
-        {
-            name: "Galle",
-            lat: 6.0535,
-            lng: 80.221,
-            province: "Southern Province",
-        },
-        {
-            name: "Jaffna",
-            lat: 9.6615,
-            lng: 80.0255,
-            province: "Northern Province",
-        },
-        {
-            name: "Negombo",
-            lat: 7.2083,
-            lng: 79.8358,
-            province: "Western Province",
-        },
-        {
-            name: "Anuradhapura",
-            lat: 8.3114,
-            lng: 80.4037,
-            province: "North Central Province",
-        },
-        {
-            name: "Trincomalee",
-            lat: 8.5874,
-            lng: 81.2152,
-            province: "Eastern Province",
-        },
-        {
-            name: "Matara",
-            lat: 5.9485,
-            lng: 80.5353,
-            province: "Southern Province",
-        },
-    ];
+        try {
+            // Using Nominatim (OpenStreetMap) - same service that Leaflet uses
+            const response = await fetch(
+                `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=16&addressdetails=1&accept-language=en`
+            );
 
-    // ✅ FIXED: Initialize only once using useState
+            if (response.ok) {
+                const data = await response.json();
+                console.log("Nominatim response:", data);
+
+                const address = data.address || {};
+                const displayName = data.display_name || "";
+
+                // Parse address components for Sri Lankan addresses
+                const city =
+                    address.city ||
+                    address.town ||
+                    address.village ||
+                    address.municipality ||
+                    address.county ||
+                    "Unknown City";
+                const province =
+                    address.state ||
+                    address.province ||
+                    address.state_district ||
+                    "Sri Lanka";
+                const neighborhood =
+                    address.suburb ||
+                    address.neighbourhood ||
+                    address.hamlet ||
+                    address.residential ||
+                    "";
+
+                // Create a readable address
+                let readableAddress = "";
+                if (address.house_number && address.road) {
+                    readableAddress = `${address.house_number} ${address.road}, ${city}`;
+                } else if (address.road) {
+                    readableAddress = `${address.road}, ${city}`;
+                } else if (neighborhood) {
+                    readableAddress = `${neighborhood}, ${city}`;
+                } else {
+                    readableAddress = `${city}, ${province}`;
+                }
+
+                return {
+                    lat,
+                    lng,
+                    address: readableAddress,
+                    neighborhood: neighborhood,
+                    city: city,
+                    province: province,
+                    country: "Sri Lanka",
+                    radius: 15,
+                    accuracy: "nominatim_geocoded",
+                    raw_data: data, // Keep raw data for debugging
+                };
+            }
+        } catch (error) {
+            console.warn(
+                "Nominatim geocoding failed, using offline fallback:",
+                error
+            );
+        }
+
+        // Fallback to offline geocoding with Sri Lankan cities
+        return reverseGeocodeOffline(lat, lng);
+    }, []);
+
+    //   ENHANCED: Offline geocoding for Sri Lankan locations
+    const reverseGeocodeOffline = useCallback((lat, lng) => {
+        console.log(`Using offline geocoding for: ${lat}, ${lng}`);
+
+        const sriLankanCities = [
+            {
+                name: "Colombo",
+                lat: 6.9271,
+                lng: 79.8612,
+                province: "Western Province",
+            },
+            {
+                name: "Negombo",
+                lat: 7.2083,
+                lng: 79.8358,
+                province: "Western Province",
+            },
+            {
+                name: "Kandy",
+                lat: 7.2906,
+                lng: 80.6337,
+                province: "Central Province",
+            },
+            {
+                name: "Gampaha",
+                lat: 7.0873,
+                lng: 79.999,
+                province: "Western Province",
+            },
+            {
+                name: "Kalutara",
+                lat: 6.5854,
+                lng: 79.9607,
+                province: "Western Province",
+            },
+            {
+                name: "Galle",
+                lat: 6.0535,
+                lng: 80.221,
+                province: "Southern Province",
+            },
+            {
+                name: "Matara",
+                lat: 5.9485,
+                lng: 80.5353,
+                province: "Southern Province",
+            },
+            {
+                name: "Jaffna",
+                lat: 9.6615,
+                lng: 80.0255,
+                province: "Northern Province",
+            },
+            {
+                name: "Batticaloa",
+                lat: 7.7102,
+                lng: 81.6924,
+                province: "Eastern Province",
+            },
+            {
+                name: "Trincomalee",
+                lat: 8.5874,
+                lng: 81.2152,
+                province: "Eastern Province",
+            },
+            {
+                name: "Anuradhapura",
+                lat: 8.3114,
+                lng: 80.4037,
+                province: "North Central Province",
+            },
+            {
+                name: "Polonnaruwa",
+                lat: 7.9403,
+                lng: 81.0188,
+                province: "North Central Province",
+            },
+            {
+                name: "Kurunegala",
+                lat: 7.4818,
+                lng: 80.3609,
+                province: "North Western Province",
+            },
+            {
+                name: "Puttalam",
+                lat: 8.0362,
+                lng: 79.8283,
+                province: "North Western Province",
+            },
+            {
+                name: "Ratnapura",
+                lat: 6.6828,
+                lng: 80.4036,
+                province: "Sabaragamuwa Province",
+            },
+            {
+                name: "Kegalle",
+                lat: 7.2513,
+                lng: 80.3464,
+                province: "Sabaragamuwa Province",
+            },
+            {
+                name: "Badulla",
+                lat: 6.9934,
+                lng: 81.055,
+                province: "Uva Province",
+            },
+            {
+                name: "Monaragala",
+                lat: 6.8728,
+                lng: 81.351,
+                province: "Uva Province",
+            },
+        ];
+
+        let closestCity = sriLankanCities[0];
+        let minDistance = calculateDistance(
+            lat,
+            lng,
+            closestCity.lat,
+            closestCity.lng
+        );
+
+        sriLankanCities.forEach((city) => {
+            const distance = calculateDistance(lat, lng, city.lat, city.lng);
+            if (distance < minDistance) {
+                minDistance = distance;
+                closestCity = city;
+            }
+        });
+
+        // Determine neighborhood based on distance
+        let neighborhood = "";
+        let address = "";
+
+        if (minDistance < 2) {
+            neighborhood = `${closestCity.name} Center`;
+            address = `${closestCity.name}, ${closestCity.province}`;
+        } else if (minDistance < 10) {
+            neighborhood = `Near ${closestCity.name}`;
+            address = `Near ${closestCity.name}, ${closestCity.province}`;
+        } else {
+            neighborhood = `${closestCity.province} Area`;
+            address = `${closestCity.province}, Sri Lanka`;
+        }
+
+        return {
+            lat,
+            lng,
+            address,
+            neighborhood,
+            city: closestCity.name,
+            province: closestCity.province,
+            country: "Sri Lanka",
+            radius: 15,
+            accuracy: "gps_offline",
+            distance_to_city: Math.round(minDistance),
+        };
+    }, []);
+
+    const calculateDistance = (lat1, lng1, lat2, lng2) => {
+        const R = 6371; // Earth radius in kilometers
+        const dLat = ((lat2 - lat1) * Math.PI) / 180;
+        const dLng = ((lng2 - lng1) * Math.PI) / 180;
+        const a =
+            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos((lat1 * Math.PI) / 180) *
+                Math.cos((lat2 * Math.PI) / 180) *
+                Math.sin(dLng / 2) *
+                Math.sin(dLng / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
+    };
+
+    //   ENHANCED: Location detection with reverse geocoding
+    const detectLocation = useCallback(async () => {
+        console.log("🔍 LocationSelector: Starting location detection");
+        setLocationState("detecting");
+
+        if ("geolocation" in navigator) {
+            console.log(
+                "📱 LocationSelector: Geolocation available, requesting position"
+            );
+
+            navigator.geolocation.getCurrentPosition(
+                async (position) => {
+                    console.log("  LocationSelector: Geolocation success");
+                    const { latitude, longitude } = position.coords;
+
+                    try {
+                        // Use our unified reverse geocoding
+                        const locationData = await reverseGeocode(
+                            latitude,
+                            longitude
+                        );
+                        console.log(
+                            "LocationSelector: Reverse geocoded location:",
+                            locationData
+                        );
+
+                        isUserInteraction.current = true;
+                        setCurrentLocation(locationData);
+                        setLocationState("confirming");
+                    } catch (error) {
+                        console.error(
+                            "LocationSelector: Reverse geocoding failed:",
+                            error
+                        );
+                        // Fallback to basic location
+                        const fallbackLocation = {
+                            lat: latitude,
+                            lng: longitude,
+                            city: "Current Location",
+                            province: "Sri Lanka",
+                            radius: 15,
+                            address: "Your Current Location",
+                            accuracy: "gps_fallback",
+                        };
+
+                        isUserInteraction.current = true;
+                        setCurrentLocation(fallbackLocation);
+                        setLocationState("confirming");
+                    }
+                },
+                (error) => {
+                    console.log("LocationSelector: Geolocation failed:", error);
+                    setLocationState("manual");
+                },
+                { timeout: 10000, enableHighAccuracy: true }
+            );
+        } else {
+            console.log("LocationSelector: Geolocation not available");
+            setLocationState("manual");
+        }
+    }, [reverseGeocode]);
+
+    // Initialize component
     useEffect(() => {
-        console.log("📍 LocationSelector: useEffect[init] - Initializing", {
+        console.log("LocationSelector: useEffect[init] - Initializing", {
             hasValue: !!value,
             valueDetails: value ? `${value.city}, ${value.province}` : "null",
             hasInitialized,
@@ -91,41 +337,26 @@ const LocationSelector = ({ value, onChange, error }) => {
         });
 
         if (!hasInitialized) {
-            console.log("🔧 LocationSelector: First time initialization");
+            console.log("LocationSelector: First time initialization");
             setHasInitialized(true);
 
             if (value && value.lat && value.lng) {
                 console.log(
-                    "✅ LocationSelector: Setting current location from value (no onChange)"
+                    "  LocationSelector: Setting current location from value"
                 );
                 setCurrentLocation(value);
                 setLocationState("confirmed");
             } else {
                 console.log(
-                    "⚡ LocationSelector: No value provided, starting detection"
+                    "LocationSelector: No value provided, starting detection"
                 );
                 detectLocation();
             }
-        } else {
-            console.log("⏭️ LocationSelector: Already initialized, skipping");
         }
-    }, [hasInitialized]); // ✅ Depend on hasInitialized instead of empty array
+    }, [hasInitialized, value, detectLocation]);
 
-    // ✅ FIXED: Handle value changes from parent (but don't trigger onChange)
+    // Handle value changes from parent
     useEffect(() => {
-        console.log(
-            "🔄 LocationSelector: useEffect[value] - Value changed from parent",
-            {
-                hasValue: !!value,
-                valueDetails: value
-                    ? `${value.city}, ${value.province}`
-                    : "null",
-                hasInitialized,
-                isUserInteraction: isUserInteraction.current,
-            }
-        );
-
-        // Only update from parent if not from user interaction and component is initialized
         if (
             hasInitialized &&
             !isUserInteraction.current &&
@@ -133,26 +364,14 @@ const LocationSelector = ({ value, onChange, error }) => {
             value.lat &&
             value.lng
         ) {
-            console.log("🔄 LocationSelector: Updating from parent value");
+            console.log("LocationSelector: Updating from parent value");
             setCurrentLocation(value);
             setLocationState("confirmed");
         }
     }, [value, hasInitialized]);
 
-    // ✅ FIXED: Only call onChange for user interactions
+    // Call onChange for user interactions
     useEffect(() => {
-        console.log(
-            "🔄 LocationSelector: useEffect[currentLocation] - Location changed",
-            {
-                hasCurrentLocation: !!currentLocation,
-                currentLocationCity: currentLocation?.city || "none",
-                isUserInteraction: isUserInteraction.current,
-                hasOnChange: !!onChange,
-                hasInitialized,
-            }
-        );
-
-        // Only call onChange if this is from a user interaction AND component has initialized
         if (
             currentLocation &&
             onChange &&
@@ -171,13 +390,12 @@ const LocationSelector = ({ value, onChange, error }) => {
             };
 
             console.log(
-                "📤 LocationSelector: Calling onChange with location data (USER INTERACTION)",
+                "LocationSelector: Calling onChange with location data",
                 {
                     locationData: `${locationData.city}, ${locationData.province}`,
                 }
             );
 
-            // Reset the flag
             isUserInteraction.current = false;
 
             const timeoutId = setTimeout(() => {
@@ -188,90 +406,8 @@ const LocationSelector = ({ value, onChange, error }) => {
         }
     }, [currentLocation, onChange, hasInitialized]);
 
-    const detectLocation = () => {
-        console.log("🔍 LocationSelector: Starting location detection");
-        setLocationState("detecting");
-
-        if ("geolocation" in navigator) {
-            console.log(
-                "📱 LocationSelector: Geolocation available, requesting position"
-            );
-            navigator.geolocation.getCurrentPosition(
-                async (position) => {
-                    console.log("✅ LocationSelector: Geolocation success");
-                    const { latitude, longitude } = position.coords;
-                    const locationData = await reverseGeocodeOffline(
-                        latitude,
-                        longitude
-                    );
-
-                    console.log(
-                        "📍 LocationSelector: Setting detected location"
-                    );
-                    isUserInteraction.current = true;
-                    setCurrentLocation(locationData);
-                    setLocationState("confirming");
-                },
-                (error) => {
-                    console.log(
-                        "❌ LocationSelector: Geolocation failed:",
-                        error
-                    );
-                    setLocationState("manual");
-                },
-                { timeout: 10000, enableHighAccuracy: true }
-            );
-        } else {
-            console.log("❌ LocationSelector: Geolocation not available");
-            setLocationState("manual");
-        }
-    };
-
-    const reverseGeocodeOffline = async (lat, lng) => {
-        let closestCity = sriLankanCities[0];
-        let minDistance = calculateDistance(
-            lat,
-            lng,
-            closestCity.lat,
-            closestCity.lng
-        );
-
-        sriLankanCities.forEach((city) => {
-            const distance = calculateDistance(lat, lng, city.lat, city.lng);
-            if (distance < minDistance) {
-                minDistance = distance;
-                closestCity = city;
-            }
-        });
-
-        return {
-            lat,
-            lng,
-            address: `Near ${closestCity.name}, ${closestCity.province}, Sri Lanka`,
-            neighborhood: minDistance < 5 ? `${closestCity.name} Area` : "",
-            city: closestCity.name,
-            province: closestCity.province,
-            radius: 15,
-            accuracy: "gps_offline",
-        };
-    };
-
-    const calculateDistance = (lat1, lng1, lat2, lng2) => {
-        const R = 6371;
-        const dLat = ((lat2 - lat1) * Math.PI) / 180;
-        const dLng = ((lng2 - lng1) * Math.PI) / 180;
-        const a =
-            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-            Math.cos((lat1 * Math.PI) / 180) *
-                Math.cos((lat2 * Math.PI) / 180) *
-                Math.sin(dLng / 2) *
-                Math.sin(dLng / 2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        return R * c;
-    };
-
     const handleLocationConfirm = (confirmed) => {
-        console.log("🎯 LocationSelector: Location confirm called", {
+        console.log("LocationSelector: Location confirm called", {
             confirmed,
         });
         isUserInteraction.current = true;
@@ -283,7 +419,7 @@ const LocationSelector = ({ value, onChange, error }) => {
     };
 
     const handleCitySelect = (city) => {
-        console.log("🏙️ LocationSelector: City selected", {
+        console.log("LocationSelector: City selected", {
             cityName: city.name,
         });
         isUserInteraction.current = true;
@@ -301,15 +437,45 @@ const LocationSelector = ({ value, onChange, error }) => {
         setLocationState("selecting");
     };
 
-    const handleLocationSelect = (location) => {
-        console.log("📍 LocationSelector: Location selected from map/search");
+    //   ENHANCED: Handle location selection with reverse geocoding
+    const handleLocationSelect = async (location) => {
+        console.log(
+            "📍 LocationSelector: Location selected from map/search",
+            location
+        );
         isUserInteraction.current = true;
-        setCurrentLocation(location);
+
+        // If location doesn't have proper address, reverse geocode it
+        if (
+            location.lat &&
+            location.lng &&
+            (!location.address || location.address.includes("coordinates"))
+        ) {
+            try {
+                const geocodedLocation = await reverseGeocode(
+                    location.lat,
+                    location.lng
+                );
+                console.log(
+                    "📍 LocationSelector: Enhanced location with geocoding:",
+                    geocodedLocation
+                );
+                setCurrentLocation(geocodedLocation);
+            } catch (error) {
+                console.warn(
+                    "LocationSelector: Geocoding failed, using original location"
+                );
+                setCurrentLocation(location);
+            }
+        } else {
+            setCurrentLocation(location);
+        }
+
         setLocationState("confirmed");
     };
 
     const handleAdvancedMapToggle = () => {
-        console.log("🗺️ LocationSelector: Advanced map toggle", {
+        console.log("LocationSelector: Advanced map toggle", {
             currentState: useAdvancedMap,
             newState: !useAdvancedMap,
         });
@@ -317,12 +483,63 @@ const LocationSelector = ({ value, onChange, error }) => {
     };
 
     const handleResetLocation = () => {
-        console.log("🔄 LocationSelector: Reset button clicked");
+        console.log("LocationSelector: Reset button clicked");
         setLocationState("manual");
         setCurrentLocation(null);
         setUseAdvancedMap(false);
         isUserInteraction.current = false;
     };
+
+    const sriLankanCities = [
+        {
+            name: "Colombo",
+            lat: 6.9271,
+            lng: 79.8612,
+            province: "Western Province",
+        },
+        {
+            name: "Negombo",
+            lat: 7.2083,
+            lng: 79.8358,
+            province: "Western Province",
+        },
+        {
+            name: "Kandy",
+            lat: 7.2906,
+            lng: 80.6337,
+            province: "Central Province",
+        },
+        {
+            name: "Gampaha",
+            lat: 7.0873,
+            lng: 79.999,
+            province: "Western Province",
+        },
+        {
+            name: "Kalutara",
+            lat: 6.5854,
+            lng: 79.9607,
+            province: "Western Province",
+        },
+        {
+            name: "Galle",
+            lat: 6.0535,
+            lng: 80.221,
+            province: "Southern Province",
+        },
+        {
+            name: "Matara",
+            lat: 5.9485,
+            lng: 80.5353,
+            province: "Southern Province",
+        },
+        {
+            name: "Jaffna",
+            lat: 9.6615,
+            lng: 80.0255,
+            province: "Northern Province",
+        },
+    ];
 
     return (
         <div className={`location-selector ${error ? "is-invalid" : ""}`}>
@@ -337,34 +554,42 @@ const LocationSelector = ({ value, onChange, error }) => {
                 </div>
             )}
 
-            {/* Location Confirmation */}
+            {/* Location Confirmation -   ENHANCED: Better display */}
             {locationState === "confirming" && currentLocation && (
                 <div className="location-confirm p-3 bg-light rounded mb-3">
-                    <h6 className="fw-bold mb-2">📍 Location Detected</h6>
-                    <p className="mb-3">
-                        You're near{" "}
-                        <strong>
-                            {currentLocation.city}, {currentLocation.province}
-                        </strong>
-                        <br />
-                        <small className="text-muted">
-                            {currentLocation.address}
-                        </small>
-                    </p>
+                    <h6 className="fw-bold mb-2">Location Detected</h6>
+                    <div className="detected-location-info">
+                        <p className="mb-2">
+                            <strong>{currentLocation.address}</strong>
+                        </p>
+                        {currentLocation.neighborhood && (
+                            <p className="text-muted small mb-2">
+                                <i className="fas fa-location-arrow me-1" />
+                                {currentLocation.neighborhood}
+                            </p>
+                        )}
+                        {currentLocation.accuracy && (
+                            <p className="text-muted small mb-3">
+                                <i className="fas fa-crosshairs me-1" />
+                                Accuracy:{" "}
+                                {currentLocation.accuracy.replace("_", " ")}
+                            </p>
+                        )}
+                    </div>
                     <div className="d-flex gap-2">
                         <button
                             type="button"
                             className="btn btn-success btn-sm"
                             onClick={() => handleLocationConfirm(true)}
                         >
-                            ✅ Yes, this is correct
+                            Yes, this is correct
                         </button>
                         <button
                             type="button"
                             className="btn btn-outline-secondary btn-sm"
                             onClick={() => handleLocationConfirm(false)}
                         >
-                            ❌ No, let me choose
+                            No, let me choose
                         </button>
                     </div>
                 </div>
@@ -373,7 +598,7 @@ const LocationSelector = ({ value, onChange, error }) => {
             {/* Manual City Selection */}
             {locationState === "manual" && (
                 <div className="city-selector mb-3">
-                    <h6 className="fw-bold mb-3">🏙️ Select your city:</h6>
+                    <h6 className="fw-bold mb-3">Select your city:</h6>
                     <div className="row g-2">
                         {sriLankanCities.map((city) => (
                             <div key={city.name} className="col-6 col-md-4">
@@ -399,7 +624,7 @@ const LocationSelector = ({ value, onChange, error }) => {
             {locationState === "selecting" && selectedCity && (
                 <div className="area-search mb-3">
                     <h6 className="fw-bold mb-2">
-                        🔍 Search your area in {selectedCity.name}:
+                        Search your area in {selectedCity.name}:
                     </h6>
                     <LocationSearch
                         city={selectedCity.name}
@@ -428,7 +653,7 @@ const LocationSelector = ({ value, onChange, error }) => {
             {/* Advanced Map Selector */}
             {useAdvancedMap && (
                 <div className="advanced-map-selector mb-3">
-                    <h6 className="fw-bold mb-2">🗺️ Select location on map:</h6>
+                    <h6 className="fw-bold mb-2">Select location on map:</h6>
                     <EnhancedLocationSelector
                         value={currentLocation}
                         onChange={handleLocationSelect}
@@ -437,7 +662,7 @@ const LocationSelector = ({ value, onChange, error }) => {
                 </div>
             )}
 
-            {/* Current Location Display */}
+            {/* Current Location Display -   ENHANCED: Better formatting */}
             {currentLocation &&
                 locationState === "confirmed" &&
                 !useAdvancedMap && (
@@ -448,25 +673,44 @@ const LocationSelector = ({ value, onChange, error }) => {
                         </h6>
                         <div className="location-details">
                             <div className="mb-2">
-                                <strong>
-                                    {currentLocation.city},{" "}
-                                    {currentLocation.province}
-                                </strong>
+                                <strong>{currentLocation.address}</strong>
                             </div>
-                            <div className="text-muted small mb-2">
-                                {currentLocation.address}
-                            </div>
+                            {currentLocation.neighborhood && (
+                                <div className="text-muted small mb-2">
+                                    <i className="fas fa-location-arrow me-1" />
+                                    {currentLocation.neighborhood}
+                                    {currentLocation.distance_to_city && (
+                                        <span>
+                                            {" "}
+                                            • {currentLocation.distance_to_city}
+                                            km from {currentLocation.city}
+                                        </span>
+                                    )}
+                                </div>
+                            )}
                             <div className="d-flex align-items-center flex-wrap gap-2">
                                 <span className="badge bg-primary">
                                     Service Radius:{" "}
                                     {currentLocation.radius || 15}km
                                 </span>
                                 <small className="text-muted">
-                                    Coordinates:{" "}
-                                    {Number(currentLocation.lat).toFixed(4)},{" "}
-                                    {Number(currentLocation.lng).toFixed(4)}
+                                    Accuracy:{" "}
+                                    {currentLocation.accuracy?.replace(
+                                        "_",
+                                        " "
+                                    ) || "Standard"}
                                 </small>
                             </div>
+                            {/*   ADD: Only show coordinates if no proper address */}
+                            {currentLocation.accuracy === "gps_fallback" && (
+                                <div className="text-muted small mt-2">
+                                    <i className="fas fa-crosshairs me-1" />
+                                    Coordinates:{" "}
+                                    {Number(currentLocation.lat).toFixed(
+                                        4
+                                    )}, {Number(currentLocation.lng).toFixed(4)}
+                                </div>
+                            )}
                         </div>
                     </div>
                 )}

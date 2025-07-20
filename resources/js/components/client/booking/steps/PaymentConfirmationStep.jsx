@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import clientService from "../../../../services/clientService";
+import AppointmentSummary from "../shared/AppointmentSummary";
 
 const PaymentConfirmationStep = ({
     service,
@@ -7,6 +8,7 @@ const PaymentConfirmationStep = ({
     bookingData,
     onComplete,
     onPrevious,
+    selectedSlot,
 }) => {
     const [paymentMethod, setPaymentMethod] = useState(
         bookingData.payment_method || "cash"
@@ -625,156 +627,33 @@ const PaymentConfirmationStep = ({
 
                     {/* Final Summary Sidebar */}
                     <div className="col-lg-4">
-                        <div
-                            className="final-summary position-sticky"
-                            style={{ top: "2rem" }}
-                        >
-                            <div className="card border-0 shadow-lg">
-                                <div className="card-header bg-purple text-white">
-                                    <h6 className="fw-bold mb-0">
-                                        <i className="fas fa-receipt me-2" />
-                                        Final Summary
-                                    </h6>
-                                </div>
-                                <div className="card-body">
-                                    {/* Quick Details */}
-                                    <div className="quick-details mb-4">
-                                        <div className="detail-item d-flex justify-content-between mb-2">
-                                            <span className="text-muted">
-                                                Service:
-                                            </span>
-                                            <span className="fw-semibold">
-                                                {service?.title}
-                                            </span>
-                                        </div>
-                                        <div className="detail-item d-flex justify-content-between mb-2">
-                                            <span className="text-muted">
-                                                Provider:
-                                            </span>
-                                            <span className="fw-semibold">
-                                                {provider?.name}
-                                            </span>
-                                        </div>
-                                        <div className="detail-item d-flex justify-content-between mb-2">
-                                            <span className="text-muted">
-                                                Date:
-                                            </span>
-                                            <span className="fw-semibold">
-                                                {bookingData.appointment_date
-                                                    ? new Date(
-                                                          bookingData.appointment_date
-                                                      ).toLocaleDateString(
-                                                          "en-US",
-                                                          {
-                                                              month: "short",
-                                                              day: "numeric",
-                                                          }
-                                                      )
-                                                    : "Not set"}
-                                            </span>
-                                        </div>
-                                        <div className="detail-item d-flex justify-content-between">
-                                            <span className="text-muted">
-                                                Time:
-                                            </span>
-                                            <span className="fw-semibold">
-                                                {bookingData.appointment_time
-                                                    ? formatTime(
-                                                          bookingData.appointment_time
-                                                      )
-                                                    : "Not set"}
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    <hr />
-
-                                    {/* Price Breakdown */}
-                                    <div className="price-breakdown mb-4">
-                                        <div className="d-flex justify-content-between mb-2">
-                                            <span>
-                                                Service (
-                                                {bookingData.duration_hours ||
-                                                    1}
-                                                h)
-                                            </span>
-                                            <span>
-                                                {formatPrice(
-                                                    bookingData.total_price || 0
-                                                )}
-                                            </span>
-                                        </div>
-
-                                        {bookingData.travel_fee > 0 && (
-                                            <div className="d-flex justify-content-between mb-2">
-                                                <span className="text-warning">
-                                                    Travel fee
-                                                </span>
-                                                <span className="text-warning">
-                                                    {formatPrice(
-                                                        bookingData.travel_fee
-                                                    )}
-                                                </span>
-                                            </div>
-                                        )}
-
-                                        <hr />
-
-                                        <div className="d-flex justify-content-between">
-                                            <span className="fw-bold h6">
-                                                Total Amount
-                                            </span>
-                                            <span className="fw-bold text-purple h4 mb-0">
-                                                {formatPrice(totalAmount)}
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    {/* Confirm Button */}
-                                    <div className="d-grid">
-                                        <button
-                                            className="btn btn-purple btn-lg"
-                                            onClick={handleSubmitBooking}
-                                            disabled={loading || !agreedToTerms}
-                                        >
-                                            {loading ? (
-                                                <>
-                                                    <span className="spinner-border spinner-border-sm me-2" />
-                                                    Processing...
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <i className="fas fa-check-circle me-2" />
-                                                    Confirm Booking
-                                                </>
-                                            )}
-                                        </button>
-                                    </div>
-
-                                    <div className="text-center mt-3">
-                                        <small className="text-muted">
-                                            You'll receive confirmation within 2
-                                            hours
-                                        </small>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Security Notice */}
-                            <div className="card border-0 shadow-sm mt-3">
-                                <div className="card-body text-center">
-                                    <h6 className="fw-bold mb-2">
-                                        <i className="fas fa-shield-alt text-success me-2" />
-                                        Secure Booking
-                                    </h6>
-                                    <p className="text-muted small mb-0">
-                                        Your booking is protected by our service
-                                        guarantee. All payments are secure and
-                                        your personal information is encrypted.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
+                        <AppointmentSummary
+                            service={service}
+                            provider={provider}
+                            bookingData={{
+                                ...bookingData,
+                                payment_method: paymentMethod,
+                                agreed_to_terms: agreedToTerms,
+                            }}
+                            selectedSlot={selectedSlot}
+                            currentStep={3}
+                            isSticky={true}
+                            showActions={true}
+                            onEdit={(section) => {
+                                // Handle edit actions
+                                switch (section) {
+                                    case "schedule":
+                                        // Go back to step 1
+                                        break;
+                                    case "location":
+                                    case "contact":
+                                        onPrevious(); // Go to step 2
+                                        break;
+                                    default:
+                                        break;
+                                }
+                            }}
+                        />
                     </div>
                 </div>
 

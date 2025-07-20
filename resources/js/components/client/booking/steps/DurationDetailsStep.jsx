@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import clientService from "../../../../services/clientService.js";
+import AppointmentSummary from "../shared/AppointmentSummary";
 
 const DurationDetailsStep = ({
     service,
@@ -431,147 +432,19 @@ const DurationDetailsStep = ({
 
                     {/* Appointment Summary Sidebar */}
                     <div className="col-lg-4">
-                        <div
-                            className="booking-summary position-sticky"
-                            style={{ top: "2rem" }}
-                        >
-                            <div className="card border-0 shadow">
-                                <div className="card-header bg-purple text-white">
-                                    <h6 className="fw-bold mb-0">
-                                        <i className="fas fa-receipt me-2" />
-                                        Appointment Summary
-                                    </h6>
-                                </div>
-                                <div className="card-body">
-                                    {/* Service */}
-                                    <div className="summary-section mb-3">
-                                        <h6 className="fw-semibold text-purple">
-                                            Service
-                                        </h6>
-                                        <div className="text-muted small">
-                                            {service?.title}
-                                        </div>
-                                    </div>
-
-                                    {/* Service Category*/}
-                                    <div className="summary-section mb-3">
-                                        <h6 className="fw-semibold text-purple">
-                                            Service Category
-                                        </h6>
-                                        <div className="text-muted small">
-                                            {service?.category?.name}
-                                        </div>
-                                    </div>
-
-                                    {/* Provider */}
-                                    <div className="summary-section mb-3">
-                                        <h6 className="fw-semibold text-purple">
-                                            Provider
-                                        </h6>
-                                        <div className="d-flex align-items-center">
-                                            {provider?.profile_image_url && (
-                                                <img
-                                                    src={
-                                                        provider.profile_image_url
-                                                    }
-                                                    alt={provider.name}
-                                                    className="rounded-circle me-2"
-                                                    style={{
-                                                        width: "30px",
-                                                        height: "30px",
-                                                        objectFit: "cover",
-                                                    }}
-                                                />
-                                            )}
-                                            <div>
-                                                <div className="text-muted small">
-                                                    {provider?.business_name}
-                                                </div>
-                                                {provider?.is_verified && (
-                                                    <div className="text-success small">
-                                                        <i className="fas fa-check-circle me-1" />
-                                                        Verified
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Schedule */}
-                                    <div className="summary-section mb-3">
-                                        <h6 className="fw-semibold text-purple">
-                                            Schedule
-                                        </h6>
-                                        <div className="text-muted small">
-                                            <div>
-                                                <i className="fas fa-calendar me-1" />
-                                                {selectedSlot?.formatted_date}
-                                            </div>
-                                            <div>
-                                                <i className="fas fa-clock me-1" />
-                                                {selectedSlot?.formatted_time}
-                                            </div>
-                                            <div>
-                                                <i className="fas fa-hourglass-half me-1" />
-                                                {duration} hour
-                                                {duration > 1 ? "s" : ""}
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <hr />
-
-                                    {/* Price Breakdown */}
-                                    <div className="price-breakdown">
-                                        <div className="d-flex justify-content-between mb-2">
-                                            <span>Service rate:</span>
-                                            <span>
-                                                {formatPrice(basePrice)}/hour
-                                            </span>
-                                        </div>
-                                        <div className="d-flex justify-content-between mb-2">
-                                            <span>Duration:</span>
-                                            <span>
-                                                {duration} hour
-                                                {duration > 1 ? "s" : ""}
-                                            </span>
-                                        </div>
-                                        <hr />
-                                        <div className="d-flex justify-content-between fw-bold">
-                                            <span>Total:</span>
-                                            <span className="text-purple h5 mb-0">
-                                                {formatPrice(totalPrice)}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Provider Info */}
-                            <div className="card border-0 shadow-sm mt-3">
-                                <div className="card-body">
-                                    <h6 className="fw-bold mb-2">
-                                        <i className="fas fa-info-circle text-info me-2" />
-                                        Important Notes
-                                    </h6>
-                                    <ul className="list-unstyled small text-muted mb-0">
-                                        <li className="mb-1">
-                                            <i className="fas fa-check text-success me-2" />
-                                            Provider will confirm within an hour
-                                        </li>
-                                        <li className="mb-1">
-                                            <i className="fas fa-clock text-warning me-2" />
-                                            Free cancellation up to 24 hours
-                                            before
-                                        </li>
-                                        <li className="mb-1">
-                                            <i className="fas fa-calculator text-info me-2" />
-                                            Final price may include travel fees
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
+                        <AppointmentSummary
+                            service={service}
+                            provider={provider}
+                            bookingData={{
+                                ...bookingData,
+                                duration_hours: duration,
+                                total_price: totalPrice,
+                                special_requirements: specialRequirements,
+                            }}
+                            selectedSlot={selectedSlot}
+                            currentStep={1}
+                            isSticky={true}
+                        />
                     </div>
                 </div>
 
