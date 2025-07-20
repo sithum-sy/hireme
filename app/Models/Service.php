@@ -252,8 +252,15 @@ class Service extends Model
             if (str_starts_with($image, 'http')) {
                 return $image; // Already a full URL
             }
-            return Storage::url('services/' . $image);
-            // return url('storage/services/' . $image);
+            
+            // Check if file exists and return URL
+            if (Storage::disk('public')->exists('services/' . $image)) {
+                // Use asset helper for consistent URL generation
+                return asset('storage/services/' . $image);
+            }
+            
+            // Return null if file doesn't exist
+            return null;
         }, $images);
     }
 
@@ -263,7 +270,11 @@ class Service extends Model
     public function getFirstImageUrlAttribute()
     {
         $images = $this->service_image_urls;
-        return !empty($images) ? $images[0] : null;
+        
+        // Filter out null values (non-existent files)
+        $validImages = array_filter($images);
+        
+        return !empty($validImages) ? array_values($validImages)[0] : null;
     }
 
     public function getFormattedPriceAttribute()

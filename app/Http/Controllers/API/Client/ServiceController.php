@@ -31,10 +31,18 @@ class ServiceController extends Controller
     public function index(Request $request)
     {
         $request->validate([
+            'search' => 'nullable|string|max:255',
             'category_id' => 'nullable|exists:service_categories,id',
             'latitude' => 'nullable|numeric|between:-90,90',
             'longitude' => 'nullable|numeric|between:-180,180',
             'radius' => 'nullable|integer|min:1|max:50',
+            'min_price' => 'nullable|numeric|min:0',
+            'max_price' => 'nullable|numeric|min:0',
+            'min_rating' => 'nullable|numeric|between:1,5',
+            'pricing_type' => 'nullable|in:hourly,fixed,custom',
+            'verified_only' => 'nullable|in:true,1,false,0',
+            'instant_booking' => 'nullable|in:true,1,false,0',
+            'available_today' => 'nullable|in:true,1,false,0',
             'sort_by' => 'nullable|in:distance,price,rating,popularity,recent',
             'per_page' => 'nullable|integer|min:1|max:50'
         ]);
@@ -42,9 +50,68 @@ class ServiceController extends Controller
         $query = Service::with(['category', 'provider.providerProfile'])
             ->where('is_active', true);
 
+        // Text search filter
+        if ($request->search) {
+            $searchTerm = $request->search;
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('title', 'like', "%{$searchTerm}%")
+                  ->orWhere('description', 'like', "%{$searchTerm}%")
+                  ->orWhereHas('category', function ($categoryQuery) use ($searchTerm) {
+                      $categoryQuery->where('name', 'like', "%{$searchTerm}%");
+                  })
+                  ->orWhereHas('provider', function ($providerQuery) use ($searchTerm) {
+                      $providerQuery->where(function ($nameQuery) use ($searchTerm) {
+                          $nameQuery->whereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$searchTerm}%"])
+                                   ->orWhere('first_name', 'like', "%{$searchTerm}%")
+                                   ->orWhere('last_name', 'like', "%{$searchTerm}%");
+                      })
+                      ->orWhereHas('providerProfile', function ($profileQuery) use ($searchTerm) {
+                          $profileQuery->where('business_name', 'like', "%{$searchTerm}%");
+                      });
+                  });
+            });
+        }
+
         // Category filter
         if ($request->category_id) {
             $query->where('category_id', $request->category_id);
+        }
+
+        // Price range filters
+        if ($request->min_price) {
+            $query->where('base_price', '>=', $request->min_price);
+        }
+        if ($request->max_price) {
+            $query->where('base_price', '<=', $request->max_price);
+        }
+
+        // Rating filter
+        if ($request->min_rating) {
+            $query->where('average_rating', '>=', $request->min_rating);
+        }
+
+        // Pricing type filter
+        if ($request->pricing_type) {
+            $query->where('pricing_type', $request->pricing_type);
+        }
+
+        // Verified providers only
+        if ($request->verified_only && in_array($request->verified_only, ['true', '1', 1, true])) {
+            $query->whereHas('provider.providerProfile', function ($q) {
+                $q->where('verification_status', 'verified');
+            });
+        }
+
+        // Available today filter
+        if ($request->available_today && in_array($request->available_today, ['true', '1', 1, true])) {
+            $today = now()->format('Y-m-d');
+            $query->whereHas('provider', function ($q) use ($today) {
+                // This would need to be implemented based on your availability system
+                // For now, just include all active providers
+                $q->whereHas('providerProfile', function ($profile) {
+                    $profile->where('is_available', true);
+                });
+            });
         }
 
         // Location-based filtering
@@ -57,12 +124,15 @@ class ServiceController extends Controller
         switch ($request->sort_by) {
             case 'distance':
                 // Already sorted by distance if location provided
+                if (!($request->latitude && $request->longitude)) {
+                    $query->orderByDesc('created_at');
+                }
                 break;
             case 'price':
                 $query->orderBy('base_price');
                 break;
             case 'rating':
-                $query->orderByDesc('average_rating');
+                $query->orderByDesc('average_rating')->orderByDesc('views_count');
                 break;
             case 'popularity':
                 $query->orderByDesc('views_count')->orderByDesc('bookings_count');
@@ -79,14 +149,33 @@ class ServiceController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => collect($services->items())->map(function ($service) {
-                return $this->formatServiceForClient($service);
-            }),
+            'data' => [
+                'data' => collect($services->items())->map(function ($service) {
+                    return $this->formatServiceForClient($service);
+                }),
+                'current_page' => $services->currentPage(),
+                'last_page' => $services->lastPage(),
+                'per_page' => $services->perPage(),
+                'total' => $services->total(),
+            ],
             'meta' => [
                 'total' => $services->total(),
                 'per_page' => $services->perPage(),
                 'current_page' => $services->currentPage(),
                 'last_page' => $services->lastPage(),
+                'search_info' => [
+                    'location_based' => $request->latitude && $request->longitude,
+                    'radius' => $request->radius ?? 15,
+                    'filters_applied' => [
+                        'search' => !!$request->search,
+                        'category' => !!$request->category_id,
+                        'price_range' => !!($request->min_price || $request->max_price),
+                        'rating' => !!$request->min_rating,
+                        'pricing_type' => !!$request->pricing_type,
+                        'verified_only' => $request->verified_only && in_array($request->verified_only, ['true', '1', 1, true]),
+                        'available_today' => $request->available_today && in_array($request->available_today, ['true', '1', 1, true]),
+                    ]
+                ]
             ]
         ]);
     }

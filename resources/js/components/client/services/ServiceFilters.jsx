@@ -240,11 +240,9 @@ const ServiceFilters = ({
                             }
                         >
                             <option value="">All Types</option>
-                            <option value="hour">Per Hour</option>
-                            <option value="service">Per Service</option>
-                            <option value="day">Per Day</option>
-                            <option value="project">Per Project</option>
-                            <option value="session">Per Session</option>
+                            <option value="hourly">Hourly</option>
+                            <option value="fixed">Fixed</option>
+                            <option value="custom">Custom</option>
                         </select>
                     </div>
 
@@ -259,6 +257,7 @@ const ServiceFilters = ({
                                     className="form-check-input"
                                     type="checkbox"
                                     id="verified-only"
+                                    checked={filters.verified_only || false}
                                     onChange={(e) =>
                                         handleFilterChange(
                                             "verified_only",
@@ -279,28 +278,8 @@ const ServiceFilters = ({
                                 <input
                                     className="form-check-input"
                                     type="checkbox"
-                                    id="instant-booking"
-                                    onChange={(e) =>
-                                        handleFilterChange(
-                                            "instant_booking",
-                                            e.target.checked
-                                        )
-                                    }
-                                />
-                                <label
-                                    className="form-check-label"
-                                    htmlFor="instant-booking"
-                                >
-                                    <i className="fas fa-bolt text-warning me-1"></i>
-                                    Instant Booking
-                                </label>
-                            </div>
-
-                            <div className="form-check">
-                                <input
-                                    className="form-check-input"
-                                    type="checkbox"
                                     id="available-today"
+                                    checked={filters.available_today || false}
                                     onChange={(e) =>
                                         handleFilterChange(
                                             "available_today",
@@ -318,40 +297,6 @@ const ServiceFilters = ({
                             </div>
                         </div>
                     </div>
-
-                    {/* Distance Filter (only if location is set) */}
-                    {location && (
-                        <div className="filter-group mb-4">
-                            <label className="form-label fw-semibold mb-2">
-                                Distance from {location.city}
-                            </label>
-                            <div className="distance-slider">
-                                <input
-                                    type="range"
-                                    className="form-range"
-                                    min="1"
-                                    max="50"
-                                    step="1"
-                                    value={location.radius || 15}
-                                    onChange={(e) => {
-                                        // Update location radius
-                                        // This would be handled by the parent component
-                                        console.log(
-                                            "Update radius:",
-                                            e.target.value
-                                        );
-                                    }}
-                                />
-                                <div className="d-flex justify-content-between text-muted small">
-                                    <span>1km</span>
-                                    <span className="fw-semibold">
-                                        {location.radius || 15}km
-                                    </span>
-                                    <span>50km</span>
-                                </div>
-                            </div>
-                        </div>
-                    )}
 
                     {/* Apply Button */}
                     <div className="d-grid mt-4">

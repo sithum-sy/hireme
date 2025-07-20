@@ -17,6 +17,31 @@ use App\Http\Controllers\API\Client\QuoteController;
 | Routes specific to clients for service discovery and booking
 */
 
+// Debug route - remove in production
+Route::get('/debug/service/{service}/images', function (\App\Models\Service $service) {
+    $serviceImages = $service->service_images;
+    $imagesArray = is_array($serviceImages) ? $serviceImages : (json_decode($serviceImages, true) ?? []);
+    
+    return response()->json([
+        'service_id' => $service->id,
+        'service_title' => $service->title,
+        'raw_service_images' => $service->service_images,
+        'service_image_urls' => $service->service_image_urls,
+        'first_image_url' => $service->first_image_url,
+        'storage_path' => storage_path('app/public/services'),
+        'public_path' => public_path('storage/services'),
+        'app_url' => config('app.url'),
+        'file_exists_check' => $serviceImages ? array_map(function($img) {
+            return [
+                'filename' => $img,
+                'exists' => \Illuminate\Support\Facades\Storage::disk('public')->exists('services/' . $img),
+                'full_path' => storage_path('app/public/services/' . $img),
+                'url' => asset('storage/services/' . $img)
+            ];
+        }, $imagesArray) : []
+    ]);
+});
+
 // Service Discovery & Search
 Route::prefix('services')->group(function () {
     Route::get('/search', [ServiceController::class, 'searchServices']);

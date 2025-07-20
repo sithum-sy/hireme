@@ -28,6 +28,11 @@ const ServicesBrowse = () => {
         max_price: searchParams.get("max_price") || "",
         min_rating: searchParams.get("min_rating") || "",
         pricing_type: searchParams.get("pricing_type") || "",
+        verified_only: searchParams.get("verified_only") === "true" || false,
+        instant_booking:
+            searchParams.get("instant_booking") === "true" || false,
+        available_today:
+            searchParams.get("available_today") === "true" || false,
         sort_by: searchParams.get("sort_by") || "recent",
     });
 
@@ -62,14 +67,23 @@ const ServicesBrowse = () => {
     }, []);
 
     const loadServices = async (page = 1) => {
+        // console.log("Loading services with filters:", filters);
         setLoading(true);
 
         try {
+            // Create params object, excluding false boolean values
             const params = {
-                ...filters,
                 page,
                 per_page: 12,
             };
+
+            // Add filters, but only if they have meaningful values
+            Object.keys(filters).forEach((key) => {
+                const value = filters[key];
+                if (value && value !== "" && value !== false) {
+                    params[key] = value;
+                }
+            });
 
             if (currentLocation && currentLocation.lat && currentLocation.lng) {
                 params.latitude = currentLocation.lat;
@@ -79,21 +93,38 @@ const ServicesBrowse = () => {
                 // console.log("Loading services without location");
             }
 
-            // Remove empty filters
-            Object.keys(params).forEach((key) => {
-                if (!params[key]) delete params[key];
-            });
+            // console.log("API request params:", params);
 
             const response = await clientService.getServices(params);
+            // console.log("API response:", response);
 
             if (response.success) {
-                setServices(response.data);
-                setPagination(response.data.data || response.meta);
+                // Handle the new nested data structure
+                const responseData = response.data;
+
+                if (responseData.data) {
+                    // New format: { data: { data: [...], total: ... } }
+                    setServices(responseData.data);
+                    setPagination({
+                        current_page: responseData.current_page,
+                        last_page: responseData.last_page,
+                        per_page: responseData.per_page,
+                        total: responseData.total,
+                    });
+                } else {
+                    // Fallback to old format
+                    setServices(responseData);
+                    setPagination(response.meta || {});
+                }
 
                 // Update URL with current filters
                 const newSearchParams = new URLSearchParams();
                 Object.keys(filters).forEach((key) => {
-                    if (filters[key]) newSearchParams.set(key, filters[key]);
+                    const value = filters[key];
+                    // Only add non-empty and non-false values to URL
+                    if (value && value !== "" && value !== false) {
+                        newSearchParams.set(key, value);
+                    }
                 });
                 setSearchParams(newSearchParams, { replace: true });
             }
@@ -105,7 +136,10 @@ const ServicesBrowse = () => {
     };
 
     const handleFilterChange = (newFilters) => {
-        setFilters((prev) => ({ ...prev, ...newFilters }));
+        // console.log("Filter change triggered:", newFilters);
+        const updatedFilters = { ...filters, ...newFilters };
+        // console.log("Updated filters:", updatedFilters);
+        setFilters(updatedFilters);
     };
 
     const handleLocationChange = (newLocation) => {
@@ -119,7 +153,7 @@ const ServicesBrowse = () => {
     };
 
     const handleSearch = (searchParams) => {
-        console.log("Search triggered:", searchParams);
+        // console.log("Search triggered:", searchParams);
 
         // Update filters with search parameters
         const newFilters = {
@@ -147,15 +181,19 @@ const ServicesBrowse = () => {
     };
 
     const clearFilters = () => {
-        setFilters({
+        const clearedFilters = {
             search: "",
             category_id: "",
             min_price: "",
             max_price: "",
             min_rating: "",
             pricing_type: "",
+            verified_only: false,
+            instant_booking: false,
+            available_today: false,
             sort_by: "recent",
-        });
+        };
+        setFilters(clearedFilters);
         setSearchParams({}, { replace: true });
     };
 
@@ -310,6 +348,7 @@ const ServicesBrowse = () => {
                                         </span>
                                     )}
 
+                                    {/* Price Range Badge */}
                                     {(filters.min_price ||
                                         filters.max_price) && (
                                         <span className="badge bg-purple bg-opacity-10 text-purple">
@@ -327,6 +366,7 @@ const ServicesBrowse = () => {
                                         </span>
                                     )}
 
+                                    {/* Rating Badge */}
                                     {filters.min_rating && (
                                         <span className="badge bg-purple bg-opacity-10 text-purple">
                                             {filters.min_rating}+ Stars
@@ -335,6 +375,72 @@ const ServicesBrowse = () => {
                                                 onClick={() =>
                                                     handleFilterChange({
                                                         min_rating: "",
+                                                    })
+                                                }
+                                            ></button>
+                                        </span>
+                                    )}
+
+                                    {/* Pricing Type Badge */}
+                                    {filters.pricing_type && (
+                                        <span className="badge bg-purple bg-opacity-10 text-purple">
+                                            {filters.pricing_type
+                                                .charAt(0)
+                                                .toUpperCase() +
+                                                filters.pricing_type.slice(1)}
+                                            <button
+                                                className="btn-close btn-close-sm ms-2"
+                                                onClick={() =>
+                                                    handleFilterChange({
+                                                        pricing_type: "",
+                                                    })
+                                                }
+                                            ></button>
+                                        </span>
+                                    )}
+
+                                    {/* Verified Only Badge */}
+                                    {filters.verified_only && (
+                                        <span className="badge bg-success bg-opacity-10 text-success">
+                                            <i className="fas fa-check-circle me-1"></i>
+                                            Verified Only
+                                            <button
+                                                className="btn-close btn-close-sm ms-2"
+                                                onClick={() =>
+                                                    handleFilterChange({
+                                                        verified_only: false,
+                                                    })
+                                                }
+                                            ></button>
+                                        </span>
+                                    )}
+
+                                    {/* Instant Booking Badge */}
+                                    {filters.instant_booking && (
+                                        <span className="badge bg-warning bg-opacity-10 text-warning">
+                                            <i className="fas fa-bolt me-1"></i>
+                                            Instant Booking
+                                            <button
+                                                className="btn-close btn-close-sm ms-2"
+                                                onClick={() =>
+                                                    handleFilterChange({
+                                                        instant_booking: false,
+                                                    })
+                                                }
+                                            ></button>
+                                        </span>
+                                    )}
+
+                                    {/* Available Today Badge */}
+                                    {filters.available_today && (
+                                        <span className="badge bg-info bg-opacity-10 text-info">
+                                            <i className="fas fa-calendar-check me-1"></i>
+                                            Available Today
+                                            <button
+                                                className="btn-close btn-close-sm ms-2"
+                                                onClick={() =>
+                                                    handleFilterChange({
+                                                        available_today: false,
                                                     })
                                                 }
                                             ></button>
@@ -376,7 +482,98 @@ const ServicesBrowse = () => {
                                         {/* Pagination */}
                                         {pagination.last_page > 1 && (
                                             <div className="d-flex justify-content-center mt-5">
-                                                {/* Pagination code remains the same */}
+                                                <nav>
+                                                    <ul className="pagination">
+                                                        <li
+                                                            className={`page-item ${
+                                                                pagination.current_page ===
+                                                                1
+                                                                    ? "disabled"
+                                                                    : ""
+                                                            }`}
+                                                        >
+                                                            <button
+                                                                className="page-link"
+                                                                onClick={() =>
+                                                                    handlePageChange(
+                                                                        pagination.current_page -
+                                                                            1
+                                                                    )
+                                                                }
+                                                                disabled={
+                                                                    pagination.current_page ===
+                                                                    1
+                                                                }
+                                                            >
+                                                                Previous
+                                                            </button>
+                                                        </li>
+
+                                                        {Array.from(
+                                                            {
+                                                                length: Math.min(
+                                                                    5,
+                                                                    pagination.last_page
+                                                                ),
+                                                            },
+                                                            (_, i) => {
+                                                                const page =
+                                                                    i + 1;
+                                                                return (
+                                                                    <li
+                                                                        key={
+                                                                            page
+                                                                        }
+                                                                        className={`page-item ${
+                                                                            pagination.current_page ===
+                                                                            page
+                                                                                ? "active"
+                                                                                : ""
+                                                                        }`}
+                                                                    >
+                                                                        <button
+                                                                            className="page-link"
+                                                                            onClick={() =>
+                                                                                handlePageChange(
+                                                                                    page
+                                                                                )
+                                                                            }
+                                                                        >
+                                                                            {
+                                                                                page
+                                                                            }
+                                                                        </button>
+                                                                    </li>
+                                                                );
+                                                            }
+                                                        )}
+
+                                                        <li
+                                                            className={`page-item ${
+                                                                pagination.current_page ===
+                                                                pagination.last_page
+                                                                    ? "disabled"
+                                                                    : ""
+                                                            }`}
+                                                        >
+                                                            <button
+                                                                className="page-link"
+                                                                onClick={() =>
+                                                                    handlePageChange(
+                                                                        pagination.current_page +
+                                                                            1
+                                                                    )
+                                                                }
+                                                                disabled={
+                                                                    pagination.current_page ===
+                                                                    pagination.last_page
+                                                                }
+                                                            >
+                                                                Next
+                                                            </button>
+                                                        </li>
+                                                    </ul>
+                                                </nav>
                                             </div>
                                         )}
                                     </>

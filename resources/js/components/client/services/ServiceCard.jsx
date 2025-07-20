@@ -145,12 +145,12 @@ const ServiceCard = ({ service, showDistance = true }) => {
 
                         {/* Service Description */}
                         <p className="card-text text-muted small mb-3">
-                            {(service.description ?? "").length > 100
-                                ? (service.description ?? "").substring(
-                                      0,
-                                      100
-                                  ) + "..."
-                                : service.description ?? ""}
+                            {(() => {
+                                const description = service.description || "";
+                                return description.length > 100
+                                    ? description.substring(0, 100) + "..."
+                                    : description;
+                            })()}
                         </p>
 
                         {/* Provider Info */}
@@ -181,7 +181,8 @@ const ServiceCard = ({ service, showDistance = true }) => {
                             </div>
                             <small className="text-muted">
                                 {service.business_name ||
-                                    service.provider?.name}
+                                    service.provider?.name ||
+                                    "Unknown Provider"}
                             </small>
                         </div>
 
@@ -213,14 +214,9 @@ const ServiceCard = ({ service, showDistance = true }) => {
                                 <span className="fw-bold text-purple">
                                     {service.formatted_price ||
                                         `Rs. ${
-                                            service.base_price || service.price
+                                            service.base_price || service.price || 0
                                         }`}
                                 </span>
-                                {/* {service.pricing_type && (
-                                    <small className="text-muted">
-                                        /{service.pricing_type}
-                                    </small>
-                                )} */}
                             </div>
 
                             {showDistance && service.distance != null && (
