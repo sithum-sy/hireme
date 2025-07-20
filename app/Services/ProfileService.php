@@ -3,117 +3,81 @@
 namespace App\Services;
 
 use App\Models\User;
-use App\Models\ProviderProfile;
-use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
-use App\Events\ProfileUpdated;
-use App\Notifications\ProfileUpdateNotification;
+use Illuminate\Support\Facades\Validator;
 
 class ProfileService
 {
     /**
-     * Update user basic profile
+     * Get complete profile data for user
      */
-    public function updateUserProfile(User $user, array $data): User
+    public function getProfileData(User $user): array
     {
-        $originalData = $user->toArray();
+        $profileData = [
+            'user' => $this->getUserData($user),
+            'config' => $this->getProfileConfig($user->role),
+            'permissions' => $this->getUserPermissions($user),
+        ];
 
-        // Handle profile picture upload
-        if (isset($data['profile_picture']) && $data['profile_picture'] instanceof UploadedFile) {
-            // Delete old profile picture
-            if ($user->profile_picture) {
-                Storage::disk('public')->delete($user->profile_picture);
-            }
-
-            $filename = 'profile_' . $user->id . '_' . time() . '.' . $data['profile_picture']->getClientOriginalExtension();
-            $data['profile_picture'] = $data['profile_picture']->storeAs('profile_pictures', $filename, 'public');
+        // Add role-specific data
+        switch ($user->role) {
+            case 'service_provider':
+                $profileData['provider_profile'] = $user->providerProfile?->toArray();
+                $profileData['provider_statistics'] = $this->getProviderStatistics($user);
+                break;
+            case 'admin':
+                $profileData['admin_permissions'] = $this->getAdminPermissions($user);
+                break;
+            case 'staff':
+                $profileData['staff_permissions'] = $this->getStaffPermissions($user);
+                break;
         }
 
-        $user->update($data);
-        $updatedUser = $user->fresh();
-
-        // Fire event and send notification
-        event(new ProfileUpdated($updatedUser, 'profile_updated', array_keys($data)));
-        $updatedUser->notify(new ProfileUpdateNotification('profile_updated'));
-
-        return $updatedUser;
+        return $profileData;
     }
 
     /**
-     * Update provider profile
+     * Update user profile
      */
-    public function updateProviderProfile(User $user, array $data): ProviderProfile
+    public function updateProfile(User $user, array $data): array
     {
-        if (!$user->providerProfile) {
-            throw new \Exception('Provider profile not found');
-        }
-
-        $profile = $user->providerProfile;
-
         DB::beginTransaction();
 
         try {
-            // Handle business license upload
-            if (isset($data['business_license']) && $data['business_license'] instanceof UploadedFile) {
-                // Delete old business license
-                if ($profile->business_license) {
-                    Storage::disk('public')->delete($profile->business_license);
-                }
+            // Update user table
+            $userFields = ['first_name', 'last_name', 'email', 'contact_number', 'address', 'date_of_birth'];
+            $userData = array_intersect_key($data, array_flip($userFields));
 
-                $filename = 'license_' . $user->id . '_' . time() . '.' . $data['business_license']->getClientOriginalExtension();
-                $data['business_license'] = $data['business_license']->storeAs('business_licenses', $filename, 'public');
+            if (!empty($userData)) {
+                $user->update($userData);
             }
 
-            // Handle certifications upload
-            if (isset($data['certifications']) && is_array($data['certifications'])) {
-                // Delete old certifications
-                if ($profile->certifications) {
-                    foreach ($profile->certifications as $oldCert) {
-                        Storage::disk('public')->delete($oldCert);
-                    }
-                }
+            // Update role-specific data
+            if ($user->role === 'service_provider' && $user->providerProfile) {
+                $providerFields = [
+                    'business_name',
+                    'bio',
+                    'years_of_experience',
+                    'service_area_radius',
+                    'is_available'
+                ];
+                $providerData = array_intersect_key($data, array_flip($providerFields));
 
-                $certificationPaths = [];
-                foreach ($data['certifications'] as $index => $certification) {
-                    if ($certification instanceof UploadedFile) {
-                        $filename = 'cert_' . $user->id . '_' . time() . '_' . ($index + 1) . '.' . $certification->getClientOriginalExtension();
-                        $certificationPaths[] = $certification->storeAs('certifications', $filename, 'public');
-                    }
+                if (!empty($providerData)) {
+                    $user->providerProfile->update($providerData);
                 }
-                $data['certifications'] = $certificationPaths;
             }
 
-            // Handle portfolio images upload
-            if (isset($data['portfolio_images']) && is_array($data['portfolio_images'])) {
-                // Delete old portfolio images
-                if ($profile->portfolio_images) {
-                    foreach ($profile->portfolio_images as $oldImage) {
-                        Storage::disk('public')->delete($oldImage);
-                    }
-                }
-
-                $portfolioPaths = [];
-                foreach ($data['portfolio_images'] as $index => $image) {
-                    if ($image instanceof UploadedFile) {
-                        $filename = 'portfolio_' . $user->id . '_' . time() . '_' . ($index + 1) . '.' . $image->getClientOriginalExtension();
-                        $portfolioPaths[] = $image->storeAs('portfolio', $filename, 'public');
-                    }
-                }
-                $data['portfolio_images'] = $portfolioPaths;
-            }
-
-            $profile->update($data);
+            // Log profile update
+            activity()
+                ->performedOn($user)
+                ->causedBy($user)
+                ->withProperties(['updated_fields' => array_keys($data)])
+                ->log('Profile updated');
 
             DB::commit();
 
-            // Fire event and send notification
-            event(new ProfileUpdated($user, 'provider_profile_updated', array_keys($data)));
-            $user->notify(new ProfileUpdateNotification('provider_documents_updated'));
-
-            return $profile->fresh();
+            return $this->getProfileData($user);
         } catch (\Exception $e) {
             DB::rollBack();
             throw $e;
@@ -121,221 +85,215 @@ class ProfileService
     }
 
     /**
-     * Change user password
+     * Get user data with computed fields
      */
-    public function changePassword(User $user, string $currentPassword, string $newPassword): bool
+    protected function getUserData(User $user): array
     {
-        if (!Hash::check($currentPassword, $user->password)) {
-            throw new \Exception('Current password is incorrect');
-        }
+        $userData = $user->toArray();
 
-        $user->update(['password' => Hash::make($newPassword)]);
+        // Add computed fields
+        $userData['full_name'] = $user->first_name . ' ' . $user->last_name;
+        $userData['age'] = $user->date_of_birth ?
+            \Carbon\Carbon::parse($user->date_of_birth)->age : null;
+        $userData['last_login_human'] = $user->last_login_at ?
+            \Carbon\Carbon::parse($user->last_login_at)->diffForHumans() : null;
+        $userData['profile_picture'] = $user->profile_picture ?
+            asset('storage/' . $user->profile_picture) : null;
 
-        // Revoke all existing tokens for security
-        $user->tokens()->delete();
-
-        // Fire event and send notification
-        event(new ProfileUpdated($user, 'password_changed'));
-        $user->notify(new ProfileUpdateNotification('password_changed'));
-
-        return true;
+        return $userData;
     }
 
     /**
-     * Get user profile with provider profile if applicable
+     * Get profile configuration for role
      */
-    public function getUserProfile(User $user): array
+    public function getProfileConfig(string $role): array
     {
-        $profileData = [
-            'user' => [
-                'id' => $user->id,
-                'first_name' => $user->first_name,
-                'last_name' => $user->last_name,
-                'full_name' => $user->full_name,
-                'email' => $user->email,
-                'role' => $user->role,
-                'address' => $user->address,
-                'contact_number' => $user->contact_number,
-                'date_of_birth' => $user->date_of_birth?->format('Y-m-d'),
-                'age' => $user->age,
-                'profile_picture' => $user->profile_picture ? Storage::url($user->profile_picture) : null,
-                'is_active' => $user->is_active,
-                'email_verified_at' => $user->email_verified_at?->format('Y-m-d H:i:s'),
-                'created_at' => $user->created_at->format('Y-m-d H:i:s'),
-                'updated_at' => $user->updated_at->format('Y-m-d H:i:s'),
+        $configs = [
+            'admin' => [
+                'sections' => ['personal', 'contact', 'security', 'permissions', 'system'],
+                'permissions' => [
+                    'canEdit' => ['first_name', 'last_name', 'contact_number', 'address'],
+                    'canView' => ['first_name', 'last_name', 'email', 'contact_number', 'address', 'role', 'created_at'],
+                    'readOnly' => ['email', 'role', 'created_at'],
+                    'canDelete' => false,
+                    'canChangeEmail' => false,
+                    'canUploadImage' => true,
+                ]
+            ],
+            'staff' => [
+                'sections' => ['personal', 'contact', 'security', 'permissions'],
+                'permissions' => [
+                    'canEdit' => ['first_name', 'last_name', 'contact_number', 'address'],
+                    'canView' => ['first_name', 'last_name', 'email', 'contact_number', 'address', 'role', 'created_at'],
+                    'readOnly' => ['email', 'role', 'created_at'],
+                    'canDelete' => false,
+                    'canChangeEmail' => false,
+                    'canUploadImage' => true,
+                ]
+            ],
+            'service_provider' => [
+                'sections' => ['personal', 'contact', 'business', 'documents', 'security', 'preferences'],
+                'permissions' => [
+                    'canEdit' => [
+                        'first_name',
+                        'last_name',
+                        'email',
+                        'contact_number',
+                        'address',
+                        'date_of_birth',
+                        'business_name',
+                        'bio',
+                        'years_of_experience',
+                        'service_area_radius',
+                        'is_available'
+                    ],
+                    'canView' => [
+                        'first_name',
+                        'last_name',
+                        'email',
+                        'contact_number',
+                        'address',
+                        'date_of_birth',
+                        'business_name',
+                        'bio',
+                        'years_of_experience',
+                        'service_area_radius',
+                        'verification_status',
+                        'average_rating',
+                        'total_reviews',
+                        'is_available'
+                    ],
+                    'readOnly' => ['role', 'verification_status', 'average_rating', 'total_reviews'],
+                    'canDelete' => true,
+                    'canChangeEmail' => true,
+                    'canUploadImage' => true,
+                    'canToggleAvailability' => true,
+                ]
+            ],
+            'client' => [
+                'sections' => ['personal', 'contact', 'preferences', 'security', 'notifications'],
+                'permissions' => [
+                    'canEdit' => ['first_name', 'last_name', 'email', 'contact_number', 'address', 'date_of_birth'],
+                    'canView' => ['first_name', 'last_name', 'email', 'contact_number', 'address', 'date_of_birth', 'role'],
+                    'readOnly' => ['role'],
+                    'canDelete' => true,
+                    'canChangeEmail' => true,
+                    'canUploadImage' => true,
+                ]
             ]
         ];
 
-        // Add provider profile data if user is service provider
-        if ($user->role === 'service_provider' && $user->providerProfile) {
-            $profile = $user->providerProfile;
-            $profileData['provider_profile'] = [
-                'id' => $profile->id,
-                'business_name' => $profile->business_name,
-                'years_of_experience' => $profile->years_of_experience,
-                'service_area_radius' => $profile->service_area_radius,
-                'bio' => $profile->bio,
-                'verification_status' => $profile->verification_status,
-                'verification_notes' => $profile->verification_notes,
-                'average_rating' => $profile->average_rating,
-                'total_reviews' => $profile->total_reviews,
-                'total_earnings' => $profile->total_earnings,
-                'is_available' => $profile->is_available,
-                'business_license_url' => $profile->business_license_url,
-                'certification_urls' => $profile->certification_urls,
-                'portfolio_image_urls' => $profile->portfolio_image_urls,
-                'verified_at' => $profile->verified_at?->format('Y-m-d H:i:s'),
-                'created_at' => $profile->created_at->format('Y-m-d H:i:s'),
-                'updated_at' => $profile->updated_at->format('Y-m-d H:i:s'),
-            ];
-
-            // Add provider statistics
-            $profileData['provider_statistics'] = [
-                'total_services' => $user->services()->count(),
-                'active_services' => $user->services()->active()->count(),
-                'total_appointments' => $user->providerAppointments()->count(),
-                'completed_appointments' => $user->providerAppointments()->completed()->count(),
-                'pending_appointments' => $user->providerAppointments()->pending()->count(),
-                'this_month_earnings' => $user->providerAppointments()
-                    ->completed()
-                    ->whereMonth('completed_at', now()->month)
-                    ->whereYear('completed_at', now()->year)
-                    ->sum('total_price'),
-            ];
-        }
-
-        return $profileData;
+        return $configs[$role] ?? $configs['client'];
     }
 
     /**
-     * Toggle provider availability
+     * Get user permissions
      */
-    public function toggleProviderAvailability(User $user): ProviderProfile
+    protected function getUserPermissions(User $user): array
     {
-        if (!$user->providerProfile) {
-            throw new \Exception('Provider profile not found');
-        }
-
-        $profile = $user->providerProfile;
-        $profile->update(['is_available' => !$profile->is_available]);
-
-        return $profile->fresh();
+        // Implementation depends on your permission system
+        // This is a basic example
+        return [
+            'can_edit_profile' => true,
+            'can_delete_account' => in_array($user->role, ['client', 'service_provider']),
+            'can_change_email' => in_array($user->role, ['client', 'service_provider']),
+        ];
     }
 
     /**
-     * Delete profile picture
+     * Get provider statistics
      */
-    public function deleteProfilePicture(User $user): bool
+    protected function getProviderStatistics(User $user): array
     {
-        if ($user->profile_picture) {
-            Storage::disk('public')->delete($user->profile_picture);
-            $user->update(['profile_picture' => null]);
+        if ($user->role !== 'service_provider' || !$user->providerProfile) {
+            return [];
+        }
+
+        // These would be actual database queries in a real implementation
+        return [
+            'total_appointments' => $user->appointments()->count(),
+            'completed_appointments' => $user->appointments()->where('status', 'completed')->count(),
+            'pending_appointments' => $user->appointments()->where('status', 'pending')->count(),
+            'today_appointments' => $user->appointments()->whereDate('scheduled_at', today())->count(),
+            'monthly_earnings' => $user->payments()->whereMonth('created_at', now()->month)->sum('amount'),
+            'total_earnings' => $user->payments()->sum('amount'),
+            'average_rating' => $user->reviews()->avg('rating') ?? 0,
+            'total_reviews' => $user->reviews()->count(),
+        ];
+    }
+
+    /**
+     * Validate field value
+     */
+    public function validateField(User $user, string $fieldName, $value): bool
+    {
+        $config = $this->getProfileConfig($user->role);
+
+        if (!in_array($fieldName, $config['permissions']['canEdit'])) {
+            return false;
+        }
+
+        // Add specific validation logic based on field type
+        $rules = $this->getFieldValidationRules($fieldName, $user);
+
+        if (empty($rules)) {
             return true;
         }
 
-        return false;
+        $validator = Validator::make(
+            [$fieldName => $value],
+            [$fieldName => $rules]
+        );
+
+        return !$validator->fails();
     }
 
     /**
-     * Delete provider document
+     * Get validation rules for specific field
      */
-    public function deleteProviderDocument(User $user, string $documentType, int $index = null): bool
+    protected function getFieldValidationRules(string $fieldName, User $user): array
     {
-        if (!$user->providerProfile) {
-            throw new \Exception('Provider profile not found');
-        }
+        $rules = [
+            'first_name' => ['required', 'string', 'max:255'],
+            'last_name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255', 'unique:users,email,' . $user->id],
+            'contact_number' => ['nullable', 'string', 'max:20'],
+            'address' => ['nullable', 'string', 'max:1000'],
+            'date_of_birth' => ['nullable', 'date', 'before:today'],
+            'business_name' => ['nullable', 'string', 'max:255'],
+            'bio' => ['required', 'string', 'min:50', 'max:1000'],
+            'years_of_experience' => ['required', 'integer', 'min:0', 'max:50'],
+            'service_area_radius' => ['required', 'integer', 'min:1', 'max:100'],
+        ];
 
-        $profile = $user->providerProfile;
-
-        switch ($documentType) {
-            case 'business_license':
-                if ($profile->business_license) {
-                    Storage::disk('public')->delete($profile->business_license);
-                    $profile->update(['business_license' => null]);
-                    return true;
-                }
-                break;
-
-            case 'certification':
-                if ($profile->certifications && isset($profile->certifications[$index])) {
-                    $certifications = $profile->certifications;
-                    Storage::disk('public')->delete($certifications[$index]);
-                    unset($certifications[$index]);
-                    $profile->update(['certifications' => array_values($certifications)]);
-                    return true;
-                }
-                break;
-
-            case 'portfolio_image':
-                if ($profile->portfolio_images && isset($profile->portfolio_images[$index])) {
-                    $portfolioImages = $profile->portfolio_images;
-                    Storage::disk('public')->delete($portfolioImages[$index]);
-                    unset($portfolioImages[$index]);
-                    $profile->update(['portfolio_images' => array_values($portfolioImages)]);
-                    return true;
-                }
-                break;
-        }
-
-        return false;
+        return $rules[$fieldName] ?? [];
     }
 
     /**
-     * Get provider profile statistics
+     * Get admin permissions
      */
-    public function getProviderStatistics(User $user): array
+    protected function getAdminPermissions(User $user): array
     {
-        if ($user->role !== 'service_provider') {
-            throw new \Exception('User is not a service provider');
-        }
-
-        $currentMonth = now()->month;
-        $currentYear = now()->year;
-        $lastMonth = now()->subMonth();
-
         return [
-            'services' => [
-                'total' => $user->services()->count(),
-                'active' => $user->services()->active()->count(),
-                'inactive' => $user->services()->where('is_active', false)->count(),
-            ],
-            'appointments' => [
-                'total' => $user->providerAppointments()->count(),
-                'completed' => $user->providerAppointments()->completed()->count(),
-                'pending' => $user->providerAppointments()->pending()->count(),
-                'confirmed' => $user->providerAppointments()->confirmed()->count(),
-                'cancelled' => $user->providerAppointments()->where('status', 'like', 'cancelled%')->count(),
-                'this_month' => $user->providerAppointments()
-                    ->whereMonth('appointment_date', $currentMonth)
-                    ->whereYear('appointment_date', $currentYear)
-                    ->count(),
-                'last_month' => $user->providerAppointments()
-                    ->whereMonth('appointment_date', $lastMonth->month)
-                    ->whereYear('appointment_date', $lastMonth->year)
-                    ->count(),
-            ],
-            'earnings' => [
-                'total' => $user->providerProfile->total_earnings ?? 0,
-                'this_month' => $user->providerAppointments()
-                    ->completed()
-                    ->whereMonth('completed_at', $currentMonth)
-                    ->whereYear('completed_at', $currentYear)
-                    ->sum('total_price'),
-                'last_month' => $user->providerAppointments()
-                    ->completed()
-                    ->whereMonth('completed_at', $lastMonth->month)
-                    ->whereYear('completed_at', $lastMonth->year)
-                    ->sum('total_price'),
-            ],
-            'ratings' => [
-                'average' => $user->providerProfile->average_rating ?? 0,
-                'total_reviews' => $user->providerProfile->total_reviews ?? 0,
-                'five_stars' => $user->providerAppointments()->completed()->where('provider_rating', 5)->count(),
-                'four_stars' => $user->providerAppointments()->completed()->where('provider_rating', 4)->count(),
-                'three_stars' => $user->providerAppointments()->completed()->where('provider_rating', 3)->count(),
-                'two_stars' => $user->providerAppointments()->completed()->where('provider_rating', 2)->count(),
-                'one_star' => $user->providerAppointments()->completed()->where('provider_rating', 1)->count(),
-            ],
+            'can_manage_users' => true,
+            'can_manage_system' => true,
+            'can_view_analytics' => true,
+            'can_manage_staff' => true,
+            'can_backup_system' => true,
+        ];
+    }
+
+    /**
+     * Get staff permissions
+     */
+    protected function getStaffPermissions(User $user): array
+    {
+        return [
+            'can_manage_categories' => true,
+            'can_moderate_content' => true,
+            'can_support_users' => true,
+            'can_view_reports' => true,
+            'can_manage_services' => false,
         ];
     }
 }

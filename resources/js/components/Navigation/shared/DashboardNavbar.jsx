@@ -61,19 +61,19 @@ const DashboardNavbar = ({
                     icon: "fas fa-user",
                 },
                 {
+                    label: "Personal Information",
+                    path: "/admin/profile/personal",
+                    icon: "fas fa-id-card",
+                },
+                {
+                    label: "Security Settings",
+                    path: "/admin/profile/security",
+                    icon: "fas fa-shield-alt",
+                },
+                {
                     label: "System Settings",
                     path: "/admin/settings",
                     icon: "fas fa-cog",
-                },
-                {
-                    label: "Activity Log",
-                    path: "/admin/activity",
-                    icon: "fas fa-history",
-                },
-                {
-                    label: "Security",
-                    path: "/admin/security",
-                    icon: "fas fa-shield-alt",
                 },
             ],
             staff: [
@@ -83,14 +83,19 @@ const DashboardNavbar = ({
                     icon: "fas fa-user",
                 },
                 {
+                    label: "Personal Information",
+                    path: "/staff/profile/personal",
+                    icon: "fas fa-id-card",
+                },
+                {
+                    label: "Security Settings",
+                    path: "/staff/profile/security",
+                    icon: "fas fa-shield-alt",
+                },
+                {
                     label: "Staff Settings",
                     path: "/staff/settings",
                     icon: "fas fa-cog",
-                },
-                {
-                    label: "Help Center",
-                    path: "/staff/help",
-                    icon: "fas fa-question-circle",
                 },
             ],
             client: [
@@ -100,19 +105,19 @@ const DashboardNavbar = ({
                     icon: "fas fa-user",
                 },
                 {
+                    label: "Personal Information",
+                    path: "/client/profile/personal",
+                    icon: "fas fa-id-card",
+                },
+                {
+                    label: "Security Settings",
+                    path: "/client/profile/security",
+                    icon: "fas fa-shield-alt",
+                },
+                {
                     label: "Account Settings",
                     path: "/client/settings",
                     icon: "fas fa-cog",
-                },
-                {
-                    label: "Payment Methods",
-                    path: "/client/payments/methods",
-                    icon: "fas fa-credit-card",
-                },
-                {
-                    label: "Favorites",
-                    path: "/client/favorites",
-                    icon: "fas fa-heart",
                 },
             ],
             provider: [
@@ -122,19 +127,24 @@ const DashboardNavbar = ({
                     icon: "fas fa-user",
                 },
                 {
-                    label: "Business Settings",
-                    path: "/provider/settings",
-                    icon: "fas fa-cog",
+                    label: "Personal Information",
+                    path: "/provider/profile/personal",
+                    icon: "fas fa-id-card",
                 },
                 {
-                    label: "Earnings",
-                    path: "/provider/earnings",
-                    icon: "fas fa-dollar-sign",
+                    label: "Business Information",
+                    path: "/provider/profile/business",
+                    icon: "fas fa-building",
                 },
                 {
-                    label: "Analytics",
-                    path: "/provider/analytics",
-                    icon: "fas fa-chart-bar",
+                    label: "Documents",
+                    path: "/provider/profile/documents",
+                    icon: "fas fa-file-alt",
+                },
+                {
+                    label: "Security Settings",
+                    path: "/provider/profile/security",
+                    icon: "fas fa-shield-alt",
                 },
             ],
         };

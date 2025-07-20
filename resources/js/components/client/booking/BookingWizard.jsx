@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import ServiceSelection from "./ServiceSelection";
-import DateTimeSelection from "./DateTimeSelection";
+// import DateTimeSelection from "./DateTimeSelection";
 import BookingDetails from "./BookingDetails";
-import BookingConfirmation from "./BookingConfirmation";
+// import BookingConfirmation from "./BookingConfirmation";
 
 const BookingWizard = ({
     service,
@@ -315,15 +315,15 @@ const BookingWizard = ({
             // For full-page wizard, scroll the main window
             window.scrollTo({
                 top: 0,
-                behavior: 'smooth'
+                behavior: "smooth",
             });
-            
+
             // Also scroll any scrollable containers
-            const wizardContent = document.querySelector('.wizard-content');
+            const wizardContent = document.querySelector(".wizard-content");
             if (wizardContent) {
                 wizardContent.scrollTo({
                     top: 0,
-                    behavior: 'smooth'
+                    behavior: "smooth",
                 });
             }
         }, 50);
@@ -342,7 +342,7 @@ const BookingWizard = ({
                         <div className="d-flex align-items-center justify-content-between">
                             <div className="selected-slot-info">
                                 <i className="fas fa-calendar-check text-success me-2"></i>
-                                <strong>Selected Time: </strong>
+                                {/* <strong>Selected Time: </strong> */}
                                 <span className="text-purple fw-semibold">
                                     {selectedSlot.formatted_date ||
                                         selectedSlot.formatted_date_short}{" "}
@@ -433,7 +433,7 @@ const BookingWizard = ({
 
             {/* Step Content with error boundaries */}
             <div className="wizard-content p-4">
-                {currentStep === 1 && (
+                {/* {currentStep === 1 && (
                     <ServiceSelection
                         service={service}
                         provider={provider}
@@ -441,9 +441,9 @@ const BookingWizard = ({
                         updateBookingData={updateBookingData}
                         onNext={handleNext}
                     />
-                )}
+                )} */}
 
-                {currentStep === 2 && (
+                {/* {currentStep === 2 && (
                     <DateTimeSelection
                         service={service}
                         provider={provider}
@@ -454,7 +454,7 @@ const BookingWizard = ({
                         // ✅ ADD: Pass selected slot to show pre-selected time
                         selectedSlot={selectedSlot}
                     />
-                )}
+                )} */}
 
                 {currentStep === 3 && (
                     <BookingDetails
@@ -467,7 +467,7 @@ const BookingWizard = ({
                     />
                 )}
 
-                {currentStep === 4 && (
+                {/* {currentStep === 4 && (
                     <BookingConfirmation
                         service={service}
                         provider={provider}
@@ -476,7 +476,7 @@ const BookingWizard = ({
                         onPrevious={handlePrevious}
                         onFullFlow={onFullFlow}
                     />
-                )}
+                )} */}
             </div>
 
             {/* Debug info (remove in production) */}

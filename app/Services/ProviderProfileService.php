@@ -4,172 +4,285 @@ namespace App\Services;
 
 use App\Models\User;
 use App\Models\ProviderProfile;
-use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 
 class ProviderProfileService
 {
     /**
-     * Create provider profile with uploaded files
+     * Get provider profile data
      */
-    public function createProviderProfile(User $user, array $data): ProviderProfile
+    public function getProviderProfile(User $user): array
     {
-        // Handle business license upload
-        $businessLicensePath = null;
-        if (isset($data['business_license']) && $data['business_license'] instanceof UploadedFile) {
-            $businessLicensePath = $this->uploadFile(
-                $data['business_license'],
-                'business_licenses',
-                'license_' . $user->id
-            );
+        if ($user->role !== 'service_provider') {
+            throw new \Exception('User is not a service provider');
         }
 
-        // Handle certifications upload
-        $certificationPaths = [];
-        if (isset($data['certifications']) && is_array($data['certifications'])) {
-            foreach ($data['certifications'] as $index => $certification) {
-                if ($certification instanceof UploadedFile) {
-                    $certificationPaths[] = $this->uploadFile(
-                        $certification,
-                        'certifications',
-                        'cert_' . $user->id . '_' . ($index + 1)
-                    );
-                }
-            }
+        $profile = $user->providerProfile;
+        if (!$profile) {
+            // Create provider profile if it doesn't exist
+            $profile = $this->createProviderProfile($user);
         }
 
-        // Handle portfolio images upload
-        $portfolioPaths = [];
-        if (isset($data['portfolio_images']) && is_array($data['portfolio_images'])) {
-            foreach ($data['portfolio_images'] as $index => $image) {
-                if ($image instanceof UploadedFile) {
-                    $portfolioPaths[] = $this->uploadFile(
-                        $image,
-                        'portfolio',
-                        'portfolio_' . $user->id . '_' . ($index + 1)
-                    );
-                }
-            }
-        }
-
-        // Create provider profile
-        $providerProfile = ProviderProfile::create([
-            'user_id' => $user->id,
-            'business_name' => $data['business_name'] ?? null,
-            'business_license' => $businessLicensePath,
-            'years_of_experience' => $data['years_of_experience'] ?? 0,
-            'service_area_radius' => $data['service_area_radius'] ?? 10,
-            'bio' => $data['bio'] ?? null,
-            'certifications' => $certificationPaths,
-            'portfolio_images' => $portfolioPaths,
-            'verification_status' => 'pending',
-            'is_available' => true,
-        ]);
-
-        return $providerProfile;
-    }
-
-    /**
-     * Upload file and return storage path
-     */
-    private function uploadFile(UploadedFile $file, string $directory, string $prefix = null): string
-    {
-        $filename = ($prefix ? $prefix . '_' : '') . Str::uuid() . '.' . $file->getClientOriginalExtension();
-        return $file->storeAs($directory, $filename, 'public');
+        return [
+            'user' => $user->toArray(),
+            'provider_profile' => $profile->toArray(),
+            'statistics' => $this->getProviderStatistics($user),
+            'verification' => $this->getVerificationStatus($profile),
+            'documents' => $this->getDocuments($profile),
+        ];
     }
 
     /**
      * Update provider profile
      */
-    public function updateProviderProfile(ProviderProfile $profile, array $data): ProviderProfile
+    public function updateProviderProfile(User $user, array $data): array
     {
-        // Handle business license update
-        if (isset($data['business_license']) && $data['business_license'] instanceof UploadedFile) {
-            // Delete old file
-            if ($profile->business_license) {
-                Storage::disk('public')->delete($profile->business_license);
+        DB::beginTransaction();
+
+        try {
+            // Update user fields
+            $userFields = ['first_name', 'last_name', 'email', 'contact_number', 'address', 'date_of_birth'];
+            $userData = array_intersect_key($data, array_flip($userFields));
+
+            if (!empty($userData)) {
+                $user->update($userData);
             }
 
-            $data['business_license'] = $this->uploadFile(
-                $data['business_license'],
-                'business_licenses',
-                'license_' . $profile->user_id
-            );
+            // Update provider profile fields
+            $providerFields = [
+                'business_name',
+                'bio',
+                'years_of_experience',
+                'service_area_radius',
+                'is_available'
+            ];
+            $providerData = array_intersect_key($data, array_flip($providerFields));
+
+            if (!empty($providerData)) {
+                $profile = $user->providerProfile ?? $this->createProviderProfile($user);
+                $profile->update($providerData);
+            }
+
+            // Log the update
+            activity()
+                ->performedOn($user)
+                ->causedBy($user)
+                ->withProperties(['updated_fields' => array_keys($data)])
+                ->log('Provider profile updated');
+
+            DB::commit();
+
+            return $this->getProviderProfile($user);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
         }
-
-        // Handle certifications update
-        if (isset($data['certifications']) && is_array($data['certifications'])) {
-            // Delete old certifications
-            if ($profile->certifications) {
-                foreach ($profile->certifications as $oldCert) {
-                    Storage::disk('public')->delete($oldCert);
-                }
-            }
-
-            $certificationPaths = [];
-            foreach ($data['certifications'] as $index => $certification) {
-                if ($certification instanceof UploadedFile) {
-                    $certificationPaths[] = $this->uploadFile(
-                        $certification,
-                        'certifications',
-                        'cert_' . $profile->user_id . '_' . ($index + 1)
-                    );
-                }
-            }
-            $data['certifications'] = $certificationPaths;
-        }
-
-        // Handle portfolio images update
-        if (isset($data['portfolio_images']) && is_array($data['portfolio_images'])) {
-            // Delete old portfolio images
-            if ($profile->portfolio_images) {
-                foreach ($profile->portfolio_images as $oldImage) {
-                    Storage::disk('public')->delete($oldImage);
-                }
-            }
-
-            $portfolioPaths = [];
-            foreach ($data['portfolio_images'] as $index => $image) {
-                if ($image instanceof UploadedFile) {
-                    $portfolioPaths[] = $this->uploadFile(
-                        $image,
-                        'portfolio',
-                        'portfolio_' . $profile->user_id . '_' . ($index + 1)
-                    );
-                }
-            }
-            $data['portfolio_images'] = $portfolioPaths;
-        }
-
-        $profile->update($data);
-        return $profile->fresh();
     }
 
     /**
-     * Delete provider profile and associated files
+     * Create provider profile
      */
-    public function deleteProviderProfile(ProviderProfile $profile): bool
+    protected function createProviderProfile(User $user): ProviderProfile
     {
-        // Delete business license
-        if ($profile->business_license) {
-            Storage::disk('public')->delete($profile->business_license);
+        return ProviderProfile::create([
+            'user_id' => $user->id,
+            'bio' => '',
+            'years_of_experience' => 0,
+            'service_area_radius' => 10,
+            'is_available' => true,
+            'verification_status' => 'pending',
+        ]);
+    }
+
+    /**
+     * Get provider statistics
+     */
+    public function getProviderStatistics(User $user): array
+    {
+        return [
+            'total_services' => $user->services()->count(),
+            'active_services' => $user->services()->where('is_active', true)->count(),
+            'total_appointments' => $user->appointments()->count(),
+            'completed_appointments' => $user->appointments()->where('status', 'completed')->count(),
+            'pending_appointments' => $user->appointments()->where('status', 'pending')->count(),
+            'cancelled_appointments' => $user->appointments()->where('status', 'cancelled')->count(),
+            'today_appointments' => $user->appointments()->whereDate('scheduled_at', today())->count(),
+            'this_week_appointments' => $user->appointments()
+                ->whereBetween('scheduled_at', [now()->startOfWeek(), now()->endOfWeek()])
+                ->count(),
+            'this_month_appointments' => $user->appointments()
+                ->whereMonth('scheduled_at', now()->month)
+                ->count(),
+            'monthly_earnings' => $user->payments()
+                ->whereMonth('created_at', now()->month)
+                ->where('status', 'completed')
+                ->sum('amount'),
+            'total_earnings' => $user->payments()
+                ->where('status', 'completed')
+                ->sum('amount'),
+            'average_rating' => round($user->reviews()->avg('rating') ?? 0, 1),
+            'total_reviews' => $user->reviews()->count(),
+            'five_star_reviews' => $user->reviews()->where('rating', 5)->count(),
+            'response_rate' => $this->calculateResponseRate($user),
+            'completion_rate' => $this->calculateCompletionRate($user),
+        ];
+    }
+
+    /**
+     * Get verification status
+     */
+    protected function getVerificationStatus(ProviderProfile $profile): array
+    {
+        return [
+            'status' => $profile->verification_status,
+            'verified_at' => $profile->verified_at,
+            'verification_notes' => $profile->verification_notes,
+            'documents_submitted' => $this->getDocumentSubmissionStatus($profile),
+            'requirements_met' => $this->checkVerificationRequirements($profile),
+        ];
+    }
+
+    /**
+     * Get documents information
+     */
+    protected function getDocuments(ProviderProfile $profile): array
+    {
+        return [
+            'business_license' => [
+                'uploaded' => !empty($profile->business_license_path),
+                'url' => $profile->business_license_path ?
+                    asset('storage/' . $profile->business_license_path) : null,
+                'uploaded_at' => $profile->business_license_uploaded_at,
+            ],
+            'certifications' => $this->getCertifications($profile),
+            'portfolio_images' => $this->getPortfolioImages($profile),
+        ];
+    }
+
+    /**
+     * Get certifications
+     */
+    protected function getCertifications(ProviderProfile $profile): array
+    {
+        if (empty($profile->certification_paths)) {
+            return [];
         }
 
-        // Delete certifications
-        if ($profile->certifications) {
-            foreach ($profile->certifications as $cert) {
-                Storage::disk('public')->delete($cert);
-            }
+        $paths = json_decode($profile->certification_paths, true) ?? [];
+
+        return array_map(function ($path) {
+            return [
+                'url' => asset('storage/' . $path),
+                'filename' => basename($path),
+                'uploaded_at' => null, // You might want to store individual upload dates
+            ];
+        }, $paths);
+    }
+
+    /**
+     * Get portfolio images
+     */
+    protected function getPortfolioImages(ProviderProfile $profile): array
+    {
+        if (empty($profile->portfolio_image_paths)) {
+            return [];
         }
 
-        // Delete portfolio images
-        if ($profile->portfolio_images) {
-            foreach ($profile->portfolio_images as $image) {
-                Storage::disk('public')->delete($image);
-            }
+        $paths = json_decode($profile->portfolio_image_paths, true) ?? [];
+
+        return array_map(function ($path) {
+            return [
+                'url' => asset('storage/' . $path),
+                'thumbnail_url' => $this->getThumbnailUrl($path),
+                'filename' => basename($path),
+                'uploaded_at' => null,
+            ];
+        }, $paths);
+    }
+
+    /**
+     * Get thumbnail URL
+     */
+    protected function getThumbnailUrl(string $path): string
+    {
+        // Implement thumbnail generation logic
+        // For now, return the original image
+        return asset('storage/' . $path);
+    }
+
+    /**
+     * Calculate response rate
+     */
+    protected function calculateResponseRate(User $user): float
+    {
+        $totalRequests = $user->serviceRequests()->count();
+        if ($totalRequests === 0) {
+            return 100.0;
         }
 
-        return $profile->delete();
+        $respondedRequests = $user->serviceRequests()
+            ->whereNotNull('responded_at')
+            ->count();
+
+        return round(($respondedRequests / $totalRequests) * 100, 1);
+    }
+
+    /**
+     * Calculate completion rate
+     */
+    protected function calculateCompletionRate(User $user): float
+    {
+        $totalAppointments = $user->appointments()->count();
+        if ($totalAppointments === 0) {
+            return 100.0;
+        }
+
+        $completedAppointments = $user->appointments()
+            ->where('status', 'completed')
+            ->count();
+
+        return round(($completedAppointments / $totalAppointments) * 100, 1);
+    }
+
+    /**
+     * Get document submission status
+     */
+    protected function getDocumentSubmissionStatus(ProviderProfile $profile): array
+    {
+        return [
+            'business_license' => !empty($profile->business_license_path),
+            'certifications' => !empty($profile->certification_paths),
+            'portfolio_images' => !empty($profile->portfolio_image_paths),
+        ];
+    }
+
+    /**
+     * Check verification requirements
+     */
+    protected function checkVerificationRequirements(ProviderProfile $profile): array
+    {
+        return [
+            'profile_complete' => $this->isProfileComplete($profile),
+            'documents_uploaded' => !empty($profile->business_license_path),
+            'services_added' => $profile->user->services()->count() > 0,
+            'bio_adequate' => strlen($profile->bio) >= 50,
+        ];
+    }
+
+    /**
+     * Check if profile is complete
+     */
+    protected function isProfileComplete(ProviderProfile $profile): bool
+    {
+        $user = $profile->user;
+
+        return !empty($user->first_name) &&
+            !empty($user->last_name) &&
+            !empty($user->email) &&
+            !empty($user->contact_number) &&
+            !empty($user->address) &&
+            !empty($profile->bio) &&
+            $profile->years_of_experience >= 0 &&
+            $profile->service_area_radius > 0;
     }
 }

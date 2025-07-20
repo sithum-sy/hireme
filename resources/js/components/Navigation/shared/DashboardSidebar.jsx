@@ -137,6 +137,26 @@ const DashboardSidebar = ({
                     ],
                 },
                 {
+                    id: "profile",
+                    icon: "fas fa-user",
+                    label: "Admin Profile",
+                    path: "/admin/profile",
+                    children: [
+                        {
+                            label: "Profile Overview",
+                            path: "/admin/profile",
+                        },
+                        {
+                            label: "Personal Information",
+                            path: "/admin/profile/personal",
+                        },
+                        {
+                            label: "Security Settings",
+                            path: "/admin/profile/security",
+                        },
+                    ],
+                },
+                {
                     id: "settings",
                     icon: "fas fa-cog",
                     label: "System Settings",
@@ -239,6 +259,26 @@ const DashboardSidebar = ({
                     ],
                 },
                 {
+                    id: "profile",
+                    icon: "fas fa-user",
+                    label: "My Profile",
+                    path: "/staff/profile",
+                    children: [
+                        {
+                            label: "Profile Overview",
+                            path: "/staff/profile",
+                        },
+                        {
+                            label: "Personal Information",
+                            path: "/staff/profile/personal",
+                        },
+                        {
+                            label: "Security Settings",
+                            path: "/staff/profile/security",
+                        },
+                    ],
+                },
+                {
                     id: "support",
                     icon: "fas fa-headset",
                     label: "Customer Support",
@@ -334,12 +374,16 @@ const DashboardSidebar = ({
                     path: "/client/profile",
                     children: [
                         {
-                            label: "Personal Info",
+                            label: "Profile Overview",
                             path: "/client/profile",
                         },
                         {
-                            label: "Edit Profile",
-                            path: "/client/profile/edit",
+                            label: "Personal Information",
+                            path: "/client/profile/personal",
+                        },
+                        {
+                            label: "Security Settings",
+                            path: "/client/profile/security",
                         },
                     ],
                 },
@@ -459,16 +503,24 @@ const DashboardSidebar = ({
                     path: "/provider/profile",
                     children: [
                         {
-                            label: "Business Profile",
-                            path: "/provider/profile/business",
+                            label: "Profile Overview",
+                            path: "/provider/profile",
                         },
                         {
-                            label: "Personal Info",
+                            label: "Personal Information",
                             path: "/provider/profile/personal",
                         },
                         {
-                            label: "Verification",
-                            path: "/provider/profile/verification",
+                            label: "Business Information",
+                            path: "/provider/profile/business",
+                        },
+                        {
+                            label: "Documents & Verification",
+                            path: "/provider/profile/documents",
+                        },
+                        {
+                            label: "Security Settings",
+                            path: "/provider/profile/security",
                         },
                     ],
                 },

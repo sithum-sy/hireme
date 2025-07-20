@@ -36,6 +36,7 @@ import AppointmentsList from "./pages/client/appointments/AppointmentsList";
 import AppointmentDetail from "./pages/client/appointments/AppointmentDetail";
 import ClientQuoteDetail from "./pages/client/quotes/QuoteDetail";
 import QuoteAcceptanceBooking from "./components/client/booking/QuoteAcceptanceBooking";
+import ClientProfile from "./pages/client/profile/ClientProfile";
 
 // Provider Pages
 import ProviderDashboard from "./pages/provider/Dashboard";
@@ -57,6 +58,7 @@ import InvoicesList from "./pages/provider/payments/InvoicesList";
 import CreateInvoice from "./pages/provider/payments/CreateInvoice";
 import InvoiceDetail from "./pages/provider/payments/InvoiceDetail";
 import EarningsOverview from "./pages/provider/payments/EarningsOverview";
+import ProviderProfile from "./pages/provider/profile/ProviderProfile";
 
 // Admin Pages
 import AdminDashboard from "./pages/admin/Dashboard";
@@ -64,6 +66,7 @@ import StaffList from "./pages/admin/staff/StaffList";
 import CreateStaff from "./pages/admin/staff/CreateStaff";
 import EditStaff from "./pages/admin/staff/EditStaff";
 import StaffDetails from "./pages/admin/staff/StaffDetails";
+import AdminProfile from "./pages/admin/profile/AdminProfile";
 
 // Staff Components
 import StaffDashboard from "./pages/staff/Dashboard";
@@ -72,6 +75,7 @@ import CategoriesList from "./pages/staff/categories/CategoriesList";
 import CreateCategory from "./pages/staff/categories/CreateCategory";
 import EditCategory from "./pages/staff/categories/EditCategory";
 import CategoryDetails from "./pages/staff/categories/CategoryDetails";
+import StaffProfile from "./pages/staff/profile/StaffProfile";
 
 function App() {
     return (
@@ -317,32 +321,7 @@ function App() {
 
                                             <Route
                                                 path="profile"
-                                                element={
-                                                    <PlaceholderPage
-                                                        title="My Profile"
-                                                        subtitle="Manage your account information"
-                                                        icon="fas fa-user-edit"
-                                                        description="Edit your profile information, preferences, and account settings."
-                                                        variant="info"
-                                                        actions={
-                                                            <>
-                                                                <button className="btn btn-primary">
-                                                                    <i className="fas fa-edit"></i>
-                                                                    <span>
-                                                                        Edit
-                                                                        Profile
-                                                                    </span>
-                                                                </button>
-                                                                <button className="btn btn-outline-primary">
-                                                                    <i className="fas fa-cog"></i>
-                                                                    <span>
-                                                                        Settings
-                                                                    </span>
-                                                                </button>
-                                                            </>
-                                                        }
-                                                    />
-                                                }
+                                                element={<ClientProfile />}
                                             />
 
                                             <Route
@@ -635,33 +614,9 @@ function App() {
 
                                                 {/* Provider Profile Routes */}
                                                 <Route
-                                                    path="profile/business"
+                                                    path="profile/"
                                                     element={
-                                                        <PlaceholderPage
-                                                            title="Business Profile"
-                                                            subtitle="Manage your business information"
-                                                            icon="fas fa-briefcase"
-                                                            description="Update your business profile, description, and professional details."
-                                                            variant="info"
-                                                            actions={
-                                                                <>
-                                                                    <button className="btn btn-primary">
-                                                                        <i className="fas fa-edit"></i>
-                                                                        <span>
-                                                                            Edit
-                                                                            Profile
-                                                                        </span>
-                                                                    </button>
-                                                                    <button className="btn btn-outline-primary">
-                                                                        <i className="fas fa-camera"></i>
-                                                                        <span>
-                                                                            Upload
-                                                                            Photos
-                                                                        </span>
-                                                                    </button>
-                                                                </>
-                                                            }
-                                                        />
+                                                        <ProviderProfile />
                                                     }
                                                 />
 
@@ -888,6 +843,10 @@ function App() {
                                             />
 
                                             <Route
+                                                path="profile"
+                                                element={<AdminProfile />}
+                                            />
+                                            <Route
                                                 path="settings"
                                                 element={
                                                     <PlaceholderPage
@@ -967,6 +926,10 @@ function App() {
                                                         variant="warning"
                                                     />
                                                 }
+                                            />
+                                            <Route
+                                                path="profile"
+                                                element={<StaffProfile />}
                                             />
 
                                             <Route

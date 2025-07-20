@@ -1,0 +1,76 @@
+/* Profile Layout */
+.profile-container {
+    /* Uses existing dashboard content padding */
+    padding: var(--dashboard-content-padding);
+}
+
+/* Profile Header Integration */
+.profile-header {
+    /* Extends existing card styles */
+    background: var(--bg-white);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-sm);
+    border-left: 4px solid var(--current-role-primary);
+}
+
+/* Profile Tabs Integration */
+.profile-tabs {
+    /* Uses existing tab styling patterns */
+    border-bottom: 2px solid var(--border-color);
+}
+
+.tab-button {
+    /* Extends existing button styles */
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    transition: var(--transition);
+}
+
+.tab-button.active {
+    color: var(--current-role-primary);
+    border-bottom: 2px solid var(--current-role-primary);
+}
+
+/* Profile Section Integration */
+.profile-section {
+    /* Uses existing dashboard card styles */
+    background: var(--bg-white);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+}
+
+.section-header {
+    /* Extends existing card header */
+    background: var(--bg-light);
+    border-bottom: 1px solid var(--border-color);
+}
+
+/* Profile Image Upload Integration */
+.profile-image-upload .upload-area:hover .image-container {
+    border-color: var(--current-role-primary);
+    box-shadow: 0 0 0 3px var(--current-role-light);
+}
+
+/* Form Integration */
+.profile-form {
+    /* Uses existing form styles */
+}
+
+.profile-form .form-group {
+    margin-bottom: var(--space-4);
+}
+
+.profile-form .btn-primary {
+    /* Uses existing button styles */
+    background: var(--current-role-gradient);
+    border-color: var(--current-role-primary);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .profile-container {
+        padding: var(--space-4);
+    }
+}

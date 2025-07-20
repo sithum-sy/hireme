@@ -7,6 +7,7 @@ use App\Http\Controllers\API\staff\ServiceCategoryController;
 use App\Http\Controllers\API\ServiceController;
 use App\Http\Controllers\API\AvailabilityController;
 use App\Http\Controllers\API\ProfileController;
+use App\Http\Controllers\API\ProviderProfileController;
 use App\Http\Controllers\API\AppointmentController;
 use App\Http\Controllers\API\LocationController;
 use App\Http\Controllers\API\PaymentController;
@@ -30,7 +31,7 @@ Route::get('/services/{service}', [ServiceController::class, 'show']);
 // Public provider routes
 Route::get('/providers/{providerId}/availability/check', [AvailabilityController::class, 'checkAvailability']);
 Route::get('/providers/{providerId}/availability/slots', [AvailabilityController::class, 'getAvailableSlots']);
-Route::get('/providers/{providerId}/profile', [ProfileController::class, 'getPublicProviderProfile']);
+Route::get('/providers/{providerId}/public-profile', [ProfileController::class, 'getPublicProviderProfile']);
 
 
 // Protected routes
@@ -39,12 +40,31 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'user']);
 
-    // Profile management (all users)
-    Route::prefix('profile')->group(function () {
-        Route::get('/', [ProfileController::class, 'getProfile']);
-        Route::put('/', [ProfileController::class, 'updateProfile']);
-        Route::post('/change-password', [ProfileController::class, 'changePassword']);
-        Route::delete('/picture', [ProfileController::class, 'deleteProfilePicture']);
+    // Base Profile Routes (All authenticated users)
+    Route::prefix('profile')->name('profile.')->group(function () {
+        Route::get('/', [ProfileController::class, 'show'])->name('show');
+        Route::put('/', [ProfileController::class, 'update'])->name('update');
+        Route::get('/config', [ProfileController::class, 'getConfig'])->name('config');
+        Route::post('/validate-field', [ProfileController::class, 'validateField'])->name('validate-field');
+
+        // Image management
+        Route::post('/image', [ProfileController::class, 'uploadImage'])->name('image.upload');
+        Route::delete('/image', [ProfileController::class, 'deleteImage'])->name('image.delete');
+
+        // Password management
+        Route::post('/change-password', [ProfileController::class, 'changePassword'])->name('change-password');
+    });
+
+    // Provider Profile Routes (Service providers only)
+    Route::prefix('provider-profile')->name('provider-profile.')->group(function () {
+        Route::get('/', [ProviderProfileController::class, 'show'])->name('show');
+        Route::put('/', [ProviderProfileController::class, 'update'])->name('update');
+        Route::post('/toggle-availability', [ProviderProfileController::class, 'toggleAvailability'])->name('toggle-availability');
+        Route::get('/statistics', [ProviderProfileController::class, 'getStatistics'])->name('statistics');
+
+        // Document management
+        Route::post('/documents', [ProviderProfileController::class, 'uploadDocuments'])->name('documents.upload');
+        Route::delete('/documents', [ProviderProfileController::class, 'deleteDocument'])->name('documents.delete');
     });
 
     // Appointment Management (all authenticated users)
