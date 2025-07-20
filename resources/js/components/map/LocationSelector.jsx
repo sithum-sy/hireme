@@ -3,13 +3,13 @@ import EnhancedLocationSelector from "./EnhancedLocationSelector";
 import LocationSearch from "./LocationSearch";
 
 const LocationSelector = ({ value, onChange, error }) => {
-    console.log("LocationSelector: Component rendering", {
-        hasValue: !!value,
-        valueCity: value?.city || "none",
-        hasOnChange: !!onChange,
-        hasError: !!error,
-        timestamp: new Date().toISOString(),
-    });
+    // console.log("LocationSelector: Component rendering", {
+    //     hasValue: !!value,
+    //     valueCity: value?.city || "none",
+    //     hasOnChange: !!onChange,
+    //     hasError: !!error,
+    //     timestamp: new Date().toISOString(),
+    // });
 
     const [locationState, setLocationState] = useState("detecting");
     const [currentLocation, setCurrentLocation] = useState(null);
@@ -20,7 +20,7 @@ const LocationSelector = ({ value, onChange, error }) => {
 
     // Centralized reverse geocoding using Nominatim (same as Leaflet)
     const reverseGeocode = useCallback(async (lat, lng) => {
-        console.log(`Reverse geocoding coordinates: ${lat}, ${lng}`);
+        // console.log(`Reverse geocoding coordinates: ${lat}, ${lng}`);
 
         try {
             // Using Nominatim (OpenStreetMap) - same service that Leaflet uses
@@ -93,7 +93,7 @@ const LocationSelector = ({ value, onChange, error }) => {
 
     //   ENHANCED: Offline geocoding for Sri Lankan locations
     const reverseGeocodeOffline = useCallback((lat, lng) => {
-        console.log(`Using offline geocoding for: ${lat}, ${lng}`);
+        // console.log(`Using offline geocoding for: ${lat}, ${lng}`);
 
         const sriLankanCities = [
             {
@@ -267,13 +267,13 @@ const LocationSelector = ({ value, onChange, error }) => {
 
     //   ENHANCED: Location detection with reverse geocoding
     const detectLocation = useCallback(async () => {
-        console.log("🔍 LocationSelector: Starting location detection");
+        // console.log("LocationSelector: Starting location detection");
         setLocationState("detecting");
 
         if ("geolocation" in navigator) {
-            console.log(
-                "📱 LocationSelector: Geolocation available, requesting position"
-            );
+            // console.log(
+            //     "LocationSelector: Geolocation available, requesting position"
+            // );
 
             navigator.geolocation.getCurrentPosition(
                 async (position) => {
@@ -316,40 +316,40 @@ const LocationSelector = ({ value, onChange, error }) => {
                     }
                 },
                 (error) => {
-                    console.log("LocationSelector: Geolocation failed:", error);
+                    // console.log("LocationSelector: Geolocation failed:", error);
                     setLocationState("manual");
                 },
                 { timeout: 10000, enableHighAccuracy: true }
             );
         } else {
-            console.log("LocationSelector: Geolocation not available");
+            // console.log("LocationSelector: Geolocation not available");
             setLocationState("manual");
         }
     }, [reverseGeocode]);
 
     // Initialize component
     useEffect(() => {
-        console.log("LocationSelector: useEffect[init] - Initializing", {
-            hasValue: !!value,
-            valueDetails: value ? `${value.city}, ${value.province}` : "null",
-            hasInitialized,
-            timestamp: new Date().toISOString(),
-        });
+        // console.log("LocationSelector: useEffect[init] - Initializing", {
+        //     hasValue: !!value,
+        //     valueDetails: value ? `${value.city}, ${value.province}` : "null",
+        //     hasInitialized,
+        //     timestamp: new Date().toISOString(),
+        // });
 
         if (!hasInitialized) {
-            console.log("LocationSelector: First time initialization");
+            // console.log("LocationSelector: First time initialization");
             setHasInitialized(true);
 
             if (value && value.lat && value.lng) {
-                console.log(
-                    "  LocationSelector: Setting current location from value"
-                );
+                // console.log(
+                //     "  LocationSelector: Setting current location from value"
+                // );
                 setCurrentLocation(value);
                 setLocationState("confirmed");
             } else {
-                console.log(
-                    "LocationSelector: No value provided, starting detection"
-                );
+                // console.log(
+                //     "LocationSelector: No value provided, starting detection"
+                // );
                 detectLocation();
             }
         }
@@ -364,7 +364,7 @@ const LocationSelector = ({ value, onChange, error }) => {
             value.lat &&
             value.lng
         ) {
-            console.log("LocationSelector: Updating from parent value");
+            // console.log("LocationSelector: Updating from parent value");
             setCurrentLocation(value);
             setLocationState("confirmed");
         }
@@ -389,12 +389,12 @@ const LocationSelector = ({ value, onChange, error }) => {
                 radius: currentLocation.radius || 15,
             };
 
-            console.log(
-                "LocationSelector: Calling onChange with location data",
-                {
-                    locationData: `${locationData.city}, ${locationData.province}`,
-                }
-            );
+            // console.log(
+            //     "LocationSelector: Calling onChange with location data",
+            //     {
+            //         locationData: `${locationData.city}, ${locationData.province}`,
+            //     }
+            // );
 
             isUserInteraction.current = false;
 
@@ -407,9 +407,9 @@ const LocationSelector = ({ value, onChange, error }) => {
     }, [currentLocation, onChange, hasInitialized]);
 
     const handleLocationConfirm = (confirmed) => {
-        console.log("LocationSelector: Location confirm called", {
-            confirmed,
-        });
+        // console.log("LocationSelector: Location confirm called", {
+        //     confirmed,
+        // });
         isUserInteraction.current = true;
         if (confirmed) {
             setLocationState("confirmed");
@@ -419,9 +419,9 @@ const LocationSelector = ({ value, onChange, error }) => {
     };
 
     const handleCitySelect = (city) => {
-        console.log("LocationSelector: City selected", {
-            cityName: city.name,
-        });
+        // console.log("LocationSelector: City selected", {
+        //     cityName: city.name,
+        // });
         isUserInteraction.current = true;
         setSelectedCity(city);
         setCurrentLocation({
@@ -439,10 +439,10 @@ const LocationSelector = ({ value, onChange, error }) => {
 
     //   ENHANCED: Handle location selection with reverse geocoding
     const handleLocationSelect = async (location) => {
-        console.log(
-            "📍 LocationSelector: Location selected from map/search",
-            location
-        );
+        // console.log(
+        //     "LocationSelector: Location selected from map/search",
+        //     location
+        // );
         isUserInteraction.current = true;
 
         // If location doesn't have proper address, reverse geocode it
@@ -456,10 +456,10 @@ const LocationSelector = ({ value, onChange, error }) => {
                     location.lat,
                     location.lng
                 );
-                console.log(
-                    "📍 LocationSelector: Enhanced location with geocoding:",
-                    geocodedLocation
-                );
+                // console.log(
+                //     "LocationSelector: Enhanced location with geocoding:",
+                //     geocodedLocation
+                // );
                 setCurrentLocation(geocodedLocation);
             } catch (error) {
                 console.warn(
@@ -475,15 +475,15 @@ const LocationSelector = ({ value, onChange, error }) => {
     };
 
     const handleAdvancedMapToggle = () => {
-        console.log("LocationSelector: Advanced map toggle", {
-            currentState: useAdvancedMap,
-            newState: !useAdvancedMap,
-        });
+        // console.log("LocationSelector: Advanced map toggle", {
+        //     currentState: useAdvancedMap,
+        //     newState: !useAdvancedMap,
+        // });
         setUseAdvancedMap(!useAdvancedMap);
     };
 
     const handleResetLocation = () => {
-        console.log("LocationSelector: Reset button clicked");
+        // console.log("LocationSelector: Reset button clicked");
         setLocationState("manual");
         setCurrentLocation(null);
         setUseAdvancedMap(false);

@@ -44,10 +44,22 @@ const AppointmentsList = () => {
     }, [filters, pagination.current_page]);
 
     // Show success message if navigated from booking completion
+    const [successMessage, setSuccessMessage] = useState(null);
+    
     useEffect(() => {
-        if (location.state?.message) {
-            // Show toast notification (you can implement your preferred notification system)
-            // console.log(location.state.message);
+        if (location.state?.message && location.state?.fromBooking) {
+            setSuccessMessage({
+                message: location.state.message,
+                type: location.state.type || "success",
+                appointment: location.state.appointment
+            });
+            
+            // Clear the success message after 10 seconds
+            const timer = setTimeout(() => {
+                setSuccessMessage(null);
+            }, 10000);
+            
+            return () => clearTimeout(timer);
         }
     }, [location.state]);
 
@@ -357,6 +369,31 @@ const AppointmentsList = () => {
     return (
         <ClientLayout>
             <div className="appointments-page">
+                {/* Success Message Banner */}
+                {successMessage && (
+                    <div className="alert alert-success alert-dismissible fade show mb-4" role="alert">
+                        <div className="d-flex align-items-center">
+                            <i className="fas fa-check-circle fa-lg me-3 text-success"></i>
+                            <div className="flex-grow-1">
+                                <h6 className="alert-heading mb-1 fw-bold">Booking Successful!</h6>
+                                <p className="mb-0">{successMessage.message}</p>
+                                {successMessage.appointment && (
+                                    <small className="text-muted">
+                                        Booking ID: #{successMessage.appointment.id} | 
+                                        Confirmation Code: {successMessage.appointment.confirmation_code}
+                                    </small>
+                                )}
+                            </div>
+                        </div>
+                        <button 
+                            type="button" 
+                            className="btn-close" 
+                            onClick={() => setSuccessMessage(null)}
+                            aria-label="Close"
+                        ></button>
+                    </div>
+                )}
+
                 {/* Page Header */}
                 <div className="page-header d-flex justify-content-between align-items-center mb-4">
                     <div>

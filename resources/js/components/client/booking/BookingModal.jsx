@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import DurationDetailsStep from "./steps/DurationDetailsStep";
 import LocationContactStep from "./steps/LocationContactStep";
 import PaymentConfirmationStep from "./steps/PaymentConfirmationStep";
@@ -147,10 +148,10 @@ const BookingModal = ({
     // };
 
     const updateBookingData = (newData) => {
-        console.log("📝 BookingModal: Updating booking data with:", newData);
+        // console.log("BookingModal: Updating booking data with:", newData);
         setBookingData((prev) => {
             const updated = { ...prev, ...newData };
-            console.log("📝 BookingModal: Updated booking data:", updated);
+            // console.log("BookingModal: Updated booking data:", updated);
             return updated;
         });
     };
@@ -182,11 +183,11 @@ const BookingModal = ({
     // };
 
     const handleStepComplete = (stepData) => {
-        console.log("📝 BookingModal: Step completed with data:", stepData);
+        // console.log("BookingModal: Step completed with data:", stepData);
 
         // Validate step data before updating
         if (!stepData) {
-            console.error("❌ BookingModal: No step data provided");
+            console.error("BookingModal: No step data provided");
             return;
         }
 
@@ -206,10 +207,10 @@ const BookingModal = ({
                 ),
             };
             setCurrentSelectedSlot(updatedSlot);
-            console.log("🎯 BookingModal: Updated selected slot:", updatedSlot);
+            console.log("BookingModal: Updated selected slot:", updatedSlot);
         }
 
-        // ✅ FIX: Proper step advancement with validation
+        // Proper step advancement with validation
         if (currentStep === 2) {
             // Validate location and contact data before proceeding to payment
             const hasValidLocation =
@@ -220,28 +221,28 @@ const BookingModal = ({
                 (stepData.client_email && stepData.client_email.trim());
 
             if (!hasValidLocation) {
-                console.error("❌ BookingModal: Invalid location data");
+                console.error("BookingModal: Invalid location data");
                 return;
             }
 
             if (!hasValidContact) {
-                console.error("❌ BookingModal: Invalid contact data");
+                console.error("BookingModal: Invalid contact data");
                 return;
             }
 
-            console.log(
-                "✅ BookingModal: Step 2 validation passed, advancing to step 3"
-            );
+            // console.log(
+            //     "Step 2 validation passed, advancing to step 3"
+            // );
         }
 
         // Auto-advance to next step
         const nextStep = Math.min(currentStep + 1, 3);
-        console.log(
-            "📈 BookingModal: Advancing from step",
-            currentStep,
-            "to step",
-            nextStep
-        );
+        // console.log(
+        //     "BookingModal: Advancing from step",
+        //     currentStep,
+        //     "to step",
+        //     nextStep
+        // );
         setCurrentStep(nextStep);
     };
 
@@ -287,37 +288,54 @@ const BookingModal = ({
     //     }
     // };
 
-    const handleBookingComplete = async (paymentData) => {
-        console.log(
-            "💳 BookingModal: Booking completion started with payment data:",
-            paymentData
-        );
+    const handleBookingComplete = async (result) => {
+        // console.log(
+        //     "   BookingModal: Booking completion started with result:",
+        //     result
+        // );
 
         try {
-            const finalBookingData = {
-                ...bookingData,
-                ...paymentData,
-                total_price:
-                    (bookingData.total_price || 0) +
-                    (bookingData.travel_fee || 0),
-            };
-
-            console.log(
-                "📤 BookingModal: Submitting final booking data:",
-                finalBookingData
-            );
-
-            // Here you would make the API call to create the booking
-            // const response = await clientService.createBooking(finalBookingData);
-
-            // For now, just simulate success
-            console.log("✅ BookingModal: Booking completed successfully");
+            // Close the modal first
             onHide();
 
-            // You can add success notification here
-            // navigate('/client/appointments');
+            // Check if booking was successful
+            if (result && result.success) {
+                console.log("  BookingModal: Booking completed successfully");
+
+                // Show toast notification
+                toast.success(
+                    result.message || "Booking request submitted successfully!",
+                    {
+                        position: "top-right",
+                        autoClose: 5000,
+                        hideProgressBar: false,
+                        closeOnClick: true,
+                        pauseOnHover: true,
+                        draggable: true,
+                    }
+                );
+
+                // Navigate to appointments page with success message
+                navigate("/client/appointments", {
+                    state: {
+                        message:
+                            result.message ||
+                            "Booking request submitted successfully!",
+                        type: "success",
+                        appointment: result.data || result.appointment,
+                        fromBooking: true,
+                    },
+                });
+            } else {
+                // Handle booking failure
+                console.error("BookingModal: Booking failed:", result);
+
+                // You can show an error notification here
+                // For now, stay on the current page
+            }
         } catch (error) {
-            console.error("❌ BookingModal: Booking completion failed:", error);
+            console.error("   BookingModal: Booking completion failed:", error);
+            onHide();
         }
     };
 
@@ -346,10 +364,10 @@ const BookingModal = ({
 
     useEffect(() => {
         if (selectedSlot && selectedSlot.date && selectedSlot.time) {
-            console.log(
-                "📅 BookingModal: Updating booking data with selected slot:",
-                selectedSlot
-            );
+            // console.log(
+            //     "BookingModal: Updating booking data with selected slot:",
+            //     selectedSlot
+            // );
 
             setCurrentSelectedSlot(selectedSlot);
             updateBookingData({
@@ -365,7 +383,7 @@ const BookingModal = ({
         }
     }, [selectedSlot]);
 
-    // ✅ ADD: Helper function to check if step is valid
+    // Helper function to check if step is valid
     const isStepValid = (stepNumber) => {
         switch (stepNumber) {
             case 1:

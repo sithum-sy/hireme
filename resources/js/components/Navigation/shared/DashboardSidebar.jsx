@@ -253,12 +253,12 @@ const DashboardSidebar = ({
                     label: "Dashboard",
                     path: "/client/dashboard",
                 },
-                {
-                    id: "bookings",
-                    icon: "fas fa-plus-circle",
-                    label: "Book A Service",
-                    path: "/client/book",
-                },
+                // {
+                //     id: "bookings",
+                //     icon: "fas fa-plus-circle",
+                //     label: "Book A Service",
+                //     path: "/client/book",
+                // },
                 {
                     id: "services",
                     icon: "fas fa-search",

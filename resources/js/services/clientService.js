@@ -846,14 +846,14 @@ class ClientService {
 
     async createBooking(bookingData) {
         try {
-            console.log("Creating booking with data:", bookingData);
+            // console.log("Creating booking with data:", bookingData);
 
             // Log specifically the quote-related fields
-            console.log("Quote-related fields:", {
-                quote_id: bookingData.quote_id,
-                isFromQuote: bookingData.isFromQuote,
-                booking_source: bookingData.booking_source,
-            });
+            // console.log("Quote-related fields:", {
+            //     quote_id: bookingData.quote_id,
+            //     isFromQuote: bookingData.isFromQuote,
+            //     booking_source: bookingData.booking_source,
+            // });
 
             // Check if this is a quote acceptance booking
             if (bookingData.isFromQuote && bookingData.quote_id) {
@@ -912,7 +912,7 @@ class ClientService {
                 bookingData.appointment_time &&
                 !bookingData.request_quote
             ) {
-                console.log("Checking availability before booking...");
+                // console.log("Checking availability before booking...");
 
                 const endTime = this.calculateEndTime(
                     bookingData.appointment_time,

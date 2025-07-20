@@ -43,12 +43,12 @@ const LocationContactStep = ({
             const userPhone = user.contact_number || user.phone || "";
             const userEmail = user.email || "";
 
-            console.log("User data available for auto-fill:", {
-                userPhone,
-                userEmail,
-                currentFormPhone: formData.client_phone,
-                currentFormEmail: formData.client_email,
-            });
+            // console.log("User data available for auto-fill:", {
+            //     userPhone,
+            //     userEmail,
+            //     currentFormPhone: formData.client_phone,
+            //     currentFormEmail: formData.client_email,
+            // });
 
             // Only auto-fill if the form fields are empty
             if (
@@ -151,7 +151,7 @@ const LocationContactStep = ({
     };
 
     const handleContinue = () => {
-        console.log("Validating form data:", formData);
+        // console.log("Validating form data:", formData);
 
         if (!validateForm()) {
             console.log("Validation failed:", errors);
@@ -167,7 +167,7 @@ const LocationContactStep = ({
             return;
         }
 
-        console.log("Validation passed, proceeding to next step");
+        // console.log("Validation passed, proceeding to next step");
 
         const stepData = {
             ...formData,

@@ -121,14 +121,14 @@ const ProviderAvailabilitySlots = ({
             datetime_iso: `${selectedDate}T${slot.time}:00`,
         };
 
-        console.log("Selected slot data:", selectedSlotData);
+        // console.log("Selected slot data:", selectedSlotData);
         onSlotSelect(selectedSlotData);
     };
 
     // Filter out past time slots for today
     const filterAvailableSlots = (slots) => {
         const today = new Date().toISOString().split("T")[0];
-        
+
         // If selected date is today, filter out past times
         if (selectedDate === today) {
             const now = new Date();
@@ -137,7 +137,7 @@ const ProviderAvailabilitySlots = ({
                 return slotDateTime > now;
             });
         }
-        
+
         // For future dates, return all slots
         return slots;
     };
@@ -296,93 +296,107 @@ const ProviderAvailabilitySlots = ({
                     ) : (
                         <div className="time-slots">
                             {(() => {
-                                const filteredSlots = filterAvailableSlots(availableSlots);
+                                const filteredSlots =
+                                    filterAvailableSlots(availableSlots);
                                 return filteredSlots.length > 0 ? (
-                                <div className="row g-2">
-                                    {filteredSlots.map((slot, index) => (
-                                        <div
-                                            key={index}
-                                            className="col-6 col-md-4 col-lg-3"
-                                        >
-                                            <button
-                                                className="time-slot-btn w-100 btn btn-outline-purple"
-                                                onClick={() =>
-                                                    handleSlotSelect(slot)
-                                                }
+                                    <div className="row g-2">
+                                        {filteredSlots.map((slot, index) => (
+                                            <div
+                                                key={index}
+                                                className="col-6 col-md-4 col-lg-3"
                                             >
-                                                <div className="slot-time fw-semibold">
-                                                    {slot.formatted_time}
-                                                </div>
-                                                {/* {slot.is_popular && (
+                                                <button
+                                                    className="time-slot-btn w-100 btn btn-outline-purple"
+                                                    onClick={() =>
+                                                        handleSlotSelect(slot)
+                                                    }
+                                                >
+                                                    <div className="slot-time fw-semibold">
+                                                        {slot.formatted_time}
+                                                    </div>
+                                                    {/* {slot.is_popular && (
                                                     <small className="badge bg-warning mt-1">
                                                         Popular
                                                     </small>
                                                 )} */}
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                (() => {
-                                    const today = new Date().toISOString().split('T')[0];
-                                    const isToday = selectedDate === today;
-                                    const hasOriginalSlots = availableSlots.length > 0;
-                                    
-                                    // If we had slots but they were filtered out (past times)
-                                    if (isToday && hasOriginalSlots) {
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    (() => {
+                                        const today = new Date()
+                                            .toISOString()
+                                            .split("T")[0];
+                                        const isToday = selectedDate === today;
+                                        const hasOriginalSlots =
+                                            availableSlots.length > 0;
+
+                                        // If we had slots but they were filtered out (past times)
+                                        if (isToday && hasOriginalSlots) {
+                                            return (
+                                                <div className="no-slots text-center py-4">
+                                                    <i className="fas fa-clock fa-2x text-muted mb-2"></i>
+                                                    <h6 className="text-muted">
+                                                        All time slots have
+                                                        passed
+                                                    </h6>
+                                                    <p className="text-muted small mb-3">
+                                                        No more slots available
+                                                        today. Try selecting
+                                                        tomorrow or contact the
+                                                        provider for urgent
+                                                        bookings.
+                                                    </p>
+                                                    <button
+                                                        className="btn btn-outline-purple btn-sm"
+                                                        onClick={
+                                                            handleContactProvider
+                                                        }
+                                                    >
+                                                        <i className="fas fa-phone me-2"></i>
+                                                        Contact Provider
+                                                    </button>
+                                                </div>
+                                            );
+                                        }
+
+                                        // Original no slots message
                                         return (
                                             <div className="no-slots text-center py-4">
-                                                <i className="fas fa-clock fa-2x text-muted mb-2"></i>
+                                                <i className="fas fa-calendar-times fa-2x text-muted mb-2"></i>
                                                 <h6 className="text-muted">
-                                                    All time slots have passed
+                                                    No available times
                                                 </h6>
                                                 <p className="text-muted small mb-3">
-                                                    No more slots available today. Try selecting tomorrow or contact the provider for urgent bookings.
+                                                    {(() => {
+                                                        const today = new Date()
+                                                            .toISOString()
+                                                            .split("T")[0];
+                                                        const isToday =
+                                                            selectedDate ===
+                                                            today;
+
+                                                        if (isToday) {
+                                                            return "No more slots available today. Try selecting tomorrow or contact the provider for urgent bookings.";
+                                                        } else {
+                                                            return "Please select a different date or contact the provider directly.";
+                                                        }
+                                                    })()}
                                                 </p>
                                                 <button
                                                     className="btn btn-outline-purple btn-sm"
-                                                    onClick={handleContactProvider}
+                                                    onClick={
+                                                        handleContactProvider
+                                                    }
                                                 >
                                                     <i className="fas fa-phone me-2"></i>
                                                     Contact Provider
                                                 </button>
                                             </div>
                                         );
-                                    }
-                                    
-                                    // Original no slots message
-                                    return (
-                                <div className="no-slots text-center py-4">
-                                    <i className="fas fa-calendar-times fa-2x text-muted mb-2"></i>
-                                    <h6 className="text-muted">
-                                        No available times
-                                    </h6>
-                                    <p className="text-muted small mb-3">
-                                        {(() => {
-                                            const today = new Date()
-                                                .toISOString()
-                                                .split("T")[0];
-                                            const isToday =
-                                                selectedDate === today;
-
-                                            if (isToday) {
-                                                return "No more slots available today. Try selecting tomorrow or contact the provider for urgent bookings.";
-                                            } else {
-                                                return "Please select a different date or contact the provider directly.";
-                                            }
-                                        })()}
-                                    </p>
-                                    <button
-                                        className="btn btn-outline-purple btn-sm"
-                                        onClick={handleContactProvider}
-                                    >
-                                        <i className="fas fa-phone me-2"></i>
-                                        Contact Provider
-                                    </button>
-                                </div>
-                                    );
-                                })()
-                            );
+                                    })()
+                                );
                             })()}
                         </div>
                     )}

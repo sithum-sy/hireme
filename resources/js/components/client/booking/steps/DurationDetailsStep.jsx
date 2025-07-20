@@ -38,17 +38,17 @@ const DurationDetailsStep = ({
 
             if (response.ok) {
                 const data = await response.json();
-                console.log("Working hours response:", data);
+                // console.log("Working hours response:", data);
                 if (data.success && data.data.is_available) {
                     const maxHours = calculateHoursBetween(
                         selectedSlot.time,
                         data.data.end_time
                     );
                     setMaxDuration(Math.min(maxHours, 12)); // Cap at 12 hours
-                    console.log(
-                        "Calculated max duration:",
-                        Math.min(maxHours, 12)
-                    );
+                    // console.log(
+                    //     "Calculated max duration:",
+                    //     Math.min(maxHours, 12)
+                    // );
                 }
             }
         } catch (error) {

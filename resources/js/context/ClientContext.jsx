@@ -495,7 +495,7 @@ export const ClientProvider = ({ children }) => {
     // Initialize data on mount with saved location
     useEffect(() => {
         if (user && user.role === "client" && !isInitialized.current) {
-            console.log("Initializing client data...");
+            // console.log("Initializing client data...");
             isInitialized.current = true;
 
             // Load dashboard data
@@ -504,13 +504,13 @@ export const ClientProvider = ({ children }) => {
             // Load service data with saved location (if any)
             const savedLocation = getSavedLocation();
             if (savedLocation) {
-                console.log(
-                    "Using saved location for initial data load:",
-                    savedLocation.city
-                );
+                // console.log(
+                //     "Using saved location for initial data load:",
+                //     savedLocation.city
+                // );
                 loadServiceData(savedLocation);
             } else {
-                console.log("No saved location, loading default service data");
+                // console.log("No saved location, loading default service data");
                 loadServiceData();
             }
         }
@@ -519,7 +519,7 @@ export const ClientProvider = ({ children }) => {
     // Effect to handle user logout (clear location data)
     useEffect(() => {
         if (!user) {
-            console.log("👤 User logged out, clearing location data");
+            console.log("User logged out, clearing location data");
             clearSavedLocation();
             dispatch({ type: "SET_LOCATION", payload: null });
         }

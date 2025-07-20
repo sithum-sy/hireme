@@ -86,10 +86,10 @@ const ServiceDetail = () => {
                             };
 
                             setClientLocation(locationData);
-                            console.log(
-                                "📍 Client location detected:",
-                                locationData.address
-                            );
+                            // console.log(
+                            //     "📍 Client location detected:",
+                            //     locationData.address
+                            // );
                         } else {
                             throw new Error("Geocoding failed");
                         }

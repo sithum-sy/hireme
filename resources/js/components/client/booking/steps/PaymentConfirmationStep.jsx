@@ -46,18 +46,21 @@ const PaymentConfirmationStep = ({
                 total_price: calculateFinalTotal(),
             };
 
-            console.log("Submitting multi-step booking:", finalBookingData);
+            // console.log("Submitting multi-step booking:", finalBookingData);
 
             const response = await clientService.createBooking(
                 finalBookingData
             );
 
             if (response.success) {
+                // Pass the full response to the parent component
                 onComplete({
                     success: true,
                     data: response.data,
+                    appointment: response.appointment,
                     message:
                         response.message || "Booking created successfully!",
+                    type: response.type || "appointment",
                 });
             } else {
                 setErrors({
