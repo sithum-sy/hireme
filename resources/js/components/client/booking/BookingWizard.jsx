@@ -163,12 +163,14 @@ const BookingWizard = ({
     const handleNext = () => {
         if (currentStep < steps.length) {
             setCurrentStep(currentStep + 1);
+            // Scroll will be handled by useEffect
         }
     };
 
     const handlePrevious = () => {
         if (currentStep > 1) {
             setCurrentStep(currentStep - 1);
+            // Scroll will be handled by useEffect
         }
     };
 
@@ -176,6 +178,7 @@ const BookingWizard = ({
         // Only allow navigation to completed steps or current step
         if (stepId <= currentStep || isStepComplete(stepId - 1)) {
             setCurrentStep(stepId);
+            // Scroll will be handled by useEffect
         }
     };
 
@@ -305,6 +308,30 @@ const BookingWizard = ({
                 return false;
         }
     };
+
+    // Scroll to top when step changes
+    const scrollToTop = () => {
+        setTimeout(() => {
+            // For full-page wizard, scroll the main window
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+            
+            // Also scroll any scrollable containers
+            const wizardContent = document.querySelector('.wizard-content');
+            if (wizardContent) {
+                wizardContent.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            }
+        }, 50);
+    };
+
+    useEffect(() => {
+        scrollToTop();
+    }, [currentStep]);
 
     return (
         <div className="booking-wizard">
@@ -497,6 +524,20 @@ const BookingWizard = ({
                     background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
                     border-left: 4px solid #6f42c1;
                 }
+                /* Enhanced scrolling and transitions */
+                .wizard-content {
+                    scroll-behavior: smooth;
+                    transition: opacity 0.2s ease-in-out;
+                }
+                
+                .step-item {
+                    transition: all 0.3s ease;
+                }
+                
+                .step-item:hover {
+                    transform: translateY(-1px);
+                }
+                
                 @media (max-width: 768px) {
                     .step-connector {
                         width: 30px;

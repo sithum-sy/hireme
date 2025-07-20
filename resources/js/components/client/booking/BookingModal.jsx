@@ -182,6 +182,83 @@ const BookingModal = ({
     //     setCurrentStep(nextStep);
     // };
 
+    // Scroll to top of modal when step changes
+    const scrollModalToTop = () => {
+        // Use a small delay to ensure DOM is updated
+        setTimeout(() => {
+            try {
+                // Try multiple selectors to ensure we catch the modal
+                const selectors = [
+                    ".modal-body",
+                    ".modal-dialog",
+                    ".modal-content",
+                    ".step-content",
+                    ".modal.show",
+                ];
+
+                let scrollPerformed = false;
+
+                selectors.forEach((selector) => {
+                    const element = document.querySelector(selector);
+                    if (element && element.scrollTo) {
+                        element.scrollTo({
+                            top: 0,
+                            behavior: "smooth",
+                        });
+                        scrollPerformed = true;
+                    }
+                });
+
+                // Also scroll the main window to ensure modal header is visible
+                const modalDialog = document.querySelector(".modal-dialog");
+                if (modalDialog && modalDialog.scrollIntoView) {
+                    modalDialog.scrollIntoView({
+                        behavior: "smooth",
+                        block: "start",
+                        inline: "nearest",
+                    });
+                }
+
+                // Fallback for older browsers or when smooth scrolling fails
+                if (!scrollPerformed) {
+                    const modalBody = document.querySelector(".modal-body");
+                    if (modalBody) {
+                        modalBody.scrollTop = 0;
+                    }
+                    window.scrollTo(0, 0);
+                }
+
+                // Debug logging (remove in production)
+            } catch (error) {
+                // Fallback scrolling if anything fails
+                console.warn("Smooth scrolling failed, using fallback:", error);
+                try {
+                    const modalBody = document.querySelector(".modal-body");
+                    if (modalBody) {
+                        modalBody.scrollTop = 0;
+                    }
+                    window.scrollTo(0, 0);
+                } catch (fallbackError) {
+                    console.error(
+                        "All scrolling methods failed:",
+                        fallbackError
+                    );
+                }
+            }
+        }, 100);
+    };
+
+    useEffect(() => {
+        scrollModalToTop();
+    }, [currentStep]);
+
+    // Scroll to top when modal first opens
+    useEffect(() => {
+        if (show) {
+            scrollModalToTop();
+        }
+    }, [show]);
+
     const handleStepComplete = (stepData) => {
         // console.log("BookingModal: Step completed with data:", stepData);
 
@@ -237,13 +314,16 @@ const BookingModal = ({
 
         // Auto-advance to next step
         const nextStep = Math.min(currentStep + 1, 3);
+        setCurrentStep(nextStep);
+
+        // Scroll to top will be handled by useEffect when currentStep changes
+
         // console.log(
         //     "BookingModal: Advancing from step",
         //     currentStep,
         //     "to step",
         //     nextStep
         // );
-        setCurrentStep(nextStep);
     };
 
     const formatDate = (dateString) => {
@@ -523,9 +603,10 @@ const BookingModal = ({
                                     provider={provider}
                                     bookingData={bookingData}
                                     onStepComplete={handleStepComplete}
-                                    onPrevious={() =>
-                                        setCurrentStep(selectedSlot ? 1 : 0)
-                                    }
+                                    onPrevious={() => {
+                                        setCurrentStep(selectedSlot ? 1 : 0);
+                                        // Scroll will be handled by useEffect
+                                    }}
                                     selectedSlot={currentSelectedSlot}
                                     clientLocation={clientLocation}
                                 />
@@ -537,7 +618,10 @@ const BookingModal = ({
                                     provider={provider}
                                     bookingData={bookingData}
                                     onStepComplete={handleStepComplete}
-                                    onPrevious={() => setCurrentStep(1)}
+                                    onPrevious={() => {
+                                        setCurrentStep(1);
+                                        // Scroll will be handled by useEffect
+                                    }}
                                     clientLocation={clientLocation}
                                     selectedSlot={currentSelectedSlot}
                                 />
@@ -549,7 +633,10 @@ const BookingModal = ({
                                     provider={provider}
                                     bookingData={bookingData}
                                     onComplete={handleBookingComplete}
-                                    onPrevious={() => setCurrentStep(2)}
+                                    onPrevious={() => {
+                                        setCurrentStep(2);
+                                        // Scroll will be handled by useEffect
+                                    }}
                                     clientLocation={clientLocation}
                                     selectedSlot={currentSelectedSlot}
                                 />
@@ -564,6 +651,49 @@ const BookingModal = ({
                 .bg-purple { background-color: #6f42c1 !important; }
                 .text-purple { color: #6f42c1 !important; }
                 .progress-bar.bg-purple { background-color: #6f42c1 !important; }
+                
+                /* Enhanced modal scrolling */
+                .modal-dialog {
+                    margin: 1rem auto;
+                    max-height: calc(100vh - 2rem);
+                }
+                
+                .modal-content {
+                    max-height: calc(100vh - 2rem);
+                    display: flex;
+                    flex-direction: column;
+                }
+                
+                .modal-body {
+                    overflow-y: auto;
+                    flex: 1;
+                    padding: 0;
+                }
+                
+                .step-content {
+                    min-height: 400px;
+                }
+                
+                /* Ensure smooth scrolling on all elements */
+                .modal-dialog, .modal-content, .modal-body, .step-content {
+                    scroll-behavior: smooth;
+                }
+                
+                /* Focus management for accessibility */
+                .modal.show .modal-dialog {
+                    animation: modalFadeIn 0.3s ease-out;
+                }
+                
+                @keyframes modalFadeIn {
+                    from {
+                        opacity: 0;
+                        transform: translateY(-20px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
             `}</style>
         </div>
     );
