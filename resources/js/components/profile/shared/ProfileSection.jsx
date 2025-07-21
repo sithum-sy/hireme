@@ -40,7 +40,9 @@ const ProfileSection = ({
                     <div className="section-text">
                         <h3 className="section-title">{title}</h3>
                         {subtitle && (
-                            <p className="section-subtitle">{subtitle}</p>
+                            <p className="section-subtitle">
+                                {/* {subtitle} */}
+                            </p>
                         )}
                     </div>
                 </div>

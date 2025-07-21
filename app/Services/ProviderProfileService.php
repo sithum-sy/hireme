@@ -8,12 +8,12 @@ use Illuminate\Support\Facades\DB;
 
 class ProviderProfileService
 {
-    protected ActivityService $activityService;
+    // protected ActivityService $activityService;
 
-    public function __construct(ActivityService $activityService)
-    {
-        $this->activityService = $activityService;
-    }
+    // public function __construct(ActivityService $activityService)
+    // {
+    //     $this->activityService = $activityService;
+    // }
     /**
      * Get provider profile data
      */
@@ -70,15 +70,15 @@ class ProviderProfileService
             }
 
             // Log the update
-            $this->activityService->logUserActivity(
-                'update',
-                $user,
-                [
-                    'action' => 'provider_profile_updated',
-                    'updated_fields' => array_keys($data),
-                    'user_role' => $user->role
-                ]
-            );
+            // $this->activityService->logUserActivity(
+            //     'update',
+            //     $user,
+            //     [
+            //         'action' => 'provider_profile_updated',
+            //         'updated_fields' => array_keys($data),
+            //         'user_role' => $user->role
+            //     ]
+            // );
 
             DB::commit();
 

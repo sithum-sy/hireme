@@ -9,6 +9,7 @@ import {
     PROFILE_SECTIONS,
     getRoleConfig,
 } from "../../../../config/profileConfig";
+import { color } from "chart.js/helpers";
 
 // Inner component that uses ProfileProvider
 const AdminProfileContent = () => {
@@ -41,9 +42,7 @@ const AdminProfileContent = () => {
                             className="spinner-border text-primary"
                             role="status"
                         >
-                            <span className="visually-hidden">
-                                Loading...
-                            </span>
+                            <span className="visually-hidden">Loading...</span>
                         </div>
                     </div>
                     <h4>Loading Admin Profile...</h4>
@@ -63,8 +62,8 @@ const AdminProfileContent = () => {
                     <i className="fas fa-exclamation-triangle fa-3x text-warning"></i>
                     <h4>Profile Not Found</h4>
                     <p>
-                        We couldn't load your admin profile information.
-                        Please try refreshing the page.
+                        We couldn't load your admin profile information. Please
+                        try refreshing the page.
                     </p>
                     <button
                         className="btn btn-primary"
@@ -113,9 +112,9 @@ const AdminProfileContent = () => {
                     </div>
                     <div className="banner-info">
                         <h5>System Administrator</h5>
-                        <p>
-                            You have full administrative access to the
-                            HireMe platform
+                        <p className="text-muted">
+                            You have full administrative access to the HireMe
+                            platform
                         </p>
                     </div>
                     <div className="banner-stats">

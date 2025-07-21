@@ -126,6 +126,16 @@ const ProfileTabs = ({
                 @media (min-width: 1024px) {
                     .tab-description {
                         display: block;
+                        white-space: normal;
+                        overflow-wrap: break-word;
+                        word-break: break-word;
+                        max-width: 100%;
+                        text-align: center;
+                        /* Force two lines if overflow */
+                        display: -webkit-box;
+                        -webkit-line-clamp: 2;
+                        -webkit-box-orient: vertical;
+                        overflow: hidden;
                     }
 
                     .tab-button {

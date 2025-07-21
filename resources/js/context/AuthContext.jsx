@@ -55,6 +55,25 @@ export const AuthProvider = ({ children }) => {
 
     const register = async (userData) => {
         try {
+            // Debug logging
+            console.log("Registration data type:", userData.constructor.name);
+            if (userData instanceof FormData) {
+                console.log("FormData contents:");
+                for (let [key, value] of userData.entries()) {
+                    if (value instanceof File) {
+                        console.log(`${key}:`, {
+                            name: value.name,
+                            type: value.type,
+                            size: value.size,
+                        });
+                    } else {
+                        console.log(`${key}:`, value);
+                    }
+                }
+            } else {
+                console.log("Regular data:", userData);
+            }
+
             const response = await axios.post("/api/register", userData, {
                 headers: {
                     "Content-Type":

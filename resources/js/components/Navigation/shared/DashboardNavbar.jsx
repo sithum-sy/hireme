@@ -714,7 +714,7 @@ const DashboardNavbar = memo(
                                                             user.profile_picture
                                                         }
                                                         alt="Profile"
-                                                        size={48}
+                                                        size={32}
                                                         className="avatar-img"
                                                     />
                                                 ) : (

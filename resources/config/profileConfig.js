@@ -574,7 +574,7 @@ export const sectionConfig = {
     [PROFILE_SECTIONS.PERSONAL]: {
         label: "Personal Info",
         icon: "fas fa-user",
-        description: "Basic personal information and account details",
+        description: "Personal information and account details",
         roles: ["admin", "staff", "service_provider", "client"],
     },
     [PROFILE_SECTIONS.CONTACT]: {

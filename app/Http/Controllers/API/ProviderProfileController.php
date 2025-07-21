@@ -7,7 +7,7 @@ use App\Http\Requests\Profile\UpdateProviderProfileRequest;
 use App\Http\Requests\Profile\UploadDocumentsRequest;
 use App\Services\ProviderProfileService;
 use App\Services\FileUploadService;
-use App\Services\ActivityService;
+// use App\Services\ActivityService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
@@ -15,16 +15,16 @@ class ProviderProfileController extends Controller
 {
     protected ProviderProfileService $providerService;
     protected FileUploadService $fileUploadService;
-    protected ActivityService $activityService;
+    // protected ActivityService $activityService;
 
     public function __construct(
         ProviderProfileService $providerService,
         FileUploadService $fileUploadService,
-        ActivityService $activityService
+        // ActivityService $activityService
     ) {
         $this->providerService = $providerService;
         $this->fileUploadService = $fileUploadService;
-        $this->activityService = $activityService;
+        // $this->activityService = $activityService;
 
         // Ensure only service providers can access
         $this->middleware('role:service_provider');
@@ -98,17 +98,17 @@ class ProviderProfileController extends Controller
             $providerProfile->update(['is_available' => $newStatus]);
 
             // Log availability change
-            $this->activityService->logUserActivity(
-                'availability_toggle',
-                $user,
-                [
-                    'action' => 'availability_toggled',
-                    'new_status' => $newStatus,
-                    'old_status' => !$newStatus,
-                    'toggled_at' => now(),
-                    'ip_address' => $request->ip()
-                ]
-            );
+            // $this->activityService->logUserActivity(
+            //     'availability_toggle',
+            //     $user,
+            //     [
+            //         'action' => 'availability_toggled',
+            //         'new_status' => $newStatus,
+            //         'old_status' => !$newStatus,
+            //         'toggled_at' => now(),
+            //         'ip_address' => $request->ip()
+            //     ]
+            // );
 
             return response()->json([
                 'success' => true,

@@ -500,11 +500,11 @@ const DashboardSidebar = ({
                     id: "profile",
                     icon: "fas fa-user",
                     label: "My Profile",
-                    path: "/provider/profile",
+                    path: "/provider/provider-profile",
                     children: [
                         {
                             label: "Profile Overview",
-                            path: "/provider/profile",
+                            path: "/provider/provider-profile",
                         },
                         {
                             label: "Personal Information",

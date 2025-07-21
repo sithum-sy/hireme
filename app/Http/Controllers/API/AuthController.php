@@ -28,6 +28,20 @@ class AuthController extends Controller
     public function register(RegisterRequest $request)
     {
         try {
+            // Debug logging
+            Log::info('Registration request received', [
+                'has_profile_picture' => $request->hasFile('profile_picture'),
+                'profile_picture_info' => $request->hasFile('profile_picture') ? [
+                    'original_name' => $request->file('profile_picture')->getClientOriginalName(),
+                    'mime_type' => $request->file('profile_picture')->getMimeType(),
+                    'size' => $request->file('profile_picture')->getSize(),
+                    'is_valid' => $request->file('profile_picture')->isValid(),
+                    'error' => $request->file('profile_picture')->getError(),
+                ] : null,
+                'content_type' => $request->header('Content-Type'),
+                'all_request_data' => $request->all(),
+            ]);
+
             DB::beginTransaction();
 
             $userData = $request->validated();

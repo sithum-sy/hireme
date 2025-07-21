@@ -614,7 +614,7 @@ function App() {
 
                                                 {/* Provider Profile Routes */}
                                                 <Route
-                                                    path="profile/"
+                                                    path="provider-profile/"
                                                     element={
                                                         <ProviderProfile />
                                                     }

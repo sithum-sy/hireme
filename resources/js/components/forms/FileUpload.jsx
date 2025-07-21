@@ -13,7 +13,9 @@ const FileUpload = ({
 }) => {
     const handleFileChange = (e) => {
         const files = Array.from(e.target.files);
-        onFileSelect(files, name);
+        if (onFileSelect) {
+            onFileSelect(files);
+        }
     };
 
     const formatFileSize = (bytes) => {
