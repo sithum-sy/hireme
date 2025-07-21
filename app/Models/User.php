@@ -148,6 +148,60 @@ class User extends Authenticatable
     }
 
     /**
+     * Get all appointments for this user (both as provider and client)
+     */
+    public function appointments()
+    {
+        // For service providers, return provider appointments
+        if ($this->role === 'service_provider') {
+            return $this->providerAppointments();
+        }
+
+        // For clients, return client appointments  
+        if ($this->role === 'client') {
+            return $this->clientAppointments();
+        }
+
+        // For other roles, return empty relationship
+        return $this->hasMany(Appointment::class, 'provider_id')->whereRaw('1 = 0');
+    }
+
+    /**
+     * Get payments as provider
+     */
+    public function providerPayments()
+    {
+        return $this->hasMany(Payment::class, 'provider_id');
+    }
+
+    /**
+     * Get payments as client  
+     */
+    public function clientPayments()
+    {
+        return $this->hasMany(Payment::class, 'client_id');
+    }
+
+    /**
+     * Get all payments for this user (both as provider and client)
+     */
+    public function payments()
+    {
+        // For service providers, return provider payments
+        if ($this->role === 'service_provider') {
+            return $this->providerPayments();
+        }
+
+        // For clients, return client payments
+        if ($this->role === 'client') {
+            return $this->clientPayments();
+        }
+
+        // For other roles, return empty relationship
+        return $this->hasMany(Payment::class, 'provider_id')->whereRaw('1 = 0');
+    }
+
+    /**
      * Relationship for tracking who created this user (for staff accounts)
      */
     public function creator()
@@ -178,6 +232,11 @@ class User extends Authenticatable
         return $this->hasMany(Review::class, 'reviewer_id');
     }
 
+    // public function payments()
+    // {
+    //     return $this->hasMany(Payment::class, 'provider_id');
+    // }
+
     public function providerReviews()
     {
         return $this->reviewsReceived()
@@ -190,6 +249,24 @@ class User extends Authenticatable
         return $this->reviewsReceived()
             ->where('review_type', Review::TYPE_PROVIDER_TO_CLIENT)
             ->visible();
+    }
+
+    /**
+     * Get all reviews for this user (role-appropriate)
+     */
+    public function reviews()
+    {
+        // For service providers, return received reviews
+        if ($this->role === 'service_provider') {
+            return $this->providerReviews();
+        }
+
+        // For clients, return given reviews
+        if ($this->role === 'client') {
+            return $this->reviewsGiven();
+        }
+
+        return $this->hasMany(Review::class, 'reviewee_id')->whereRaw('1 = 0');
     }
 
     // Helper methods

@@ -225,16 +225,15 @@ class ProfileService
             return [];
         }
 
-        // These would be actual database queries in a real implementation
         return [
-            'total_appointments' => $user->appointments()->count(),
-            'completed_appointments' => $user->appointments()->where('status', 'completed')->count(),
-            'pending_appointments' => $user->appointments()->where('status', 'pending')->count(),
-            'today_appointments' => $user->appointments()->whereDate('scheduled_at', today())->count(),
-            'monthly_earnings' => $user->payments()->whereMonth('created_at', now()->month)->sum('amount'),
-            'total_earnings' => $user->payments()->sum('amount'),
-            'average_rating' => $user->reviews()->avg('rating') ?? 0,
-            'total_reviews' => $user->reviews()->count(),
+            'total_appointments' => $user->providerAppointments()->count(),
+            'completed_appointments' => $user->providerAppointments()->where('status', 'completed')->count(),
+            'pending_appointments' => $user->providerAppointments()->where('status', 'pending')->count(),
+            'today_appointments' => $user->providerAppointments()->whereDate('appointment_date', today())->count(), // Fixed column name
+            'monthly_earnings' => $user->providerPayments()->whereMonth('created_at', now()->month)->where('status', 'completed')->sum('amount') ?? 0,
+            'total_earnings' => $user->providerPayments()->where('status', 'completed')->sum('amount') ?? 0,
+            'average_rating' => $user->providerReviews()->avg('rating') ?? 0,
+            'total_reviews' => $user->providerReviews()->count(),
         ];
     }
 
