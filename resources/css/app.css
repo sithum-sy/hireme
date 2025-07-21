@@ -11,6 +11,7 @@
 @import "layouts/dashboard-layout.css";
 @import "components/dashboard-cards.css";
 @import "components/dashboard-navigation.css";
+@import "components/dashboard-navigation-mobile-fix.css";
 @import "components/placeholder-page.css";
 @import "pages/client-dashboard.css";
 @import "pages/provider-dashboard.css";

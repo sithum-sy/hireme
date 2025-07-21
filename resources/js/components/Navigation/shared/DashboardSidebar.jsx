@@ -706,7 +706,7 @@ const DashboardSidebar = ({
             </div>
 
             {/* Sidebar Footer */}
-            <div className="sidebar-footer">
+            {/* <div className="sidebar-footer">
                 {!collapsed ? (
                     <div className="status-info">
                         <div className="status-indicator"></div>
@@ -717,7 +717,7 @@ const DashboardSidebar = ({
                         <div className="status-indicator"></div>
                     </div>
                 )}
-            </div>
+            </div> */}
         </div>
     );
 };

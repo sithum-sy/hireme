@@ -1,0 +1,185 @@
+/* ============ MOBILE SIDEBAR FIXES ============ */
+/* This file contains the fixes for mobile sidebar functionality */
+
+/* Mobile responsive fixes for dashboard sidebar */
+@media (max-width: 768px) {
+    /* Reset the sidebar positioning for mobile */
+    .dashboard-sidebar {
+        position: fixed !important;
+        top: var(--dashboard-header-height);
+        left: -280px; /* Hidden by default - matches your JS logic */
+        width: var(--dashboard-sidebar-width) !important; /* Force full width on mobile */
+        height: calc(100vh - var(--dashboard-header-height));
+        z-index: 1030; /* Higher than backdrop */
+        transition: left 0.3s ease-in-out !important; /* Smooth slide animation */
+        transform: none !important; /* Remove transform, use left positioning */
+        background: var(--sidebar-background);
+        box-shadow: 2px 0 20px rgba(0, 0, 0, 0.3); /* Enhanced shadow for mobile */
+    }
+
+    /* Show sidebar when not collapsed */
+    .dashboard-sidebar:not(.collapsed) {
+        left: 0 !important;
+    }
+
+    /* Alternative class-based approach for showing mobile sidebar */
+    .dashboard-sidebar.mobile-open,
+    .dashboard-sidebar.mobile-overlay {
+        left: 0 !important;
+    }
+
+    /* Ensure collapsed sidebar stays hidden on mobile */
+    .dashboard-sidebar.collapsed {
+        left: -280px !important;
+    }
+
+    /* Remove the transform approach completely on mobile */
+    .dashboard-sidebar.show {
+        left: 0 !important;
+        transform: none !important;
+    }
+
+    /* Main content should not have left margin on mobile */
+    .main-content {
+        margin-left: 0 !important;
+        width: 100% !important;
+    }
+
+    /* Enhanced mobile backdrop/overlay */
+    .mobile-sidebar-backdrop,
+    .position-fixed.bg-dark.bg-opacity-50 {
+        position: fixed !important;
+        top: var(--dashboard-header-height) !important;
+        left: 0 !important;
+        width: 100vw !important;
+        height: calc(100vh - var(--dashboard-header-height)) !important;
+        background-color: rgba(0, 0, 0, 0.6) !important;
+        backdrop-filter: blur(3px);
+        z-index: 1025 !important; /* Lower than sidebar but higher than content */
+        animation: fadeInBackdrop 0.3s ease-in-out;
+    }
+
+    @keyframes fadeInBackdrop {
+        from { 
+            opacity: 0; 
+        }
+        to { 
+            opacity: 1; 
+        }
+    }
+
+    /* Prevent body scroll when mobile sidebar is open */
+    body.mobile-sidebar-open {
+        overflow: hidden;
+    }
+
+    /* Enhanced sidebar toggle button for mobile */
+    .sidebar-toggle-btn {
+        position: relative;
+        z-index: 1035; /* Always visible above sidebar */
+    }
+
+    /* Ensure sidebar content is scrollable on mobile */
+    .sidebar-menu {
+        height: calc(100vh - var(--dashboard-header-height) - 120px);
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch; /* iOS smooth scrolling */
+    }
+
+    /* Enhanced touch targets for mobile */
+    .menu-link {
+        padding: 1rem 0.875rem;
+        min-height: 48px; /* Touch-friendly minimum */
+    }
+
+    .submenu-item {
+        padding: 0.875rem 1rem;
+        min-height: 44px;
+    }
+
+    /* Hide sidebar tooltips on mobile (they don't work well on touch) */
+    .dashboard-sidebar .menu-item:hover::after,
+    .dashboard-sidebar .menu-item:hover::before {
+        display: none !important;
+    }
+}
+
+/* Extra small mobile devices */
+@media (max-width: 576px) {
+    /* Make sidebar full width on very small screens */
+    .dashboard-sidebar {
+        width: 100vw !important;
+        left: -100vw;
+    }
+
+    .dashboard-sidebar:not(.collapsed),
+    .dashboard-sidebar.mobile-open,
+    .dashboard-sidebar.mobile-overlay,
+    .dashboard-sidebar.show {
+        left: 0 !important;
+    }
+
+    .dashboard-sidebar.collapsed {
+        left: -100vw !important;
+    }
+
+    /* Adjust navbar for very small screens */
+    .navbar-container {
+        padding: 0 0.5rem;
+    }
+
+    .sidebar-toggle-btn {
+        margin-right: 0.25rem;
+    }
+}
+
+/* ============ ADDITIONAL UTILITY CLASSES ============ */
+/* These classes can be toggled by JavaScript for better mobile control */
+
+/* Class to add to body when mobile sidebar is open */
+.mobile-sidebar-open {
+    overflow: hidden;
+}
+
+/* Alternative mobile sidebar states */
+.dashboard-sidebar.mobile-hidden {
+    left: -280px !important;
+    transition: left 0.3s ease-in-out !important;
+}
+
+.dashboard-sidebar.mobile-visible {
+    left: 0 !important;
+    transition: left 0.3s ease-in-out !important;
+}
+
+/* Debug helper (remove in production) */
+.debug-sidebar-state::before {
+    content: 'Collapsed: ' attr(data-collapsed) ' | Mobile: ' attr(data-mobile);
+    position: fixed;
+    top: 70px;
+    right: 10px;
+    background: red;
+    color: white;
+    padding: 5px;
+    font-size: 12px;
+    z-index: 9999;
+    border-radius: 3px;
+}
+
+/* Landscape mobile optimization */
+@media (max-width: 768px) and (orientation: landscape) {
+    .dashboard-sidebar {
+        width: 320px !important; /* Slightly wider in landscape */
+        left: -320px;
+    }
+
+    .dashboard-sidebar:not(.collapsed),
+    .dashboard-sidebar.mobile-open,
+    .dashboard-sidebar.mobile-overlay {
+        left: 0 !important;
+    }
+
+    .dashboard-sidebar.collapsed {
+        left: -320px !important;
+    }
+}

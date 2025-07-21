@@ -449,18 +449,29 @@ const DashboardNavbar = memo(
                             </button>
 
                             {/* Brand */}
-                            <Link
-                                to={config.dashboardPath}
-                                className="navbar-brand"
-                            >
-                                <div className="brand-icon">
-                                    <i className="fas fa-handshake"></i>
+                            <Link to="/" className="navbar-brand">
+                                <div className="brand-logo">
+                                    <img
+                                        src="/images/hireme-logo.png"
+                                        alt="HireMe"
+                                        className="logo-img"
+                                        onError={(e) => {
+                                            e.target.style.display = "none";
+                                            e.target.nextSibling.style.display =
+                                                "flex";
+                                        }}
+                                    />
+                                    <div
+                                        className="logo-fallback"
+                                        style={{ display: "none" }}
+                                    >
+                                        <div className="brand-icon">
+                                            <i className="fas fa-handshake"></i>
+                                        </div>
+                                    </div>
                                 </div>
                                 <div className="brand-text d-none d-md-block">
                                     <div className="brand-name">HireMe</div>
-                                    <div className="brand-subtitle">
-                                        {config.roleTitle}
-                                    </div>
                                 </div>
                             </Link>
                         </div>
@@ -531,9 +542,9 @@ const DashboardNavbar = memo(
                         {/* Right Section - Actions & Profile */}
                         <div className="navbar-right">
                             {/* Mobile Search Toggle */}
-                            <button className="navbar-action-btn d-lg-none">
+                            {/* <button className="navbar-action-btn d-lg-none">
                                 <i className="fas fa-search"></i>
-                            </button>
+                            </button> */}
 
                             {/* Quick Actions Dropdown */}
                             <div className="navbar-dropdown d-none d-md-block">
