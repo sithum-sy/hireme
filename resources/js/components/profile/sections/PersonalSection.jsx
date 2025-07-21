@@ -5,6 +5,7 @@ import ProfileSection from "../shared/ProfileSection";
 import ProfileImageUpload from "../shared/ProfileImageUpload";
 import BasicInfoForm from "../forms/BasicInfoForm";
 import Button from "../../ui/Button";
+import { useStableProfileImage } from "../../../hooks/useStableImageUrl";
 
 const PersonalSection = React.memo(({ onSuccess, onError }) => {
     const { user } = useAuth();
@@ -14,6 +15,12 @@ const PersonalSection = React.memo(({ onSuccess, onError }) => {
 
     const userData = profile?.user;
     const canEditProfile = config?.permissions?.canEdit?.length > 0;
+
+    // Use enhanced stable image URL with caching
+    const currentProfileImage = useStableProfileImage(
+        userData?.id,
+        userData?.profile_picture
+    );
 
     const handleFormSuccess = useCallback(
         (result) => {
@@ -54,7 +61,7 @@ const PersonalSection = React.memo(({ onSuccess, onError }) => {
                 <div className="profile-image-section">
                     <div className="image-container">
                         <ProfileImageUpload
-                            currentImage={userData?.profile_picture}
+                            currentImage={currentProfileImage}
                             onImageChange={handleImageChange}
                             size="large"
                             className="profile-image-upload"

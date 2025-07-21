@@ -8,6 +8,7 @@ use App\Http\Requests\Profile\ChangePasswordRequest;
 use App\Http\Requests\Profile\UploadImageRequest;
 use App\Services\ProfileService;
 use App\Services\FileUploadService;
+use App\Services\ActivityService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
@@ -17,13 +18,16 @@ class ProfileController extends Controller
 {
     protected ProfileService $profileService;
     protected FileUploadService $fileUploadService;
+    protected ActivityService $activityService;
 
     public function __construct(
         ProfileService $profileService,
-        FileUploadService $fileUploadService
+        FileUploadService $fileUploadService,
+        ActivityService $activityService
     ) {
         $this->profileService = $profileService;
         $this->fileUploadService = $fileUploadService;
+        $this->activityService = $activityService;
     }
 
     /**
@@ -153,11 +157,16 @@ class ProfileController extends Controller
             ]);
 
             // Log password change
-            activity()
-                ->performedOn($user)
-                ->causedBy($user)
-                ->withProperties(['action' => 'password_changed'])
-                ->log('Password changed');
+            $this->activityService->logUserActivity(
+                'password_change',
+                $user,
+                [
+                    'action' => 'password_changed',
+                    'changed_at' => now(),
+                    'ip_address' => $request->ip(),
+                    'user_agent' => $request->userAgent()
+                ]
+            );
 
             return response()->json([
                 'success' => true,

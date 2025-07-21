@@ -40,7 +40,7 @@ const BasicInfoForm = ({ onSubmit, initialData = {} }) => {
                 setFormData(initialFormData);
             }
         }
-    }, [profile?.user?.id, profile?.user?.first_name, profile?.user?.last_name, profile?.user?.email, profile?.user?.date_of_birth, userId]); // Only depend on actual user data, not initialData
+    }, [profile?.user?.id, userId]); // Remove individual field dependencies
 
     // Auto-save draft
     useEffect(() => {

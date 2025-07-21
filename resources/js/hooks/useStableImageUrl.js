@@ -16,14 +16,30 @@ export const useStableImageUrl = (imageUrl, fallbackUrl = '/images/default-avata
             return stableUrl.current;
         }
 
+        // Normalize URL by removing potential cache busters or timestamps
+        let normalizedUrl = imageUrl;
+        try {
+            const url = new URL(imageUrl, window.location.origin);
+            // Remove common cache busting parameters
+            url.searchParams.delete('t');
+            url.searchParams.delete('timestamp');
+            url.searchParams.delete('v');
+            url.searchParams.delete('cache');
+            url.searchParams.delete('_');
+            normalizedUrl = url.toString();
+        } catch (e) {
+            // If URL parsing fails, use original
+            normalizedUrl = imageUrl;
+        }
+
         // If URL is the same as previous, return the stable reference
-        if (imageUrl === previousUrl.current && stableUrl.current) {
+        if (normalizedUrl === previousUrl.current && stableUrl.current) {
             return stableUrl.current;
         }
 
         // Update references for new URL
-        previousUrl.current = imageUrl;
-        stableUrl.current = imageUrl;
+        previousUrl.current = normalizedUrl;
+        stableUrl.current = normalizedUrl;
         
         return stableUrl.current;
     }, [imageUrl, fallbackUrl]);
@@ -80,4 +96,48 @@ export const useImageLoadState = (imageUrl) => {
         handleImageError,
         handleImageLoadStart
     };
+};
+
+/**
+ * Enhanced hook that combines stable URLs with caching
+ */
+export const useStableProfileImage = (userId, imageUrl, fallbackUrl = '/images/default-avatar.png') => {
+    const cacheKey = `profile_image_${userId}`;
+    const [cachedUrl, setCachedUrl] = useState(() => {
+        try {
+            return localStorage.getItem(cacheKey);
+        } catch (e) {
+            return null;
+        }
+    });
+
+    const stableUrl = useStableImageUrl(imageUrl, fallbackUrl);
+
+    // Update cache when stable URL changes
+    useEffect(() => {
+        if (stableUrl && stableUrl !== fallbackUrl) {
+            try {
+                localStorage.setItem(cacheKey, stableUrl);
+                setCachedUrl(stableUrl);
+            } catch (e) {
+                // Ignore localStorage errors
+            }
+        }
+    }, [stableUrl, cacheKey, fallbackUrl]);
+
+    // Return cached URL if available and current URL is loading
+    return useMemo(() => {
+        // If we have a current stable URL, use it
+        if (stableUrl && stableUrl !== fallbackUrl) {
+            return stableUrl;
+        }
+        
+        // Otherwise, use cached URL if available
+        if (cachedUrl && cachedUrl !== fallbackUrl) {
+            return cachedUrl;
+        }
+        
+        // Fallback
+        return fallbackUrl;
+    }, [stableUrl, cachedUrl, fallbackUrl]);
 };

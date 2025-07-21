@@ -126,13 +126,13 @@ const ProfileImageUpload = React.memo(
             fileInputRef.current?.click();
         }, []);
 
-        // Use stable image URL to prevent flickering
+        // Use stable image URL to prevent flickering with enhanced normalization
         const stableCurrentImage = useStableImageUrl(currentImage);
         const stablePreviewImage = useStableImageUrl(preview);
-
+        
         // Memoize the display image to prevent unnecessary re-renders
         const displayImage = useMemo(() => {
-            return stablePreviewImage || stableCurrentImage;
+        return stablePreviewImage || stableCurrentImage;
         }, [stablePreviewImage, stableCurrentImage]);
 
         return (

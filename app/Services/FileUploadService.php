@@ -7,10 +7,28 @@ use App\Models\ProviderProfile;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Intervention\Image\Facades\Image;
+use Illuminate\Support\Facades\Log;
+use Intervention\Image\ImageManager;
+use Intervention\Image\Drivers\Gd\Driver;
 
 class FileUploadService
 {
+    protected ActivityService $activityService;
+    protected ?ImageManager $imageManager;
+
+    public function __construct(ActivityService $activityService)
+    {
+        $this->activityService = $activityService;
+
+        // Initialize ImageManager with error handling
+        try {
+            $this->imageManager = new ImageManager(new Driver());
+        } catch (\Exception $e) {
+            // Log the error but don't fail the service
+            Log::warning('ImageManager initialization failed: ' . $e->getMessage());
+            $this->imageManager = null;
+        }
+    }
     /**
      * Upload profile image
      */
@@ -23,26 +41,39 @@ class FileUploadService
         $filename = 'profile_' . $user->id . '_' . time() . '.' . $file->getClientOriginalExtension();
         $path = 'profile-images/' . $filename;
 
-        // Resize and optimize image
-        $image = Image::make($file)
-            ->resize(400, 400, function ($constraint) {
-                $constraint->aspectRatio();
-                $constraint->upsize();
-            })
-            ->encode('jpg', 85);
+        // Resize and optimize image (maintain aspect ratio)
+        if ($this->imageManager) {
+            try {
+                $image = $this->imageManager->read($file)
+                    ->scaleDown(width: 400, height: 400)
+                    ->toJpeg(85);
 
-        // Store the image
-        Storage::disk('public')->put($path, $image);
+                // Store the processed image
+                Storage::disk('public')->put($path, (string) $image);
+            } catch (\Exception $e) {
+                Log::warning('Image processing failed, storing original: ' . $e->getMessage());
+                // Fallback: store original file
+                $file->storeAs('profile-images', $filename, 'public');
+            }
+        } else {
+            // Fallback: store original file without processing
+            $file->storeAs('profile-images', $filename, 'public');
+        }
 
         // Update user profile picture path
         $user->update(['profile_picture' => $path]);
 
         // Log the upload
-        activity()
-            ->performedOn($user)
-            ->causedBy($user)
-            ->withProperties(['action' => 'profile_image_uploaded'])
-            ->log('Profile image uploaded');
+        $this->activityService->logUserActivity(
+            'profile_image_upload',
+            $user,
+            [
+                'action' => 'profile_image_uploaded',
+                'file_path' => $path,
+                'file_size' => $file->getSize(),
+                'file_type' => $file->getClientOriginalExtension()
+            ]
+        );
 
         return $path;
     }
@@ -56,11 +87,14 @@ class FileUploadService
             Storage::disk('public')->delete($user->profile_picture);
             $user->update(['profile_picture' => null]);
 
-            activity()
-                ->performedOn($user)
-                ->causedBy($user)
-                ->withProperties(['action' => 'profile_image_deleted'])
-                ->log('Profile image deleted');
+            $this->activityService->logUserActivity(
+                'profile_image_delete',
+                $user,
+                [
+                    'action' => 'profile_image_deleted',
+                    'deleted_path' => $user->profile_picture
+                ]
+            );
         }
     }
 
@@ -163,26 +197,31 @@ class FileUploadService
             $filename = 'portfolio_' . $profile->user_id . '_' . time() . '_' . Str::random(8) . '.' . $file->getClientOriginalExtension();
             $path = 'provider-documents/portfolio/' . $filename;
 
-            // Resize and optimize image
-            $image = Image::make($file)
-                ->resize(1200, 1200, function ($constraint) {
-                    $constraint->aspectRatio();
-                    $constraint->upsize();
-                })
-                ->encode('jpg', 90);
+            // Resize and optimize image (maintain aspect ratio)
+            if ($this->imageManager) {
+                try {
+                    $image = $this->imageManager->read($file)
+                        ->scaleDown(width: 1200, height: 1200)
+                        ->toJpeg(90);
 
-            Storage::disk('public')->put($path, $image);
+                    Storage::disk('public')->put($path, (string) $image);
 
-            // Generate thumbnail
-            $thumbnailPath = 'provider-documents/portfolio/thumbnails/' . $filename;
-            $thumbnail = Image::make($file)
-                ->resize(300, 300, function ($constraint) {
-                    $constraint->aspectRatio();
-                    $constraint->upsize();
-                })
-                ->encode('jpg', 80);
+                    // Generate thumbnail (maintain aspect ratio)
+                    $thumbnailPath = 'provider-documents/portfolio/thumbnails/' . $filename;
+                    $thumbnail = $this->imageManager->read($file)
+                        ->scaleDown(width: 300, height: 300)
+                        ->toJpeg(80);
 
-            Storage::disk('public')->put($thumbnailPath, $thumbnail);
+                    Storage::disk('public')->put($thumbnailPath, (string) $thumbnail);
+                } catch (\Exception $e) {
+                    Log::warning('Portfolio image processing failed, storing original: ' . $e->getMessage());
+                    // Fallback: store original file
+                    $file->storeAs('provider-documents/portfolio', $filename, 'public');
+                }
+            } else {
+                // Fallback: store original file without processing
+                $file->storeAs('provider-documents/portfolio', $filename, 'public');
+            }
 
             $paths[] = $path;
         }
@@ -232,15 +271,17 @@ class FileUploadService
                 throw new \Exception('Invalid document type');
         }
 
-        activity()
-            ->performedOn($profile)
-            ->causedBy($user)
-            ->withProperties([
+        $this->activityService->log(
+            'document_delete',
+            "Deleted {$documentType} document for provider {$user->full_name}",
+            $profile,
+            [
                 'action' => 'document_deleted',
                 'document_type' => $documentType,
-                'index' => $index
-            ])
-            ->log('Provider document deleted');
+                'index' => $index,
+                'user_id' => $user->id
+            ]
+        );
     }
 
     /**

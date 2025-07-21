@@ -8,6 +8,12 @@ use Illuminate\Support\Facades\Validator;
 
 class ProfileService
 {
+    protected ActivityService $activityService;
+
+    public function __construct(ActivityService $activityService)
+    {
+        $this->activityService = $activityService;
+    }
     /**
      * Get complete profile data for user
      */
@@ -69,11 +75,15 @@ class ProfileService
             }
 
             // Log profile update
-            activity()
-                ->performedOn($user)
-                ->causedBy($user)
-                ->withProperties(['updated_fields' => array_keys($data)])
-                ->log('Profile updated');
+            $this->activityService->logUserActivity(
+                'update',
+                $user,
+                [
+                    'action' => 'profile_updated',
+                    'updated_fields' => array_keys($data),
+                    'user_role' => $user->role
+                ]
+            );
 
             DB::commit();
 
@@ -97,8 +107,14 @@ class ProfileService
             \Carbon\Carbon::parse($user->date_of_birth)->age : null;
         $userData['last_login_human'] = $user->last_login_at ?
             \Carbon\Carbon::parse($user->last_login_at)->diffForHumans() : null;
-        $userData['profile_picture'] = $user->profile_picture ?
-            asset('storage/' . $user->profile_picture) : null;
+        
+        // Stabilize profile picture URL to prevent frontend flickering
+        if ($user->profile_picture) {
+            // Use a consistent URL format without timestamps
+            $userData['profile_picture'] = url('storage/' . $user->profile_picture);
+        } else {
+            $userData['profile_picture'] = null;
+        }
 
         return $userData;
     }
