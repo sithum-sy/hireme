@@ -20,12 +20,22 @@ class FileUploadService
     {
         $this->activityService = $activityService;
 
-        // Initialize ImageManager with error handling
+        // Initialize ImageManager with better error handling
         try {
+            // Check if GD extension is available
+            if (!extension_loaded('gd')) {
+                Log::warning('GD PHP extension is not installed. Image processing will be disabled.');
+                Log::info('To enable image processing: 1) Edit php.ini 2) Uncomment extension=gd 3) Restart Apache');
+                $this->imageManager = null;
+                return;
+            }
+            
             $this->imageManager = new ImageManager(new Driver());
+            Log::info('ImageManager initialized successfully with GD driver.');
         } catch (\Exception $e) {
             // Log the error but don't fail the service
             Log::warning('ImageManager initialization failed: ' . $e->getMessage());
+            Log::info('Image uploads will still work but images will not be resized/optimized.');
             $this->imageManager = null;
         }
     }

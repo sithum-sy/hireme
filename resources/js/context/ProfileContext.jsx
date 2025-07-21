@@ -144,7 +144,7 @@ export const ProfileProvider = ({ children }) => {
     const uploadImage = async (file) => {
         try {
             dispatch({ type: "SET_SAVING", payload: true });
-
+            
             const response = await profileAPI.uploadImage(file);
 
             if (response.data.success) {
@@ -156,7 +156,9 @@ export const ProfileProvider = ({ children }) => {
                         profile_picture: response.data.data.full_url,
                     },
                 };
+                
                 dispatch({ type: "SET_PROFILE", payload: updatedProfile });
+                
                 return {
                     success: true,
                     message: response.data.message,
