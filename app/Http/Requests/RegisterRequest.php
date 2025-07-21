@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rules\Password;
+use Illuminate\Support\Facades\Log;
 
 class RegisterRequest extends FormRequest
 {
@@ -15,7 +16,7 @@ class RegisterRequest extends FormRequest
     protected function prepareForValidation()
     {
         // Debug logging for validation
-        \Log::info('RegisterRequest validation preparation', [
+        Log::info('RegisterRequest validation preparation', [
             'has_profile_picture_file' => $this->hasFile('profile_picture'),
             'profile_picture_in_request' => $this->has('profile_picture'),
             'files' => $this->allFiles(),

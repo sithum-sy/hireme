@@ -29,18 +29,18 @@ class AuthController extends Controller
     {
         try {
             // Debug logging
-            Log::info('Registration request received', [
-                'has_profile_picture' => $request->hasFile('profile_picture'),
-                'profile_picture_info' => $request->hasFile('profile_picture') ? [
-                    'original_name' => $request->file('profile_picture')->getClientOriginalName(),
-                    'mime_type' => $request->file('profile_picture')->getMimeType(),
-                    'size' => $request->file('profile_picture')->getSize(),
-                    'is_valid' => $request->file('profile_picture')->isValid(),
-                    'error' => $request->file('profile_picture')->getError(),
-                ] : null,
-                'content_type' => $request->header('Content-Type'),
-                'all_request_data' => $request->all(),
-            ]);
+            // Log::info('Registration request received', [
+            //     'has_profile_picture' => $request->hasFile('profile_picture'),
+            //     'profile_picture_info' => $request->hasFile('profile_picture') ? [
+            //         'original_name' => $request->file('profile_picture')->getClientOriginalName(),
+            //         'mime_type' => $request->file('profile_picture')->getMimeType(),
+            //         'size' => $request->file('profile_picture')->getSize(),
+            //         'is_valid' => $request->file('profile_picture')->isValid(),
+            //         'error' => $request->file('profile_picture')->getError(),
+            //     ] : null,
+            //     'content_type' => $request->header('Content-Type'),
+            //     'all_request_data' => $request->all(),
+            // ]);
 
             DB::beginTransaction();
 
@@ -50,11 +50,20 @@ class AuthController extends Controller
             $userData['password'] = Hash::make($userData['password']);
 
             // Handle profile picture upload
+            // Handle profile picture upload
             if ($request->hasFile('profile_picture')) {
                 $file = $request->file('profile_picture');
                 $filename = 'profile_' . Str::uuid() . '.' . $file->getClientOriginalExtension();
-                $path = $file->storeAs('profile_pictures', $filename, 'public');
-                $userData['profile_picture'] = $path;
+
+                // Create the profile_pictures directory if it doesn't exist
+                $profileDir = public_path('images/profile_pictures');
+                if (!file_exists($profileDir)) {
+                    mkdir($profileDir, 0755, true);
+                }
+
+                // Move the uploaded file to public/images/profile_pictures
+                $file->move($profileDir, $filename);
+                $userData['profile_picture'] = 'images/profile_pictures/' . $filename;
             }
 
             // Create user
@@ -101,7 +110,8 @@ class AuthController extends Controller
                     'contact_number' => $user->contact_number,
                     'date_of_birth' => $user->date_of_birth?->format('Y-m-d'),
                     'age' => $user->age,
-                    'profile_picture' => $user->profile_picture ? Storage::url($user->profile_picture) : null,
+                    // 'profile_picture' => $user->profile_picture ? Storage::url($user->profile_picture) : null,
+                    'profile_picture' => $user->profile_picture ? asset($user->profile_picture) : null,
                     'is_active' => $user->is_active,
                     'last_login_at' => $user->last_login_at?->format('Y-m-d H:i:s'),
                 ],
@@ -188,7 +198,8 @@ class AuthController extends Controller
                     'contact_number' => $user->contact_number,
                     'date_of_birth' => $user->date_of_birth?->format('Y-m-d'),
                     'age' => $user->age,
-                    'profile_picture' => $user->profile_picture ? Storage::url($user->profile_picture) : null,
+                    // 'profile_picture' => $user->profile_picture ? Storage::url($user->profile_picture) : null,
+                    'profile_picture' => $user->profile_picture ? asset($user->profile_picture) : null,
                     'is_active' => $user->is_active,
                     'last_login_at' => $user->last_login_at?->format('Y-m-d H:i:s'),
                     'created_by' => $user->created_by,
@@ -339,7 +350,8 @@ class AuthController extends Controller
                     'contact_number' => $user->contact_number,
                     'date_of_birth' => $user->date_of_birth?->format('Y-m-d'),
                     'age' => $user->age,
-                    'profile_picture' => $user->profile_picture ? Storage::url($user->profile_picture) : null,
+                    // 'profile_picture' => $user->profile_picture ? Storage::url($user->profile_picture) : null,
+                    'profile_picture' => $user->profile_picture ? asset($user->profile_picture) : null,
                     'is_active' => $user->is_active,
                     'last_login_at' => $user->last_login_at?->format('Y-m-d H:i:s'),
                     'last_login_human' => $user->last_login_human ?? 'Never logged in',

@@ -193,8 +193,7 @@ const RegisterForm = () => {
                 formData.profile_picture &&
                 formData.profile_picture.size > 2 * 1024 * 1024
             ) {
-                newErrors.profile_picture =
-                    "Profile picture must be under 2MB";
+                newErrors.profile_picture = "Profile picture must be under 2MB";
             }
 
             if (formData.role === "service_provider") {
@@ -297,10 +296,12 @@ const RegisterForm = () => {
 
     // Check if we need to use FormData (if any files are present)
     const hasFiles = () => {
-        return formData.profile_picture || 
-               formData.business_license || 
-               formData.certifications.length > 0 || 
-               formData.portfolio_images.length > 0;
+        return (
+            formData.profile_picture ||
+            formData.business_license ||
+            formData.certifications.length > 0 ||
+            formData.portfolio_images.length > 0
+        );
     };
 
     const handleSubmit = async (e) => {
@@ -311,10 +312,12 @@ const RegisterForm = () => {
             return;
         }
 
-        const submitData =
-            formData.role === "service_provider"
-                ? prepareFormDataForSubmit()
-                : formData;
+        // const submitData =
+        //     formData.role === "service_provider"
+        //         ? prepareFormDataForSubmit()
+        //         : formData;
+        // const submitData = hasFiles() ? prepareFormDataForSubmit() : formData;
+        const submitData = prepareFormDataForSubmit();
 
         const result = await register(submitData);
         if (result.success) {
