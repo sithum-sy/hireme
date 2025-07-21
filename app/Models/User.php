@@ -4,13 +4,15 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Support\Facades\Log;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -237,8 +239,14 @@ class User extends Authenticatable
         }
 
         try {
-            return $this->last_login_at->diffForHumans();
+            // Ensure we have a valid Carbon instance
+            $lastLogin = $this->last_login_at instanceof \Carbon\Carbon
+                ? $this->last_login_at
+                : \Carbon\Carbon::parse($this->last_login_at);
+
+            return $lastLogin->diffForHumans();
         } catch (\Exception $e) {
+            Log::warning('Error formatting last login time: ' . $e->getMessage());
             return 'Never logged in';
         }
     }

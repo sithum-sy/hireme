@@ -69,6 +69,7 @@ class AuthController extends Controller
                 'date_of_birth' => $userData['date_of_birth'],
                 'profile_picture' => $userData['profile_picture'] ?? null,
                 'is_active' => true,
+                'last_login_at' => now(),
             ]);
 
             // Create provider profile if user is service provider
@@ -86,9 +87,6 @@ class AuthController extends Controller
 
             // Create token
             $token = $user->createToken('auth_token')->plainTextToken;
-
-            // Update last login on registration
-            $user->updateLastLogin();
 
             // Prepare response data
             $responseData = [
@@ -270,6 +268,7 @@ class AuthController extends Controller
         try {
             $user = $request->user();
 
+
             if ($user) {
                 // Get the current token
                 $currentToken = $user->currentAccessToken();
@@ -309,62 +308,98 @@ class AuthController extends Controller
 
     public function user(Request $request)
     {
-        $user = $request->user();
+        try {
+            $user = $request->user();
 
-        $responseData = [
-            'user' => [
-                'id' => $user->id,
-                'first_name' => $user->first_name,
-                'last_name' => $user->last_name,
-                'full_name' => $user->full_name,
-                'email' => $user->email,
-                'role' => $user->role,
-                'address' => $user->address,
-                'contact_number' => $user->contact_number,
-                'date_of_birth' => $user->date_of_birth?->format('Y-m-d'),
-                'age' => $user->age,
-                'profile_picture' => $user->profile_picture ? Storage::url($user->profile_picture) : null,
-                'is_active' => $user->is_active,
-                'last_login_at' => $user->last_login_at?->format('Y-m-d H:i:s'),
-                'last_login_human' => $user->last_login_human,
-                'created_by' => $user->created_by,
-                'created_at' => $user->created_at,
-                'was_created_by_admin' => $user->wasCreatedByAdmin(),
-            ]
-        ];
+            // Fix the token logging to handle TransientToken
+            $currentToken = $user->currentAccessToken();
+            $tokenId = null;
+            if ($currentToken && !($currentToken instanceof \Laravel\Sanctum\TransientToken)) {
+                $tokenId = $currentToken->id;
+            }
 
-        // Add creator information if user was created by admin
-        if ($user->creator) {
-            $responseData['creator'] = [
-                'id' => $user->creator->id,
-                'name' => $user->creator->full_name,
-                'role' => $user->creator->role,
+            Log::info('User endpoint called', [
+                'token_id' => $tokenId,
+                'user_id' => $user->id,
+                'user_email' => $user->email,
+                'user_role' => $user->role,
+                'token_class' => get_class($currentToken),
+                'request_token' => $request->bearerToken()
+            ]);
+
+            $responseData = [
+                'user' => [
+                    'id' => $user->id,
+                    'first_name' => $user->first_name,
+                    'last_name' => $user->last_name,
+                    'full_name' => $user->full_name,
+                    'email' => $user->email,
+                    'role' => $user->role,
+                    'address' => $user->address,
+                    'contact_number' => $user->contact_number,
+                    'date_of_birth' => $user->date_of_birth?->format('Y-m-d'),
+                    'age' => $user->age,
+                    'profile_picture' => $user->profile_picture ? Storage::url($user->profile_picture) : null,
+                    'is_active' => $user->is_active,
+                    'last_login_at' => $user->last_login_at?->format('Y-m-d H:i:s'),
+                    'last_login_human' => $user->last_login_human ?? 'Never logged in',
+                    'created_by' => $user->created_by,
+                    'created_at' => $user->created_at,
+                    'was_created_by_admin' => $user->wasCreatedByAdmin(),
+                ]
             ];
-        }
 
-        // Add provider profile data if user is service provider
-        if ($user->role === 'service_provider' && $user->providerProfile) {
-            $profile = $user->providerProfile;
-            $responseData['provider_profile'] = [
-                'business_name' => $profile->business_name,
-                'years_of_experience' => $profile->years_of_experience,
-                'service_area_radius' => $profile->service_area_radius,
-                'bio' => $profile->bio,
-                'verification_status' => $profile->verification_status,
-                'average_rating' => $profile->average_rating,
-                'total_reviews' => $profile->total_reviews,
-                'total_earnings' => $profile->total_earnings,
-                'business_license_url' => $profile->business_license_url,
-                'certification_urls' => $profile->certification_urls,
-                'portfolio_image_urls' => $profile->portfolio_image_urls,
-                'is_available' => $profile->is_available,
-                'verified_at' => $profile->verified_at?->format('Y-m-d H:i:s'),
-            ];
-        }
+            // Add creator information if user was created by admin - with error handling
+            try {
+                if ($user->creator) {
+                    $responseData['creator'] = [
+                        'id' => $user->creator->id,
+                        'name' => $user->creator->full_name,
+                        'role' => $user->creator->role,
+                    ];
+                }
+            } catch (\Exception $e) {
+                Log::warning('Error loading creator data: ' . $e->getMessage());
+            }
 
-        return response()->json([
-            'success' => true,
-            'data' => $responseData
-        ], 200);
+            // Add provider profile data if user is service provider - with error handling
+            try {
+                if ($user->role === 'service_provider' && $user->providerProfile) {
+                    $profile = $user->providerProfile;
+                    $responseData['provider_profile'] = [
+                        'business_name' => $profile->business_name,
+                        'years_of_experience' => $profile->years_of_experience,
+                        'service_area_radius' => $profile->service_area_radius,
+                        'bio' => $profile->bio,
+                        'verification_status' => $profile->verification_status,
+                        'average_rating' => $profile->average_rating,
+                        'total_reviews' => $profile->total_reviews,
+                        'total_earnings' => $profile->total_earnings,
+                        'business_license_url' => $profile->business_license_url,
+                        'certification_urls' => $profile->certification_urls,
+                        'portfolio_image_urls' => $profile->portfolio_image_urls,
+                        'is_available' => $profile->is_available,
+                        'verified_at' => $profile->verified_at?->format('Y-m-d H:i:s'),
+                    ];
+                }
+            } catch (\Exception $e) {
+                Log::warning('Error loading provider profile data: ' . $e->getMessage());
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => $responseData
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('User endpoint error: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to load user data',
+                'error' => app()->environment('local') ? $e->getMessage() : 'Internal server error'
+            ], 500);
+        }
     }
 }

@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\User;
 use App\Models\ProviderProfile;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class ProviderProfileService
 {
@@ -92,16 +93,48 @@ class ProviderProfileService
     /**
      * Create provider profile
      */
-    protected function createProviderProfile(User $user): ProviderProfile
+    public function createProviderProfile(User $user, array $userData = []): ProviderProfile
     {
-        return ProviderProfile::create([
+        // Extract provider-specific data from userData
+        $providerData = [
             'user_id' => $user->id,
-            'bio' => '',
-            'years_of_experience' => 0,
-            'service_area_radius' => 10,
+            'bio' => $userData['bio'] ?? '',
+            'years_of_experience' => $userData['years_of_experience'] ?? 0,
+            'service_area_radius' => $userData['service_area_radius'] ?? 10,
+            'business_name' => $userData['business_name'] ?? null,
             'is_available' => true,
             'verification_status' => 'pending',
-        ]);
+        ];
+
+        // Handle file uploads if present
+        if (!empty($userData['business_license'])) {
+            // Store business license file
+            $filename = 'business_license_' . Str::uuid() . '.' . $userData['business_license']->getClientOriginalExtension();
+            $path = $userData['business_license']->storeAs('business_licenses', $filename, 'public');
+            $providerData['business_license'] = $path;
+        }
+
+        if (!empty($userData['certifications'])) {
+            $certificationPaths = [];
+            foreach ($userData['certifications'] as $cert) {
+                $filename = 'cert_' . Str::uuid() . '.' . $cert->getClientOriginalExtension();
+                $path = $cert->storeAs('certifications', $filename, 'public');
+                $certificationPaths[] = $path;
+            }
+            $providerData['certifications'] = $certificationPaths;
+        }
+
+        if (!empty($userData['portfolio_images'])) {
+            $portfolioPaths = [];
+            foreach ($userData['portfolio_images'] as $image) {
+                $filename = 'portfolio_' . Str::uuid() . '.' . $image->getClientOriginalExtension();
+                $path = $image->storeAs('portfolio_images', $filename, 'public');
+                $portfolioPaths[] = $path;
+            }
+            $providerData['portfolio_images'] = $portfolioPaths;
+        }
+
+        return ProviderProfile::create($providerData);
     }
 
     /**

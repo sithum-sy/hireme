@@ -25,36 +25,100 @@ export const AuthProvider = ({ children }) => {
         }
     }, [token]);
 
+    const refreshToken = async () => {
+        try {
+            const response = await axios.post("/api/refresh-token");
+            if (response.data.success) {
+                const { token: newToken } = response.data.data;
+                setToken(newToken);
+                localStorage.setItem("auth_token", newToken);
+                return true;
+            }
+        } catch (error) {
+            console.error("Token refresh failed:", error);
+            return false;
+        }
+    };
+
     // Check authentication status on app load
     useEffect(() => {
         const checkAuthStatus = async () => {
             const storedToken = localStorage.getItem("auth_token");
 
             if (storedToken) {
+                // Validate token format before making API call
+                if (!storedToken.includes("|")) {
+                    // Invalid token format, clear it
+                    console.warn("Invalid token format, clearing");
+                    localStorage.removeItem("auth_token");
+                    setUser(null);
+                    setToken(null);
+                    setLoading(false);
+                    return;
+                }
+
                 setToken(storedToken);
                 try {
                     const response = await axios.get("/api/user");
                     if (response.data.success) {
                         setUser(response.data.data.user);
                     } else {
-                        // Token is invalid, clear it
+                        // Token is invalid, clear everything
+                        console.warn("Token is invalid, clearing auth data");
                         localStorage.removeItem("auth_token");
                         setToken(null);
+                        setUser(null);
                     }
                 } catch (error) {
                     console.error("Auth check failed:", error);
-                    localStorage.removeItem("auth_token");
-                    setToken(null);
+
+                    // Only clear token for specific errors, not network errors
+                    if (
+                        error.response &&
+                        (error.response.status === 401 ||
+                            error.response.status === 403 ||
+                            error.response.status === 500)
+                    ) {
+                        // Authentication error or server error - token is likely invalid
+                        console.warn(
+                            "Authentication failed, clearing auth data"
+                        );
+                        localStorage.removeItem("auth_token");
+                        setToken(null);
+                        setUser(null);
+                    } else {
+                        // Network error - keep token but clear user
+                        console.warn(
+                            "Network error during auth check, keeping token"
+                        );
+                        setUser(null);
+                    }
                 }
+            } else {
+                // No token, ensure user state is cleared
+                setUser(null);
+                setToken(null);
             }
             setLoading(false);
         };
 
         checkAuthStatus();
-    }, []); // Empty dependency array - only run on mount
+    }, []);
+
+    const clearAuthData = () => {
+        localStorage.removeItem("auth_token");
+        localStorage.removeItem("client_preferred_radius");
+        localStorage.removeItem("profile_image_2");
+        // Remove any other auth-related localStorage items
+        setUser(null);
+        setToken(null);
+        delete axios.defaults.headers.common["Authorization"];
+    };
 
     const register = async (userData) => {
         try {
+            clearAuthData();
+
             // Debug logging
             console.log("Registration data type:", userData.constructor.name);
             if (userData instanceof FormData) {
