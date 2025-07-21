@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect } from "react";
+import React, { createContext, useContext, useReducer, useEffect, useMemo, useCallback } from "react";
 import { profileAPI, providerProfileAPI } from "../services/api";
 
 const ProfileContext = createContext();
@@ -52,7 +52,7 @@ export const ProfileProvider = ({ children }) => {
         loadConfig();
     }, []);
 
-    const loadProfile = async () => {
+    const loadProfile = useCallback(async () => {
         try {
             dispatch({ type: "SET_LOADING", payload: true });
             const response = await profileAPI.getProfile();
@@ -68,9 +68,9 @@ export const ProfileProvider = ({ children }) => {
         } finally {
             dispatch({ type: "SET_LOADING", payload: false });
         }
-    };
+    }, []);
 
-    const loadConfig = async () => {
+    const loadConfig = useCallback(async () => {
         try {
             const response = await profileAPI.getConfig();
 
@@ -80,7 +80,7 @@ export const ProfileProvider = ({ children }) => {
         } catch (error) {
             console.error("Config load error:", error);
         }
-    };
+    }, []);
 
     const updateProfile = async (data) => {
         try {
@@ -353,7 +353,8 @@ export const ProfileProvider = ({ children }) => {
         );
     };
 
-    const value = {
+    // Memoize the context value to prevent unnecessary re-renders
+    const value = useMemo(() => ({
         // State
         profile: state.profile,
         config: state.config,
@@ -380,7 +381,29 @@ export const ProfileProvider = ({ children }) => {
         canEdit,
         canView,
         isReadOnly,
-    };
+    }), [
+        state.profile,
+        state.config,
+        state.loading,
+        state.saving,
+        state.error,
+        state.fieldErrors,
+        loadProfile,
+        updateProfile,
+        updateProviderProfile,
+        uploadImage,
+        deleteImage,
+        changePassword,
+        toggleAvailability,
+        uploadDocuments,
+        deleteProviderDocument,
+        validateField,
+        clearFieldError,
+        clearErrors,
+        canEdit,
+        canView,
+        isReadOnly,
+    ]);
 
     return (
         <ProfileContext.Provider value={value}>

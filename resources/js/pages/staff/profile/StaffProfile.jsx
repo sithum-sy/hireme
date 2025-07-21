@@ -3,14 +3,15 @@ import StaffLayout from "../../../components/layouts/StaffLayout";
 import ProfileLayout from "../../../components/profile/shared/ProfileLayout";
 import ProfileTabs from "../../../components/profile/shared/ProfileTabs";
 import ProfileSectionContainer from "../../../components/profile/shared/ProfileSectionContainer";
-import { useProfile } from "../../../context/ProfileContext";
+import { ProfileProvider, useProfile } from "../../../context/ProfileContext";
 import { useAuth } from "../../../context/AuthContext";
 import {
     PROFILE_SECTIONS,
     getRoleConfig,
 } from "../../../../config/profileConfig";
 
-const StaffProfile = () => {
+// Inner component that uses ProfileProvider
+const StaffProfileContent = () => {
     const { user } = useAuth();
     const { profile, loading } = useProfile();
     const [activeTab, setActiveTab] = useState(PROFILE_SECTIONS.PERSONAL);
@@ -33,50 +34,46 @@ const StaffProfile = () => {
 
     if (loading) {
         return (
-            <StaffLayout>
-                <div className="profile-loading">
-                    <div className="loading-content">
-                        <div className="loading-spinner">
-                            <div
-                                className="spinner-border text-primary"
-                                role="status"
-                            >
-                                <span className="visually-hidden">
-                                    Loading...
-                                </span>
-                            </div>
+            <div className="profile-loading">
+                <div className="loading-content">
+                    <div className="loading-spinner">
+                        <div
+                            className="spinner-border text-primary"
+                            role="status"
+                        >
+                            <span className="visually-hidden">
+                                Loading...
+                            </span>
                         </div>
-                        <h4>Loading Staff Profile...</h4>
-                        <p>
-                            Please wait while we fetch your staff information.
-                        </p>
                     </div>
+                    <h4>Loading Staff Profile...</h4>
+                    <p>
+                        Please wait while we fetch your staff information.
+                    </p>
                 </div>
-            </StaffLayout>
+            </div>
         );
     }
 
     if (!profile) {
         return (
-            <StaffLayout>
-                <div className="profile-error">
-                    <div className="error-content">
-                        <i className="fas fa-exclamation-triangle fa-3x text-warning"></i>
-                        <h4>Profile Not Found</h4>
-                        <p>
-                            We couldn't load your staff profile information.
-                            Please try refreshing the page.
-                        </p>
-                        <button
-                            className="btn btn-primary"
-                            onClick={() => window.location.reload()}
-                        >
-                            <i className="fas fa-refresh"></i>
-                            Refresh Page
-                        </button>
-                    </div>
+            <div className="profile-error">
+                <div className="error-content">
+                    <i className="fas fa-exclamation-triangle fa-3x text-warning"></i>
+                    <h4>Profile Not Found</h4>
+                    <p>
+                        We couldn't load your staff profile information.
+                        Please try refreshing the page.
+                    </p>
+                    <button
+                        className="btn btn-primary"
+                        onClick={() => window.location.reload()}
+                    >
+                        <i className="fas fa-refresh"></i>
+                        Refresh Page
+                    </button>
                 </div>
-            </StaffLayout>
+            </div>
         );
     }
 
@@ -103,81 +100,89 @@ const StaffProfile = () => {
     };
 
     return (
-        <StaffLayout>
-            <ProfileLayout
-                title="Staff Profile"
-                subtitle="Manage your staff account information and permissions"
-            >
-                {/* Staff-specific banner */}
-                <div className="staff-banner">
-                    <div className="banner-content">
-                        <div className="banner-icon">
-                            <i className="fas fa-user-tie"></i>
-                        </div>
-                        <div className="banner-info">
-                            <h5>Staff Account</h5>
-                            <p>
-                                You have staff-level access to manage content
-                                and support customers
-                            </p>
-                        </div>
-                        <div className="banner-badge">
-                            <span className="staff-badge">
-                                <i className="fas fa-shield-check"></i>
-                                Staff Member
-                            </span>
-                        </div>
+        <ProfileLayout
+            title="Staff Profile"
+            subtitle="Manage your staff account information and permissions"
+        >
+            {/* Staff-specific banner */}
+            <div className="staff-banner">
+                <div className="banner-content">
+                    <div className="banner-icon">
+                        <i className="fas fa-user-tie"></i>
+                    </div>
+                    <div className="banner-info">
+                        <h5>Staff Account</h5>
+                        <p>
+                            You have staff-level access to manage content
+                            and support customers
+                        </p>
+                    </div>
+                    <div className="banner-badge">
+                        <span className="staff-badge">
+                            <i className="fas fa-shield-check"></i>
+                            Staff Member
+                        </span>
                     </div>
                 </div>
+            </div>
 
-                {/* Success Message */}
-                {successMessage && (
-                    <div className="message-banner success-banner">
-                        <div className="message-content">
-                            <i className="fas fa-check-circle"></i>
-                            <span>{successMessage}</span>
-                        </div>
-                        <button
-                            className="message-close"
-                            onClick={() => setSuccessMessage("")}
-                            aria-label="Close message"
-                        >
-                            <i className="fas fa-times"></i>
-                        </button>
+            {/* Success Message */}
+            {successMessage && (
+                <div className="message-banner success-banner">
+                    <div className="message-content">
+                        <i className="fas fa-check-circle"></i>
+                        <span>{successMessage}</span>
                     </div>
-                )}
+                    <button
+                        className="message-close"
+                        onClick={() => setSuccessMessage("")}
+                        aria-label="Close message"
+                    >
+                        <i className="fas fa-times"></i>
+                    </button>
+                </div>
+            )}
 
-                {/* Error Message */}
-                {errorMessage && (
-                    <div className="message-banner error-banner">
-                        <div className="message-content">
-                            <i className="fas fa-exclamation-circle"></i>
-                            <span>{errorMessage}</span>
-                        </div>
-                        <button
-                            className="message-close"
-                            onClick={() => setErrorMessage("")}
-                            aria-label="Close message"
-                        >
-                            <i className="fas fa-times"></i>
-                        </button>
+            {/* Error Message */}
+            {errorMessage && (
+                <div className="message-banner error-banner">
+                    <div className="message-content">
+                        <i className="fas fa-exclamation-circle"></i>
+                        <span>{errorMessage}</span>
                     </div>
-                )}
+                    <button
+                        className="message-close"
+                        onClick={() => setErrorMessage("")}
+                        aria-label="Close message"
+                    >
+                        <i className="fas fa-times"></i>
+                    </button>
+                </div>
+            )}
 
-                {/* Profile Navigation */}
-                <ProfileTabs
-                    activeTab={activeTab}
-                    onTabChange={setActiveTab}
-                    availableSections={availableSections}
-                />
+            {/* Profile Navigation */}
+            <ProfileTabs
+                activeTab={activeTab}
+                onTabChange={setActiveTab}
+                availableSections={availableSections}
+            />
 
-                {/* Profile Content */}
-                <ProfileSectionContainer
-                    section={activeTab}
-                    onSuccess={handleSuccess}
-                    onError={handleError}
-                />
-            </ProfileLayout>
+            {/* Profile Content */}
+            <ProfileSectionContainer
+                section={activeTab}
+                onSuccess={handleSuccess}
+                onError={handleError}
+            />
+        </ProfileLayout>
+    );
+};
+
+const StaffProfile = () => {
+    return (
+        <StaffLayout>
+            <ProfileProvider>
+                <StaffProfileContent />
+            </ProfileProvider>
 
             <style jsx>{`
                 .profile-loading,

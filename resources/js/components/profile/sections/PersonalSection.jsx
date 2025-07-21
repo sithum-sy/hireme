@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import { useProfile } from "../../../context/ProfileContext";
 import { useAuth } from "../../../context/AuthContext";
 import ProfileSection from "../shared/ProfileSection";
@@ -6,7 +6,7 @@ import ProfileImageUpload from "../shared/ProfileImageUpload";
 import BasicInfoForm from "../forms/BasicInfoForm";
 import Button from "../../ui/Button";
 
-const PersonalSection = ({ onSuccess, onError }) => {
+const PersonalSection = React.memo(({ onSuccess, onError }) => {
     const { user } = useAuth();
     const { profile, config } = useProfile();
     const [editMode, setEditMode] = useState(false);
@@ -15,26 +15,38 @@ const PersonalSection = ({ onSuccess, onError }) => {
     const userData = profile?.user;
     const canEditProfile = config?.permissions?.canEdit?.length > 0;
 
-    const handleFormSuccess = (result) => {
-        setEditMode(false);
-        if (onSuccess) {
-            onSuccess(
-                result.message || "Personal information updated successfully!"
-            );
-        }
-    };
+    const handleFormSuccess = useCallback(
+        (result) => {
+            setEditMode(false);
+            if (onSuccess) {
+                onSuccess(
+                    result.message ||
+                        "Personal information updated successfully!"
+                );
+            }
+        },
+        [onSuccess]
+    );
 
-    const handleFormError = (error) => {
-        if (onError) {
-            onError(error.message || "Failed to update personal information");
-        }
-    };
+    const handleFormError = useCallback(
+        (error) => {
+            if (onError) {
+                onError(
+                    error.message || "Failed to update personal information"
+                );
+            }
+        },
+        [onError]
+    );
 
-    const handleImageChange = (newImageUrl) => {
-        if (onSuccess) {
-            onSuccess("Profile picture updated successfully!");
-        }
-    };
+    const handleImageChange = useCallback(
+        (newImageUrl) => {
+            if (onSuccess) {
+                onSuccess("Profile picture updated successfully!");
+            }
+        },
+        [onSuccess]
+    );
 
     const renderViewMode = () => (
         <div className="personal-view-mode">
@@ -463,6 +475,8 @@ const PersonalSection = ({ onSuccess, onError }) => {
             `}</style>
         </ProfileSection>
     );
-};
+});
+
+PersonalSection.displayName = "PersonalSection";
 
 export default PersonalSection;

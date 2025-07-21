@@ -3,14 +3,15 @@ import AdminLayout from "../../../components/layouts/AdminLayout";
 import ProfileLayout from "../../../components/profile/shared/ProfileLayout";
 import ProfileTabs from "../../../components/profile/shared/ProfileTabs";
 import ProfileSectionContainer from "../../../components/profile/shared/ProfileSectionContainer";
-import { useProfile } from "../../../context/ProfileContext";
+import { ProfileProvider, useProfile } from "../../../context/ProfileContext";
 import { useAuth } from "../../../context/AuthContext";
 import {
     PROFILE_SECTIONS,
     getRoleConfig,
 } from "../../../../config/profileConfig";
 
-const AdminProfile = () => {
+// Inner component that uses ProfileProvider
+const AdminProfileContent = () => {
     const { user } = useAuth();
     const { profile, loading } = useProfile();
     const [activeTab, setActiveTab] = useState(PROFILE_SECTIONS.PERSONAL);
@@ -33,51 +34,47 @@ const AdminProfile = () => {
 
     if (loading) {
         return (
-            <AdminLayout>
-                <div className="profile-loading">
-                    <div className="loading-content">
-                        <div className="loading-spinner">
-                            <div
-                                className="spinner-border text-primary"
-                                role="status"
-                            >
-                                <span className="visually-hidden">
-                                    Loading...
-                                </span>
-                            </div>
+            <div className="profile-loading">
+                <div className="loading-content">
+                    <div className="loading-spinner">
+                        <div
+                            className="spinner-border text-primary"
+                            role="status"
+                        >
+                            <span className="visually-hidden">
+                                Loading...
+                            </span>
                         </div>
-                        <h4>Loading Admin Profile...</h4>
-                        <p>
-                            Please wait while we fetch your administrator
-                            information.
-                        </p>
                     </div>
+                    <h4>Loading Admin Profile...</h4>
+                    <p>
+                        Please wait while we fetch your administrator
+                        information.
+                    </p>
                 </div>
-            </AdminLayout>
+            </div>
         );
     }
 
     if (!profile) {
         return (
-            <AdminLayout>
-                <div className="profile-error">
-                    <div className="error-content">
-                        <i className="fas fa-exclamation-triangle fa-3x text-warning"></i>
-                        <h4>Profile Not Found</h4>
-                        <p>
-                            We couldn't load your admin profile information.
-                            Please try refreshing the page.
-                        </p>
-                        <button
-                            className="btn btn-primary"
-                            onClick={() => window.location.reload()}
-                        >
-                            <i className="fas fa-refresh"></i>
-                            Refresh Page
-                        </button>
-                    </div>
+            <div className="profile-error">
+                <div className="error-content">
+                    <i className="fas fa-exclamation-triangle fa-3x text-warning"></i>
+                    <h4>Profile Not Found</h4>
+                    <p>
+                        We couldn't load your admin profile information.
+                        Please try refreshing the page.
+                    </p>
+                    <button
+                        className="btn btn-primary"
+                        onClick={() => window.location.reload()}
+                    >
+                        <i className="fas fa-refresh"></i>
+                        Refresh Page
+                    </button>
                 </div>
-            </AdminLayout>
+            </div>
         );
     }
 
@@ -104,135 +101,143 @@ const AdminProfile = () => {
     };
 
     return (
+        <ProfileLayout
+            title="Administrator Profile"
+            subtitle="Manage your administrator account and system permissions"
+        >
+            {/* Admin-specific banner */}
+            <div className="admin-banner">
+                <div className="banner-content">
+                    <div className="banner-icon">
+                        <i className="fas fa-crown"></i>
+                    </div>
+                    <div className="banner-info">
+                        <h5>System Administrator</h5>
+                        <p>
+                            You have full administrative access to the
+                            HireMe platform
+                        </p>
+                    </div>
+                    <div className="banner-stats">
+                        <div className="stat-item">
+                            <span className="stat-value">99.9%</span>
+                            <span className="stat-label">Uptime</span>
+                        </div>
+                        <div className="stat-divider"></div>
+                        <div className="stat-item">
+                            <span className="stat-value">24/7</span>
+                            <span className="stat-label">Access</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* System Status */}
+            <div className="system-status">
+                <div className="status-header">
+                    <h5>System Status</h5>
+                    <span className="status-indicator online">
+                        <i className="fas fa-circle"></i>
+                        All Systems Operational
+                    </span>
+                </div>
+                <div className="status-grid">
+                    <div className="status-item">
+                        <div className="status-icon">
+                            <i className="fas fa-server text-success"></i>
+                        </div>
+                        <div className="status-content">
+                            <h6>Database</h6>
+                            <p>Healthy</p>
+                        </div>
+                    </div>
+                    <div className="status-item">
+                        <div className="status-icon">
+                            <i className="fas fa-cloud text-success"></i>
+                        </div>
+                        <div className="status-content">
+                            <h6>Cloud Services</h6>
+                            <p>Operational</p>
+                        </div>
+                    </div>
+                    <div className="status-item">
+                        <div className="status-icon">
+                            <i className="fas fa-shield-alt text-success"></i>
+                        </div>
+                        <div className="status-content">
+                            <h6>Security</h6>
+                            <p>Protected</p>
+                        </div>
+                    </div>
+                    <div className="status-item">
+                        <div className="status-icon">
+                            <i className="fas fa-chart-line text-success"></i>
+                        </div>
+                        <div className="status-content">
+                            <h6>Performance</h6>
+                            <p>Optimal</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Success Message */}
+            {successMessage && (
+                <div className="message-banner success-banner">
+                    <div className="message-content">
+                        <i className="fas fa-check-circle"></i>
+                        <span>{successMessage}</span>
+                    </div>
+                    <button
+                        className="message-close"
+                        onClick={() => setSuccessMessage("")}
+                        aria-label="Close message"
+                    >
+                        <i className="fas fa-times"></i>
+                    </button>
+                </div>
+            )}
+
+            {/* Error Message */}
+            {errorMessage && (
+                <div className="message-banner error-banner">
+                    <div className="message-content">
+                        <i className="fas fa-exclamation-circle"></i>
+                        <span>{errorMessage}</span>
+                    </div>
+                    <button
+                        className="message-close"
+                        onClick={() => setErrorMessage("")}
+                        aria-label="Close message"
+                    >
+                        <i className="fas fa-times"></i>
+                    </button>
+                </div>
+            )}
+
+            {/* Profile Navigation */}
+            <ProfileTabs
+                activeTab={activeTab}
+                onTabChange={setActiveTab}
+                availableSections={availableSections}
+            />
+
+            {/* Profile Content */}
+            <ProfileSectionContainer
+                section={activeTab}
+                onSuccess={handleSuccess}
+                onError={handleError}
+            />
+        </ProfileLayout>
+    );
+};
+
+const AdminProfile = () => {
+    return (
         <AdminLayout>
-            <ProfileLayout
-                title="Administrator Profile"
-                subtitle="Manage your administrator account and system permissions"
-            >
-                {/* Admin-specific banner */}
-                <div className="admin-banner">
-                    <div className="banner-content">
-                        <div className="banner-icon">
-                            <i className="fas fa-crown"></i>
-                        </div>
-                        <div className="banner-info">
-                            <h5>System Administrator</h5>
-                            <p>
-                                You have full administrative access to the
-                                HireMe platform
-                            </p>
-                        </div>
-                        <div className="banner-stats">
-                            <div className="stat-item">
-                                <span className="stat-value">99.9%</span>
-                                <span className="stat-label">Uptime</span>
-                            </div>
-                            <div className="stat-divider"></div>
-                            <div className="stat-item">
-                                <span className="stat-value">24/7</span>
-                                <span className="stat-label">Access</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* System Status */}
-                <div className="system-status">
-                    <div className="status-header">
-                        <h5>System Status</h5>
-                        <span className="status-indicator online">
-                            <i className="fas fa-circle"></i>
-                            All Systems Operational
-                        </span>
-                    </div>
-                    <div className="status-grid">
-                        <div className="status-item">
-                            <div className="status-icon">
-                                <i className="fas fa-server text-success"></i>
-                            </div>
-                            <div className="status-content">
-                                <h6>Database</h6>
-                                <p>Healthy</p>
-                            </div>
-                        </div>
-                        <div className="status-item">
-                            <div className="status-icon">
-                                <i className="fas fa-cloud text-success"></i>
-                            </div>
-                            <div className="status-content">
-                                <h6>Cloud Services</h6>
-                                <p>Operational</p>
-                            </div>
-                        </div>
-                        <div className="status-item">
-                            <div className="status-icon">
-                                <i className="fas fa-shield-alt text-success"></i>
-                            </div>
-                            <div className="status-content">
-                                <h6>Security</h6>
-                                <p>Protected</p>
-                            </div>
-                        </div>
-                        <div className="status-item">
-                            <div className="status-icon">
-                                <i className="fas fa-chart-line text-success"></i>
-                            </div>
-                            <div className="status-content">
-                                <h6>Performance</h6>
-                                <p>Optimal</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Success Message */}
-                {successMessage && (
-                    <div className="message-banner success-banner">
-                        <div className="message-content">
-                            <i className="fas fa-check-circle"></i>
-                            <span>{successMessage}</span>
-                        </div>
-                        <button
-                            className="message-close"
-                            onClick={() => setSuccessMessage("")}
-                            aria-label="Close message"
-                        >
-                            <i className="fas fa-times"></i>
-                        </button>
-                    </div>
-                )}
-
-                {/* Error Message */}
-                {errorMessage && (
-                    <div className="message-banner error-banner">
-                        <div className="message-content">
-                            <i className="fas fa-exclamation-circle"></i>
-                            <span>{errorMessage}</span>
-                        </div>
-                        <button
-                            className="message-close"
-                            onClick={() => setErrorMessage("")}
-                            aria-label="Close message"
-                        >
-                            <i className="fas fa-times"></i>
-                        </button>
-                    </div>
-                )}
-
-                {/* Profile Navigation */}
-                <ProfileTabs
-                    activeTab={activeTab}
-                    onTabChange={setActiveTab}
-                    availableSections={availableSections}
-                />
-
-                {/* Profile Content */}
-                <ProfileSectionContainer
-                    section={activeTab}
-                    onSuccess={handleSuccess}
-                    onError={handleError}
-                />
-            </ProfileLayout>
+            <ProfileProvider>
+                <AdminProfileContent />
+            </ProfileProvider>
 
             <style jsx>{`
                 .profile-loading,

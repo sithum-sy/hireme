@@ -38,7 +38,19 @@ export const profileAPI = {
     getProfile: () => api.get("/profile"),
 
     // Update profile
-    updateProfile: (data) => api.put("/profile", data),
+    updateProfile: async (data) => {
+        try {
+            console.log("Updating profile with data:", data);
+            const response = await api.put("/profile", data);
+            return response;
+        } catch (error) {
+            console.error(
+                "Profile update failed:",
+                error.response?.data || error.message
+            );
+            throw error;
+        }
+    },
 
     // Get profile configuration
     getConfig: () => api.get("/profile/config"),
