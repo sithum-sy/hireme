@@ -205,7 +205,7 @@ const PublicLayout = ({
                                     ))}
 
                                     {/* Services Dropdown */}
-                                    <div className="nav-dropdown">
+                                    {/* <div className="nav-dropdown">
                                         <button
                                             className="nav-link dropdown-trigger"
                                             onClick={() =>
@@ -283,7 +283,7 @@ const PublicLayout = ({
                                                 </div>
                                             </div>
                                         )}
-                                    </div>
+                                    </div> */}
                                 </div>
 
                                 {/* Auth Section */}
@@ -367,7 +367,7 @@ const PublicLayout = ({
                     >
                         <div className="mobile-content">
                             <div className="mobile-section">
-                                <h6>Navigation</h6>
+                                <h6>HireMe</h6>
                                 {publicNavItems.map((item, index) => (
                                     <Link
                                         key={index}
@@ -383,7 +383,7 @@ const PublicLayout = ({
                                 ))}
                             </div>
 
-                            <div className="mobile-section">
+                            {/* <div className="mobile-section">
                                 <h6>Popular Services</h6>
                                 <div className="mobile-services">
                                     {serviceCategories
@@ -410,7 +410,7 @@ const PublicLayout = ({
                                             </Link>
                                         ))}
                                 </div>
-                            </div>
+                            </div> */}
 
                             <div className="mobile-section">
                                 {isAuthenticated ? (

@@ -32,7 +32,7 @@ const HeroSection = () => {
 
                         <h1 className="hero-title">
                             Find{" "}
-                            <span className="text-gradient">
+                            <span className="hero-title">
                                 Skilled Professionals
                             </span>
                             <br />

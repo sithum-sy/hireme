@@ -145,7 +145,9 @@
 }
 
 .footer-logo .logo-img {
-    height: 40px;
+    background: var(--bg-light);
+    border-radius: 10px;
+    height: 100px;
     width: auto;
     object-fit: contain;
     /* filter: brightness(1.2) contrast(1.1); */

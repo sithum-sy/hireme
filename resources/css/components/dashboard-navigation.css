@@ -74,7 +74,9 @@
 }
 
 .brand-logo .logo-img {
-    height: 40px;
+    background: var(--bg-light);
+    border-radius: 10px;
+    height: 60px;
     width: auto;
     object-fit: contain;
     transition: var(--transition);
