@@ -197,12 +197,43 @@ const SimpleLocationSelector = ({ value, onChange, error }) => {
 
     const getCurrentLocation = () => {
         if (navigator.geolocation) {
+            // ENHANCED: GPS options and error handling
+            const gpsOptions = {
+                enableHighAccuracy: true,
+                timeout: 15000,
+                maximumAge: 30000,
+            };
+
+            const handleGpsError = (error) => {
+                let errorMessage = "Unable to get your location. ";
+
+                switch (error.code) {
+                    case error.PERMISSION_DENIED:
+                        errorMessage +=
+                            "Please allow location access and try again.";
+                        break;
+                    case error.POSITION_UNAVAILABLE:
+                        errorMessage += "Location services are unavailable.";
+                        break;
+                    case error.TIMEOUT:
+                        errorMessage += "Location request timed out.";
+                        break;
+                    default:
+                        errorMessage += "Please select your location manually.";
+                        break;
+                }
+
+                alert(errorMessage);
+            };
+
             navigator.geolocation.getCurrentPosition(
                 (position) => {
-                    const { latitude, longitude } = position.coords;
-                    console.log("📍 Got current location:", {
-                        latitude,
-                        longitude,
+                    const { latitude, longitude, accuracy, altitude } =
+                        position.coords;
+                    console.log("📍 Enhanced GPS location:", {
+                        coordinates: `${latitude}, ${longitude}`,
+                        accuracy: `±${accuracy} meters`,
+                        altitude: altitude ? `${altitude}m` : "unavailable",
                     });
 
                     const closestCity = findClosestCity(latitude, longitude);
@@ -216,6 +247,13 @@ const SimpleLocationSelector = ({ value, onChange, error }) => {
                         province: closestCity.province,
                         radius: 15,
                         country: "Sri Lanka",
+
+                        // ENHANCED: Add GPS accuracy data
+                        gps_accuracy: accuracy,
+                        gps_altitude: altitude,
+                        gps_timestamp: new Date().toISOString(),
+                        accuracy_level:
+                            accuracy <= 10 ? "gps_precise" : "gps_standard",
                     };
 
                     setSelectedLocation(locationData);
@@ -226,12 +264,8 @@ const SimpleLocationSelector = ({ value, onChange, error }) => {
                         onChange(locationData);
                     }
                 },
-                (error) => {
-                    console.error("Geolocation error:", error);
-                    alert(
-                        "Unable to get your location. Please select manually."
-                    );
-                }
+                handleGpsError,
+                gpsOptions
             );
         } else {
             alert("Geolocation is not supported by this browser.");

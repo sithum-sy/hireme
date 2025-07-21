@@ -99,6 +99,7 @@ const LocationSearch = ({ city, onLocationSelect }) => {
 
     return (
         <div className="location-search">
+            {/* Search Input */}
             <div className="input-group mb-3">
                 <input
                     type="text"
@@ -112,54 +113,181 @@ const LocationSearch = ({ city, onLocationSelect }) => {
                 </span>
             </div>
 
-            {/* Quick suggestions */}
-            {query.length <= 1 && results.length > 0 && (
-                <div className="mb-3">
-                    <small className="text-muted fw-semibold">
-                        Popular areas in {city}:
-                    </small>
-                    <div className="d-flex flex-wrap gap-1 mt-2">
-                        {results.slice(0, 6).map((result, index) => (
-                            <button
-                                key={index}
-                                className="btn btn-outline-secondary btn-sm"
-                                onClick={() => handleResultSelect(result)}
-                            >
-                                {result.name}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-            )}
-
-            {/* Search results */}
+            {/* ENHANCED: Search results appear immediately below search bar */}
             {query.length > 1 && (
-                <div className="search-results">
+                <div className="search-results mb-3">
+                    <div className="search-results-header mb-2">
+                        <small className="text-muted fw-semibold">
+                            <i className="fas fa-search me-1"></i>
+                            Search Results for "{query}" in {city}:
+                        </small>
+                    </div>
+                    
                     {results.length > 0 ? (
                         <div className="list-group">
                             {results.map((result, index) => (
                                 <button
                                     key={index}
-                                    className="list-group-item list-group-item-action"
+                                    className="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
                                     onClick={() => handleResultSelect(result)}
                                 >
-                                    <div className="fw-semibold">
-                                        {result.name}
+                                    <div>
+                                        <div className="fw-semibold">
+                                            <i className="fas fa-map-marker-alt me-2 text-primary"></i>
+                                            {result.name}
+                                        </div>
+                                        <small className="text-muted">
+                                            {result.address}
+                                        </small>
                                     </div>
-                                    <small className="text-muted">
-                                        {result.address}
-                                    </small>
+                                    <i className="fas fa-chevron-right text-muted"></i>
                                 </button>
                             ))}
                         </div>
                     ) : (
-                        <div className="text-center py-3 text-muted">
-                            <i className="fas fa-search me-2"></i>
-                            No areas found for "{query}" in {city}
+                        <div className="no-results text-center py-3 text-muted">
+                            <i className="fas fa-search-minus fa-2x mb-2"></i>
+                            <div>No areas found for "{query}" in {city}</div>
+                            <small>Try a different search term</small>
                         </div>
                     )}
                 </div>
             )}
+
+            {/* ENHANCED: Quick suggestions (shown when not searching) */}
+            {query.length <= 1 && results.length > 0 && (
+                <div className="quick-suggestions mb-3">
+                    <div className="suggestions-header mb-2">
+                        <small className="text-muted fw-semibold">
+                            <i className="fas fa-star me-1"></i>
+                            Popular areas in {city}:
+                        </small>
+                    </div>
+                    <div className="suggestions-grid">
+                        {results.slice(0, 8).map((result, index) => (
+                            <button
+                                key={index}
+                                className="suggestion-btn"
+                                onClick={() => handleResultSelect(result)}
+                            >
+                                <i className="fas fa-location-dot me-1"></i>
+                                {result.name}
+                            </button>
+                        ))}
+                    </div>
+                    {results.length > 8 && (
+                        <div className="text-center mt-2">
+                            <small className="text-muted">
+                                Type to search for more areas...
+                            </small>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* Enhanced Styling */}
+            <style jsx>{`
+                .search-results-header {
+                    padding: 0.5rem 0;
+                    border-bottom: 1px solid #e9ecef;
+                }
+                
+                .list-group-item {
+                    border: 1px solid #e9ecef;
+                    border-radius: 0.375rem !important;
+                    margin-bottom: 0.25rem;
+                    transition: all 0.2s ease;
+                }
+                
+                .list-group-item:hover {
+                    background-color: #f8f9fa;
+                    transform: translateY(-1px);
+                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                }
+                
+                .no-results {
+                    background-color: #f8f9fa;
+                    border: 1px solid #e9ecef;
+                    border-radius: 0.375rem;
+                    padding: 1rem;
+                }
+                
+                .suggestions-header {
+                    padding: 0.5rem 0;
+                }
+                
+                .suggestions-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+                    gap: 0.5rem;
+                }
+                
+                .suggestion-btn {
+                    background: #f8f9fa;
+                    border: 1px solid #e9ecef;
+                    border-radius: 0.375rem;
+                    padding: 0.5rem 0.75rem;
+                    text-align: left;
+                    font-size: 0.875rem;
+                    transition: all 0.2s ease;
+                    cursor: pointer;
+                }
+                
+                .suggestion-btn:hover {
+                    background: #e9ecef;
+                    transform: translateY(-1px);
+                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                }
+                
+                .quick-suggestions {
+                    animation: slideInUp 0.3s ease-out;
+                }
+                
+                .search-results {
+                    animation: slideInDown 0.3s ease-out;
+                    max-height: 400px;
+                    overflow-y: auto;
+                }
+                
+                @keyframes slideInUp {
+                    from {
+                        opacity: 0;
+                        transform: translateY(10px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+                
+                @keyframes slideInDown {
+                    from {
+                        opacity: 0;
+                        transform: translateY(-10px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+                
+                /* Mobile responsiveness */
+                @media (max-width: 576px) {
+                    .suggestions-grid {
+                        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+                        gap: 0.375rem;
+                    }
+                    
+                    .suggestion-btn {
+                        font-size: 0.8rem;
+                        padding: 0.4rem 0.6rem;
+                    }
+                    
+                    .search-results {
+                        max-height: 300px;
+                    }
+                }
+            `}</style>
         </div>
     );
 };

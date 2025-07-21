@@ -246,6 +246,70 @@ const ServiceFilters = ({
                         </select>
                     </div>
 
+                    {/* Location Radius Filter */}
+                    {location && location.lat && location.lng && (
+                        <div className="filter-group mb-4">
+                            <label className="form-label fw-semibold mb-2">
+                                Search Radius
+                            </label>
+                            <div className="radius-selector">
+                                <input
+                                    type="range"
+                                    className="form-range"
+                                    min="1"
+                                    max="50"
+                                    step="1"
+                                    value={filters.radius || location.radius || 5}
+                                    onChange={(e) =>
+                                        handleFilterChange(
+                                            "radius",
+                                            parseInt(e.target.value)
+                                        )
+                                    }
+                                    id="radius-range"
+                                />
+                                <div className="d-flex justify-content-between align-items-center mt-2">
+                                    <small className="text-muted">1 km</small>
+                                    <div className="radius-display text-center">
+                                        <span className="badge bg-purple">
+                                            <i className="fas fa-map-marker-alt me-1"></i>
+                                            {filters.radius || location.radius || 5} km
+                                        </span>
+                                    </div>
+                                    <small className="text-muted">50 km</small>
+                                </div>
+                                <div className="text-center mt-2">
+                                    <small className="text-muted">
+                                        Services within {filters.radius || location.radius || 5} km from your location
+                                    </small>
+                                </div>
+                                {/* Quick Radius Options */}
+                                <div className="quick-radius mt-2">
+                                    <div className="d-flex flex-wrap gap-1 justify-content-center">
+                                        {[2, 5, 10, 20].map((radius) => (
+                                            <button
+                                                key={radius}
+                                                className={`btn btn-outline-purple btn-xs ${
+                                                    (filters.radius || location.radius || 5) === radius
+                                                        ? "active"
+                                                        : ""
+                                                }`}
+                                                onClick={() => {
+                                                    handleFilterChange(
+                                                        "radius",
+                                                        radius
+                                                    );
+                                                }}
+                                            >
+                                                {radius} km
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Service Features */}
                     <div className="filter-group mb-4">
                         <label className="form-label fw-semibold mb-2">
@@ -343,6 +407,15 @@ const ServiceFilters = ({
                 }
                 .form-range::-moz-range-thumb {
                     background: #6f42c1;
+                }
+                .btn-outline-purple {
+                    color: #6f42c1;
+                    border-color: #6f42c1;
+                }
+                .btn-outline-purple:hover, .btn-outline-purple.active {
+                    background-color: #6f42c1;
+                    border-color: #6f42c1;
+                    color: white;
                 }
             `}</style>
         </div>

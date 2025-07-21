@@ -8,7 +8,9 @@
         position: fixed !important;
         top: var(--dashboard-header-height);
         left: -280px; /* Hidden by default - matches your JS logic */
-        width: var(--dashboard-sidebar-width) !important; /* Force full width on mobile */
+        width: var(
+            --dashboard-sidebar-width
+        ) !important; /* Force full width on mobile */
         height: calc(100vh - var(--dashboard-header-height));
         z-index: 1030; /* Higher than backdrop */
         transition: left 0.3s ease-in-out !important; /* Smooth slide animation */
@@ -60,11 +62,11 @@
     }
 
     @keyframes fadeInBackdrop {
-        from { 
-            opacity: 0; 
+        from {
+            opacity: 0;
         }
-        to { 
-            opacity: 1; 
+        to {
+            opacity: 1;
         }
     }
 
@@ -154,7 +156,7 @@
 
 /* Debug helper (remove in production) */
 .debug-sidebar-state::before {
-    content: 'Collapsed: ' attr(data-collapsed) ' | Mobile: ' attr(data-mobile);
+    content: "Collapsed: " attr(data-collapsed) " | Mobile: " attr(data-mobile);
     position: fixed;
     top: 70px;
     right: 10px;
@@ -181,5 +183,112 @@
 
     .dashboard-sidebar.collapsed {
         left: -320px !important;
+    }
+}
+/* ENHANCED: Location accuracy indicators */
+.accuracy-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.375rem 0.75rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.accuracy-badge.street_address {
+    background-color: rgba(25, 135, 84, 0.1);
+    color: #198754;
+    border: 1px solid rgba(25, 135, 84, 0.2);
+}
+
+.accuracy-badge.street {
+    background-color: rgba(13, 202, 240, 0.1);
+    color: #0dcaf0;
+    border: 1px solid rgba(13, 202, 240, 0.2);
+}
+
+.accuracy-badge.neighborhood {
+    background-color: rgba(255, 193, 7, 0.1);
+    color: #ffc107;
+    border: 1px solid rgba(255, 193, 7, 0.2);
+}
+
+.accuracy-badge.city {
+    background-color: rgba(108, 117, 125, 0.1);
+    color: #6c757d;
+    border: 1px solid rgba(108, 117, 125, 0.2);
+}
+
+.address-breakdown {
+    padding: 0.5rem;
+    background-color: rgba(0, 0, 0, 0.05);
+    border-radius: 0.375rem;
+    border-left: 3px solid #0d6efd;
+}
+
+.address-breakdown .text-muted {
+    margin-bottom: 0.25rem !important;
+}
+
+.accuracy-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Enhanced badge styling */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+/* ENHANCED: GPS accuracy indicators */
+.gps-accuracy-info {
+    animation: slideInFromLeft 0.3s ease-out;
+}
+
+.gps-details {
+    transition: all 0.2s ease;
+}
+
+.gps-details:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* GPS accuracy color coding */
+.text-success {
+    color: #198754 !important;
+}
+.text-info {
+    color: #0dcaf0 !important;
+}
+.text-warning {
+    color: #ffc107 !important;
+}
+.text-danger {
+    color: #dc3545 !important;
+}
+
+/* Responsive GPS info */
+@media (max-width: 576px) {
+    .gps-details .row {
+        font-size: 0.85rem;
+    }
+
+    .gps-details h6 {
+        font-size: 0.9rem;
+    }
+}
+
+@keyframes slideInFromLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
     }
 }

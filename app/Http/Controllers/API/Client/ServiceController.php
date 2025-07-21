@@ -55,20 +55,20 @@ class ServiceController extends Controller
             $searchTerm = $request->search;
             $query->where(function ($q) use ($searchTerm) {
                 $q->where('title', 'like', "%{$searchTerm}%")
-                  ->orWhere('description', 'like', "%{$searchTerm}%")
-                  ->orWhereHas('category', function ($categoryQuery) use ($searchTerm) {
-                      $categoryQuery->where('name', 'like', "%{$searchTerm}%");
-                  })
-                  ->orWhereHas('provider', function ($providerQuery) use ($searchTerm) {
-                      $providerQuery->where(function ($nameQuery) use ($searchTerm) {
-                          $nameQuery->whereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$searchTerm}%"])
-                                   ->orWhere('first_name', 'like', "%{$searchTerm}%")
-                                   ->orWhere('last_name', 'like', "%{$searchTerm}%");
-                      })
-                      ->orWhereHas('providerProfile', function ($profileQuery) use ($searchTerm) {
-                          $profileQuery->where('business_name', 'like', "%{$searchTerm}%");
-                      });
-                  });
+                    ->orWhere('description', 'like', "%{$searchTerm}%")
+                    ->orWhereHas('category', function ($categoryQuery) use ($searchTerm) {
+                        $categoryQuery->where('name', 'like', "%{$searchTerm}%");
+                    })
+                    ->orWhereHas('provider', function ($providerQuery) use ($searchTerm) {
+                        $providerQuery->where(function ($nameQuery) use ($searchTerm) {
+                            $nameQuery->whereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$searchTerm}%"])
+                                ->orWhere('first_name', 'like', "%{$searchTerm}%")
+                                ->orWhere('last_name', 'like', "%{$searchTerm}%");
+                        })
+                            ->orWhereHas('providerProfile', function ($profileQuery) use ($searchTerm) {
+                                $profileQuery->where('business_name', 'like', "%{$searchTerm}%");
+                            });
+                    });
             });
         }
 
@@ -116,8 +116,8 @@ class ServiceController extends Controller
 
         // Location-based filtering
         if ($request->latitude && $request->longitude) {
-            $radius = $request->radius ?? 15;
-            $query->servingLocation($request->latitude, $request->longitude);
+            $radius = $request->radius ?? 5;  // Use 5km as default instead of 10km
+            $query->nearLocation($request->latitude, $request->longitude, $radius);
         }
 
         // Sorting
@@ -165,7 +165,7 @@ class ServiceController extends Controller
                 'last_page' => $services->lastPage(),
                 'search_info' => [
                     'location_based' => $request->latitude && $request->longitude,
-                    'radius' => $request->radius ?? 15,
+                    'radius' => $request->radius ?? 5,
                     'filters_applied' => [
                         'search' => !!$request->search,
                         'category' => !!$request->category_id,
@@ -318,13 +318,24 @@ class ServiceController extends Controller
         }
     }
 
+    /**
+     * Calculate the distance between two latitude/longitude points using the Haversine formula.
+     *
+     * @param float $lat1 Latitude of the first point
+     * @param float $lon1 Longitude of the first point
+     * @param float $lat2 Latitude of the second point
+     * @param float $lon2 Longitude of the second point
+     * @return float Distance in kilometers, rounded to 2 decimal places
+     */
     private function calculateDistance($lat1, $lon1, $lat2, $lon2)
     {
         $earthRadius = 6371; // Earth radius in kilometers
 
+        // Convert latitude and longitude differences to radians
         $latDiff = deg2rad($lat2 - $lat1);
         $lonDiff = deg2rad($lon2 - $lon1);
 
+        // Haversine formula to calculate the great-circle distance
         $a = sin($latDiff / 2) * sin($latDiff / 2) +
             cos(deg2rad($lat1)) * cos(deg2rad($lat2)) *
             sin($lonDiff / 2) * sin($lonDiff / 2);
@@ -332,6 +343,7 @@ class ServiceController extends Controller
         $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
         $distance = $earthRadius * $c;
 
+        // Return the distance rounded to 2 decimal places
         return round($distance, 2);
     }
 
@@ -362,8 +374,8 @@ class ServiceController extends Controller
 
             // Apply location filter if provided
             if ($request->latitude && $request->longitude) {
-                $radius = $request->radius ?? 20;
-                $query->servingLocation($request->latitude, $request->longitude);
+                $radius = $request->radius ?? 5;
+                $query->nearLocation($request->latitude, $request->longitude, $radius);
             }
 
             return $query->get()->map(function ($service) {
@@ -410,8 +422,8 @@ class ServiceController extends Controller
 
             // Apply location filter if provided
             if ($request->latitude && $request->longitude) {
-                $radius = $request->radius ?? 15;
-                $query->servingLocation($request->latitude, $request->longitude);
+                $radius = $request->radius ?? 5;
+                $query->nearLocation($request->latitude, $request->longitude, $radius);
             }
 
             return $query->get()->map(function ($service) {
@@ -447,8 +459,8 @@ class ServiceController extends Controller
         $categories = Cache::remember($cacheKey, 600, function () use ($request) {
             $query = ServiceCategory::with(['activeServices' => function ($serviceQuery) use ($request) {
                 if ($request->latitude && $request->longitude) {
-                    $radius = $request->radius ?? 15;
-                    $serviceQuery->servingLocation($request->latitude, $request->longitude);
+                    $radius = $request->radius ?? 5;
+                    $serviceQuery->nearLocation($request->latitude, $request->longitude, $radius);
                 }
             }])
                 ->where('is_active', true)
@@ -497,8 +509,8 @@ class ServiceController extends Controller
 
         // Apply location filter if provided
         if ($request->latitude && $request->longitude) {
-            $radius = $request->radius ?? 15;
-            $query->servingLocation($request->latitude, $request->longitude);
+            $radius = $request->radius ?? 5;
+            $query->nearLocation($request->latitude, $request->longitude, $radius);
         } else {
             $query->orderByDesc('average_rating')->orderByDesc('views_count');
         }
@@ -602,7 +614,7 @@ class ServiceController extends Controller
         if ($request->latitude && $request->longitude) {
             $lat = $request->latitude;
             $lng = $request->longitude;
-            $radius = $request->radius ?? 15;
+            $radius = $request->radius ?? 5;
 
             Log::info('Location-based search:', [
                 'lat' => $request->latitude,
@@ -611,7 +623,7 @@ class ServiceController extends Controller
                 'results_count' => $query->count()
             ]);
 
-            $query->servingLocation($lat, $lng);
+            $query->nearLocation($lat, $lng, $radius);
         }
 
         // Sorting
@@ -678,7 +690,7 @@ class ServiceController extends Controller
                 'last_page' => $services->lastPage(),
                 'search_info' => [
                     'location_based' => $request->latitude && $request->longitude,
-                    'radius' => $request->radius ?? 15,
+                    'radius' => $request->radius ?? 5,
                     'filters_applied' => count(array_filter($filters))
                 ]
             ]

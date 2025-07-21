@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Services\LocationService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class LocationController extends Controller
 {
@@ -26,7 +27,7 @@ class LocationController extends Controller
         try {
             $latitude = $request->latitude;
             $longitude = $request->longitude;
-            $radius = $request->radius ?? 50; // Default 50km radius
+            $radius = $request->radius ?? 10; // Default 10km radius
 
             $nearbyAreas = $this->locationService->getNearbyServiceAreas(
                 $latitude,
@@ -44,7 +45,7 @@ class LocationController extends Controller
                 ]
             ]);
         } catch (\Exception $e) {
-            \Log::error('Error getting nearby service areas:', [
+            Log::error('Error getting nearby service areas:', [
                 'error' => $e->getMessage(),
                 'latitude' => $request->latitude ?? null,
                 'longitude' => $request->longitude ?? null

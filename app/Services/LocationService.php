@@ -133,7 +133,7 @@ class LocationService
         }
 
         return [
-            'nearby_areas' => array_slice($nearbyAreas, 0, 15), // Limit to 15 closest
+            'nearby_areas' => array_slice($nearbyAreas, 0, 10), // Limit to 15 closest
             'province' => $province,
             'all_province_areas' => $province ? $this->getProvinceCities($province) : []
         ];

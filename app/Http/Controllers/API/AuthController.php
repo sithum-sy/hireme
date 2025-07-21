@@ -285,9 +285,11 @@ class AuthController extends Controller
                 $currentToken = $user->currentAccessToken();
 
                 if ($currentToken) {
-                    // Check if it's a real token (not TransientToken)
-                    if (method_exists($currentToken, 'delete')) {
-                        $currentToken->delete();
+                    // Only delete if it's not a TransientToken
+                    if (!($currentToken instanceof \Laravel\Sanctum\TransientToken)) {
+                        if ($currentToken instanceof \Laravel\Sanctum\PersonalAccessToken) {
+                            $currentToken->delete();
+                        }
                     } else {
                         // It's a TransientToken, delete all user tokens
                         $user->tokens()->delete();

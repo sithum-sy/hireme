@@ -34,6 +34,7 @@ const ServicesBrowse = () => {
         available_today:
             searchParams.get("available_today") === "true" || false,
         sort_by: searchParams.get("sort_by") || "recent",
+        radius: parseInt(searchParams.get("radius")) || 5,
     });
 
     useEffect(() => {
@@ -43,31 +44,172 @@ const ServicesBrowse = () => {
     useEffect(() => {
         // Try to get user's current location on component mount
         if (!currentLocation && !showLocationSelector) {
+            console.log("🌐 Attempting to get user's location on mount");
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
                     (position) => {
                         const { latitude, longitude } = position.coords;
-                        setCurrentLocation({
+                        const currentRadius = filters.radius || 5;
+                        const initialLocation = {
                             lat: latitude,
                             lng: longitude,
                             city: "Current Location",
                             province: "Sri Lanka",
-                            radius: 15,
+                            radius: currentRadius,
                             address: `${latitude.toFixed(
                                 4
                             )}, ${longitude.toFixed(4)}`,
+                        };
+                        
+                        console.log("✅ Initial GPS location set:", {
+                            coordinates: `${latitude}, ${longitude}`,
+                            radius: currentRadius
                         });
+                        
+                        setCurrentLocation(initialLocation);
                     },
                     (error) => {
-                        console.log("Geolocation error:", error);
+                        console.warn("⚠️ Geolocation error on mount:", error);
+                        // Don't set any location if GPS fails - user will need to select manually
                     }
                 );
+            } else {
+                console.log("❌ Geolocation not supported");
             }
         }
     }, []);
 
+    // ENHANCED: GPS location capture function
+    const getCurrentLocation = () => {
+        const currentRadius = filters.radius || 5;
+        if (navigator.geolocation) {
+            setLoading(true);
+            
+            navigator.geolocation.getCurrentPosition(
+                async (position) => {
+                    const { latitude, longitude, accuracy } = position.coords;
+                    
+                    console.log("📍 GPS location captured:", {
+                        coordinates: `${latitude}, ${longitude}`,
+                        accuracy: `±${accuracy} meters`
+                    });
+
+                    try {
+                        // ENHANCED: Reverse geocode to get proper address
+                        const response = await fetch(
+                            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=16&addressdetails=1&accept-language=en`
+                        );
+
+                        if (response.ok) {
+                            const data = await response.json();
+                            const address = data.address || {};
+                            
+                            // Parse address components
+                            const city = address.city || address.town || address.village || "Current Location";
+                            const province = address.state || address.province || "Sri Lanka";
+                            const neighborhood = address.suburb || address.neighbourhood || "";
+                            const road = address.road || "";
+                            const houseNumber = address.house_number || "";
+                            const postcode = address.postcode || "";
+
+                            // Build readable address
+                            let readableAddress = "";
+                            if (houseNumber && road) {
+                                readableAddress = `${houseNumber} ${road}, ${city}`;
+                            } else if (road) {
+                                readableAddress = `${road}, ${city}`;
+                            } else if (neighborhood) {
+                                readableAddress = `${neighborhood}, ${city}`;
+                            } else {
+                                readableAddress = `${city}, ${province}`;
+                            }
+
+                            if (postcode) {
+                                readableAddress = readableAddress.replace(city, `${city} ${postcode}`);
+                            }
+
+                            const locationData = {
+                                lat: latitude,
+                                lng: longitude,
+                                address: readableAddress,
+                                neighborhood: neighborhood,
+                                city: city,
+                                province: province,
+                                radius: currentRadius,
+                                country: "Sri Lanka",
+                                gps_accuracy: accuracy,
+                                accuracy_level: accuracy <= 10 ? 'gps_precise' : 'gps_standard',
+                                gps_timestamp: new Date().toISOString()
+                            };
+
+                            setCurrentLocation(locationData);
+                            setShowLocationSelector(false);
+                            
+                            console.log("✅ Location updated:", locationData.address);
+                        } else {
+                            throw new Error('Geocoding failed');
+                        }
+                    } catch (error) {
+                        console.warn("Reverse geocoding failed, using basic location:", error);
+                        
+                        // Fallback to basic GPS location
+                        const fallbackLocation = {
+                            lat: latitude,
+                            lng: longitude,
+                            city: "Current Location",
+                            province: "Sri Lanka",
+                            radius: currentRadius,
+                            address: `GPS: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`,
+                            gps_accuracy: accuracy,
+                            accuracy_level: 'gps_fallback'
+                        };
+                        
+                        setCurrentLocation(fallbackLocation);
+                        setShowLocationSelector(false);
+                    }
+                    
+                    setLoading(false);
+                },
+                (error) => {
+                    setLoading(false);
+                    let errorMessage = "Unable to get your location. ";
+                    
+                    switch(error.code) {
+                        case error.PERMISSION_DENIED:
+                            errorMessage += "Please allow location access in your browser settings.";
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            errorMessage += "Location services are unavailable.";
+                            break;
+                        case error.TIMEOUT:
+                            errorMessage += "Location request timed out. Please try again.";
+                            break;
+                        default:
+                            errorMessage += "Please select your location manually.";
+                            break;
+                    }
+                    
+                    alert(errorMessage);
+                    console.error("GPS Error:", error);
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 15000,
+                    maximumAge: 30000
+                }
+            );
+        } else {
+            alert("Geolocation is not supported by this browser. Please select your location manually.");
+        }
+    };
+
     const loadServices = async (page = 1) => {
-        // console.log("Loading services with filters:", filters);
+        console.log("🔍 Loading services with:", {
+            currentLocation: currentLocation ? `${currentLocation.lat}, ${currentLocation.lng}` : 'null',
+            filters: filters,
+            radius: filters.radius
+        });
+        
         setLoading(true);
 
         try {
@@ -85,18 +227,54 @@ const ServicesBrowse = () => {
                 }
             });
 
+            // CRITICAL FIX: Always require location for location-based searches
             if (currentLocation && currentLocation.lat && currentLocation.lng) {
                 params.latitude = currentLocation.lat;
                 params.longitude = currentLocation.lng;
-                params.radius = currentLocation.radius || 15;
+                params.radius = filters.radius || 5;
+                
+                console.log("📍 API call with location:", {
+                    latitude: params.latitude,
+                    longitude: params.longitude,
+                    radius: params.radius
+                });
             } else {
-                // console.log("Loading services without location");
+                console.log("❌ No location available - cannot search for services");
+                // Don't make API call without location - show no results instead
+                setServices([]);
+                setPagination({
+                    current_page: 1,
+                    last_page: 1,
+                    per_page: 12,
+                    total: 0,
+                });
+                setLoading(false);
+                return;
             }
 
-            // console.log("API request params:", params);
-
             const response = await clientService.getServices(params);
-            // console.log("API response:", response);
+            console.log("🎯 API response full:", response);
+            console.log("🎯 Services data:", response.data?.data);
+            
+            // Let's also check individual service distances
+            if (response.data?.data && Array.isArray(response.data.data)) {
+                response.data.data.forEach((service, index) => {
+                    console.log(`Service ${index + 1} (${service.title}):`), {
+                        id: service.id,
+                        distance: service.distance,
+                        provider_location: service.provider_location || 'N/A',
+                        service_location: service.service_location || 'N/A'
+                    };
+                });
+            }
+            
+            console.log("🎯 API response:", {
+                success: response.success,
+                total: response.data?.total || 0,
+                services_count: response.data?.data?.length || 0,
+                radius_used: params.radius,
+                coordinates_used: `${params.latitude}, ${params.longitude}`
+            });
 
             if (response.success) {
                 // Handle the new nested data structure
@@ -130,6 +308,14 @@ const ServicesBrowse = () => {
             }
         } catch (error) {
             console.error("Failed to load services:", error);
+            // On error, show empty results
+            setServices([]);
+            setPagination({
+                current_page: 1,
+                last_page: 1,
+                per_page: 12,
+                total: 0,
+            });
         } finally {
             setLoading(false);
         }
@@ -143,8 +329,24 @@ const ServicesBrowse = () => {
     };
 
     const handleLocationChange = (newLocation) => {
-        setCurrentLocation(newLocation);
+        console.log("📍 Location changed to:", {
+            lat: newLocation.lat,
+            lng: newLocation.lng,
+            address: newLocation.address,
+            city: newLocation.city
+        });
+        
+        // Ensure the location has the current filter radius
+        const locationWithRadius = {
+            ...newLocation,
+            radius: filters.radius || 5
+        };
+        
+        setCurrentLocation(locationWithRadius);
         setShowLocationSelector(false);
+        
+        // Force a reload of services for the new location
+        console.log("🔄 Triggering service reload for new location");
     };
 
     const handlePageChange = (page) => {
@@ -170,13 +372,13 @@ const ServicesBrowse = () => {
 
         // If location is provided in search, update current location
         if (searchParams.latitude && searchParams.longitude) {
-            setCurrentLocation({
-                lat: searchParams.latitude,
-                lng: searchParams.longitude,
-                radius: searchParams.radius || 15,
-                city: "Search Location",
-                province: "Sri Lanka",
-            });
+        setCurrentLocation({
+        lat: searchParams.latitude,
+        lng: searchParams.longitude,
+        radius: searchParams.radius || filters.radius || 5,
+        city: "Search Location",
+        province: "Sri Lanka",
+        });
         }
     };
 
@@ -192,6 +394,7 @@ const ServicesBrowse = () => {
             instant_booking: false,
             available_today: false,
             sort_by: "recent",
+            radius: 5,
         };
         setFilters(clearedFilters);
         setSearchParams({}, { replace: true });
@@ -208,11 +411,21 @@ const ServicesBrowse = () => {
                             <p className="text-muted mb-0">
                                 Discover and book from thousands of services
                                 {currentLocation &&
-                                    ` near ${currentLocation.city}, ${currentLocation.province}`}
+                                ` near ${currentLocation.city}, ${currentLocation.province}`}
                             </p>
                         </div>
                         <div className="col-md-6 text-end">
                             <div className="d-flex gap-2 justify-content-end">
+                                {/* ENHANCED: Select My Location Button */}
+                                <button
+                                    className="btn btn-success"
+                                    onClick={getCurrentLocation}
+                                    title="Use my current GPS location"
+                                >
+                                    <i className="fas fa-location-arrow me-2"></i>
+                                    Select My Location
+                                </button>
+                                
                                 <button
                                     className="btn btn-outline-purple"
                                     onClick={() =>
@@ -224,7 +437,7 @@ const ServicesBrowse = () => {
                                     <i className="fas fa-map-marker-alt me-2"></i>
                                     {currentLocation
                                         ? "Change Location"
-                                        : "Set Location"}
+                                        : "Custom Location"}
                                 </button>
                                 <button
                                     className="btn btn-outline-purple d-lg-none"
@@ -255,6 +468,7 @@ const ServicesBrowse = () => {
                             <LocationSelector
                                 value={currentLocation}
                                 onChange={handleLocationChange}
+                                radius={filters.radius || 5}
                             />
                         </div>
                     )}
@@ -291,9 +505,7 @@ const ServicesBrowse = () => {
                                         <>Searching for "{filters.search}" </>
                                     )}
                                     {currentLocation &&
-                                        `Within ${
-                                            currentLocation.radius || 15
-                                        } km of your location`}
+                                        `Within ${filters.radius || 5} km of your location`}
                                 </small>
                             </div>
 
@@ -447,6 +659,22 @@ const ServicesBrowse = () => {
                                         </span>
                                     )}
 
+                                    {/* Radius Badge */}
+                                    {currentLocation && filters.radius && filters.radius !== 5 && (
+                                        <span className="badge bg-primary bg-opacity-10 text-primary">
+                                            <i className="fas fa-map-marker-alt me-1"></i>
+                                            Within {filters.radius} km
+                                            <button
+                                                className="btn-close btn-close-sm ms-2"
+                                                onClick={() =>
+                                                    handleFilterChange({
+                                                        radius: 5,
+                                                    })
+                                                }
+                                            ></button>
+                                        </span>
+                                    )}
+
                                     <button
                                         className="btn btn-link btn-sm text-decoration-none"
                                         onClick={clearFilters}
@@ -458,7 +686,31 @@ const ServicesBrowse = () => {
                         )}
 
                         {/* Services Grid - Rest remains the same */}
-                        {loading ? (
+                        {!currentLocation ? (
+                            <div className="no-location text-center py-5">
+                                <i className="fas fa-map-marker-alt fa-3x text-muted mb-3"></i>
+                                <h5 className="text-muted">Location Required</h5>
+                                <p className="text-muted mb-3">
+                                    Please select your location to see available services in your area.
+                                </p>
+                                <div className="d-flex gap-2 justify-content-center">
+                                    <button
+                                        className="btn btn-success"
+                                        onClick={getCurrentLocation}
+                                    >
+                                        <i className="fas fa-location-arrow me-2"></i>
+                                        Use My Current Location
+                                    </button>
+                                    <button
+                                        className="btn btn-outline-purple"
+                                        onClick={() => setShowLocationSelector(true)}
+                                    >
+                                        <i className="fas fa-map-marker-alt me-2"></i>
+                                        Select Custom Location
+                                    </button>
+                                </div>
+                            </div>
+                        ) : loading ? (
                             <LoadingSpinner message="Loading services..." />
                         ) : (
                             <>

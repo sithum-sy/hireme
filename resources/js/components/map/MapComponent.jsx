@@ -44,7 +44,7 @@ const MapComponent = ({ center, radius, onLocationChange }) => {
                     borderRadius: "0.5rem",
                     background:
                         "linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%)",
-                    border: "2px solid #4caf50",
+                    border: "2px solid #2d6aa3",
                     position: "relative",
                     cursor: "crosshair",
                     overflow: "hidden",
@@ -82,7 +82,7 @@ const MapComponent = ({ center, radius, onLocationChange }) => {
                         style={{
                             width: "16px",
                             height: "16px",
-                            backgroundColor: "#4caf50",
+                            backgroundColor: "#2d6aa3",
                             borderRadius: "50%",
                             border: "3px solid white",
                             boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
@@ -100,7 +100,7 @@ const MapComponent = ({ center, radius, onLocationChange }) => {
                         width: `${visualRadius * 2}px`,
                         height: `${visualRadius * 2}px`,
                         transform: "translate(-50%, -50%)",
-                        border: "2px solid #4caf50",
+                        border: "2px solid #2d6aa3",
                         borderRadius: "50%",
                         backgroundColor: "rgba(76, 175, 80, 0.1)",
                         zIndex: 2,
@@ -116,7 +116,7 @@ const MapComponent = ({ center, radius, onLocationChange }) => {
                             borderRadius: "12px",
                             fontSize: "12px",
                             fontWeight: "bold",
-                            color: "#4caf50",
+                            color: "#2d6aa3",
                         }}
                     >
                         {radius}km
@@ -156,7 +156,7 @@ const MapComponent = ({ center, radius, onLocationChange }) => {
                         bottom: "10px",
                         left: "10px",
                         right: "10px",
-                        backgroundColor: "rgba(76, 175, 80, 0.9)",
+                        backgroundColor: "#2d6aa3",
                         color: "white",
                         padding: "6px 12px",
                         borderRadius: "6px",
@@ -201,7 +201,7 @@ const MapComponent = ({ center, radius, onLocationChange }) => {
                                 style={{
                                     width: "12px",
                                     height: "12px",
-                                    backgroundColor: "#4caf50",
+                                    backgroundColor: "#2d6aa3",
                                     borderRadius: "50%",
                                     marginRight: "6px",
                                 }}
@@ -215,7 +215,7 @@ const MapComponent = ({ center, radius, onLocationChange }) => {
                                 style={{
                                     width: "12px",
                                     height: "12px",
-                                    border: "2px solid #4caf50",
+                                    border: "2px solid #2d6aa3",
                                     borderRadius: "50%",
                                     marginRight: "6px",
                                 }}
