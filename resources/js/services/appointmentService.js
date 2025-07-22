@@ -123,6 +123,48 @@ class AppointmentService {
     }
 
     /**
+     * Update appointment (for pending appointments)
+     * @param {number} appointmentId - The appointment ID
+     * @param {Object} updateData - Updated appointment data
+     * @returns {Object} Response with updated appointment data
+     */
+    async updateAppointment(appointmentId, updateData) {
+        try {
+            const payload = {
+                appointment_date: updateData.appointment_date,
+                appointment_time: updateData.appointment_time,
+                duration_hours: updateData.duration_hours,
+                client_phone: updateData.client_phone,
+                client_email: updateData.client_email,
+                client_address: updateData.client_address,
+                client_city: updateData.client_city,
+                client_postal_code: updateData.client_postal_code,
+                location_type: updateData.location_type,
+                location_instructions: updateData.location_instructions,
+                contact_preference: updateData.contact_preference,
+                client_notes: updateData.client_notes,
+                ...updateData,
+            };
+
+            const response = await axios.put(
+                `${API_BASE}/appointments/${appointmentId}`,
+                payload
+            );
+
+            return {
+                success: true,
+                data: response.data.data || response.data,
+                message:
+                    response.data.message ||
+                    "Appointment updated successfully",
+            };
+        } catch (error) {
+            console.error("Failed to update appointment:", error);
+            return this.handleError(error, "Failed to update appointment");
+        }
+    }
+
+    /**
      * Request reschedule for an appointment
      * @param {number} appointmentId - The appointment ID
      * @param {Object} rescheduleData - New date/time and reason
@@ -131,17 +173,19 @@ class AppointmentService {
     async requestReschedule(appointmentId, rescheduleData) {
         try {
             const payload = {
-                requested_date: rescheduleData.date,
-                requested_time: rescheduleData.time,
-                reschedule_reason:
-                    rescheduleData.reason || "Client requested reschedule",
-                reschedule_notes: rescheduleData.notes || "",
-                ...rescheduleData,
+                date: rescheduleData.date,
+                time: rescheduleData.time,
+                reason: rescheduleData.reason || "other",
+                notes: rescheduleData.notes || "",
+                // Include contact and location updates if provided
+                client_phone: rescheduleData.client_phone,
+                client_email: rescheduleData.client_email,
+                client_address: rescheduleData.client_address,
+                location_type: rescheduleData.location_type,
             };
 
-            // Note: This endpoint would need to be implemented in your Laravel backend
             const response = await axios.post(
-                `${API_BASE}/bookings/${appointmentId}/reschedule-request`,
+                `${API_BASE}/appointments/${appointmentId}/reschedule-request`,
                 payload
             );
 

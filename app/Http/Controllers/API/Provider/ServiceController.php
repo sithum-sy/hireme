@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class ServiceController extends Controller
 {
@@ -504,7 +505,7 @@ class ServiceController extends Controller
                 'data' => $serviceData
             ], 200);
         } catch (\Exception $e) {
-            \Log::error('Error fetching service for details:', [
+            Log::error('Error fetching service for details:', [
                 'service_id' => $service->id,
                 'error' => $e->getMessage()
             ]);
@@ -533,7 +534,7 @@ class ServiceController extends Controller
                 ], 403);
             }
 
-            \Log::info('Service update request:', [
+            Log::info('Service update request:', [
                 'service_id' => $service->id,
                 'user_id' => $user->id,
                 'request_data' => $request->except(['service_images'])
@@ -547,7 +548,7 @@ class ServiceController extends Controller
                 'data' => $this->formatServiceResponse($updatedService)
             ], 200);
         } catch (\Exception $e) {
-            \Log::error('Service update error:', [
+            Log::error('Service update error:', [
                 'service_id' => $service->id,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
@@ -649,7 +650,7 @@ class ServiceController extends Controller
             $user = Auth::user();
 
             // Add debug logging
-            \Log::info('User accessing myServices:', ['user_id' => $user->id, 'role' => $user->role]);
+            Log::info('User accessing myServices:', ['user_id' => $user->id, 'role' => $user->role]);
 
             if ($user->role !== 'service_provider') {
                 return response()->json([
@@ -665,7 +666,7 @@ class ServiceController extends Controller
                 ->where('provider_id', $user->id);
 
             // Add debug logging
-            \Log::info('Service query count:', ['count' => $query->count()]);
+            Log::info('Service query count:', ['count' => $query->count()]);
 
             if ($status === 'active') {
                 $query->where('is_active', true);
@@ -676,14 +677,14 @@ class ServiceController extends Controller
             $services = $query->orderBy('created_at', 'desc')->paginate($perPage);
 
             // Add debug logging
-            \Log::info('Services found:', ['total' => $services->total()]);
+            Log::info('Services found:', ['total' => $services->total()]);
 
             $formattedServices = $services->map(function ($service) {
                 return $this->formatServiceResponse($service);
             })->values();
 
             // Add this debug logging:
-            \Log::info('Formatted services sample:', [
+            Log::info('Formatted services sample:', [
                 'first_service' => $formattedServices->first(),
                 'services_collection_type' => get_class($formattedServices),
                 'response_structure' => [
@@ -704,7 +705,7 @@ class ServiceController extends Controller
                 ]
             ], 200);
         } catch (\Exception $e) {
-            \Log::error('Error in myServices:', ['error' => $e->getMessage()]);
+            Log::error('Error in myServices:', ['error' => $e->getMessage()]);
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch your services',
@@ -721,7 +722,7 @@ class ServiceController extends Controller
         $baseResponse = [
             'id' => $service->id,
             'title' => $service->title,
-            'description' => $detailed ? $service->description : \Str::limit($service->description, 150),
+            'description' => $detailed ? $service->description : Str::limit($service->description, 150),
             'category' => [
                 'id' => $service->category->id,
                 'name' => $service->category->name,

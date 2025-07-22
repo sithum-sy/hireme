@@ -1,10 +1,13 @@
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useServicePrimaryImage, constructProfileImageUrl } from "../../../hooks/useServiceImages";
+import { useServicePrimaryImage } from "../../../hooks/useServiceImages";
+
+import { useState } from "react";
 
 const ServiceCard = ({ service, showDistance = true }) => {
     const navigate = useNavigate();
     const primaryImage = useServicePrimaryImage(service);
+    const [imageError, setImageError] = useState(false);
 
     return (
         <div className="service-card">
@@ -15,7 +18,7 @@ const ServiceCard = ({ service, showDistance = true }) => {
                 <div className="card h-100 border-0 shadow-sm">
                     {/* Service Image */}
                     <div className="service-image position-relative">
-                        {primaryImage ? (
+                        {primaryImage && !imageError ? (
                             <img
                                 src={primaryImage}
                                 alt={service.title}
@@ -24,34 +27,35 @@ const ServiceCard = ({ service, showDistance = true }) => {
                                     height: "200px",
                                     objectFit: "cover",
                                 }}
-                                onError={(e) => {
+                                onError={() => {
                                     console.error(
                                         "Image failed to load:",
                                         primaryImage
                                     );
-                                    // Hide the failed image and show fallback
-                                    e.target.style.display = "none";
-                                    const fallback = e.target.parentNode.querySelector('.image-fallback');
-                                    if (fallback) {
-                                        fallback.style.display = "flex";
-                                    }
+                                    setImageError(true);
                                 }}
                             />
                         ) : null}
-                        
+
                         {/* Fallback placeholder - only show if no primary image or image fails to load */}
-                        <div
-                            className={`image-fallback card-img-top bg-light d-flex align-items-center justify-content-center`}
-                            style={{
-                                height: "200px",
-                                display: primaryImage ? "none" : "flex",
-                            }}
-                        >
-                            <div className="text-center text-muted">
-                                <i className="fas fa-image fa-2x mb-2"></i>
-                                <div>{primaryImage ? "Image unavailable" : "No image"}</div>
+                        {(imageError || !primaryImage) && (
+                            <div
+                                className={`image-fallback card-img-top bg-light d-flex align-items-center justify-content-center`}
+                                style={{
+                                    height: "200px",
+                                    display: "flex",
+                                }}
+                            >
+                                <div className="text-center text-muted">
+                                    <i className="fas fa-image fa-2x mb-2"></i>
+                                    <div>
+                                        {primaryImage
+                                            ? "Image unavailable"
+                                            : "No image"}
+                                    </div>
+                                </div>
                             </div>
-                        </div>
+                        )}
 
                         {/* Category Badge */}
                         <div className="position-absolute top-0 start-0 m-2">
@@ -97,9 +101,31 @@ const ServiceCard = ({ service, showDistance = true }) => {
                         <div className="provider-info d-flex align-items-center mb-2">
                             <div className="provider-avatar me-2">
                                 {(() => {
-                                    // Use the dedicated profile image URL constructor
-                                    const profileImageUrl = constructProfileImageUrl(service.provider?.profile_image_url);
-                                    
+                                    // Construct proper profile image URL
+                                    let profileImageUrl =
+                                        service.provider?.profile_image_url;
+
+                                    if (profileImageUrl) {
+                                        // If it's a relative path, construct full URL
+                                        if (
+                                            !profileImageUrl.startsWith(
+                                                "http"
+                                            ) &&
+                                            !profileImageUrl.startsWith("/")
+                                        ) {
+                                            profileImageUrl = `/images/profiles/${profileImageUrl}`;
+                                        }
+                                        // If it already starts with /images/profiles/, keep as is
+                                        else if (
+                                            profileImageUrl.startsWith(
+                                                "images/profiles/"
+                                            )
+                                        ) {
+                                            profileImageUrl =
+                                                "/" + profileImageUrl;
+                                        }
+                                    }
+
                                     return profileImageUrl ? (
                                         <img
                                             src={profileImageUrl}
@@ -112,23 +138,28 @@ const ServiceCard = ({ service, showDistance = true }) => {
                                             }}
                                             onError={(e) => {
                                                 // Hide failed image and show fallback
-                                                e.target.style.display = 'none';
-                                                const fallback = e.target.nextSibling;
+                                                e.target.style.display = "none";
+                                                const fallback =
+                                                    e.target.nextSibling;
                                                 if (fallback) {
-                                                    fallback.style.display = 'flex';
+                                                    fallback.style.display =
+                                                        "flex";
                                                 }
                                             }}
                                         />
                                     ) : null;
                                 })()}
-                                
+
                                 {/* Fallback avatar */}
                                 <div
                                     className="bg-purple bg-opacity-10 text-purple rounded-circle d-flex align-items-center justify-content-center"
                                     style={{
                                         width: "24px",
                                         height: "24px",
-                                        display: service.provider?.profile_image_url ? "none" : "flex",
+                                        display: service.provider
+                                            ?.profile_image_url
+                                            ? "none"
+                                            : "flex",
                                     }}
                                 >
                                     <i className="fas fa-user fa-xs"></i>

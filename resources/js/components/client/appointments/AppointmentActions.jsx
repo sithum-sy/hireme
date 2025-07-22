@@ -46,6 +46,16 @@ const AppointmentActions = ({
 
         switch (appointment.status) {
             case "pending":
+                // Edit button for pending appointments (direct changes)
+                if (onReschedule) {
+                    actions.push({
+                        key: "edit",
+                        label: "Edit Appointment",
+                        icon: "fas fa-edit",
+                        className: "btn-outline-primary",
+                        action: () => onReschedule(appointment, "edit"),
+                    });
+                }
                 if (onContact) {
                     actions.push({
                         key: "contact",
@@ -70,11 +80,12 @@ const AppointmentActions = ({
                 break;
 
             case "confirmed":
+                // Smart reschedule/edit button based on status
                 if (onReschedule) {
                     actions.push({
                         key: "reschedule",
                         label: "Reschedule",
-                        icon: "fas fa-edit",
+                        icon: "fas fa-calendar-alt",
                         className: "btn-outline-warning",
                         action: () => onReschedule(appointment),
                     });

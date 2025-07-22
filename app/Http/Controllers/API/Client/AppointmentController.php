@@ -30,6 +30,338 @@ class AppointmentController extends Controller
     }
 
     /**
+     * Update appointment (for pending appointments)
+     */
+    public function update(Request $request, Appointment $appointment)
+    {
+        $request->validate([
+            'appointment_date' => 'required|date|after_or_equal:today',
+            'appointment_time' => 'required',
+            'duration_hours' => 'nullable|numeric|min:1|max:24',
+            'client_phone' => 'nullable|string|max:20',
+            'client_email' => 'nullable|email',
+            'client_address' => 'nullable|string|max:255',
+            'client_city' => 'nullable|string|max:100',
+            'client_postal_code' => 'nullable|string|max:20',
+            'location_type' => 'nullable|in:client_address,provider_location,custom_location',
+            'location_instructions' => 'nullable|string|max:1000',
+            'contact_preference' => 'nullable|in:phone,message',
+            'client_notes' => 'nullable|string|max:1000',
+        ]);
+
+        // Ensure user can only update their own appointments
+        if ($appointment->client_id !== Auth::id()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Appointment not found',
+            ], 404);
+        }
+
+        // Check if appointment can be updated (only pending appointments)
+        if ($appointment->status !== 'pending') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Only pending appointments can be directly updated. Use reschedule request for confirmed appointments.',
+            ], 422);
+        }
+
+        // Validate new appointment time
+        $validationError = $this->validateAppointmentDateTime(
+            $request->appointment_date,
+            $request->appointment_time
+        );
+
+        if ($validationError) {
+            return response()->json([
+                'success' => false,
+                'message' => $validationError,
+                'errors' => ['appointment_time' => [$validationError]]
+            ], 422);
+        }
+
+        // Check provider availability (excluding this appointment)
+        $availabilityError = $this->checkProviderAvailabilityForUpdate(
+            $appointment->provider_id,
+            $request->appointment_date,
+            $request->appointment_time,
+            $request->duration_hours ?? $appointment->duration_hours,
+            $appointment->id
+        );
+
+        if ($availabilityError) {
+            return response()->json([
+                'success' => false,
+                'message' => $availabilityError,
+                'errors' => ['availability' => [$availabilityError]]
+            ], 422);
+        }
+
+        // Contact validation
+        if (empty($request->client_phone) && empty($request->client_email)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Either phone number or email is required',
+                'errors' => ['contact' => ['Contact information is required']]
+            ], 422);
+        }
+
+        try {
+            // Update the appointment
+            $appointment->update([
+                'appointment_date' => $request->appointment_date,
+                'appointment_time' => $request->appointment_time,
+                'duration_hours' => $request->duration_hours ?? $appointment->duration_hours,
+                'client_phone' => $request->client_phone,
+                'client_email' => $request->client_email,
+                'client_address' => $request->client_address,
+                'client_city' => $request->client_city,
+                'client_postal_code' => $request->client_postal_code,
+                'location_type' => $request->location_type ?? $appointment->location_type,
+                'location_instructions' => $request->location_instructions,
+                'contact_preference' => $request->contact_preference ?? $appointment->contact_preference,
+                'client_notes' => $request->client_notes,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'data' => $appointment->fresh([
+                    'service.category',
+                    'provider.providerProfile',
+                    'invoice',
+                    'payment',
+                    'clientReview'
+                ]),
+                'message' => 'Appointment updated successfully'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Appointment update failed', [
+                'error' => $e->getMessage(),
+                'appointment_id' => $appointment->id,
+                'client_id' => Auth::id()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update appointment. Please try again.',
+                'error' => config('app.debug') ? $e->getMessage() : 'Internal server error'
+            ], 500);
+        }
+    }
+
+    /**
+     * Request reschedule for confirmed appointments
+     */
+    public function requestReschedule(Request $request, Appointment $appointment)
+    {
+        $request->validate([
+            'date' => 'required|date|after:today',
+            'time' => 'required|date_format:H:i',
+            'reason' => 'required|string|in:personal_emergency,work_conflict,travel_plans,health_reasons,weather_concerns,provider_request,other',
+            'notes' => 'nullable|string|max:500',
+            // Optional updated contact/location info
+            'client_phone' => 'nullable|string|max:20',
+            'client_email' => 'nullable|email',
+            'client_address' => 'nullable|string|max:255',
+            'location_type' => 'nullable|in:client_address,provider_location,custom_location',
+        ]);
+
+        // Authorization check
+        if ($appointment->client_id !== Auth::id()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized access'
+            ], 403);
+        }
+
+        // Check if appointment can be rescheduled
+        if (!in_array($appointment->status, ['pending', 'confirmed'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This appointment cannot be rescheduled'
+            ], 422);
+        }
+
+        // 24-hour policy for confirmed appointments
+        if ($appointment->status === 'confirmed') {
+            $appointmentDateTime = $appointment->full_appointment_date_time;
+            $hoursUntilAppointment = now()->diffInHours($appointmentDateTime, false);
+
+            if ($hoursUntilAppointment <= 24) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Reschedule requests must be made at least 24 hours before the appointment time'
+                ], 422);
+            }
+        }
+
+        // Validate new time slot
+        $validationError = $this->validateAppointmentDateTime(
+            $request->date,
+            $request->time
+        );
+
+        if ($validationError) {
+            return response()->json([
+                'success' => false,
+                'message' => $validationError,
+                'errors' => ['appointment_time' => [$validationError]]
+            ], 422);
+        }
+
+        // Check provider availability for new time
+        $availabilityError = $this->checkProviderAvailabilityForUpdate(
+            $appointment->provider_id,
+            $request->date,
+            $request->time,
+            $appointment->duration_hours,
+            $appointment->id
+        );
+
+        if ($availabilityError) {
+            return response()->json([
+                'success' => false,
+                'message' => $availabilityError,
+                'errors' => ['availability' => [$availabilityError]]
+            ], 422);
+        }
+
+        try {
+            if ($appointment->status === 'pending') {
+                // Direct update for pending appointments
+                $updateData = [
+                    'appointment_date' => $request->date,
+                    'appointment_time' => $request->time,
+                ];
+
+                // Update contact info if provided
+                if ($request->client_phone) $updateData['client_phone'] = $request->client_phone;
+                if ($request->client_email) $updateData['client_email'] = $request->client_email;
+                if ($request->client_address) $updateData['client_address'] = $request->client_address;
+                if ($request->location_type) $updateData['location_type'] = $request->location_type;
+
+                // Append reschedule reason to notes
+                if ($request->notes) {
+                    $updateData['client_notes'] = ($appointment->client_notes ? $appointment->client_notes . "\n\n" : '') 
+                        . "Reschedule reason: " . $request->notes;
+                }
+
+                $appointment->update($updateData);
+                
+                $message = 'Appointment rescheduled successfully';
+            } else {
+                // For confirmed appointments, create a simple reschedule request
+                // Since we don't have a reschedule_requests table, we'll update status and add notes
+                $rescheduleNotes = "Reschedule requested by client:\n"
+                    . "New date: {$request->date}\n"
+                    . "New time: {$request->time}\n"
+                    . "Reason: {$request->reason}";
+                
+                if ($request->notes) {
+                    $rescheduleNotes .= "\nNotes: {$request->notes}";
+                }
+
+                // Add to existing client notes
+                $updatedNotes = ($appointment->client_notes ? $appointment->client_notes . "\n\n" : '')
+                    . $rescheduleNotes;
+
+                $appointment->update([
+                    'client_notes' => $updatedNotes,
+                    // For bachelor's project: temporarily store requested date/time in notes
+                    // In a full implementation, you'd create a reschedule_requests table
+                ]);
+
+                $message = 'Reschedule request submitted successfully. The provider will respond within 24 hours.';
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => $appointment->fresh([
+                    'service.category',
+                    'provider.providerProfile',
+                    'invoice',
+                    'payment',
+                    'clientReview'
+                ]),
+                'message' => $message
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Reschedule request failed', [
+                'error' => $e->getMessage(),
+                'appointment_id' => $appointment->id,
+                'client_id' => Auth::id()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to process reschedule request. Please try again.',
+                'error' => config('app.debug') ? $e->getMessage() : 'Internal server error'
+            ], 500);
+        }
+    }
+
+    /**
+     * Enhanced provider availability check that excludes current appointment
+     */
+    private function checkProviderAvailabilityForUpdate($providerId, $appointmentDate, $appointmentTime, $durationHours, $excludeAppointmentId = null)
+    {
+        try {
+            $provider = User::find($providerId);
+            if (!$provider || $provider->role !== 'service_provider') {
+                return 'Provider not found';
+            }
+
+            // Calculate end time
+            $startDateTime = $this->parseAppointmentDateTime($appointmentDate, $appointmentTime);
+            if (!$startDateTime) {
+                return 'Invalid appointment time';
+            }
+
+            $endDateTime = $startDateTime->copy()->addHours($durationHours);
+
+            // Use the AvailabilityService to check if provider is available
+            $availabilityService = app(\App\Services\AvailabilityService::class);
+
+            $availability = $availabilityService->isAvailableAt(
+                $provider,
+                $appointmentDate,
+                $startDateTime->format('H:i'),
+                $endDateTime->format('H:i')
+            );
+
+            if (!$availability['available']) {
+                return $availability['reason'] ?? 'Provider is not available at the selected time';
+            }
+
+            // Check for conflicting appointments (excluding the current one being updated)
+            $conflicts = Appointment::where('provider_id', $providerId)
+                ->where('appointment_date', $appointmentDate)
+                ->where('id', '!=', $excludeAppointmentId)
+                ->whereIn('status', ['pending', 'confirmed', 'in_progress'])
+                ->where(function($query) use ($startDateTime, $endDateTime) {
+                    $query->whereBetween('appointment_time', [
+                        $startDateTime->format('H:i:s'),
+                        $endDateTime->format('H:i:s')
+                    ])->orWhere(function($q) use ($startDateTime, $endDateTime) {
+                        // Check for overlapping appointments
+                        $q->where('appointment_time', '<', $endDateTime->format('H:i:s'))
+                          ->whereRaw('ADDTIME(appointment_time, SEC_TO_TIME(duration_hours * 3600)) > ?', 
+                                    [$startDateTime->format('H:i:s')]);
+                    });
+                })
+                ->exists();
+
+            if ($conflicts) {
+                return 'Selected time conflicts with existing appointments';
+            }
+
+            return null; // Provider is available
+        } catch (\Exception $e) {
+            Log::error('Provider availability check error: ' . $e->getMessage());
+            return 'Unable to verify provider availability';
+        }
+    }
+
+    /**
      * Create new appointment (your existing store method - keeping as is)
      */
     public function store(Request $request)

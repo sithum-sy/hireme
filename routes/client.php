@@ -49,6 +49,8 @@ Route::prefix('appointments')->group(function () {
     Route::post('/', [AppointmentController::class, 'store']); // Create appointment (your existing)
     Route::get('/', [AppointmentController::class, 'index']); // List appointments (enhanced)
     Route::get('/{appointment}', [AppointmentController::class, 'show']); // Get appointment details (enhanced)
+    Route::put('/{appointment}', [AppointmentController::class, 'update']); // Update appointment (pending only)
+    Route::post('/{appointment}/reschedule-request', [AppointmentController::class, 'requestReschedule']); // Request reschedule
     Route::patch('/{appointment}/cancel', [AppointmentController::class, 'cancel']); // Cancel appointment (enhanced)
 
     // NEW payment and review endpoints

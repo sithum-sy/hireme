@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import ClientLayout from "../../../components/layouts/ClientLayout";
 import LoadingSpinner from "../../../components/LoadingSpinner";
 import CancelAppointmentModal from "../../../components/client/appointments/CancelAppointmentModal";
-import RescheduleModal from "../../../components/client/appointments/RescheduleModal";
+import AppointmentUpdateModal from "../../../components/client/appointments/AppointmentUpdateModal";
 import ReviewModal from "../../../components/client/appointments/ReviewModal";
 import PaymentModal from "../../../components/client/appointments/PaymentModal";
 import InvoiceSection from "../../../components/client/appointments/InvoiceSection";
@@ -22,7 +22,8 @@ const AppointmentDetail = () => {
 
     // Modal states
     const [showCancelModal, setShowCancelModal] = useState(false);
-    const [showRescheduleModal, setShowRescheduleModal] = useState(false);
+    const [showUpdateModal, setShowUpdateModal] = useState(false);
+    const [updateMode, setUpdateMode] = useState("auto");
     const [showReviewModal, setShowReviewModal] = useState(false);
     const [showPaymentModal, setShowPaymentModal] = useState(false);
     const [showContactPanel, setShowContactPanel] = useState(false);
@@ -240,9 +241,9 @@ const AppointmentDetail = () => {
         setShowCancelModal(false);
     };
 
-    const handleRescheduleSuccess = (updatedAppointment) => {
+    const handleUpdateSuccess = (updatedAppointment) => {
         setAppointment(updatedAppointment);
-        setShowRescheduleModal(false);
+        setShowUpdateModal(false);
     };
 
     // Loading state
@@ -353,24 +354,42 @@ const AppointmentDetail = () => {
                         )}
 
                         {/* Existing Status-based Actions */}
-                        {appointment.status === "pending" && canCancel && (
-                            <button
-                                className="btn btn-outline-danger"
-                                onClick={() => setShowCancelModal(true)}
-                                disabled={actionLoading}
-                            >
-                                <i className="fas fa-times me-2"></i>
-                                Cancel Appointment
-                            </button>
+                        {appointment.status === "pending" && (
+                            <>
+                                <button
+                                    className="btn btn-outline-primary me-2"
+                                    onClick={() => {
+                                        setUpdateMode("edit");
+                                        setShowUpdateModal(true);
+                                    }}
+                                    disabled={actionLoading}
+                                >
+                                    <i className="fas fa-edit me-2"></i>
+                                    Edit Appointment
+                                </button>
+                                {canCancel && (
+                                    <button
+                                        className="btn btn-outline-danger"
+                                        onClick={() => setShowCancelModal(true)}
+                                        disabled={actionLoading}
+                                    >
+                                        <i className="fas fa-times me-2"></i>
+                                        Cancel Appointment
+                                    </button>
+                                )}
+                            </>
                         )}
 
                         {appointment.status === "confirmed" && (
                             <>
                                 <button
                                     className="btn btn-outline-warning"
-                                    onClick={() => setShowRescheduleModal(true)}
+                                    onClick={() => {
+                                        setUpdateMode("reschedule");
+                                        setShowUpdateModal(true);
+                                    }}
                                 >
-                                    <i className="fas fa-edit me-2"></i>
+                                    <i className="fas fa-calendar-alt me-2"></i>
                                     Request Reschedule
                                 </button>
                                 <button
@@ -1064,11 +1083,12 @@ const AppointmentDetail = () => {
                 onCancellationSuccess={handleCancellationSuccess}
             />
 
-            <RescheduleModal
-                show={showRescheduleModal}
-                onHide={() => setShowRescheduleModal(false)}
+            <AppointmentUpdateModal
+                show={showUpdateModal}
+                onHide={() => setShowUpdateModal(false)}
                 appointment={appointment}
-                onRescheduleSuccess={handleRescheduleSuccess}
+                mode={updateMode}
+                onUpdateSuccess={handleUpdateSuccess}
             />
 
             <ReviewModal

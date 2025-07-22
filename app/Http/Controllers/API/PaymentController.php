@@ -53,7 +53,7 @@ class PaymentController extends Controller
         } catch (\Stripe\Exception\ApiErrorException $e) {
             Log::error('Stripe API error', [
                 'error' => $e->getMessage(),
-                'type' => $e->getType(),
+                // 'type' => $e->getType(),
                 'code' => $e->getCode(),
             ]);
 
