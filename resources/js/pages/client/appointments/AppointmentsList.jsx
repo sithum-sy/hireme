@@ -3,7 +3,7 @@ import { Link, useSearchParams, useLocation } from "react-router-dom";
 import ClientLayout from "../../../components/layouts/ClientLayout";
 import LoadingSpinner from "../../../components/LoadingSpinner";
 import CancelAppointmentModal from "../../../components/client/appointments/CancelAppointmentModal";
-import RescheduleModal from "../../../components/client/appointments/RescheduleModal";
+// import RescheduleModal from "../../../components/client/appointments/RescheduleModal";
 import ReviewModal from "../../../components/client/appointments/ReviewModal";
 import PaymentModal from "../../../components/client/appointments/PaymentModal";
 import clientAppointmentService from "../../../services/clientAppointmentService";
@@ -33,7 +33,7 @@ const AppointmentsList = () => {
 
     // Modal states
     const [showCancelModal, setShowCancelModal] = useState(false);
-    const [showRescheduleModal, setShowRescheduleModal] = useState(false);
+    // const [showRescheduleModal, setShowRescheduleModal] = useState(false);
     const [showReviewModal, setShowReviewModal] = useState(false);
     const [showPaymentModal, setShowPaymentModal] = useState(false);
     const [selectedAppointment, setSelectedAppointment] = useState(null);
@@ -45,20 +45,20 @@ const AppointmentsList = () => {
 
     // Show success message if navigated from booking completion
     const [successMessage, setSuccessMessage] = useState(null);
-    
+
     useEffect(() => {
         if (location.state?.message && location.state?.fromBooking) {
             setSuccessMessage({
                 message: location.state.message,
                 type: location.state.type || "success",
-                appointment: location.state.appointment
+                appointment: location.state.appointment,
             });
-            
+
             // Clear the success message after 10 seconds
             const timer = setTimeout(() => {
                 setSuccessMessage(null);
             }, 10000);
-            
+
             return () => clearTimeout(timer);
         }
     }, [location.state]);
@@ -310,10 +310,10 @@ const AppointmentsList = () => {
         setShowCancelModal(true);
     };
 
-    const handleRescheduleClick = (appointment) => {
-        setSelectedAppointment(appointment);
-        setShowRescheduleModal(true);
-    };
+    // const handleRescheduleClick = (appointment) => {
+    //     setSelectedAppointment(appointment);
+    //     setShowRescheduleModal(true);
+    // };
 
     const handleReviewClick = (appointment) => {
         setSelectedAppointment(appointment);
@@ -336,15 +336,15 @@ const AppointmentsList = () => {
         setSelectedAppointment(null);
     };
 
-    const handleRescheduleSuccess = (updatedAppointment) => {
-        setAppointments((prev) =>
-            prev.map((apt) =>
-                apt.id === updatedAppointment.id ? updatedAppointment : apt
-            )
-        );
-        setShowRescheduleModal(false);
-        setSelectedAppointment(null);
-    };
+    // const handleRescheduleSuccess = (updatedAppointment) => {
+    //     setAppointments((prev) =>
+    //         prev.map((apt) =>
+    //             apt.id === updatedAppointment.id ? updatedAppointment : apt
+    //         )
+    //     );
+    //     setShowRescheduleModal(false);
+    //     setSelectedAppointment(null);
+    // };
 
     const handleReviewSuccess = (updatedAppointment) => {
         setAppointments((prev) =>
@@ -371,23 +371,29 @@ const AppointmentsList = () => {
             <div className="appointments-page">
                 {/* Success Message Banner */}
                 {successMessage && (
-                    <div className="alert alert-success alert-dismissible fade show mb-4" role="alert">
+                    <div
+                        className="alert alert-success alert-dismissible fade show mb-4"
+                        role="alert"
+                    >
                         <div className="d-flex align-items-center">
                             <i className="fas fa-check-circle fa-lg me-3 text-success"></i>
                             <div className="flex-grow-1">
-                                <h6 className="alert-heading mb-1 fw-bold">Booking Successful!</h6>
+                                <h6 className="alert-heading mb-1 fw-bold">
+                                    Booking Successful!
+                                </h6>
                                 <p className="mb-0">{successMessage.message}</p>
                                 {successMessage.appointment && (
                                     <small className="text-muted">
-                                        Booking ID: #{successMessage.appointment.id} | 
-                                        Confirmation Code: {successMessage.appointment.confirmation_code}
+                                        Booking ID: #
+                                        {successMessage.appointment.id} |
+                                        {/* Confirmation Code: {successMessage.appointment.confirmation_code} */}
                                     </small>
                                 )}
                             </div>
                         </div>
-                        <button 
-                            type="button" 
-                            className="btn-close" 
+                        <button
+                            type="button"
+                            className="btn-close"
                             onClick={() => setSuccessMessage(null)}
                             aria-label="Close"
                         ></button>
@@ -766,17 +772,18 @@ const AppointmentsList = () => {
                                                             {appointment.status ===
                                                                 "confirmed" && (
                                                                 <>
-                                                                    <button
+                                                                    {/* <button
                                                                         className="btn btn-outline-warning btn-sm me-2"
                                                                         onClick={() =>
                                                                             handleRescheduleClick(
-                                                                                appointment
+                                                                                appointment,
+                                                                                "reschedule"
                                                                             )
                                                                         }
                                                                     >
-                                                                        <i className="fas fa-edit me-1"></i>
+                                                                        <i className="fas fa-calendar-alt me-1"></i>
                                                                         Reschedule
-                                                                    </button>
+                                                                    </button> */}
                                                                     {canCancel && (
                                                                         <button
                                                                             className="btn btn-outline-danger btn-sm"
@@ -1062,14 +1069,15 @@ const AppointmentsList = () => {
                         onCancellationSuccess={handleCancellationSuccess}
                     />
 
-                    <RescheduleModal
-                        show={showRescheduleModal}
+                    <AppointmentUpdateModal
+                        show={showUpdateModal}
                         onHide={() => {
-                            setShowRescheduleModal(false);
+                            setShowUpdateModal(false);
                             setSelectedAppointment(null);
                         }}
                         appointment={selectedAppointment}
-                        onRescheduleSuccess={handleRescheduleSuccess}
+                        mode={updateMode}
+                        onUpdateSuccess={handleUpdateSuccess}
                     />
 
                     <ReviewModal

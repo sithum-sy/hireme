@@ -48,7 +48,7 @@ const ContactSection = ({ onSuccess, onError }) => {
                                     <span className="value-text">
                                         {userData.contact_number}
                                     </span>
-                                    <div className="value-actions">
+                                    {/* <div className="value-actions">
                                         <a
                                             href={`tel:${userData.contact_number}`}
                                             className="action-btn"
@@ -63,7 +63,7 @@ const ContactSection = ({ onSuccess, onError }) => {
                                         >
                                             <i className="fas fa-sms"></i>
                                         </a>
-                                    </div>
+                                    </div> */}
                                 </div>
                             ) : (
                                 <span className="no-value">Not provided</span>
@@ -87,7 +87,7 @@ const ContactSection = ({ onSuccess, onError }) => {
                                     <span className="value-text">
                                         {userData.email}
                                     </span>
-                                    <div className="value-actions">
+                                    {/* <div className="value-actions">
                                         <a
                                             href={`mailto:${userData.email}`}
                                             className="action-btn"
@@ -95,7 +95,7 @@ const ContactSection = ({ onSuccess, onError }) => {
                                         >
                                             <i className="fas fa-envelope"></i>
                                         </a>
-                                    </div>
+                                    </div> */}
                                 </div>
                             ) : (
                                 <span className="no-value">Not provided</span>
@@ -120,7 +120,7 @@ const ContactSection = ({ onSuccess, onError }) => {
                                         <div className="address-text">
                                             {userData.address}
                                         </div>
-                                        <div className="value-actions">
+                                        {/* <div className="value-actions">
                                             <a
                                                 href={`https://maps.google.com?q=${encodeURIComponent(
                                                     userData.address
@@ -132,7 +132,7 @@ const ContactSection = ({ onSuccess, onError }) => {
                                             >
                                                 <i className="fas fa-map"></i>
                                             </a>
-                                        </div>
+                                        </div> */}
                                     </div>
                                 ) : (
                                     <span className="no-value">
@@ -179,7 +179,7 @@ const ContactSection = ({ onSuccess, onError }) => {
                         </div>
                     </div>
 
-                    <div className="preference-item">
+                    {/* <div className="preference-item">
                         <div className="preference-icon">
                             <i className="fas fa-sms"></i>
                         </div>
@@ -190,7 +190,7 @@ const ContactSection = ({ onSuccess, onError }) => {
                                 Disabled
                             </span>
                         </div>
-                    </div>
+                    </div> */}
                 </div>
             </div>
         </div>

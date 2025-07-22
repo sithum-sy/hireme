@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import DateTimeSelection from "../booking/DateTimeSelection";
+import TimeSelectionStep from "../booking/shared/TimeSelectionStep";
+import DurationDetailsStep from "../booking/steps/DurationDetailsStep";
 import LocationContactStep from "../booking/steps/LocationContactStep";
 import AppointmentSummary from "../booking/shared/AppointmentSummary";
 import appointmentService from "../../../services/appointmentService";
@@ -39,10 +40,17 @@ const AppointmentUpdateModal = ({
         contact_preference: appointment.contact_preference || "phone",
         client_notes: appointment.client_notes,
         payment_method: appointment.payment_method,
+        special_requirements: appointment.client_notes || "",
+        base_price: appointment.base_price || appointment.total_price,
     });
 
     const [originalData, setOriginalData] = useState(bookingData);
     const [hasChanges, setHasChanges] = useState(false);
+    const [selectedSlot, setSelectedSlot] = useState(null);
+
+    // For reschedule reason
+    const [rescheduleReason, setRescheduleReason] = useState("other");
+    const [rescheduleNotes, setRescheduleNotes] = useState("");
 
     useEffect(() => {
         if (show) {
@@ -64,10 +72,21 @@ const AppointmentUpdateModal = ({
                 contact_preference: appointment.contact_preference || "phone",
                 client_notes: appointment.client_notes,
                 payment_method: appointment.payment_method,
+                special_requirements: appointment.client_notes || "",
+                base_price: appointment.base_price || appointment.total_price,
             };
 
             setBookingData(initialData);
             setOriginalData(initialData);
+
+            // Create selected slot from appointment data
+            const slot = {
+                date: appointment.appointment_date,
+                time: appointment.appointment_time,
+                formatted_date: formatDate(appointment.appointment_date),
+                formatted_time: formatTime(appointment.appointment_time),
+            };
+            setSelectedSlot(slot);
         }
     }, [show, appointment]);
 
@@ -77,6 +96,34 @@ const AppointmentUpdateModal = ({
             JSON.stringify(bookingData) !== JSON.stringify(originalData);
         setHasChanges(changes);
     }, [bookingData, originalData]);
+
+    // Helper functions
+    const formatDate = (dateString) => {
+        if (!dateString) return "";
+        try {
+            return new Date(dateString).toLocaleDateString("en-US", {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+            });
+        } catch (error) {
+            return dateString;
+        }
+    };
+
+    const formatTime = (timeString) => {
+        if (!timeString) return "";
+        try {
+            const [hours, minutes] = timeString.split(":");
+            const hour = parseInt(hours);
+            const ampm = hour >= 12 ? "PM" : "AM";
+            const displayHour = hour % 12 || 12;
+            return `${displayHour}:${minutes} ${ampm}`;
+        } catch (error) {
+            return timeString;
+        }
+    };
 
     const updateBookingData = (newData) => {
         setBookingData((prev) => ({ ...prev, ...newData }));
@@ -89,54 +136,39 @@ const AppointmentUpdateModal = ({
         });
     };
 
-    const validateStep = (step) => {
-        const newErrors = {};
+    // Step handlers
+    const handleTimeStepComplete = (stepData) => {
+        updateBookingData(stepData);
 
-        if (step === 1) {
-            if (!bookingData.appointment_date) {
-                newErrors.appointment_date = "Please select a date";
-            }
-            if (!bookingData.appointment_time) {
-                newErrors.appointment_time = "Please select a time";
-            }
-        }
+        // Update selected slot
+        const slot = {
+            date: stepData.appointment_date,
+            time: stepData.appointment_time,
+            formatted_date: formatDate(stepData.appointment_date),
+            formatted_time: formatTime(stepData.appointment_time),
+        };
+        setSelectedSlot(slot);
 
-        if (step === 2) {
-            if (
-                bookingData.location_type === "client_address" ||
-                bookingData.location_type === "custom_location"
-            ) {
-                if (!bookingData.client_address?.trim()) {
-                    newErrors.client_address = "Address is required";
-                }
-                if (!bookingData.client_city?.trim()) {
-                    newErrors.client_city = "City is required";
-                }
-            }
-
-            const hasPhone = bookingData.client_phone?.trim();
-            const hasEmail = bookingData.client_email?.trim();
-
-            if (!hasPhone && !hasEmail) {
-                newErrors.contact = "Either phone number or email is required";
-            }
-        }
-
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
+        setCurrentStep(2);
     };
 
-    const handleNext = () => {
-        if (!validateStep(currentStep)) return;
-        setCurrentStep((prev) => prev + 1);
+    const handleDurationStepComplete = (stepData) => {
+        updateBookingData(stepData);
+        setCurrentStep(3);
+    };
+
+    const handleLocationStepComplete = (stepData) => {
+        updateBookingData(stepData);
+        // Skip to submission since we don't need payment step for updates
+        handleSubmit({ ...bookingData, ...stepData });
     };
 
     const handlePrevious = () => {
         setCurrentStep((prev) => Math.max(1, prev - 1));
     };
 
-    const handleSubmit = async () => {
-        if (!validateStep(2) || !hasChanges) return;
+    const handleSubmit = async (finalData = bookingData) => {
+        if (!hasChanges) return;
 
         setLoading(true);
         try {
@@ -146,24 +178,22 @@ const AppointmentUpdateModal = ({
                 // Direct update for pending appointments
                 result = await appointmentService.updateAppointment(
                     appointment.id,
-                    bookingData
+                    finalData
                 );
             } else {
                 // Reschedule request for confirmed appointments
                 result = await appointmentService.requestReschedule(
                     appointment.id,
                     {
-                        date: bookingData.appointment_date,
-                        time: bookingData.appointment_time,
-                        reason:
-                            bookingData.reschedule_reason || "client_request",
-                        notes: bookingData.client_notes,
+                        date: finalData.appointment_date,
+                        time: finalData.appointment_time,
+                        reason: rescheduleReason,
+                        notes: rescheduleNotes || finalData.client_notes,
                         // Include updated contact and location info
-                        location_type: bookingData.location_type,
-                        client_address: bookingData.client_address,
-                        client_city: bookingData.client_city,
-                        client_phone: bookingData.client_phone,
-                        client_email: bookingData.client_email,
+                        client_phone: finalData.client_phone,
+                        client_email: finalData.client_email,
+                        client_address: finalData.client_address,
+                        location_type: finalData.location_type,
                     }
                 );
             }
@@ -187,7 +217,8 @@ const AppointmentUpdateModal = ({
         } catch (error) {
             console.error("Update failed:", error);
             setErrors({
-                general: "Failed to update appointment. Please try again.",
+                general:
+                    "Failed to update appointment. Please try again.",
             });
         } finally {
             setLoading(false);
@@ -224,13 +255,17 @@ const AppointmentUpdateModal = ({
         }
     };
 
-    const getActionButtonText = () => {
-        if (loading) return "Saving...";
-        if (updateMode === "edit") {
-            return hasChanges ? "Save Changes" : "No Changes";
-        } else {
-            return hasChanges ? "Submit Reschedule Request" : "No Changes";
-        }
+    const handleRescheduleReasonChange = (e) => {
+        setRescheduleReason(e.target.value);
+    };
+
+    const handleRescheduleNotesChange = (e) => {
+        setRescheduleNotes(e.target.value);
+    };
+
+    const handleTimeSelectionContinue = () => {
+        // Proceed to time selection after setting reschedule reason
+        // The TimeSelectionStep will handle the next step progression
     };
 
     if (!show) return null;
@@ -241,21 +276,27 @@ const AppointmentUpdateModal = ({
             <div
                 className="modal-backdrop fade show"
                 style={{ zIndex: 1040 }}
-            ></div>
+            />
 
             {/* Modal */}
             <div
                 className="modal fade show d-block"
                 style={{ zIndex: 1050 }}
                 tabIndex="-1"
+                role="dialog"
+                aria-labelledby="appointmentUpdateModalTitle"
+                aria-hidden="false"
             >
                 <div className="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
                     <div className="modal-content">
                         {/* Header */}
                         <div className="modal-header border-bottom">
                             <div>
-                                <h5 className="modal-title fw-bold text-purple">
-                                    <i className={`${getModalIcon()} me-2`}></i>
+                                <h5
+                                    id="appointmentUpdateModalTitle"
+                                    className="modal-title fw-bold text-purple"
+                                >
+                                    <i className={`${getModalIcon()} me-2`} />
                                     {getModalTitle()}
                                 </h5>
                                 <p className="text-muted mb-0 small">
@@ -270,14 +311,15 @@ const AppointmentUpdateModal = ({
                                 className="btn-close"
                                 onClick={handleClose}
                                 disabled={loading}
-                            ></button>
+                                aria-label="Close modal"
+                            />
                         </div>
 
                         {/* Body */}
                         <div className="modal-body p-0">
                             {errors.general && (
                                 <div className="alert alert-danger m-3">
-                                    <i className="fas fa-exclamation-triangle me-2"></i>
+                                    <i className="fas fa-exclamation-triangle me-2" />
                                     {errors.general}
                                 </div>
                             )}
@@ -297,13 +339,11 @@ const AppointmentUpdateModal = ({
                                                 ? "fa-info-circle"
                                                 : "fa-clock"
                                         } me-2`}
-                                    ></i>
+                                    />
                                     <div>
                                         {updateMode === "edit" ? (
                                             <>
-                                                <strong>
-                                                    Direct Edit Mode:
-                                                </strong>{" "}
+                                                <strong>Direct Edit Mode:</strong>{" "}
                                                 Changes will be applied
                                                 immediately since your
                                                 appointment is still pending
@@ -314,9 +354,9 @@ const AppointmentUpdateModal = ({
                                                 <strong>
                                                     Reschedule Request Mode:
                                                 </strong>{" "}
-                                                Your appointment is confirmed,
-                                                so changes require provider
-                                                approval. You'll receive a
+                                                Your appointment is confirmed, so
+                                                changes require provider
+                                                approval. You will receive a
                                                 response within 24 hours.
                                             </>
                                         )}
@@ -324,178 +364,185 @@ const AppointmentUpdateModal = ({
                                 </div>
                             </div>
 
-                            <div className="container-fluid">
-                                <div className="row">
-                                    <div className="col-lg-8">
-                                        {/* Step 1: Date & Time Selection */}
-                                        {currentStep === 1 && (
-                                            <div className="step-content">
-                                                <DateTimeSelection
-                                                    service={
-                                                        appointment.service
-                                                    }
-                                                    provider={
-                                                        appointment.provider
-                                                    }
-                                                    bookingData={bookingData}
-                                                    updateBookingData={
-                                                        updateBookingData
-                                                    }
-                                                    onNext={handleNext}
-                                                    onPrevious={handleClose}
-                                                />
-                                            </div>
-                                        )}
-
-                                        {/* Step 2: Location & Contact */}
-                                        {currentStep === 2 && (
-                                            <div className="step-content">
-                                                <LocationContactStep
-                                                    service={
-                                                        appointment.service
-                                                    }
-                                                    provider={
-                                                        appointment.provider
-                                                    }
-                                                    bookingData={bookingData}
-                                                    onStepComplete={() => {}} // We handle submit differently
-                                                    onPrevious={handlePrevious}
-                                                    clientLocation={{
-                                                        city: bookingData.client_city,
-                                                        address:
-                                                            bookingData.client_address,
-                                                    }}
-                                                />
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {/* Sidebar with Summary */}
-                                    <div className="col-lg-4">
-                                        <div
-                                            className="position-sticky"
-                                            style={{ top: "2rem" }}
-                                        >
-                                            <AppointmentSummary
-                                                service={appointment.service}
-                                                provider={appointment.provider}
-                                                bookingData={bookingData}
-                                                currentStep={currentStep}
-                                                isSticky={false}
-                                            />
-
-                                            {/* Changes Summary */}
-                                            {hasChanges && (
-                                                <div className="card border-warning mt-3">
-                                                    <div className="card-header bg-warning bg-opacity-10 border-warning">
-                                                        <h6 className="fw-bold mb-0 text-warning">
-                                                            <i className="fas fa-exclamation-triangle me-2"></i>
-                                                            Pending Changes
-                                                        </h6>
-                                                    </div>
-                                                    <div className="card-body">
-                                                        <small className="text-muted">
-                                                            You have unsaved
-                                                            changes to your
-                                                            appointment.
-                                                            {updateMode ===
-                                                            "edit"
-                                                                ? " Click 'Save Changes' to apply them."
-                                                                : " Click 'Submit Request' to send to provider."}
-                                                        </small>
-                                                    </div>
+                            {/* Reschedule Reason for confirmed appointments */}
+                            {updateMode === "reschedule" && currentStep === 1 && (
+                                <div className="reschedule-reason-section mx-3 mb-3">
+                                    <div className="card border-warning">
+                                        <div className="card-body">
+                                            <h6 className="fw-bold text-warning mb-3">
+                                                <i className="fas fa-question-circle me-2" />
+                                                Why do you need to reschedule?
+                                            </h6>
+                                            <div className="row">
+                                                <div className="col-md-6 mb-3">
+                                                    <label
+                                                        htmlFor="rescheduleReason"
+                                                        className="form-label"
+                                                    >
+                                                        Reason *
+                                                    </label>
+                                                    <select
+                                                        id="rescheduleReason"
+                                                        className="form-select"
+                                                        value={rescheduleReason}
+                                                        onChange={
+                                                            handleRescheduleReasonChange
+                                                        }
+                                                        required
+                                                    >
+                                                        <option value="personal_emergency">
+                                                            Personal emergency
+                                                        </option>
+                                                        <option value="work_conflict">
+                                                            Work schedule conflict
+                                                        </option>
+                                                        <option value="travel_plans">
+                                                            Travel plans changed
+                                                        </option>
+                                                        <option value="health_reasons">
+                                                            Health reasons
+                                                        </option>
+                                                        <option value="weather_concerns">
+                                                            Weather concerns
+                                                        </option>
+                                                        <option value="other">
+                                                            Other reason
+                                                        </option>
+                                                    </select>
                                                 </div>
-                                            )}
+                                                <div className="col-md-6 mb-3">
+                                                    <label
+                                                        htmlFor="rescheduleNotes"
+                                                        className="form-label"
+                                                    >
+                                                        Additional Notes
+                                                    </label>
+                                                    <textarea
+                                                        id="rescheduleNotes"
+                                                        className="form-control"
+                                                        rows="2"
+                                                        placeholder="Please explain why you need to reschedule..."
+                                                        value={rescheduleNotes}
+                                                        onChange={
+                                                            handleRescheduleNotesChange
+                                                        }
+                                                        maxLength="500"
+                                                    />
+                                                    <small className="text-muted">
+                                                        {rescheduleNotes.length}/500
+                                                    </small>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+                            )}
+
+                            {/* Step Content */}
+                            {currentStep === 1 && updateMode === "edit" && (
+                                <TimeSelectionStep
+                                    service={appointment.service}
+                                    provider={appointment.provider}
+                                    bookingData={bookingData}
+                                    selectedSlot={selectedSlot}
+                                    onStepComplete={handleTimeStepComplete}
+                                />
+                            )}
+
+                            {currentStep === 1 && updateMode === "reschedule" && (
+                                <TimeSelectionStep
+                                    service={appointment.service}
+                                    provider={appointment.provider}
+                                    bookingData={bookingData}
+                                    selectedSlot={selectedSlot}
+                                    onStepComplete={handleTimeStepComplete}
+                                />
+                            )}
+
+                            {currentStep === 2 && (
+                                <DurationDetailsStep
+                                    service={appointment.service}
+                                    provider={appointment.provider}
+                                    bookingData={bookingData}
+                                    selectedSlot={selectedSlot}
+                                    onStepComplete={handleDurationStepComplete}
+                                    onPrevious={handlePrevious}
+                                />
+                            )}
+
+                            {currentStep === 3 && (
+                                <LocationContactStep
+                                    service={appointment.service}
+                                    provider={appointment.provider}
+                                    bookingData={bookingData}
+                                    selectedSlot={selectedSlot}
+                                    onStepComplete={handleLocationStepComplete}
+                                    onPrevious={handlePrevious}
+                                    clientLocation={{
+                                        city: bookingData.client_city,
+                                        address: bookingData.client_address,
+                                    }}
+                                />
+                            )}
+
+                            {/* Changes Summary */}
+                            {hasChanges && (
+                                <div className="changes-summary mx-3 mb-3">
+                                    <div className="card border-warning">
+                                        <div className="card-header bg-warning bg-opacity-10 border-warning">
+                                            <h6 className="fw-bold mb-0 text-warning">
+                                                <i className="fas fa-exclamation-triangle me-2" />
+                                                Pending Changes
+                                            </h6>
+                                        </div>
+                                        <div className="card-body">
+                                            <small className="text-muted">
+                                                You have unsaved changes to your
+                                                appointment.
+                                                {updateMode === "edit"
+                                                    ? " Complete all steps to apply them."
+                                                    : " Complete all steps to submit your reschedule request."}
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
-                        {/* Footer */}
-                        <div className="modal-footer border-top">
-                            <div className="d-flex justify-content-between w-100">
-                                <div>
-                                    {currentStep > 1 && (
-                                        <button
-                                            type="button"
-                                            className="btn btn-outline-secondary"
-                                            onClick={handlePrevious}
-                                            disabled={loading}
-                                        >
-                                            <i className="fas fa-arrow-left me-2"></i>
-                                            Previous
-                                        </button>
-                                    )}
-                                </div>
+                        {/* Footer - Only show for reschedule reason step */}
+                        {currentStep === 1 && updateMode === "reschedule" && (
+                            <div className="modal-footer border-top">
+                                <div className="d-flex justify-content-between w-100">
+                                    <button
+                                        type="button"
+                                        className="btn btn-outline-secondary"
+                                        onClick={handleClose}
+                                        disabled={loading}
+                                    >
+                                        Cancel
+                                    </button>
 
-                                <div>
-                                    {currentStep === 1 ? (
-                                        <button
-                                            type="button"
-                                            className="btn btn-purple"
-                                            onClick={handleNext}
-                                            disabled={
-                                                !bookingData.appointment_date ||
-                                                !bookingData.appointment_time
-                                            }
-                                        >
-                                            Continue to Details
-                                            <i className="fas fa-arrow-right ms-2"></i>
-                                        </button>
-                                    ) : (
-                                        <>
-                                            <button
-                                                type="button"
-                                                className="btn btn-outline-secondary me-2"
-                                                onClick={handleClose}
-                                                disabled={loading}
-                                            >
-                                                Cancel
-                                            </button>
-                                            <button
-                                                type="button"
-                                                className={`btn btn-${
-                                                    updateMode === "edit"
-                                                        ? "success"
-                                                        : "warning"
-                                                }`}
-                                                onClick={handleSubmit}
-                                                disabled={
-                                                    loading || !hasChanges
-                                                }
-                                            >
-                                                {loading ? (
-                                                    <>
-                                                        <span className="spinner-border spinner-border-sm me-2"></span>
-                                                        Saving...
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <i
-                                                            className={`fas ${
-                                                                updateMode ===
-                                                                "edit"
-                                                                    ? "fa-save"
-                                                                    : "fa-paper-plane"
-                                                            } me-2`}
-                                                        ></i>
-                                                        {getActionButtonText()}
-                                                    </>
-                                                )}
-                                            </button>
-                                        </>
-                                    )}
+                                    <button
+                                        type="button"
+                                        className="btn btn-warning"
+                                        onClick={handleTimeSelectionContinue}
+                                        disabled={!rescheduleReason}
+                                    >
+                                        Continue to Time Selection
+                                        <i className="fas fa-arrow-right ms-2" />
+                                    </button>
                                 </div>
                             </div>
-                        </div>
+                        )}
                     </div>
                 </div>
             </div>
 
             {/* Custom Styles */}
             <style>{`
-                .text-purple { color: #6f42c1 !important; }
+                .text-purple { 
+                    color: #6f42c1 !important; 
+                }
                 .btn-purple {
                     background-color: #6f42c1;
                     border-color: #6f42c1;
@@ -506,11 +553,47 @@ const AppointmentUpdateModal = ({
                     border-color: #5a2d91;
                     color: white;
                 }
-                .step-content {
-                    padding: 2rem 0;
-                }
                 .modal-xl {
                     max-width: 1200px;
+                }
+                
+                /* Enhanced modal scrolling */
+                .modal-dialog {
+                    margin: 1rem auto;
+                    max-height: calc(100vh - 2rem);
+                }
+                
+                .modal-content {
+                    max-height: calc(100vh - 2rem);
+                    display: flex;
+                    flex-direction: column;
+                }
+                
+                .modal-body {
+                    overflow-y: auto;
+                    flex: 1;
+                    padding: 0;
+                }
+                
+                /* Ensure smooth scrolling */
+                .modal-dialog, .modal-content, .modal-body {
+                    scroll-behavior: smooth;
+                }
+                
+                /* Focus management for accessibility */
+                .modal.show .modal-dialog {
+                    animation: modalFadeIn 0.3s ease-out;
+                }
+                
+                @keyframes modalFadeIn {
+                    from {
+                        opacity: 0;
+                        transform: translateY(-20px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
                 }
             `}</style>
         </>

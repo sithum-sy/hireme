@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import CompleteServiceModal from "./CompleteServiceModal";
+import RescheduleRequestModal from "./RescheduleRequestModal";
 import providerAppointmentService from "../../../services/providerAppointmentService";
 import ReviewButton from "../../reviews/ReviewButton";
 
@@ -8,9 +9,41 @@ const AppointmentCard = ({ appointment, onStatusUpdate }) => {
     const [loading, setLoading] = useState(false);
     const [actionLoading, setActionLoading] = useState(false);
     const [showCompleteModal, setShowCompleteModal] = useState(false);
+    const [showRescheduleModal, setShowRescheduleModal] = useState(false);
 
+    // Check if appointment has pending reschedule request
+    const hasPendingReschedule = () => {
+        return appointment.reschedule_request && 
+               appointment.reschedule_request.status === 'pending';
     // Check if appointment time has arrived
     const canStartService = () => {
+
+    // Helper functions for formatting
+    const formatDate = (dateString) => {
+        if (!dateString) return "";
+        try {
+            return new Date(dateString).toLocaleDateString("en-US", {
+                weekday: "short",
+                month: "short",
+                day: "numeric",
+            });
+        } catch (error) {
+            return dateString;
+        }
+    };
+
+    const formatTime = (timeString) => {
+        if (!timeString) return "";
+        try {
+            const [hours, minutes] = timeString.split(":");
+            const hour = parseInt(hours);
+            const ampm = hour >= 12 ? "PM" : "AM";
+            const displayHour = hour % 12 || 12;
+            return `${displayHour}:${minutes} ${ampm}`;
+        } catch (error) {
+            return timeString;
+        }
+    };
         if (appointment.status !== "confirmed") return false;
 
         try {
@@ -420,6 +453,30 @@ const AppointmentCard = ({ appointment, onStatusUpdate }) => {
                                         </span>
                                     </div>
                                 )}
+
+                            {/* Reschedule Request Alert */}
+                            {hasPendingReschedule() && (
+                                <div className="mt-2">
+                                    <div className="alert alert-warning py-2 mb-0 d-flex align-items-center justify-content-between">
+                                        <div>
+                                            <i className="fas fa-calendar-alt me-2"></i>
+                                            <strong>Reschedule Request Pending</strong>
+                                            <br />
+                                            <small>
+                                                New: {formatDate(appointment.reschedule_request.requested_date)} at {formatTime(appointment.reschedule_request.requested_time)}
+                                            </small>
+                                        </div>
+                                        <button
+                                            className="btn btn-warning btn-sm ms-2"
+                                            onClick={() => setShowRescheduleModal(true)}
+                                            disabled={actionLoading}
+                                        >
+                                            <i className="fas fa-eye me-1"></i>
+                                            Review
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
 
@@ -548,6 +605,15 @@ const AppointmentCard = ({ appointment, onStatusUpdate }) => {
                     isOpen={showCompleteModal}
                     onClose={handleCloseModal}
                     onComplete={handleCompleteService}
+                />
+            )}
+
+            {showRescheduleModal && (
+                <RescheduleRequestModal
+                    show={showRescheduleModal}
+                    onHide={() => setShowRescheduleModal(false)}
+                    appointment={appointment}
+                    onResponseSuccess={onStatusUpdate}
                 />
             )}
         </div>
