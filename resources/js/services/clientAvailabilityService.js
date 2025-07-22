@@ -103,6 +103,45 @@ class ClientAvailabilityService {
         }
     }
 
+    async getProviderWorkingHours(providerId, date) {
+        try {
+            const response = await axios.get(
+                `${API_BASE}/providers/${providerId}/availability/working-hours`,
+                {
+                    params: { date }
+                }
+            );
+
+            return {
+                success: true,
+                data: response.data.data || response.data,
+                message: response.data.message || "Working hours loaded",
+            };
+        } catch (error) {
+            console.warn("Provider working hours endpoint error:", error);
+
+            // Log the actual error for debugging
+            if (error.response) {
+                console.error("Error response:", error.response.data);
+                console.error("Error status:", error.response.status);
+            }
+
+            // Return fallback working hours
+            return {
+                success: true,
+                data: {
+                    is_available: true,
+                    start_time: "09:00",
+                    end_time: "17:00",
+                    timezone: "Asia/Colombo",
+                    day_of_week: new Date(date).getDay(),
+                },
+                message: "Working hours loaded (fallback mode)",
+                fallback: true,
+            };
+        }
+    }
+
     // Format availability slots from Laravel backend
     formatAvailabilitySlots(slotsData, selectedDate) {
         if (!Array.isArray(slotsData)) {

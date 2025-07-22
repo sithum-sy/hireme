@@ -10,6 +10,7 @@ import BookingModal from "../../../components/client/booking/BookingModal";
 import LoadingSpinner from "../../../components/LoadingSpinner";
 import ProviderAvailabilitySlots from "../../../components/client/services/ProviderAvailabilitySlots";
 import QuoteRequestModal from "../../../components/client/booking/QuoteRequestModal";
+import { constructProfileImageUrl } from "../../../hooks/useServiceImages";
 
 const ServiceDetail = () => {
     const { id } = useParams();
@@ -124,11 +125,13 @@ const ServiceDetail = () => {
             if (response.ok) {
                 const data = await response.json();
                 const address = data.address || {};
-                
+
                 return {
                     lat,
                     lng,
-                    address: data.display_name || `${lat.toFixed(4)}, ${lng.toFixed(4)}`,
+                    address:
+                        data.display_name ||
+                        `${lat.toFixed(4)}, ${lng.toFixed(4)}`,
                     neighborhood: address.suburb || address.neighbourhood || "",
                     city:
                         address.city ||
@@ -154,16 +157,51 @@ const ServiceDetail = () => {
 
     const reverseGeocodeOffline = (lat, lng) => {
         const sriLankanCities = [
-            { name: "Colombo", lat: 6.9271, lng: 79.8612, province: "Western Province" },
-            { name: "Negombo", lat: 7.2083, lng: 79.8358, province: "Western Province" },
-            { name: "Kandy", lat: 7.2906, lng: 80.6337, province: "Central Province" },
-            { name: "Gampaha", lat: 7.0873, lng: 79.999, province: "Western Province" },
-            { name: "Kalutara", lat: 6.5854, lng: 79.9607, province: "Western Province" },
-            { name: "Galle", lat: 6.0535, lng: 80.221, province: "Southern Province" },
+            {
+                name: "Colombo",
+                lat: 6.9271,
+                lng: 79.8612,
+                province: "Western Province",
+            },
+            {
+                name: "Negombo",
+                lat: 7.2083,
+                lng: 79.8358,
+                province: "Western Province",
+            },
+            {
+                name: "Kandy",
+                lat: 7.2906,
+                lng: 80.6337,
+                province: "Central Province",
+            },
+            {
+                name: "Gampaha",
+                lat: 7.0873,
+                lng: 79.999,
+                province: "Western Province",
+            },
+            {
+                name: "Kalutara",
+                lat: 6.5854,
+                lng: 79.9607,
+                province: "Western Province",
+            },
+            {
+                name: "Galle",
+                lat: 6.0535,
+                lng: 80.221,
+                province: "Southern Province",
+            },
         ];
 
         let closestCity = sriLankanCities[0];
-        let minDistance = calculateDistance(lat, lng, closestCity.lat, closestCity.lng);
+        let minDistance = calculateDistance(
+            lat,
+            lng,
+            closestCity.lat,
+            closestCity.lng
+        );
 
         sriLankanCities.forEach((city) => {
             const distance = calculateDistance(lat, lng, city.lat, city.lng);
@@ -527,7 +565,12 @@ const ServiceDetail = () => {
                             <ServiceGallery
                                 service={service}
                                 title={service.title || "Service Gallery"}
-                                images={service.images || service.service_images || service.existing_images || []}
+                                images={
+                                    service.images ||
+                                    service.service_images ||
+                                    service.existing_images ||
+                                    []
+                                }
                             />
                         </div>
 
@@ -690,35 +733,74 @@ const ServiceDetail = () => {
                                         <div className="card-body">
                                             {/* Provider Header - Fixed Layout */}
                                             <div className="provider-header d-flex align-items-start mb-4">
-                                                <div className="provider-avatar me-3 flex-shrink-0">
-                                                    {provider.profile_image_url ? (
-                                                        <img
-                                                            src={
+                                                <div className=" me-3 flex-shrink-0">
+                                                    {(() => {
+                                                        // Use the dedicated profile image URL constructor
+                                                        const profileImageUrl =
+                                                            constructProfileImageUrl(
                                                                 provider.profile_image_url
-                                                            }
-                                                            alt={
-                                                                provider.business_name ||
-                                                                provider.name
-                                                            }
-                                                            className="rounded-circle"
-                                                            style={{
-                                                                width: "80px",
-                                                                height: "80px",
-                                                                objectFit:
-                                                                    "cover",
-                                                            }}
-                                                        />
-                                                    ) : (
-                                                        <div
-                                                            className="bg-purple bg-opacity-10 text-purple rounded-circle d-flex align-items-center justify-content-center"
-                                                            style={{
-                                                                width: "80px",
-                                                                height: "80px",
-                                                            }}
-                                                        >
-                                                            <i className="fas fa-user fa-2x"></i>
-                                                        </div>
-                                                    )}
+                                                            );
+
+                                                        {
+                                                            /* console.log('Provider profile image debug:', {
+                                                            provider_id: provider.id,
+                                                            original_url: provider.profile_image_url,
+                                                            constructed_url: profileImageUrl,
+                                                            provider_name: provider.business_name || provider.name
+                                                        }); */
+                                                        }
+
+                                                        return profileImageUrl ? (
+                                                            <img
+                                                                src={
+                                                                    profileImageUrl
+                                                                }
+                                                                alt={
+                                                                    provider.business_name ||
+                                                                    provider.name
+                                                                }
+                                                                className="rounded-circle"
+                                                                style={{
+                                                                    width: "80px",
+                                                                    height: "80px",
+                                                                    objectFit:
+                                                                        "cover",
+                                                                }}
+                                                                onError={(
+                                                                    e
+                                                                ) => {
+                                                                    console.error(
+                                                                        "Provider profile image failed to load:",
+                                                                        profileImageUrl
+                                                                    );
+                                                                    // Hide failed image and show fallback
+                                                                    e.target.style.display =
+                                                                        "none";
+                                                                    const fallback =
+                                                                        e.target
+                                                                            .nextSibling;
+                                                                    if (
+                                                                        fallback
+                                                                    ) {
+                                                                        fallback.style.display =
+                                                                            "flex";
+                                                                    }
+                                                                }}
+                                                            />
+                                                        ) : null;
+                                                    })()}
+
+                                                    {/* Fallback avatar */}
+                                                    {/* <div
+                                                        className="bg-purple bg-opacity-10 text-purple rounded-circle d-flex align-items-center justify-content-center"
+                                                        style={{
+                                                            width: "80px",
+                                                            height: "80px",
+                                                            display: provider.profile_image_url ? "none" : "flex",
+                                                        }}
+                                                    >
+                                                        <i className="fas fa-user fa-2x"></i>
+                                                    </div> */}
                                                 </div>
 
                                                 <div className="provider-info flex-grow-1 min-width-0">

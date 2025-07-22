@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import clientService from "../../../../services/clientService.js";
+import clientAvailabilityService from "../../../../services/clientAvailabilityService";
 import AppointmentSummary from "../shared/AppointmentSummary";
 
 const DurationDetailsStep = ({
@@ -32,24 +32,24 @@ const DurationDetailsStep = ({
     const calculateMaxDuration = async () => {
         setLoading(true);
         try {
-            const response = await fetch(
-                `/api/client/providers/${provider.id}/availability/working-hours?date=${selectedSlot.date}`
+            const response = await clientAvailabilityService.getProviderWorkingHours(
+                provider.id,
+                selectedSlot.date
             );
 
-            if (response.ok) {
-                const data = await response.json();
-                // console.log("Working hours response:", data);
-                if (data.success && data.data.is_available) {
-                    const maxHours = calculateHoursBetween(
-                        selectedSlot.time,
-                        data.data.end_time
-                    );
-                    setMaxDuration(Math.min(maxHours, 12)); // Cap at 12 hours
-                    // console.log(
-                    //     "Calculated max duration:",
-                    //     Math.min(maxHours, 12)
-                    // );
-                }
+            if (response.success && response.data.is_available) {
+                const maxHours = calculateHoursBetween(
+                    selectedSlot.time,
+                    response.data.end_time
+                );
+                setMaxDuration(Math.min(maxHours, 12)); // Cap at 12 hours
+                console.log(
+                    "Calculated max duration:",
+                    Math.min(maxHours, 12)
+                );
+            } else {
+                // Provider not available, set a default duration
+                setMaxDuration(8);
             }
         } catch (error) {
             console.warn("Could not calculate max duration:", error);

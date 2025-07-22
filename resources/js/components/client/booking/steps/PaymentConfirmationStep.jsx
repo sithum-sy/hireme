@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import clientService from "../../../../services/clientService";
+import { constructProfileImageUrl } from "../../../../hooks/useServiceImages";
 import AppointmentSummary from "../shared/AppointmentSummary";
 
 const PaymentConfirmationStep = ({
@@ -18,6 +19,7 @@ const PaymentConfirmationStep = ({
     );
     const [loading, setLoading] = useState(false);
     const [errors, setErrors] = useState({});
+    const [providerImageError, setProviderImageError] = useState(false);
 
     const handleSubmitBooking = async () => {
         // Clear previous errors
@@ -198,60 +200,67 @@ const PaymentConfirmationStep = ({
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div className="col-md-4 text-end">
-                                                {service?.first_image_url && (
-                                                    <img
-                                                        src={
-                                                            service.first_image_url
-                                                        }
-                                                        alt={service.title}
-                                                        className="rounded"
-                                                        style={{
-                                                            width: "80px",
-                                                            height: "80px",
-                                                            objectFit: "cover",
-                                                        }}
-                                                    />
-                                                )}
-                                            </div>
                                         </div>
                                     </div>
-
-                                    {/* Provider Details */}
                                     <div className="confirmation-section border-bottom pb-3 mb-3">
                                         <h6 className="fw-bold text-purple mb-2">
                                             Provider
                                         </h6>
                                         <div className="provider-info d-flex align-items-center">
-                                            <div className="provider-avatar me-3">
-                                                {provider?.profile_image_url ? (
-                                                    <img
-                                                        src={
-                                                            provider.profile_image_url
-                                                        }
-                                                        alt={provider.name}
-                                                        className="rounded-circle"
-                                                        style={{
-                                                            width: "50px",
-                                                            height: "50px",
-                                                            objectFit: "cover",
-                                                        }}
-                                                    />
-                                                ) : (
-                                                    <div
-                                                        className="bg-purple bg-opacity-10 text-purple rounded-circle d-flex align-items-center justify-content-center"
-                                                        style={{
-                                                            width: "50px",
-                                                            height: "50px",
-                                                        }}
-                                                    >
-                                                        <i className="fas fa-user" />
-                                                    </div>
-                                                )}
+                                            <div className="me-3">
+                                                {(() => {
+                                                    const profileImageUrl =
+                                                        constructProfileImageUrl(
+                                                            provider?.profile_image_url
+                                                        );
+
+                                                    if (
+                                                        profileImageUrl &&
+                                                        !providerImageError
+                                                    ) {
+                                                        return (
+                                                            <img
+                                                                src={
+                                                                    profileImageUrl
+                                                                }
+                                                                alt={
+                                                                    provider.name
+                                                                }
+                                                                className="rounded-circle"
+                                                                style={{
+                                                                    width: "50px",
+                                                                    height: "50px",
+                                                                    objectFit:
+                                                                        "cover",
+                                                                }}
+                                                                onError={() =>
+                                                                    setProviderImageError(
+                                                                        true
+                                                                    )
+                                                                }
+                                                            />
+                                                        );
+                                                    } else {
+                                                        return (
+                                                            <div
+                                                                className="bg-opacity-10 text-purple rounded-circle d-flex align-items-center justify-content-center"
+                                                                style={{
+                                                                    width: "50px",
+                                                                    height: "50px",
+                                                                    display:
+                                                                        "flex",
+                                                                }}
+                                                            >
+                                                                <i className="fas fa-user" />
+                                                            </div>
+                                                        );
+                                                    }
+                                                })()}
                                             </div>
                                             <div>
                                                 <div className="fw-semibold">
-                                                    {provider?.name}
+                                                    {provider?.business_name ||
+                                                        provider?.name}
                                                 </div>
                                                 <div className="text-muted small">
                                                     <i className="fas fa-star text-warning me-1" />
@@ -433,12 +442,7 @@ const PaymentConfirmationStep = ({
                                                                         provider
                                                                     </div>
                                                                 </div>
-                                                                <div className="ms-auto">
-                                                                    <span className="badge bg-success bg-opacity-10 text-success">
-                                                                        Most
-                                                                        Popular
-                                                                    </span>
-                                                                </div>
+                                                                <div className="ms-auto"></div>
                                                             </div>
                                                         </div>
                                                     </div>

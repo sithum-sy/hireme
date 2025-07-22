@@ -1,13 +1,10 @@
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useServicePrimaryImage } from "../../../hooks/useServiceImages";
-
-import { useState } from "react";
+import { useServicePrimaryImage, constructProfileImageUrl } from "../../../hooks/useServiceImages";
 
 const ServiceCard = ({ service, showDistance = true }) => {
     const navigate = useNavigate();
     const primaryImage = useServicePrimaryImage(service);
-    const [imageError, setImageError] = useState(false);
 
     return (
         <div className="service-card">
@@ -18,7 +15,7 @@ const ServiceCard = ({ service, showDistance = true }) => {
                 <div className="card h-100 border-0 shadow-sm">
                     {/* Service Image */}
                     <div className="service-image position-relative">
-                        {primaryImage && !imageError ? (
+                        {primaryImage ? (
                             <img
                                 src={primaryImage}
                                 alt={service.title}
@@ -27,35 +24,34 @@ const ServiceCard = ({ service, showDistance = true }) => {
                                     height: "200px",
                                     objectFit: "cover",
                                 }}
-                                onError={() => {
+                                onError={(e) => {
                                     console.error(
                                         "Image failed to load:",
                                         primaryImage
                                     );
-                                    setImageError(true);
+                                    // Hide the failed image and show fallback
+                                    e.target.style.display = "none";
+                                    const fallback = e.target.parentNode.querySelector('.image-fallback');
+                                    if (fallback) {
+                                        fallback.style.display = "flex";
+                                    }
                                 }}
                             />
                         ) : null}
-
+                        
                         {/* Fallback placeholder - only show if no primary image or image fails to load */}
-                        {(imageError || !primaryImage) && (
-                            <div
-                                className={`image-fallback card-img-top bg-light d-flex align-items-center justify-content-center`}
-                                style={{
-                                    height: "200px",
-                                    display: "flex",
-                                }}
-                            >
-                                <div className="text-center text-muted">
-                                    <i className="fas fa-image fa-2x mb-2"></i>
-                                    <div>
-                                        {primaryImage
-                                            ? "Image unavailable"
-                                            : "No image"}
-                                    </div>
-                                </div>
+                        <div
+                            className={`image-fallback card-img-top bg-light d-flex align-items-center justify-content-center`}
+                            style={{
+                                height: "200px",
+                                display: primaryImage ? "none" : "flex",
+                            }}
+                        >
+                            <div className="text-center text-muted">
+                                <i className="fas fa-image fa-2x mb-2"></i>
+                                <div>{primaryImage ? "Image unavailable" : "No image"}</div>
                             </div>
-                        )}
+                        </div>
 
                         {/* Category Badge */}
                         <div className="position-absolute top-0 start-0 m-2">
@@ -100,28 +96,43 @@ const ServiceCard = ({ service, showDistance = true }) => {
                         {/* Provider Info */}
                         <div className="provider-info d-flex align-items-center mb-2">
                             <div className="provider-avatar me-2">
-                                {service.provider?.profile_image_url ? (
-                                    <img
-                                        src={service.provider.profile_image_url}
-                                        alt={service.provider.name}
-                                        className="rounded-circle"
-                                        style={{
-                                            width: "24px",
-                                            height: "24px",
-                                            objectFit: "cover",
-                                        }}
-                                    />
-                                ) : (
-                                    <div
-                                        className="bg-purple bg-opacity-10 text-purple rounded-circle d-flex align-items-center justify-content-center"
-                                        style={{
-                                            width: "24px",
-                                            height: "24px",
-                                        }}
-                                    >
-                                        <i className="fas fa-user fa-xs"></i>
-                                    </div>
-                                )}
+                                {(() => {
+                                    // Use the dedicated profile image URL constructor
+                                    const profileImageUrl = constructProfileImageUrl(service.provider?.profile_image_url);
+                                    
+                                    return profileImageUrl ? (
+                                        <img
+                                            src={profileImageUrl}
+                                            alt={service.provider.name}
+                                            className="rounded-circle"
+                                            style={{
+                                                width: "24px",
+                                                height: "24px",
+                                                objectFit: "cover",
+                                            }}
+                                            onError={(e) => {
+                                                // Hide failed image and show fallback
+                                                e.target.style.display = 'none';
+                                                const fallback = e.target.nextSibling;
+                                                if (fallback) {
+                                                    fallback.style.display = 'flex';
+                                                }
+                                            }}
+                                        />
+                                    ) : null;
+                                })()}
+                                
+                                {/* Fallback avatar */}
+                                <div
+                                    className="bg-purple bg-opacity-10 text-purple rounded-circle d-flex align-items-center justify-content-center"
+                                    style={{
+                                        width: "24px",
+                                        height: "24px",
+                                        display: service.provider?.profile_image_url ? "none" : "flex",
+                                    }}
+                                >
+                                    <i className="fas fa-user fa-xs"></i>
+                                </div>
                             </div>
                             <small className="text-muted">
                                 {service.business_name ||

@@ -1,4 +1,5 @@
 import React from "react";
+import { constructProfileImageUrl } from "../../../../hooks/useServiceImages";
 
 const AppointmentSummary = ({
     service,
@@ -136,18 +137,50 @@ const AppointmentSummary = ({
                     <div className="summary-section mb-3">
                         <h6 className="fw-semibold text-purple">Provider</h6>
                         <div className="d-flex align-items-center">
-                            {provider?.profile_image_url && (
-                                <img
-                                    src={provider.profile_image_url}
-                                    alt={provider.name}
-                                    className="rounded-circle me-2"
-                                    style={{
-                                        width: "30px",
-                                        height: "30px",
-                                        objectFit: "cover",
-                                    }}
-                                />
-                            )}
+                            <div className="me-2">
+                                {(() => {
+                                    const profileImageUrl =
+                                        constructProfileImageUrl(
+                                            provider?.profile_image_url
+                                        );
+                                    const [imgError, setImgError] =
+                                        React.useState(false);
+
+                                    if (profileImageUrl && !imgError) {
+                                        return (
+                                            <img
+                                                src={profileImageUrl}
+                                                alt={
+                                                    provider.business_name ||
+                                                    provider.name
+                                                }
+                                                className="rounded-circle"
+                                                style={{
+                                                    width: "30px",
+                                                    height: "30px",
+                                                    objectFit: "cover",
+                                                }}
+                                                onError={() =>
+                                                    setImgError(true)
+                                                }
+                                            />
+                                        );
+                                    } else {
+                                        return (
+                                            <div
+                                                className="bg-opacity-10 text-purple rounded-circle d-flex align-items-center justify-content-center"
+                                                style={{
+                                                    width: "30px",
+                                                    height: "30px",
+                                                    fontSize: "12px",
+                                                }}
+                                            >
+                                                <i className="fas fa-user" />
+                                            </div>
+                                        );
+                                    }
+                                })()}
+                            </div>
                             <div>
                                 <div className="text-muted small fw-semibold">
                                     {provider?.business_name || provider?.name}
