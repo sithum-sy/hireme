@@ -99,7 +99,7 @@ class ProfileController extends Controller
                 'success' => true,
                 'data' => [
                     'image_url' => $imagePath,
-                    'full_url' => asset('storage/' . $imagePath)
+                    'full_url' => asset($imagePath)
                 ],
                 'message' => 'Profile image uploaded successfully'
             ]);

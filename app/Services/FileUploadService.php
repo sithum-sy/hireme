@@ -49,7 +49,14 @@ class FileUploadService
 
         // Generate unique filename
         $filename = 'profile_' . $user->id . '_' . time() . '.' . $file->getClientOriginalExtension();
-        $path = 'profile-images/' . $filename;
+        
+        // Create the profile_pictures directory if it doesn't exist
+        $profileDir = public_path('images/profile_pictures');
+        if (!file_exists($profileDir)) {
+            mkdir($profileDir, 0755, true);
+        }
+
+        $relativePath = 'images/profile_pictures/' . $filename;
 
         // Resize and optimize image (maintain aspect ratio)
         if ($this->imageManager) {
@@ -58,20 +65,20 @@ class FileUploadService
                     ->scaleDown(width: 400, height: 400)
                     ->toJpeg(85);
 
-                // Store the processed image
-                Storage::disk('public')->put($path, (string) $image);
+                // Store the processed image directly to public/images/profile_pictures
+                file_put_contents(public_path($relativePath), (string) $image);
             } catch (\Exception $e) {
                 Log::warning('Image processing failed, storing original: ' . $e->getMessage());
                 // Fallback: store original file
-                $file->storeAs('profile-images', $filename, 'public');
+                $file->move($profileDir, $filename);
             }
         } else {
             // Fallback: store original file without processing
-            $file->storeAs('profile-images', $filename, 'public');
+            $file->move($profileDir, $filename);
         }
 
         // Update user profile picture path
-        $user->update(['profile_picture' => $path]);
+        $user->update(['profile_picture' => $relativePath]);
 
         // Log the upload
         $this->activityService->logUserActivity(
@@ -79,13 +86,13 @@ class FileUploadService
             $user,
             [
                 'action' => 'profile_image_uploaded',
-                'file_path' => $path,
+                'file_path' => $relativePath,
                 'file_size' => $file->getSize(),
                 'file_type' => $file->getClientOriginalExtension()
             ]
         );
 
-        return $path;
+        return $relativePath;
     }
 
     /**
@@ -94,9 +101,11 @@ class FileUploadService
     public function deleteProfileImage(User $user): void
     {
         if ($user->profile_picture) {
-            Storage::disk('public')->delete($user->profile_picture);
-            $user->update(['profile_picture' => null]);
-
+            $fullPath = public_path($user->profile_picture);
+            if (file_exists($fullPath)) {
+                unlink($fullPath);
+            }
+            
             $this->activityService->logUserActivity(
                 'profile_image_delete',
                 $user,
@@ -105,6 +114,8 @@ class FileUploadService
                     'deleted_path' => $user->profile_picture
                 ]
             );
+            
+            $user->update(['profile_picture' => null]);
         }
     }
 
@@ -148,22 +159,32 @@ class FileUploadService
     {
         // Delete existing business license
         if ($profile->business_license_path) {
-            Storage::disk('public')->delete($profile->business_license_path);
+            $fullPath = public_path($profile->business_license_path);
+            if (file_exists($fullPath)) {
+                unlink($fullPath);
+            }
         }
 
         $filename = 'business_license_' . $profile->user_id . '_' . time() . '.' . $file->getClientOriginalExtension();
-        $path = 'provider-documents/business-licenses/' . $filename;
+        
+        // Create the business_licenses directory if it doesn't exist
+        $businessDir = public_path('images/provider_documents/business_licenses');
+        if (!file_exists($businessDir)) {
+            mkdir($businessDir, 0755, true);
+        }
 
-        // Store the file
-        $file->storeAs('provider-documents/business-licenses', $filename, 'public');
+        $relativePath = 'images/provider_documents/business_licenses/' . $filename;
+
+        // Move the file to public/images/provider_documents/business_licenses
+        $file->move($businessDir, $filename);
 
         // Update profile
         $profile->update([
-            'business_license_path' => $path,
+            'business_license_path' => $relativePath,
             'business_license_uploaded_at' => now(),
         ]);
 
-        return $path;
+        return $relativePath;
     }
 
     /**
@@ -175,12 +196,19 @@ class FileUploadService
         $existingPaths = $profile->certification_paths ?
             json_decode($profile->certification_paths, true) : [];
 
+        // Create the certifications directory if it doesn't exist
+        $certDir = public_path('images/provider_documents/certifications');
+        if (!file_exists($certDir)) {
+            mkdir($certDir, 0755, true);
+        }
+
         foreach ($files as $file) {
             $filename = 'certification_' . $profile->user_id . '_' . time() . '_' . Str::random(8) . '.' . $file->getClientOriginalExtension();
-            $path = 'provider-documents/certifications/' . $filename;
+            $relativePath = 'images/provider_documents/certifications/' . $filename;
 
-            $file->storeAs('provider-documents/certifications', $filename, 'public');
-            $paths[] = $path;
+            // Move the file to public/images/provider_documents/certifications
+            $file->move($certDir, $filename);
+            $paths[] = $relativePath;
         }
 
         // Merge with existing paths
@@ -203,9 +231,20 @@ class FileUploadService
         $existingPaths = $profile->portfolio_image_paths ?
             json_decode($profile->portfolio_image_paths, true) : [];
 
+        // Create the portfolio directories if they don't exist
+        $portfolioDir = public_path('images/provider_documents/portfolio');
+        $thumbnailDir = public_path('images/provider_documents/portfolio/thumbnails');
+        if (!file_exists($portfolioDir)) {
+            mkdir($portfolioDir, 0755, true);
+        }
+        if (!file_exists($thumbnailDir)) {
+            mkdir($thumbnailDir, 0755, true);
+        }
+
         foreach ($files as $file) {
             $filename = 'portfolio_' . $profile->user_id . '_' . time() . '_' . Str::random(8) . '.' . $file->getClientOriginalExtension();
-            $path = 'provider-documents/portfolio/' . $filename;
+            $relativePath = 'images/provider_documents/portfolio/' . $filename;
+            $thumbnailRelativePath = 'images/provider_documents/portfolio/thumbnails/' . $filename;
 
             // Resize and optimize image (maintain aspect ratio)
             if ($this->imageManager) {
@@ -214,26 +253,27 @@ class FileUploadService
                         ->scaleDown(width: 1200, height: 1200)
                         ->toJpeg(90);
 
-                    Storage::disk('public')->put($path, (string) $image);
+                    // Store main image
+                    file_put_contents(public_path($relativePath), (string) $image);
 
                     // Generate thumbnail (maintain aspect ratio)
-                    $thumbnailPath = 'provider-documents/portfolio/thumbnails/' . $filename;
                     $thumbnail = $this->imageManager->read($file)
                         ->scaleDown(width: 300, height: 300)
                         ->toJpeg(80);
 
-                    Storage::disk('public')->put($thumbnailPath, (string) $thumbnail);
+                    // Store thumbnail
+                    file_put_contents(public_path($thumbnailRelativePath), (string) $thumbnail);
                 } catch (\Exception $e) {
                     Log::warning('Portfolio image processing failed, storing original: ' . $e->getMessage());
                     // Fallback: store original file
-                    $file->storeAs('provider-documents/portfolio', $filename, 'public');
+                    $file->move($portfolioDir, $filename);
                 }
             } else {
                 // Fallback: store original file without processing
-                $file->storeAs('provider-documents/portfolio', $filename, 'public');
+                $file->move($portfolioDir, $filename);
             }
 
-            $paths[] = $path;
+            $paths[] = $relativePath;
         }
 
         // Merge with existing paths
@@ -261,7 +301,10 @@ class FileUploadService
         switch ($documentType) {
             case 'business_license':
                 if ($profile->business_license_path) {
-                    Storage::disk('public')->delete($profile->business_license_path);
+                    $fullPath = public_path($profile->business_license_path);
+                    if (file_exists($fullPath)) {
+                        unlink($fullPath);
+                    }
                     $profile->update([
                         'business_license_path' => null,
                         'business_license_uploaded_at' => null,
@@ -307,7 +350,10 @@ class FileUploadService
             json_decode($profile->certification_paths, true) : [];
 
         if (isset($paths[$index])) {
-            Storage::disk('public')->delete($paths[$index]);
+            $fullPath = public_path($paths[$index]);
+            if (file_exists($fullPath)) {
+                unlink($fullPath);
+            }
             unset($paths[$index]);
 
             $profile->update([
@@ -329,11 +375,18 @@ class FileUploadService
             json_decode($profile->portfolio_image_paths, true) : [];
 
         if (isset($paths[$index])) {
-            Storage::disk('public')->delete($paths[$index]);
+            // Delete main image
+            $fullPath = public_path($paths[$index]);
+            if (file_exists($fullPath)) {
+                unlink($fullPath);
+            }
 
             // Also delete thumbnail
             $thumbnailPath = str_replace('portfolio/', 'portfolio/thumbnails/', $paths[$index]);
-            Storage::disk('public')->delete($thumbnailPath);
+            $fullThumbnailPath = public_path($thumbnailPath);
+            if (file_exists($fullThumbnailPath)) {
+                unlink($fullThumbnailPath);
+            }
 
             unset($paths[$index]);
 

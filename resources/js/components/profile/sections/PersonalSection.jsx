@@ -68,7 +68,7 @@ const PersonalSection = React.memo(({ onSuccess, onError }) => {
                         />
                     </div>
                     <div className="image-actions">
-                        <Button
+                        {/* <Button
                             variant="outline-primary"
                             size="sm"
                             onClick={() => setShowImageUpload(!showImageUpload)}
@@ -77,7 +77,7 @@ const PersonalSection = React.memo(({ onSuccess, onError }) => {
                             {userData?.profile_picture
                                 ? "Change Photo"
                                 : "Add Photo"}
-                        </Button>
+                        </Button> */}
                     </div>
                 </div>
 

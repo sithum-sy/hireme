@@ -1,4 +1,4 @@
-import React, { useState, useRef, useMemo, useCallback } from "react";
+import React, { useState, useRef, useMemo, useCallback, useEffect } from "react";
 import { useProfile } from "../../../context/ProfileContext";
 import { validateFile } from "../../../utils/validationUtils";
 import {
@@ -16,6 +16,12 @@ const ProfileImageUpload = React.memo(
         const [preview, setPreview] = useState(null);
         const [error, setError] = useState("");
         const fileInputRef = useRef(null);
+            
+            // Clear preview on mount and when currentImage changes
+            useEffect(() => {
+                setPreview(null);
+                setError("");
+            }, [currentImage]);
 
         // Memoize the file config to prevent recalculation
         const fileConfig = useMemo(() => {
@@ -26,6 +32,7 @@ const ProfileImageUpload = React.memo(
                 }
             );
         }, []);
+        
         const sizeClasses = {
             small: "size-small",
             medium: "size-medium",
@@ -61,10 +68,10 @@ const ProfileImageUpload = React.memo(
 
                     if (result.success) {
                         onImageChange?.(result.imageUrl);
-                        setPreview(null);
+                        setPreview(null); // Clear preview
                     } else {
                         setError(result.message);
-                        setPreview(null);
+                        setPreview(null); // Clear preview on error too
                     }
                 } catch (err) {
                     setError("Failed to process image");
@@ -107,7 +114,8 @@ const ProfileImageUpload = React.memo(
             setDragOver(false);
         }, []);
 
-        const handleDeleteImage = useCallback(async () => {
+        const handleDeleteImage = useCallback(async (e) => {
+            e.stopPropagation(); // Prevent triggering file input
             if (
                 window.confirm(
                     "Are you sure you want to delete your profile picture?"
@@ -122,18 +130,24 @@ const ProfileImageUpload = React.memo(
             }
         }, [deleteImage, onImageChange]);
 
-        const triggerFileInput = useCallback(() => {
+        const triggerFileInput = useCallback((e) => {
+            e.stopPropagation(); // Prevent event bubbling
             fileInputRef.current?.click();
         }, []);
 
         // Use stable image URL to prevent flickering with enhanced normalization
         const stableCurrentImage = useStableImageUrl(currentImage);
-        const stablePreviewImage = useStableImageUrl(preview);
+        // Don't use useStableImageUrl for preview - it's a temporary blob URL
         
         // Memoize the display image to prevent unnecessary re-renders
         const displayImage = useMemo(() => {
-        return stablePreviewImage || stableCurrentImage;
-        }, [stablePreviewImage, stableCurrentImage]);
+            // If we have a preview (during upload), use it
+            if (preview) {
+                return preview;
+            }
+            // Otherwise use the stable current image
+            return stableCurrentImage;
+        }, [preview, stableCurrentImage]);
 
         return (
             <div
@@ -146,7 +160,6 @@ const ProfileImageUpload = React.memo(
                     onDrop={handleDrop}
                     onDragOver={handleDragOver}
                     onDragLeave={handleDragLeave}
-                    onClick={triggerFileInput}
                 >
                     {/* Hidden file input */}
                     <input
@@ -163,65 +176,65 @@ const ProfileImageUpload = React.memo(
                     {/* Image display */}
                     <div className="image-container">
                         {displayImage ? (
-                            <img
-                                key={displayImage} // Force re-render only when URL actually changes
-                                src={displayImage}
-                                alt="Profile"
-                                className="profile-preview"
-                                onError={useCallback((e) => {
-                                    e.target.src = "/images/default-avatar.png";
-                                }, [])}
-                            />
+                            <>
+                                <img
+                                    key={displayImage}
+                                    src={displayImage}
+                                    alt="Profile"
+                                    className="profile-preview"
+                                    onError={useCallback((e) => {
+                                        e.target.src = "/images/default-avatar.png";
+                                    }, [])}
+                                />
+                                
+                                {/* Action buttons for existing image */}
+                                <div className="image-actions">
+                                    <button
+                                        type="button"
+                                        className="action-btn edit-btn"
+                                        onClick={triggerFileInput}
+                                        disabled={saving}
+                                        title="Change Picture"
+                                    >
+                                        <i className="fas fa-edit"></i>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="action-btn delete-btn"
+                                        onClick={handleDeleteImage}
+                                        disabled={saving}
+                                        title="Delete Picture"
+                                    >
+                                        <i className="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                                
+                                {/* Upload overlay - only show on hover */}
+                                <div className="upload-overlay" onClick={triggerFileInput}>
+                                    {saving ? (
+                                        <div className="uploading-indicator">
+                                            <i className="fas fa-spinner fa-spin"></i>
+                                            <span>Uploading...</span>
+                                        </div>
+                                    ) : (
+                                        <div className="upload-icon">
+                                            <i className="fas fa-camera fa-2x"></i>
+                                            <div className="upload-text">
+                                                <span className="upload-main">Change Picture</span>
+                                                <span className="upload-hint">Click to upload</span>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </>
                         ) : (
-                            <div className="placeholder">
+                            /* Placeholder for no image - clickable to upload */
+                            <div className="placeholder" onClick={triggerFileInput}>
                                 <i className="fas fa-user fa-3x"></i>
-                            </div>
-                        )}
-
-                        {/* Upload overlay */}
-                        <div className="upload-overlay">
-                            {saving ? (
-                                <div className="uploading-indicator">
-                                    <i className="fas fa-spinner fa-spin"></i>
-                                    <span>Uploading...</span>
+                                <div className="upload-text">
+                                    <span className="upload-main">Upload Picture</span>
+                                    <span className="upload-hint">Click or drag to upload</span>
                                 </div>
-                            ) : (
-                                <div className="upload-icon">
-                                    <i className="fas fa-camera fa-2x"></i>
-                                </div>
-                            )}
-
-                            <div className="upload-text">
-                                <span className="upload-main">
-                                    {displayImage
-                                        ? "Change Picture"
-                                        : "Upload Picture"}
-                                </span>
-                                <span className="upload-hint">
-                                    Click or drag to upload
-                                </span>
-                            </div>
-                        </div>
-
-                        {/* Action buttons */}
-                        {displayImage && (
-                            <div className="image-actions">
-                                <button
-                                    type="button"
-                                    className="action-btn edit-btn"
-                                    onClick={triggerFileInput}
-                                    disabled={saving}
-                                >
-                                    <i className="fas fa-edit"></i>
-                                </button>
-                                <button
-                                    type="button"
-                                    className="action-btn delete-btn"
-                                    onClick={handleDeleteImage}
-                                    disabled={saving}
-                                >
-                                    <i className="fas fa-trash"></i>
-                                </button>
                             </div>
                         )}
                     </div>
@@ -255,7 +268,6 @@ const ProfileImageUpload = React.memo(
 
                     .upload-area {
                         position: relative;
-                        cursor: pointer;
                         transition: var(--transition);
                         border-radius: var(--border-radius-lg);
                         overflow: hidden;
@@ -276,7 +288,7 @@ const ProfileImageUpload = React.memo(
                         opacity: 0;
                         width: 100%;
                         height: 100%;
-                        cursor: pointer;
+                        pointer-events: none;
                     }
 
                     .image-container {
@@ -317,12 +329,20 @@ const ProfileImageUpload = React.memo(
 
                     .placeholder {
                         display: flex;
+                        flex-direction: column;
                         align-items: center;
                         justify-content: center;
                         width: 100%;
                         height: 100%;
                         background: var(--bg-light);
                         color: var(--text-muted);
+                        cursor: pointer;
+                        transition: var(--transition);
+                    }
+                    
+                    .placeholder:hover {
+                        background: var(--bg-hover);
+                        color: var(--current-role-primary);
                     }
 
                     .upload-overlay {
@@ -338,6 +358,7 @@ const ProfileImageUpload = React.memo(
                         justify-content: center;
                         opacity: 0;
                         transition: var(--transition);
+                        cursor: pointer;
                     }
 
                     .upload-area:hover .upload-overlay {
@@ -358,7 +379,7 @@ const ProfileImageUpload = React.memo(
 
                     .upload-icon {
                         color: white;
-                        margin-bottom: var(--space-2);
+                        text-align: center;
                     }
 
                     .upload-text {
@@ -367,6 +388,12 @@ const ProfileImageUpload = React.memo(
                         align-items: center;
                         color: white;
                         text-align: center;
+                        margin-top: var(--space-2);
+                    }
+
+                    .placeholder .upload-text {
+                        color: inherit;
+                        margin-top: var(--space-2);
                     }
 
                     .upload-main {
@@ -386,12 +413,7 @@ const ProfileImageUpload = React.memo(
                         right: var(--space-2);
                         display: flex;
                         gap: var(--space-1);
-                        opacity: 0;
-                        transition: var(--transition);
-                    }
-
-                    .upload-area:hover .image-actions {
-                        opacity: 1;
+                        z-index: 10;
                     }
 
                     .action-btn {
@@ -405,6 +427,7 @@ const ProfileImageUpload = React.memo(
                         cursor: pointer;
                         transition: var(--transition);
                         font-size: var(--text-sm);
+                        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
                     }
 
                     .edit-btn {
@@ -412,7 +435,7 @@ const ProfileImageUpload = React.memo(
                         color: white;
                     }
 
-                    .edit-btn:hover {
+                    .edit-btn:hover:not(:disabled) {
                         background: var(--current-role-secondary);
                         transform: scale(1.1);
                     }
@@ -422,9 +445,15 @@ const ProfileImageUpload = React.memo(
                         color: white;
                     }
 
-                    .delete-btn:hover {
+                    .delete-btn:hover:not(:disabled) {
                         background: #dc2626;
                         transform: scale(1.1);
+                    }
+
+                    .action-btn:disabled {
+                        opacity: 0.5;
+                        cursor: not-allowed;
+                        transform: none;
                     }
 
                     .upload-error {
@@ -461,11 +490,16 @@ const ProfileImageUpload = React.memo(
                             width: 80px;
                             height: 80px;
                         }
+                        
+                        .action-btn {
+                            width: 28px;
+                            height: 28px;
+                            font-size: 12px;
+                        }
                     }
                 `}</style>
             </div>
         );
-        // };
     }
 );
 

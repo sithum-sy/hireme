@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useReducer, useEffect, useMemo, useCallback } from "react";
 import { profileAPI, providerProfileAPI } from "../services/api";
+import { useAuth } from "./AuthContext";
 
 const ProfileContext = createContext();
 
@@ -45,6 +46,16 @@ function profileReducer(state, action) {
 
 export const ProfileProvider = ({ children }) => {
     const [state, dispatch] = useReducer(profileReducer, initialState);
+    
+    // Safely get AuthContext (might not be available in some contexts)
+    let updateUserData;
+    try {
+        const authContext = useAuth();
+        updateUserData = authContext.updateUserData;
+    } catch (error) {
+        // AuthContext not available, which is fine
+        updateUserData = null;
+    }
 
     // Load profile data on mount
     useEffect(() => {
@@ -148,16 +159,15 @@ export const ProfileProvider = ({ children }) => {
             const response = await profileAPI.uploadImage(file);
 
             if (response.data.success) {
-                // Update profile with new image URL
-                const updatedProfile = {
-                    ...state.profile,
-                    user: {
-                        ...state.profile.user,
-                        profile_picture: response.data.data.full_url,
-                    },
-                };
+                // Instead of manually updating, reload the profile to get properly formatted URLs
+                await loadProfile();
                 
-                dispatch({ type: "SET_PROFILE", payload: updatedProfile });
+                // Also update AuthContext to sync navbar
+                if (updateUserData && state.profile?.user) {
+                    updateUserData({
+                        profile_picture: response.data.data.full_url
+                    });
+                }
                 
                 return {
                     success: true,
@@ -183,15 +193,16 @@ export const ProfileProvider = ({ children }) => {
             const response = await profileAPI.deleteImage();
 
             if (response.data.success) {
-                // Update profile to remove image
-                const updatedProfile = {
-                    ...state.profile,
-                    user: {
-                        ...state.profile.user,
-                        profile_picture: null,
-                    },
-                };
-                dispatch({ type: "SET_PROFILE", payload: updatedProfile });
+                // Reload profile to get updated data
+                await loadProfile();
+                
+                // Also update AuthContext to sync navbar
+                if (updateUserData) {
+                    updateUserData({
+                        profile_picture: null
+                    });
+                }
+                
                 return { success: true, message: response.data.message };
             } else {
                 return { success: false, message: response.data.message };

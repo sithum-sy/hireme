@@ -110,26 +110,50 @@ class ProviderProfileService
         if (!empty($userData['business_license'])) {
             // Store business license file
             $filename = 'business_license_' . Str::uuid() . '.' . $userData['business_license']->getClientOriginalExtension();
-            $path = $userData['business_license']->storeAs('business_licenses', $filename, 'public');
-            $providerData['business_license'] = $path;
+            
+            // Create the business_licenses directory if it doesn't exist
+            $businessDir = public_path('images/provider_documents/business_licenses');
+            if (!file_exists($businessDir)) {
+                mkdir($businessDir, 0755, true);
+            }
+            
+            $relativePath = 'images/provider_documents/business_licenses/' . $filename;
+            $userData['business_license']->move($businessDir, $filename);
+            $providerData['business_license'] = $relativePath;
         }
 
         if (!empty($userData['certifications'])) {
             $certificationPaths = [];
+            
+            // Create the certifications directory if it doesn't exist
+            $certDir = public_path('images/provider_documents/certifications');
+            if (!file_exists($certDir)) {
+                mkdir($certDir, 0755, true);
+            }
+            
             foreach ($userData['certifications'] as $cert) {
                 $filename = 'cert_' . Str::uuid() . '.' . $cert->getClientOriginalExtension();
-                $path = $cert->storeAs('certifications', $filename, 'public');
-                $certificationPaths[] = $path;
+                $relativePath = 'images/provider_documents/certifications/' . $filename;
+                $cert->move($certDir, $filename);
+                $certificationPaths[] = $relativePath;
             }
             $providerData['certifications'] = $certificationPaths;
         }
 
         if (!empty($userData['portfolio_images'])) {
             $portfolioPaths = [];
+            
+            // Create the portfolio directory if it doesn't exist
+            $portfolioDir = public_path('images/provider_documents/portfolio');
+            if (!file_exists($portfolioDir)) {
+                mkdir($portfolioDir, 0755, true);
+            }
+            
             foreach ($userData['portfolio_images'] as $image) {
                 $filename = 'portfolio_' . Str::uuid() . '.' . $image->getClientOriginalExtension();
-                $path = $image->storeAs('portfolio_images', $filename, 'public');
-                $portfolioPaths[] = $path;
+                $relativePath = 'images/provider_documents/portfolio/' . $filename;
+                $image->move($portfolioDir, $filename);
+                $portfolioPaths[] = $relativePath;
             }
             $providerData['portfolio_images'] = $portfolioPaths;
         }
@@ -194,7 +218,7 @@ class ProviderProfileService
             'business_license' => [
                 'uploaded' => !empty($profile->business_license_path),
                 'url' => $profile->business_license_path ?
-                    asset('storage/' . $profile->business_license_path) : null,
+                    asset($profile->business_license_path) : null,
                 'uploaded_at' => $profile->business_license_uploaded_at,
             ],
             'certifications' => $this->getCertifications($profile),
@@ -215,7 +239,7 @@ class ProviderProfileService
 
         return array_map(function ($path) {
             return [
-                'url' => asset('storage/' . $path),
+                'url' => asset($path),
                 'filename' => basename($path),
                 'uploaded_at' => null, // You might want to store individual upload dates
             ];
@@ -235,7 +259,7 @@ class ProviderProfileService
 
         return array_map(function ($path) {
             return [
-                'url' => asset('storage/' . $path),
+                'url' => asset($path),
                 'thumbnail_url' => $this->getThumbnailUrl($path),
                 'filename' => basename($path),
                 'uploaded_at' => null,
@@ -248,9 +272,14 @@ class ProviderProfileService
      */
     protected function getThumbnailUrl(string $path): string
     {
-        // Implement thumbnail generation logic
-        // For now, return the original image
-        return asset('storage/' . $path);
+        // Check if thumbnail exists, otherwise return original
+        $thumbnailPath = str_replace('portfolio/', 'portfolio/thumbnails/', $path);
+        if (file_exists(public_path($thumbnailPath))) {
+            return asset($thumbnailPath);
+        }
+        
+        // Fallback to original image
+        return asset($path);
     }
 
     /**

@@ -111,7 +111,7 @@ class ProfileService
         // Stabilize profile picture URL to prevent frontend flickering
         if ($user->profile_picture) {
             // Use a consistent URL format without timestamps
-            $userData['profile_picture'] = url('storage/' . $user->profile_picture);
+            $userData['profile_picture'] = asset($user->profile_picture);
         } else {
             $userData['profile_picture'] = null;
         }

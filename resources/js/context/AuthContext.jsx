@@ -292,6 +292,28 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    const refreshUser = async () => {
+        try {
+            if (token) {
+                const response = await axios.get("/api/user");
+                if (response.data.success) {
+                    setUser(response.data.data.user);
+                    return response.data.data.user;
+                }
+            }
+        } catch (error) {
+            console.error("Failed to refresh user data:", error);
+        }
+        return null;
+    };
+
+    const updateUserData = (updatedUserData) => {
+        setUser(prevUser => ({
+            ...prevUser,
+            ...updatedUserData
+        }));
+    };
+
     const isStaff = () => {
         return user?.role === "staff";
     };
@@ -306,6 +328,8 @@ export const AuthProvider = ({ children }) => {
         register,
         login,
         logout,
+        refreshUser,
+        updateUserData,
         isAuthenticated: !!user,
         isStaff,
         hasStaffPermission,
