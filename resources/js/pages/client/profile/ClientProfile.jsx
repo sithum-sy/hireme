@@ -103,6 +103,7 @@ const ClientProfileContent = () => {
         <ProfileLayout
             title="My Profile"
             subtitle="Manage your account information and preferences"
+            showProfileHeader={false}
         >
             {/* Success Message */}
             {successMessage && (

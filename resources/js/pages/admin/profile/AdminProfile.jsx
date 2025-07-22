@@ -103,6 +103,7 @@ const AdminProfileContent = () => {
         <ProfileLayout
             title="Administrator Profile"
             subtitle="Manage your administrator account and system permissions"
+            showProfileHeader={false}
         >
             {/* Admin-specific banner */}
             <div className="admin-banner">

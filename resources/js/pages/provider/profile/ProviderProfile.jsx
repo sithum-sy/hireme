@@ -96,6 +96,7 @@ const ProviderProfileContent = () => {
         <ProfileLayout
             title="Business Profile"
             subtitle="Manage your business information and professional details"
+            showProfileHeader={false}
         >
             {/* Provider-specific banner */}
             <div className="provider-banner">

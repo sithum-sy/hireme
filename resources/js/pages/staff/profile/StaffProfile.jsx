@@ -103,6 +103,7 @@ const StaffProfileContent = () => {
         <ProfileLayout
             title="Staff Profile"
             subtitle="Manage your staff account information and permissions"
+            showProfileHeader={false}
         >
             {/* Staff-specific banner */}
             <div className="staff-banner">

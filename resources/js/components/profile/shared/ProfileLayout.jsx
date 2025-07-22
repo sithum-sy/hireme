@@ -2,7 +2,7 @@ import React from "react";
 import { useProfile } from "../../../context/ProfileContext";
 import { useAuth } from "../../../context/AuthContext";
 
-const ProfileLayout = ({ children, title, subtitle }) => {
+const ProfileLayout = ({ children, title, subtitle, showProfileHeader = false }) => {
     const { profile, loading } = useProfile();
     const { user } = useAuth();
 
@@ -33,115 +33,117 @@ const ProfileLayout = ({ children, title, subtitle }) => {
 
     return (
         <div className={`profile-container ${user?.role}-profile`}>
-            {/* Profile Header */}
-            <div className="profile-header">
-                <div className="profile-header-content">
-                    <div className="profile-avatar-section">
-                        <div className="profile-avatar">
-                            <img
-                                src={
-                                    userData.profile_picture ||
-                                    "/images/default-avatar.png"
-                                }
-                                alt="Profile"
-                                className="profile-image"
-                                onError={(e) => {
-                                    e.target.src = "/images/default-avatar.png";
-                                }}
-                            />
-                            <div className="profile-status">
-                                {user?.role === "service_provider" &&
-                                    providerProfile?.is_available && (
-                                        <span className="status-badge available">
-                                            <i className="fas fa-circle"></i>
-                                            Available
-                                        </span>
-                                    )}
-                                {user?.role === "service_provider" &&
-                                    !providerProfile?.is_available && (
-                                        <span className="status-badge unavailable">
-                                            <i className="fas fa-circle"></i>
-                                            Unavailable
-                                        </span>
-                                    )}
+            {/* Profile Header - Only show if explicitly requested */}
+            {showProfileHeader && (
+                <div className="profile-header">
+                    <div className="profile-header-content">
+                        <div className="profile-avatar-section">
+                            <div className="profile-avatar">
+                                <img
+                                    src={
+                                        userData.profile_picture ||
+                                        "/images/default-avatar.png"
+                                    }
+                                    alt="Profile"
+                                    className="profile-image"
+                                    onError={(e) => {
+                                        e.target.src = "/images/default-avatar.png";
+                                    }}
+                                />
+                                <div className="profile-status">
+                                    {user?.role === "service_provider" &&
+                                        providerProfile?.is_available && (
+                                            <span className="status-badge available">
+                                                <i className="fas fa-circle"></i>
+                                                Available
+                                            </span>
+                                        )}
+                                    {user?.role === "service_provider" &&
+                                        !providerProfile?.is_available && (
+                                            <span className="status-badge unavailable">
+                                                <i className="fas fa-circle"></i>
+                                                Unavailable
+                                            </span>
+                                        )}
+                                </div>
                             </div>
+                        </div>
+
+                        <div className="profile-info">
+                            <h1 className="profile-name">{userData.full_name}</h1>
+                            <p className="profile-role">
+                                <i className="fas fa-user-tag"></i>
+                                {user?.role?.replace("_", " ")?.toUpperCase()}
+                            </p>
+
+                            {user?.role === "service_provider" &&
+                                providerProfile && (
+                                    <div className="provider-stats">
+                                        <div className="stat-item">
+                                            <i className="fas fa-star"></i>
+                                            <span className="rating">
+                                                {providerProfile.average_rating > 0
+                                                    ? `${providerProfile.average_rating}/5`
+                                                    : "No ratings"}
+                                            </span>
+                                            <span className="reviews">
+                                                (
+                                                {providerProfile.total_reviews || 0}{" "}
+                                                reviews)
+                                            </span>
+                                        </div>
+
+                                        <div className="stat-item">
+                                            <i className="fas fa-check-circle"></i>
+                                            <span className="verification">
+                                                {providerProfile.verification_status ===
+                                                "verified"
+                                                    ? "Verified"
+                                                    : "Pending Verification"}
+                                            </span>
+                                        </div>
+                                    </div>
+                                )}
+
+                            {user?.role === "staff" && profile.staff_info && (
+                                <div className="staff-info">
+                                    <p className="created-by">
+                                        <i className="fas fa-user-plus"></i>
+                                        Created by: {profile.staff_info.created_by}
+                                    </p>
+                                </div>
+                            )}
                         </div>
                     </div>
 
-                    <div className="profile-info">
-                        <h1 className="profile-name">{userData.full_name}</h1>
-                        <p className="profile-role">
-                            <i className="fas fa-user-tag"></i>
-                            {user?.role?.replace("_", " ")?.toUpperCase()}
-                        </p>
-
-                        {user?.role === "service_provider" &&
-                            providerProfile && (
-                                <div className="provider-stats">
-                                    <div className="stat-item">
-                                        <i className="fas fa-star"></i>
-                                        <span className="rating">
-                                            {providerProfile.average_rating > 0
-                                                ? `${providerProfile.average_rating}/5`
-                                                : "No ratings"}
-                                        </span>
-                                        <span className="reviews">
-                                            (
-                                            {providerProfile.total_reviews || 0}{" "}
-                                            reviews)
-                                        </span>
-                                    </div>
-
-                                    <div className="stat-item">
-                                        <i className="fas fa-check-circle"></i>
-                                        <span className="verification">
-                                            {providerProfile.verification_status ===
-                                            "verified"
-                                                ? "Verified"
-                                                : "Pending Verification"}
-                                        </span>
-                                    </div>
-                                </div>
-                            )}
-
-                        {user?.role === "staff" && profile.staff_info && (
-                            <div className="staff-info">
-                                <p className="created-by">
-                                    <i className="fas fa-user-plus"></i>
-                                    Created by: {profile.staff_info.created_by}
-                                </p>
-                            </div>
+                    {/* Header Actions */}
+                    <div className="profile-header-actions">
+                        {user?.role === "service_provider" && (
+                            <button
+                                className={`availability-toggle ${
+                                    providerProfile?.is_available
+                                        ? "available"
+                                        : "unavailable"
+                                }`}
+                                onClick={() => {
+                                    /* Will implement toggle functionality */
+                                }}
+                            >
+                                <i
+                                    className={`fas fa-circle ${
+                                        providerProfile?.is_available
+                                            ? "text-success"
+                                            : "text-muted"
+                                    }`}
+                                ></i>
+                                {providerProfile?.is_available
+                                    ? "Available"
+                                    : "Unavailable"}
+                            </button>
                         )}
                     </div>
                 </div>
-
-                {/* Header Actions */}
-                <div className="profile-header-actions">
-                    {user?.role === "service_provider" && (
-                        <button
-                            className={`availability-toggle ${
-                                providerProfile?.is_available
-                                    ? "available"
-                                    : "unavailable"
-                            }`}
-                            onClick={() => {
-                                /* Will implement toggle functionality */
-                            }}
-                        >
-                            <i
-                                className={`fas fa-circle ${
-                                    providerProfile?.is_available
-                                        ? "text-success"
-                                        : "text-muted"
-                                }`}
-                            ></i>
-                            {providerProfile?.is_available
-                                ? "Available"
-                                : "Unavailable"}
-                        </button>
-                    )}
-                </div>
-            </div>
+            )}
 
             {/* Page Title */}
             {(title || subtitle) && (
