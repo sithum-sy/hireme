@@ -114,45 +114,47 @@ const LocationSearch = ({ city, onLocationSelect }) => {
             </div>
 
             {/* ENHANCED: Search results appear immediately below search bar */}
-            {query.length > 1 && (
-                <div className="search-results mb-3">
-                    <div className="search-results-header mb-2">
-                        <small className="text-muted fw-semibold">
-                            <i className="fas fa-search me-1"></i>
-                            Search Results for "{query}" in {city}:
-                        </small>
-                    </div>
-                    
-                    {results.length > 0 ? (
-                        <div className="list-group">
-                            {results.map((result, index) => (
-                                <button
-                                    key={index}
-                                    className="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
-                                    onClick={() => handleResultSelect(result)}
-                                >
-                                    <div>
-                                        <div className="fw-semibold">
-                                            <i className="fas fa-map-marker-alt me-2 text-primary"></i>
-                                            {result.name}
+            <div className="search-results-container">
+                {query.length > 1 && (
+                    <div className="search-results mb-3">
+                        <div className="search-results-header mb-2">
+                            <small className="text-muted fw-semibold">
+                                <i className="fas fa-search me-1"></i>
+                                Search Results for "{query}" in {city}:
+                            </small>
+                        </div>
+                        
+                        {results.length > 0 ? (
+                            <div className="list-group">
+                                {results.map((result, index) => (
+                                    <button
+                                        key={index}
+                                        className="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+                                        onClick={() => handleResultSelect(result)}
+                                    >
+                                        <div>
+                                            <div className="fw-semibold">
+                                                <i className="fas fa-map-marker-alt me-2 text-primary"></i>
+                                                {result.name}
+                                            </div>
+                                            <small className="text-muted">
+                                                {result.address}
+                                            </small>
                                         </div>
-                                        <small className="text-muted">
-                                            {result.address}
-                                        </small>
-                                    </div>
-                                    <i className="fas fa-chevron-right text-muted"></i>
-                                </button>
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="no-results text-center py-3 text-muted">
-                            <i className="fas fa-search-minus fa-2x mb-2"></i>
-                            <div>No areas found for "{query}" in {city}</div>
-                            <small>Try a different search term</small>
-                        </div>
-                    )}
-                </div>
-            )}
+                                        <i className="fas fa-chevron-right text-muted"></i>
+                                    </button>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="no-results text-center py-3 text-muted">
+                                <i className="fas fa-search-minus fa-2x mb-2"></i>
+                                <div>No areas found for "{query}" in {city}</div>
+                                <small>Try a different search term</small>
+                            </div>
+                        )}
+                    </div>
+                )}
+            </div>
 
             {/* ENHANCED: Quick suggestions (shown when not searching) */}
             {query.length <= 1 && results.length > 0 && (
@@ -271,11 +273,83 @@ const LocationSearch = ({ city, onLocationSelect }) => {
                     }
                 }
                 
-                /* Mobile responsiveness */
-                @media (max-width: 576px) {
+                /* Enhanced mobile responsiveness */
+                @media (max-width: 767.98px) {
+                    .location-search {
+                        margin: 0 -0.75rem;
+                        padding: 0 0.75rem;
+                    }
+                    
+                    .search-results-container {
+                        position: relative;
+                        z-index: 1050;
+                        margin: 0 -0.75rem;
+                    }
+                    
+                    .search-results {
+                        max-height: 50vh;
+                        border-radius: 0.5rem;
+                        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+                        margin: 0.5rem 0;
+                        background: white;
+                        border: 1px solid #dee2e6;
+                    }
+                    
+                    .list-group-item {
+                        padding: 1rem 0.75rem;
+                        font-size: 0.95rem;
+                        border: none;
+                        border-bottom: 1px solid #f8f9fa;
+                    }
+                    
+                    .list-group-item:last-child {
+                        border-bottom: none;
+                    }
+                    
+                    .suggestions-grid {
+                        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+                        gap: 0.5rem;
+                        margin: 0 -0.75rem;
+                        padding: 0 0.75rem;
+                    }
+                    
+                    .suggestion-btn {
+                        font-size: 0.85rem;
+                        padding: 0.6rem 0.75rem;
+                    }
+                    
+                    .input-group {
+                        margin: 0 -0.75rem 1rem -0.75rem;
+                        padding: 0 0.75rem;
+                    }
+                }
+                
+                @media (max-width: 575.98px) {
+                    .location-search {
+                        margin: 0 -0.5rem;
+                        padding: 0 0.5rem;
+                    }
+                    
+                    .search-results-container {
+                        margin: 0 -0.5rem;
+                    }
+                    
+                    .search-results {
+                        max-height: 40vh;
+                        margin: 0.25rem 0;
+                        border-radius: 0.375rem;
+                    }
+                    
+                    .list-group-item {
+                        padding: 0.875rem 0.75rem;
+                        font-size: 0.9rem;
+                    }
+                    
                     .suggestions-grid {
                         grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
                         gap: 0.375rem;
+                        margin: 0 -0.5rem;
+                        padding: 0 0.5rem;
                     }
                     
                     .suggestion-btn {
@@ -283,8 +357,23 @@ const LocationSearch = ({ city, onLocationSelect }) => {
                         padding: 0.4rem 0.6rem;
                     }
                     
-                    .search-results {
-                        max-height: 300px;
+                    .search-results-header {
+                        padding: 0.375rem 0.75rem;
+                        font-size: 0.85rem;
+                    }
+                    
+                    .no-results {
+                        padding: 0.75rem;
+                        font-size: 0.9rem;
+                    }
+                    
+                    .input-group {
+                        margin: 0 -0.5rem 1rem -0.5rem;
+                        padding: 0 0.5rem;
+                    }
+                    
+                    .form-control {
+                        font-size: 1rem; /* Prevent zoom on iOS */
                     }
                 }
             `}</style>

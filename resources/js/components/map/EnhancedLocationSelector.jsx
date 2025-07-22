@@ -88,14 +88,21 @@ const LocationPicker = ({
 // Helper functions
 const reverseGeocode = async (lat, lng) => {
     try {
+        // Use Laravel backend proxy instead of direct API call
         const response = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`,
+            `/api/geocoding/reverse?lat=${lat}&lon=${lng}`,
             {
                 headers: {
-                    "User-Agent": "HireMe-ServiceApp/1.0",
+                    "Accept": "application/json",
+                    "Content-Type": "application/json",
                 },
             }
         );
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         return await response.json();
     } catch (error) {
         console.error("Reverse geocoding failed:", error);
@@ -112,16 +119,23 @@ const reverseGeocode = async (lat, lng) => {
 
 const geocodeSearch = async (query) => {
     try {
+        // Use Laravel backend proxy instead of direct API call
         const response = await fetch(
-            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+            `/api/geocoding/search?q=${encodeURIComponent(
                 query
-            )}&countrycodes=lk&limit=5&addressdetails=1`,
+            )}&countrycodes=lk&limit=5`,
             {
                 headers: {
-                    "User-Agent": "HireMe-ServiceApp/1.0",
+                    "Accept": "application/json",
+                    "Content-Type": "application/json",
                 },
             }
         );
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         return await response.json();
     } catch (error) {
         console.error("Geocoding failed:", error);
@@ -230,9 +244,20 @@ const EnhancedLocationSelector = ({ value, onChange, error }) => {
         setIsSearching(true);
         try {
             const results = await geocodeSearch(query);
-            setSearchResults(results.slice(0, 5));
+            // Handle both array response and error object response
+            if (Array.isArray(results)) {
+                setSearchResults(results.slice(0, 5));
+            } else if (results.error) {
+                console.warn('Geocoding API error:', results.error);
+                setSearchResults([]);
+                // You could add a toast notification here
+            } else {
+                setSearchResults([]);
+            }
         } catch (error) {
             console.error("Search failed:", error);
+            setSearchResults([]);
+            // You could add a toast notification here
         } finally {
             setIsSearching(false);
         }
@@ -271,7 +296,7 @@ const EnhancedLocationSelector = ({ value, onChange, error }) => {
                 <label className="form-label fw-semibold">
                     Search Location
                 </label>
-                <div className="position-relative">
+                <div className="search-container position-relative">
                     <input
                         type="text"
                         className="form-control"
@@ -287,38 +312,30 @@ const EnhancedLocationSelector = ({ value, onChange, error }) => {
                             <div className="spinner-border spinner-border-sm"></div>
                         </div>
                     )}
-                </div>
-
-                {/* Search Results */}
-                {searchResults.length > 0 && (
-                    <div
-                        className="search-results mt-2 border rounded shadow-sm bg-white"
-                        style={{
-                            maxHeight: "200px",
-                            overflowY: "auto",
-                            zIndex: 1000,
-                        }}
-                    >
-                        {searchResults.map((result, index) => (
-                            <div
-                                key={index}
-                                className="search-result-item p-2 border-bottom cursor-pointer hover-bg-light"
-                                onClick={() => selectSearchResult(result)}
-                                style={{ cursor: "pointer" }}
-                            >
-                                <div className="fw-semibold text-truncate">
-                                    {result.display_name}
+                    
+                    {/* Search Results - Fixed positioning */}
+                    {searchResults.length > 0 && (
+                        <div className="search-results">
+                            {searchResults.map((result, index) => (
+                                <div
+                                    key={index}
+                                    className="search-result-item"
+                                    onClick={() => selectSearchResult(result)}
+                                >
+                                    <div className="fw-semibold text-truncate">
+                                        {result.display_name}
+                                    </div>
+                                    <small className="text-muted">
+                                        {result.type} •{" "}
+                                        {result.address?.city ||
+                                            result.address?.town ||
+                                            "Unknown"}
+                                    </small>
                                 </div>
-                                <small className="text-muted">
-                                    {result.type} •{" "}
-                                    {result.address?.city ||
-                                        result.address?.town ||
-                                        "Unknown"}
-                                </small>
-                            </div>
-                        ))}
-                    </div>
-                )}
+                            ))}
+                        </div>
+                    )}
+                </div>
             </div>
 
             {/* Radius Selector */}
@@ -410,17 +427,9 @@ const EnhancedLocationSelector = ({ value, onChange, error }) => {
                     position: relative;
                 }
 
-                .search-result-item:hover {
-                    background-color: #f8f9fa;
-                }
-
-                .hover-bg-light:hover {
-                    background-color: #f8f9fa !important;
-                }
-
-                .map-container .leaflet-container {
-                    height: 400px !important;
-                    width: 100% !important;
+                .search-container {
+                    position: relative;
+                    width: 100%;
                 }
 
                 .search-results {
@@ -428,7 +437,34 @@ const EnhancedLocationSelector = ({ value, onChange, error }) => {
                     top: 100%;
                     left: 0;
                     right: 0;
-                    z-index: 1000;
+                    z-index: 1050;
+                    background: white;
+                    border: 1px solid #dee2e6;
+                    border-radius: 0.375rem;
+                    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+                    max-height: 300px;
+                    overflow-y: auto;
+                    margin-top: 2px;
+                }
+
+                .search-result-item {
+                    padding: 0.75rem;
+                    border-bottom: 1px solid #f8f9fa;
+                    cursor: pointer;
+                    transition: background-color 0.15s ease-in-out;
+                }
+
+                .search-result-item:hover {
+                    background-color: #f8f9fa;
+                }
+
+                .search-result-item:last-child {
+                    border-bottom: none;
+                }
+
+                .map-container .leaflet-container {
+                    height: 400px !important;
+                    width: 100% !important;
                 }
 
                 .leaflet-popup-content-wrapper {
@@ -456,6 +492,101 @@ const EnhancedLocationSelector = ({ value, onChange, error }) => {
 
                 .leaflet-control-zoom a:hover {
                     background-color: #f4f4f4;
+                }
+
+                /* Mobile Responsiveness */
+                @media (max-width: 767.98px) {
+                    .search-container {
+                        position: relative;
+                        width: 100%;
+                    }
+                    
+                    .search-results {
+                        position: absolute;
+                        top: 100%;
+                        left: -0.75rem;
+                        right: -0.75rem;
+                        z-index: 1055;
+                        background: white;
+                        border: 1px solid #dee2e6;
+                        border-radius: 0.5rem;
+                        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+                        max-height: 50vh;
+                        overflow-y: auto;
+                        margin-top: 0.25rem;
+                    }
+
+                    .search-result-item {
+                        padding: 1rem 0.75rem;
+                        border-bottom: 1px solid #f8f9fa;
+                        cursor: pointer;
+                        transition: background-color 0.15s ease-in-out;
+                        font-size: 0.95rem;
+                        line-height: 1.4;
+                    }
+                    
+                    .search-result-item .fw-semibold {
+                        font-size: 0.9rem;
+                        margin-bottom: 0.25rem;
+                    }
+                    
+                    .search-result-item small {
+                        font-size: 0.8rem;
+                        line-height: 1.3;
+                    }
+
+                    .enhanced-location-selector {
+                        overflow: visible;
+                        padding: 0 0.75rem;
+                    }
+
+                    .map-container {
+                        margin-bottom: 1rem;
+                    }
+
+                    .map-wrapper {
+                        height: 300px !important;
+                    }
+                }
+
+                @media (max-width: 575.98px) {
+                    .search-container {
+                        margin: 0 -0.5rem;
+                        width: calc(100% + 1rem);
+                    }
+                    
+                    .search-results {
+                        left: 0;
+                        right: 0;
+                        max-height: 40vh;
+                        border-radius: 0.375rem;
+                        margin-top: 0.5rem;
+                    }
+
+                    .search-result-item {
+                        padding: 0.875rem 0.75rem;
+                        font-size: 0.9rem;
+                    }
+                    
+                    .search-result-item .fw-semibold {
+                        font-size: 0.85rem;
+                    }
+                    
+                    .search-result-item small {
+                        font-size: 0.75rem;
+                    }
+                    
+                    .enhanced-location-selector {
+                        padding: 0 0.5rem;
+                    }
+
+                    .map-wrapper {
+                        height: 250px !important;
+                    }
+                    
+                    .form-control {
+                        font-size: 1rem; /* Prevent zoom on iOS */
+                    }
                 }
             `}</style>
         </div>

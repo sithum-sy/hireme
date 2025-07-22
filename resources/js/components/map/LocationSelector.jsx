@@ -23,19 +23,19 @@ const LocationSelector = ({ value, onChange, error, radius = 5 }) => {
     const [hasInitialized, setHasInitialized] = useState(false);
     const isUserInteraction = useRef(false);
 
-    // Centralized reverse geocoding using Nominatim (same as Leaflet)
+    // Centralized reverse geocoding using Laravel backend
     const reverseGeocode = useCallback(async (lat, lng) => {
         // console.log(`Reverse geocoding coordinates: ${lat}, ${lng}`);
 
         try {
-            // Using Nominatim (OpenStreetMap) - same service that Leaflet uses
+            // Using Laravel backend proxy
             const response = await fetch(
-                `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=16&addressdetails=1&accept-language=en`
+                `/api/geocoding/reverse?lat=${lat}&lon=${lng}`
             );
 
             if (response.ok) {
                 const data = await response.json();
-                console.log("Nominatim response:", data);
+                console.log("Geocoding response:", data);
 
                 const address = data.address || {};
                 const displayName = data.display_name || "";
@@ -148,7 +148,7 @@ const LocationSelector = ({ value, onChange, error, radius = 5 }) => {
             }
         } catch (error) {
             console.warn(
-                "Nominatim geocoding failed, using offline fallback:",
+                "Backend geocoding failed, using offline fallback:",
                 error
             );
         }
@@ -735,6 +735,70 @@ const LocationSelector = ({ value, onChange, error, radius = 5 }) => {
 
     return (
         <div className={`location-selector ${error ? "is-invalid" : ""}`}>
+            {/* Mobile overlay for search results */}
+            <style jsx>{`
+                .location-selector {
+                    position: relative;
+                }
+                
+                @media (max-width: 767.98px) {
+                    .location-selector {
+                        overflow: visible;
+                        padding: 0;
+                    }
+                    
+                    .city-selector .row {
+                        margin: 0 -0.375rem;
+                    }
+                    
+                    .city-selector .col-6 {
+                        padding: 0 0.375rem;
+                        margin-bottom: 0.5rem;
+                    }
+                    
+                    .area-search {
+                        position: relative;
+                        z-index: 1040;
+                        margin: 1rem 0;
+                    }
+                    
+                    .advanced-map-selector {
+                        margin: 1rem 0;
+                    }
+                    
+                    .location-confirm,
+                    .current-location-display {
+                        margin: 1rem 0;
+                        padding: 0.75rem;
+                    }
+                    
+                    .gps-accuracy-info,
+                    .address-breakdown {
+                        margin: 0.75rem 0;
+                    }
+                }
+                
+                @media (max-width: 575.98px) {
+                    .city-selector .col-6 {
+                        flex: 0 0 100%;
+                        max-width: 100%;
+                    }
+                    
+                    .location-confirm,
+                    .current-location-display {
+                        margin: 0.75rem 0;
+                    }
+                    
+                    .d-flex.gap-2 {
+                        flex-direction: column;
+                        gap: 0.5rem !important;
+                    }
+                    
+                    .d-flex.gap-2 .btn {
+                        width: 100%;
+                    }
+                }
+            `}</style>
             {/* Location Detection */}
             {locationState === "detecting" && (
                 <div className="text-center py-4">

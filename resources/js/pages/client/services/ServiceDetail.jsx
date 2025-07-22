@@ -39,9 +39,9 @@ const ServiceDetail = () => {
                     const { latitude, longitude } = position.coords;
 
                     try {
-                        // ✅ Use Nominatim reverse geocoding (same as LocationSelector)
+                        // ✅ Use Laravel backend proxy instead of direct API call
                         const response = await fetch(
-                            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=16&addressdetails=1&accept-language=en`
+                            `/api/geocoding/reverse?lat=${latitude}&lon=${longitude}`
                         );
 
                         if (response.ok) {
@@ -116,43 +116,89 @@ const ServiceDetail = () => {
 
     const reverseGeocode = async (lat, lng) => {
         try {
-            // Try using a free geocoding service first
+            // Use Laravel backend proxy instead of external API
             const response = await fetch(
-                `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`
+                `/api/geocoding/reverse?lat=${lat}&lon=${lng}`
             );
 
             if (response.ok) {
                 const data = await response.json();
+                const address = data.address || {};
+                
                 return {
                     lat,
                     lng,
-                    address: data.locality
-                        ? `${data.locality}, ${
-                              data.city || data.principalSubdivision
-                          }, ${data.countryName}`
-                        : `${data.city || data.principalSubdivision}, ${
-                              data.countryName
-                          }`,
-                    neighborhood: data.locality || "",
+                    address: data.display_name || `${lat.toFixed(4)}, ${lng.toFixed(4)}`,
+                    neighborhood: address.suburb || address.neighbourhood || "",
                     city:
-                        data.city ||
-                        data.principalSubdivision ||
+                        address.city ||
+                        address.town ||
+                        address.village ||
                         "Unknown City",
-                    province: data.principalSubdivision || "Sri Lanka",
-                    country: data.countryName || "Sri Lanka",
+                    province: address.state || address.province || "Sri Lanka",
+                    country: "Sri Lanka",
                     radius: 15,
                     accuracy: "gps_geocoded",
                 };
             }
         } catch (error) {
             console.warn(
-                "Online geocoding failed, using offline fallback:",
+                "Laravel geocoding failed, using offline fallback:",
                 error
             );
         }
 
         // Fallback to offline geocoding with Sri Lankan cities
         return reverseGeocodeOffline(lat, lng);
+    };
+
+    const reverseGeocodeOffline = (lat, lng) => {
+        const sriLankanCities = [
+            { name: "Colombo", lat: 6.9271, lng: 79.8612, province: "Western Province" },
+            { name: "Negombo", lat: 7.2083, lng: 79.8358, province: "Western Province" },
+            { name: "Kandy", lat: 7.2906, lng: 80.6337, province: "Central Province" },
+            { name: "Gampaha", lat: 7.0873, lng: 79.999, province: "Western Province" },
+            { name: "Kalutara", lat: 6.5854, lng: 79.9607, province: "Western Province" },
+            { name: "Galle", lat: 6.0535, lng: 80.221, province: "Southern Province" },
+        ];
+
+        let closestCity = sriLankanCities[0];
+        let minDistance = calculateDistance(lat, lng, closestCity.lat, closestCity.lng);
+
+        sriLankanCities.forEach((city) => {
+            const distance = calculateDistance(lat, lng, city.lat, city.lng);
+            if (distance < minDistance) {
+                minDistance = distance;
+                closestCity = city;
+            }
+        });
+
+        return {
+            lat,
+            lng,
+            address: `Near ${closestCity.name}, ${closestCity.province}`,
+            neighborhood: `Near ${closestCity.name}`,
+            city: closestCity.name,
+            province: closestCity.province,
+            country: "Sri Lanka",
+            radius: 15,
+            accuracy: "offline_fallback",
+            distance_to_city: Math.round(minDistance),
+        };
+    };
+
+    const calculateDistance = (lat1, lng1, lat2, lng2) => {
+        const R = 6371; // Earth radius in kilometers
+        const dLat = ((lat2 - lat1) * Math.PI) / 180;
+        const dLng = ((lng2 - lng1) * Math.PI) / 180;
+        const a =
+            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos((lat1 * Math.PI) / 180) *
+                Math.cos((lat2 * Math.PI) / 180) *
+                Math.sin(dLng / 2) *
+                Math.sin(dLng / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
     };
 
     // useEffect(() => {

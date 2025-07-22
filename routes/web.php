@@ -25,3 +25,8 @@ use Illuminate\Support\Facades\Route;
 Route::get('/{any}', function () {
     return view('app'); // or wherever your React app entry point is
 })->where('any', '^(?!api).*$'); // Exclude API routes
+
+// Include test routes in development
+if (app()->environment('local')) {
+    require __DIR__ . '/test.php';
+}

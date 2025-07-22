@@ -5,6 +5,7 @@ const ServiceFilters = ({
     categories,
     onChange,
     onClear,
+    onClose, // New prop for closing modal/sidebar
     location,
 }) => {
     const [priceRange, setPriceRange] = useState({
@@ -35,14 +36,28 @@ const ServiceFilters = ({
                 <div className="card-header bg-white border-bottom">
                     <div className="d-flex justify-content-between align-items-center">
                         <h6 className="fw-bold mb-0">Filters</h6>
-                        {hasActiveFilters && (
-                            <button
-                                className="btn btn-link btn-sm text-decoration-none p-0"
-                                onClick={onClear}
-                            >
-                                Clear All
-                            </button>
-                        )}
+                        <div className="d-flex align-items-center gap-2">
+                            {hasActiveFilters && (
+                                <button
+                                    className="btn btn-link btn-sm text-decoration-none p-0"
+                                    onClick={() => {
+                                        onClear();
+                                        if (onClose) onClose(); // Close modal after clearing
+                                    }}
+                                >
+                                    Clear All
+                                </button>
+                            )}
+                            {onClose && (
+                                <button
+                                    className="btn btn-outline-secondary btn-sm d-lg-none"
+                                    onClick={onClose}
+                                    title="Close filters"
+                                >
+                                    <i className="fas fa-times"></i>
+                                </button>
+                            )}
+                        </div>
                     </div>
                 </div>
 
@@ -369,6 +384,7 @@ const ServiceFilters = ({
                             onClick={() => {
                                 // Filters are applied in real-time, this could trigger a search
                                 console.log("Apply filters:", filters);
+                                if (onClose) onClose(); // Close modal after applying
                             }}
                         >
                             <i className="fas fa-search me-2"></i>

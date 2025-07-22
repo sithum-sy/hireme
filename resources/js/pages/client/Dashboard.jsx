@@ -7,7 +7,7 @@ import QuickServiceSearch from "../../components/client/dashboard/QuickServiceSe
 import ServiceRecommendations from "../../components/client/dashboard/ServiceRecommendations";
 import LocationSelector from "../../components/map/LocationSelector";
 import LoadingSpinner from "../../components/LoadingSpinner";
-import SimpleLocationSelector from "../../components/map/SimpleLocationSelector";
+// import SimpleLocationSelector from "../../components/map/SimpleLocationSelector";
 
 const ClientDashboard = () => {
     const { user } = useAuth();

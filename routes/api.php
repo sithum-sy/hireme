@@ -12,6 +12,7 @@ use App\Http\Controllers\API\AppointmentController;
 use App\Http\Controllers\API\LocationController;
 use App\Http\Controllers\API\PaymentController;
 use App\Http\Controllers\API\ReviewController;
+use App\Http\Controllers\GeocodingController;
 
 /*
 |--------------------------------------------------------------------------
@@ -22,6 +23,12 @@ use App\Http\Controllers\API\ReviewController;
 // Public routes
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+
+// Public geocoding routes (no auth required)
+Route::prefix('geocoding')->group(function () {
+    Route::get('/search', [GeocodingController::class, 'search']);
+    Route::get('/reverse', [GeocodingController::class, 'reverse']);
+});
 
 // Public service routes
 Route::get('/service-categories', [ServiceCategoryController::class, 'index']);
