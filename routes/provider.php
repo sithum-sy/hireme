@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\API\ServiceController;
+use App\Http\Controllers\API\provider\ServiceController;
 use App\Http\Controllers\API\AvailabilityController;
 use App\Http\Controllers\API\ProfileController;
 use App\Http\Controllers\API\AppointmentController;

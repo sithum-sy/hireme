@@ -238,7 +238,7 @@ class Service extends Model
             return [];
         }
 
-        // If service_images is stored as JSON array of filenames
+        // If service_images is stored as JSON array of paths
         $images = is_string($this->service_images)
             ? json_decode($this->service_images, true)
             : $this->service_images;
@@ -247,16 +247,20 @@ class Service extends Model
             return [];
         }
 
-        return array_map(function ($image) {
-            // Convert relative paths to full URLs
-            if (str_starts_with($image, 'http')) {
-                return $image; // Already a full URL
+        return array_map(function ($imagePath) {
+            // Convert paths to full URLs
+            if (str_starts_with($imagePath, 'http')) {
+                return $imagePath; // Already a full URL
             }
             
-            // Check if file exists and return URL
-            if (Storage::disk('public')->exists('services/' . $image)) {
-                // Use asset helper for consistent URL generation
-                return asset('storage/services/' . $image);
+            // Check if file exists in public directory
+            if (file_exists(public_path($imagePath))) {
+                return asset($imagePath);
+            }
+            
+            // Legacy fallback - check old storage location
+            if (Storage::disk('public')->exists('services/' . basename($imagePath))) {
+                return asset('storage/services/' . basename($imagePath));
             }
             
             // Return null if file doesn't exist

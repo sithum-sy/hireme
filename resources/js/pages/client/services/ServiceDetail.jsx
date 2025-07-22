@@ -525,8 +525,9 @@ const ServiceDetail = () => {
 
                             {/* Service Images */}
                             <ServiceGallery
-                                images={service.images || []}
+                                service={service}
                                 title={service.title || "Service Gallery"}
+                                images={service.images || service.service_images || service.existing_images || []}
                             />
                         </div>
 

@@ -1,43 +1,13 @@
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useServicePrimaryImage } from "../../../hooks/useServiceImages";
+
+import { useState } from "react";
 
 const ServiceCard = ({ service, showDistance = true }) => {
     const navigate = useNavigate();
-    // console.log("Service image debug:", {
-    //     service_id: service.id,
-    //     first_image_url: service.first_image_url,
-    //     service_images: service.service_images,
-    //     service_title: service.title,
-    // });
-
-    // const handleImageError = (e) => {
-    //     console.error("Image failed to load:", {
-    //         src: e.target.src,
-    //         service_id: service.id,
-    //         error: e,
-    //         naturalWidth: e.target.naturalWidth,
-    //         naturalHeight: e.target.naturalHeight,
-    //     });
-    // };
-
-    // const handleImageLoad = (e) => {
-    //     console.log("Image loaded successfully:", {
-    //         src: e.target.src,
-    //         service_id: service.id,
-    //         naturalWidth: e.target.naturalWidth,
-    //         naturalHeight: e.target.naturalHeight,
-    //     });
-    // };
-
-    // console.log("Rating data:", {
-    //     service_id: service.id,
-    //     average_rating: service.average_rating,
-    //     reviews_count: service.reviews_count,
-    //     rating_type: typeof service.average_rating,
-    //     reviews_type: typeof service.reviews_count,
-    //     rating_value: service.average_rating || 0,
-    //     reviews_value: service.reviews_count || 0,
-    // });
+    const primaryImage = useServicePrimaryImage(service);
+    const [imageError, setImageError] = useState(false);
 
     return (
         <div className="service-card">
@@ -48,70 +18,44 @@ const ServiceCard = ({ service, showDistance = true }) => {
                 <div className="card h-100 border-0 shadow-sm">
                     {/* Service Image */}
                     <div className="service-image position-relative">
-                        {/* Get image URL from multiple possible fields */}
-                        {/* {service.first_image_url ? (
+                        {primaryImage && !imageError ? (
                             <img
-                                src={service.first_image_url}
+                                src={primaryImage}
                                 alt={service.title}
                                 className="card-img-top"
-                                style={{ height: "200px", objectFit: "cover" }}
-                                onError={handleImageError}
-                                onLoad={handleImageLoad}
+                                style={{
+                                    height: "200px",
+                                    objectFit: "cover",
+                                }}
+                                onError={() => {
+                                    console.error(
+                                        "Image failed to load:",
+                                        primaryImage
+                                    );
+                                    setImageError(true);
+                                }}
                             />
-                        ) : (
-                            <div
-                                className="card-img-top bg-light d-flex align-items-center justify-content-center"
-                                style={{ height: "200px" }}
-                            >
-                                <i className="fas fa-image fa-3x text-muted"></i>
-                            </div>
-                        )} */}
-                        {(() => {
-                            const imageUrl =
-                                service.first_image_url ||
-                                service.service_image_urls?.[0] ||
-                                service.images?.[0]?.url ||
-                                null;
+                        ) : null}
 
-                            return imageUrl ? (
-                                <>
-                                    <img
-                                        src={imageUrl}
-                                        alt={service.title}
-                                        className="card-img-top"
-                                        style={{
-                                            height: "200px",
-                                            objectFit: "cover",
-                                        }}
-                                        onError={(e) => {
-                                            console.error(
-                                                "Image failed to load:",
-                                                imageUrl
-                                            );
-                                            e.target.style.display = "none";
-                                            e.target.nextSibling.style.display =
-                                                "flex";
-                                        }}
-                                    />
-                                    <div
-                                        className="card-img-top bg-light d-flex align-items-center justify-content-center"
-                                        style={{
-                                            height: "200px",
-                                            display: "none",
-                                        }}
-                                    >
-                                        <i className="fas fa-image fa-3x text-muted"></i>
+                        {/* Fallback placeholder - only show if no primary image or image fails to load */}
+                        {(imageError || !primaryImage) && (
+                            <div
+                                className={`image-fallback card-img-top bg-light d-flex align-items-center justify-content-center`}
+                                style={{
+                                    height: "200px",
+                                    display: "flex",
+                                }}
+                            >
+                                <div className="text-center text-muted">
+                                    <i className="fas fa-image fa-2x mb-2"></i>
+                                    <div>
+                                        {primaryImage
+                                            ? "Image unavailable"
+                                            : "No image"}
                                     </div>
-                                </>
-                            ) : (
-                                <div
-                                    className="card-img-top bg-light d-flex align-items-center justify-content-center"
-                                    style={{ height: "200px" }}
-                                >
-                                    <i className="fas fa-image fa-3x text-muted"></i>
                                 </div>
-                            );
-                        })()}
+                            </div>
+                        )}
 
                         {/* Category Badge */}
                         <div className="position-absolute top-0 start-0 m-2">
@@ -214,7 +158,9 @@ const ServiceCard = ({ service, showDistance = true }) => {
                                 <span className="fw-bold text-purple">
                                     {service.formatted_price ||
                                         `Rs. ${
-                                            service.base_price || service.price || 0
+                                            service.base_price ||
+                                            service.price ||
+                                            0
                                         }`}
                                 </span>
                             </div>

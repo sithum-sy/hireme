@@ -173,7 +173,7 @@ class ServiceService
             $newImages = [];
             if (request()->hasFile('service_images')) {
                 foreach (request()->file('service_images') as $image) {
-                    $newImages[] = $this->uploadServiceImage($image);
+                    $newImages[] = $this->uploadServiceImage($image, $service->provider_id);
                 }
             }
 
@@ -219,10 +219,15 @@ class ServiceService
         DB::beginTransaction();
 
         try {
-            // Delete service images
+            // Delete service images from public/images/services
             if ($service->service_images) {
-                foreach ($service->service_images as $image) {
-                    Storage::disk('public')->delete($image);
+                foreach ($service->service_images as $imagePath) {
+                    if ($imagePath) {
+                        $fullPath = public_path($imagePath);
+                        if (file_exists($fullPath)) {
+                            unlink($fullPath);
+                        }
+                    }
                 }
             }
 
@@ -250,11 +255,22 @@ class ServiceService
     /**
      * Upload service image
      */
-    private function uploadServiceImage($image)
+    private function uploadServiceImage($image, $providerId = null, $index = null)
     {
         $filename = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
-        $path = $image->storeAs('services', $filename, 'public');
-        return $filename; // Store just the filename, not the full path
+        
+        // Create the services directory if it doesn't exist
+        $serviceDir = public_path('images/services');
+        if (!file_exists($serviceDir)) {
+            mkdir($serviceDir, 0755, true);
+        }
+
+        $relativePath = 'images/services/' . $filename;
+
+        // Move the file to public/images/services
+        $image->move($serviceDir, $filename);
+
+        return $relativePath; // Return the relative path from public
     }
 
     /**

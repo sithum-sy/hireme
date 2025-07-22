@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { useServices } from "../../../context/ServicesContext";
 import { useProvider } from "../../../context/ProviderContext";
 import ProviderLayout from "../../../components/layouts/ProviderLayout";
+import ServiceGallery from "../../../components/client/services/ServiceGallery";
 
 const ServiceDetails = () => {
     const { id } = useParams();
@@ -550,50 +551,17 @@ const ServiceDetails = () => {
                                 {activeTab === "overview" && (
                                     <div className="overview-content">
                                         {/* Service Images */}
-                                        {service.service_images &&
-                                            service.service_images.length >
-                                                0 && (
-                                                <div className="service-images mb-4">
-                                                    <h6 className="fw-semibold mb-3">
-                                                        Service Images
-                                                    </h6>
-                                                    <div className="row g-2">
-                                                        {service.service_images.map(
-                                                            (image, index) => (
-                                                                <div
-                                                                    key={index}
-                                                                    className="col-md-4 col-6"
-                                                                >
-                                                                    <div className="image-container">
-                                                                        <img
-                                                                            src={
-                                                                                image
-                                                                            }
-                                                                            alt={`Service ${
-                                                                                index +
-                                                                                1
-                                                                            }`}
-                                                                            className="img-fluid rounded"
-                                                                            style={{
-                                                                                height: "150px",
-                                                                                objectFit:
-                                                                                    "cover",
-                                                                                width: "100%",
-                                                                            }}
-                                                                            onError={(
-                                                                                e
-                                                                            ) => {
-                                                                                e.target.src =
-                                                                                    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150' viewBox='0 0 150 150'%3E%3Crect width='150' height='150' fill='%23f8f9fa'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%236c757d'%3EImage%3C/text%3E%3C/svg%3E";
-                                                                            }}
-                                                                        />
-                                                                    </div>
-                                                                </div>
-                                                            )
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            )}
+                                        {/* Service Images - Use ServiceGallery component */}
+                                        <div className="service-images mb-4">
+                                            <h6 className="fw-semibold mb-3">
+                                                Service Images
+                                            </h6>
+                                            <ServiceGallery
+                                                service={service}
+                                                title={service.title}
+                                                images={service.service_images || service.existing_images || service.images || []}
+                                            />
+                                        </div>
 
                                         {/* Description */}
                                         <div className="service-description mb-4">
