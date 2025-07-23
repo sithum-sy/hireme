@@ -677,6 +677,117 @@ class AppointmentController extends Controller
     }
 
     /**
+     * Approve reschedule request
+     */
+    public function approveReschedule(Request $request, Appointment $appointment)
+    {
+        $request->validate([
+            'notes' => 'nullable|string|max:500'
+        ]);
+
+        // Authorization check
+        if ($appointment->provider_id !== Auth::id()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized access'
+            ], 403);
+        }
+
+        // Get the pending reschedule request
+        $rescheduleRequest = $appointment->pendingRescheduleRequest;
+        if (!$rescheduleRequest) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No pending reschedule request found'
+            ], 404);
+        }
+
+        try {
+            // Approve the reschedule request
+            $rescheduleRequest->approve(Auth::id(), $request->notes);
+
+            // Apply the reschedule to the appointment
+            $appointment->applyReschedule($rescheduleRequest);
+
+            return response()->json([
+                'success' => true,
+                'data' => $appointment->fresh([
+                    'service',
+                    'client',
+                    'pendingRescheduleRequest',
+                    'latestRescheduleRequest'
+                ]),
+                'message' => 'Reschedule request approved successfully'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Reschedule approval failed', [
+                'error' => $e->getMessage(),
+                'appointment_id' => $appointment->id,
+                'provider_id' => Auth::id()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to approve reschedule request'
+            ], 500);
+        }
+    }
+
+    /**
+     * Decline reschedule request
+     */
+    public function declineReschedule(Request $request, Appointment $appointment)
+    {
+        $request->validate([
+            'notes' => 'required|string|max:500'
+        ]);
+
+        // Authorization check
+        if ($appointment->provider_id !== Auth::id()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized access'
+            ], 403);
+        }
+
+        // Get the pending reschedule request
+        $rescheduleRequest = $appointment->pendingRescheduleRequest;
+        if (!$rescheduleRequest) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No pending reschedule request found'
+            ], 404);
+        }
+
+        try {
+            // Decline the reschedule request
+            $rescheduleRequest->decline(Auth::id(), $request->notes);
+
+            return response()->json([
+                'success' => true,
+                'data' => $appointment->fresh([
+                    'service',
+                    'client',
+                    'pendingRescheduleRequest',
+                    'latestRescheduleRequest'
+                ]),
+                'message' => 'Reschedule request declined successfully'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Reschedule decline failed', [
+                'error' => $e->getMessage(),
+                'appointment_id' => $appointment->id,
+                'provider_id' => Auth::id()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to decline reschedule request'
+            ], 500);
+        }
+    }
+
+    /**
      * Transform appointment data for provider view
      */
     private function transformAppointmentForProvider($appointment)
@@ -700,6 +811,8 @@ class AppointmentController extends Controller
             'created_at' => $appointment->created_at,
             'can_confirm' => $appointment->canBeConfirmed(),
             'can_cancel' => $appointment->canBeCancelled(),
+            'has_pending_reschedule' => $appointment->hasPendingRescheduleRequest(),
+            'pending_reschedule_request' => $appointment->pendingRescheduleRequest,
             // Add earnings calculation
             'earnings' => $appointment->status === 'completed' ?
                 $appointment->total_price : ($appointment->status === 'confirmed' ? $appointment->total_price : 0)

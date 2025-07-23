@@ -21,8 +21,6 @@ class ProviderAvailability extends Model
     ];
 
     protected $casts = [
-        'start_time' => 'datetime:H:i',
-        'end_time' => 'datetime:H:i',
         'is_available' => 'boolean',
     ];
 
@@ -61,7 +59,12 @@ class ProviderAvailability extends Model
 
     public function getFormattedTimeRangeAttribute()
     {
-        return $this->start_time->format('g:i A') . ' - ' . $this->end_time->format('g:i A');
+        if (!$this->start_time || !$this->end_time) return 'Not available';
+        
+        $startTime = is_string($this->start_time) ? \Carbon\Carbon::parse($this->start_time) : $this->start_time;
+        $endTime = is_string($this->end_time) ? \Carbon\Carbon::parse($this->end_time) : $this->end_time;
+        
+        return $startTime->format('g:i A') . ' - ' . $endTime->format('g:i A');
     }
 
     // Helper Methods
@@ -80,11 +83,11 @@ class ProviderAvailability extends Model
 
     public function isAvailableAtTime($time)
     {
-        if (!$this->is_available) return false;
+        if (!$this->is_available || !$this->start_time || !$this->end_time) return false;
 
         $checkTime = Carbon::parse($time);
-        $startTime = Carbon::parse($this->start_time);
-        $endTime = Carbon::parse($this->end_time);
+        $startTime = is_string($this->start_time) ? Carbon::parse($this->start_time) : $this->start_time;
+        $endTime = is_string($this->end_time) ? Carbon::parse($this->end_time) : $this->end_time;
 
         return $checkTime->between($startTime, $endTime);
     }

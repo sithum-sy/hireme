@@ -193,19 +193,49 @@ class ProviderAppointmentService {
     /**
      * Accept reschedule request
      */
-    async acceptRescheduleRequest(appointmentId) {
-        return this.respondToRescheduleRequest(appointmentId, "accept");
+    async acceptRescheduleRequest(appointmentId, notes = "") {
+        try {
+            const response = await axios.post(
+                `${API_BASE}/appointments/${appointmentId}/reschedule-request/approve`,
+                { notes }
+            );
+            return {
+                success: true,
+                data: response.data.data,
+                message:
+                    response.data.message ||
+                    "Reschedule request accepted successfully",
+            };
+        } catch (error) {
+            return this.handleError(
+                error,
+                "Failed to accept reschedule request"
+            );
+        }
     }
 
     /**
      * Decline reschedule request
      */
-    async declineRescheduleRequest(appointmentId, reason = "") {
-        return this.respondToRescheduleRequest(
-            appointmentId,
-            "decline",
-            reason
-        );
+    async declineRescheduleRequest(appointmentId, reason) {
+        try {
+            const response = await axios.post(
+                `${API_BASE}/appointments/${appointmentId}/reschedule-request/decline`,
+                { notes: reason }
+            );
+            return {
+                success: true,
+                data: response.data.data,
+                message:
+                    response.data.message ||
+                    "Reschedule request declined successfully",
+            };
+        } catch (error) {
+            return this.handleError(
+                error,
+                "Failed to decline reschedule request"
+            );
+        }
     }
 
     /**

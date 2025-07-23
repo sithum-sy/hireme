@@ -13,10 +13,9 @@ const AppointmentCard = ({ appointment, onStatusUpdate }) => {
 
     // Check if appointment has pending reschedule request
     const hasPendingReschedule = () => {
-        return (
-            appointment.reschedule_request &&
-            appointment.reschedule_request.status === "pending"
-        );
+        return appointment.has_pending_reschedule || 
+               (appointment.pending_reschedule_request && 
+                appointment.pending_reschedule_request.status === "pending");
     };
     // Check if appointment time has arrived
     const canStartService = () => {

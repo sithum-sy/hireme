@@ -174,10 +174,10 @@ class AppointmentController extends Controller
         }
 
         // Check if appointment can be rescheduled
-        if (!in_array($appointment->status, ['pending', 'confirmed'])) {
+        if (!$appointment->canBeRescheduled()) {
             return response()->json([
                 'success' => false,
-                'message' => 'This appointment cannot be rescheduled'
+                'message' => 'This appointment cannot be rescheduled. It may have a pending reschedule request or be in an invalid status.'
             ], 422);
         }
 
@@ -249,25 +249,20 @@ class AppointmentController extends Controller
                 
                 $message = 'Appointment rescheduled successfully';
             } else {
-                // For confirmed appointments, create a simple reschedule request
-                // Since we don't have a reschedule_requests table, we'll update status and add notes
-                $rescheduleNotes = "Reschedule requested by client:\n"
-                    . "New date: {$request->date}\n"
-                    . "New time: {$request->time}\n"
-                    . "Reason: {$request->reason}";
-                
-                if ($request->notes) {
-                    $rescheduleNotes .= "\nNotes: {$request->notes}";
-                }
-
-                // Add to existing client notes
-                $updatedNotes = ($appointment->client_notes ? $appointment->client_notes . "\n\n" : '')
-                    . $rescheduleNotes;
-
-                $appointment->update([
-                    'client_notes' => $updatedNotes,
-                    // For bachelor's project: temporarily store requested date/time in notes
-                    // In a full implementation, you'd create a reschedule_requests table
+                // For confirmed appointments, create a proper reschedule request
+                $rescheduleRequest = $appointment->rescheduleRequests()->create([
+                    'requested_by' => Auth::id(),
+                    'original_date' => $appointment->appointment_date,
+                    'original_time' => $appointment->appointment_time,
+                    'requested_date' => $request->date,
+                    'requested_time' => $request->time,
+                    'reason' => $request->reason,
+                    'notes' => $request->notes,
+                    'client_phone' => $request->client_phone,
+                    'client_email' => $request->client_email,
+                    'client_address' => $request->client_address,
+                    'location_type' => $request->location_type,
+                    'status' => \App\Models\RescheduleRequest::STATUS_PENDING
                 ]);
 
                 $message = 'Reschedule request submitted successfully. The provider will respond within 24 hours.';
@@ -280,7 +275,8 @@ class AppointmentController extends Controller
                     'provider.providerProfile',
                     'invoice',
                     'payment',
-                    'clientReview'
+                    'clientReview',
+                    'pendingRescheduleRequest'
                 ]),
                 'message' => $message
             ]);
@@ -787,7 +783,8 @@ class AppointmentController extends Controller
                     'provider.providerProfile',
                     'invoice',
                     'payment',
-                    'clientReview'
+                    'clientReview',
+                    'pendingRescheduleRequest'
                 ]);
 
             // Apply status filter

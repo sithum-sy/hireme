@@ -23,8 +23,6 @@ class BlockedTime extends Model
     protected $casts = [
         'start_date' => 'date:Y-m-d',  // Ensure consistent format
         'end_date' => 'date:Y-m-d',    // Ensure consistent format
-        'start_time' => 'datetime:H:i',
-        'end_time' => 'datetime:H:i',
         'all_day' => 'boolean',
     ];
 
@@ -82,7 +80,10 @@ class BlockedTime extends Model
             return 'All day';
         }
 
-        return $this->start_time->format('g:i A') . ' - ' . $this->end_time->format('g:i A');
+        $startTime = is_string($this->start_time) ? \Carbon\Carbon::parse($this->start_time) : $this->start_time;
+        $endTime = is_string($this->end_time) ? \Carbon\Carbon::parse($this->end_time) : $this->end_time;
+
+        return $startTime->format('g:i A') . ' - ' . $endTime->format('g:i A');
     }
 
     // Helper Methods
@@ -114,6 +115,9 @@ class BlockedTime extends Model
             return true; // Blocked time is all day
         }
 
-        return !($this->end_time->lte($startTime) || $this->start_time->gte($endTime));
+        $blockedStartTime = is_string($this->start_time) ? \Carbon\Carbon::parse($this->start_time) : $this->start_time;
+        $blockedEndTime = is_string($this->end_time) ? \Carbon\Carbon::parse($this->end_time) : $this->end_time;
+        
+        return !($blockedEndTime->lte($startTime) || $blockedStartTime->gte($endTime));
     }
 }

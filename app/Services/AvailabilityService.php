@@ -45,10 +45,10 @@ class AvailabilityService
                     'day_name' => $dayNames[$day],
                     'is_available' => $dayAvailability ? $dayAvailability->is_available : false,
                     'start_time' => $dayAvailability && $dayAvailability->start_time
-                        ? $dayAvailability->start_time->format('H:i')
+                        ? (is_string($dayAvailability->start_time) ? substr($dayAvailability->start_time, 0, 5) : $dayAvailability->start_time->format('H:i'))
                         : null,
                     'end_time' => $dayAvailability && $dayAvailability->end_time
-                        ? $dayAvailability->end_time->format('H:i')
+                        ? (is_string($dayAvailability->end_time) ? substr($dayAvailability->end_time, 0, 5) : $dayAvailability->end_time->format('H:i'))
                         : null,
                     'formatted_time_range' => $dayAvailability && $dayAvailability->is_available
                         ? $this->formatTimeRange($dayAvailability->start_time, $dayAvailability->end_time)
@@ -96,8 +96,8 @@ class AvailabilityService
                     'day_of_week' => $availability->day_of_week,
                     'day_name' => $availability->day_name ?? $this->getDayName($availability->day_of_week),
                     'is_available' => $availability->is_available,
-                    'start_time' => $availability->start_time ? $availability->start_time->format('H:i') : null,
-                    'end_time' => $availability->end_time ? $availability->end_time->format('H:i') : null,
+                    'start_time' => $availability->start_time ? (is_string($availability->start_time) ? substr($availability->start_time, 0, 5) : $availability->start_time->format('H:i')) : null,
+                    'end_time' => $availability->end_time ? (is_string($availability->end_time) ? substr($availability->end_time, 0, 5) : $availability->end_time->format('H:i')) : null,
                     'formatted_time_range' => $availability->is_available && $availability->start_time && $availability->end_time
                         ? $this->formatTimeRange($availability->start_time, $availability->end_time)
                         : 'Unavailable',
@@ -234,7 +234,10 @@ class AvailabilityService
     {
         if (!$startTime || !$endTime) return 'Unavailable';
 
-        return $startTime->format('g:i A') . ' - ' . $endTime->format('g:i A');
+        $start = is_string($startTime) ? \Carbon\Carbon::parse($startTime) : $startTime;
+        $end = is_string($endTime) ? \Carbon\Carbon::parse($endTime) : $endTime;
+
+        return $start->format('g:i A') . ' - ' . $end->format('g:i A');
     }
 
     private function getDayName($dayOfWeek)
@@ -261,7 +264,12 @@ class AvailabilityService
         try {
             Log::info("Getting available slots for provider {$provider->id} on {$date} with duration {$serviceDuration}h");
 
-            $checkDate = Carbon::parse($date);
+            // Clean the date string - extract just the date part if it contains time/timezone info
+            $cleanDate = is_string($date) && strpos($date, 'T') !== false 
+                ? explode('T', $date)[0] 
+                : $date;
+                
+            $checkDate = Carbon::parse($cleanDate);
             $dayOfWeek = $checkDate->dayOfWeek;
 
             // Add more detailed logging
@@ -287,20 +295,24 @@ class AvailabilityService
                 return [];
             }
 
-            $workingStart = Carbon::parse($weeklyAvailability->start_time);
-            $workingEnd = Carbon::parse($weeklyAvailability->end_time);
+            $workingStart = is_string($weeklyAvailability->start_time) 
+                ? Carbon::parse($weeklyAvailability->start_time) 
+                : $weeklyAvailability->start_time;
+            $workingEnd = is_string($weeklyAvailability->end_time) 
+                ? Carbon::parse($weeklyAvailability->end_time) 
+                : $weeklyAvailability->end_time;
 
             Log::info("Working hours: {$workingStart->format('H:i')} - {$workingEnd->format('H:i')}");
 
             // Get blocked times for this date
             $blockedTimes = BlockedTime::where('provider_id', $provider->id)
-                ->forDate($date)
+                ->forDate($cleanDate)
                 ->get();
 
             Log::info("Found " . $blockedTimes->count() . " blocked times for {$date}");
 
             // Get existing appointments for this date
-            $existingAppointments = $this->getExistingAppointments($provider, $date);
+            $existingAppointments = $this->getExistingAppointments($provider, $cleanDate);
 
             Log::info("Found " . $existingAppointments->count() . " existing appointments for {$date}");
 
@@ -314,7 +326,7 @@ class AvailabilityService
                 $slotEnd = $current->copy()->addMinutes($serviceDurationMinutes);
 
                 // Check if this slot conflicts with blocked times
-                $isBlocked = $this->isTimeSlotBlocked($current, $slotEnd, $blockedTimes, $date);
+                $isBlocked = $this->isTimeSlotBlocked($current, $slotEnd, $blockedTimes, $cleanDate);
 
                 // Check if this slot conflicts with existing appointments
                 $hasAppointmentConflict = $this->hasAppointmentConflict($current, $slotEnd, $existingAppointments);
@@ -360,8 +372,8 @@ class AvailabilityService
             }
 
             // Check for time overlap
-            $blockedStart = Carbon::parse($blocked->start_time);
-            $blockedEnd = Carbon::parse($blocked->end_time);
+            $blockedStart = is_string($blocked->start_time) ? Carbon::parse($blocked->start_time) : $blocked->start_time;
+            $blockedEnd = is_string($blocked->end_time) ? Carbon::parse($blocked->end_time) : $blocked->end_time;
 
             // Times overlap if: start < blocked_end AND end > blocked_start
             $overlaps = $startTime->lt($blockedEnd) && $endTime->gt($blockedStart);
@@ -425,7 +437,12 @@ class AvailabilityService
         try {
             Log::info("Checking availability for provider {$provider->id} on {$date} from {$startTime} to {$endTime}");
 
-            $checkDate = Carbon::parse($date);
+            // Clean the date string - extract just the date part if it contains time/timezone info
+            $cleanDate = is_string($date) && strpos($date, 'T') !== false 
+                ? explode('T', $date)[0] 
+                : $date;
+                
+            $checkDate = Carbon::parse($cleanDate);
             $dayOfWeek = $checkDate->dayOfWeek;
 
             // Check weekly schedule
@@ -456,8 +473,12 @@ class AvailabilityService
             // Check if time falls within working hours
             $requestedStart = Carbon::parse($startTime);
             $requestedEnd = Carbon::parse($endTime);
-            $workingStart = Carbon::parse($weeklyAvailability->start_time);
-            $workingEnd = Carbon::parse($weeklyAvailability->end_time);
+            $workingStart = is_string($weeklyAvailability->start_time) 
+                ? Carbon::parse($weeklyAvailability->start_time) 
+                : $weeklyAvailability->start_time;
+            $workingEnd = is_string($weeklyAvailability->end_time) 
+                ? Carbon::parse($weeklyAvailability->end_time) 
+                : $weeklyAvailability->end_time;
 
             if ($requestedStart->lt($workingStart) || $requestedEnd->gt($workingEnd)) {
                 Log::info("Requested time outside working hours");
@@ -477,11 +498,11 @@ class AvailabilityService
 
             // Check for blocked times
             $blockedTimes = BlockedTime::where('provider_id', $provider->id)
-                ->forDate($date)
+                ->forDate($cleanDate)
                 ->get();
 
             foreach ($blockedTimes as $blocked) {
-                if ($blocked->conflictsWith($date, $date, $startTime, $endTime)) {
+                if ($blocked->conflictsWith($cleanDate, $cleanDate, $startTime, $endTime)) {
                     Log::info("Time conflicts with blocked period: {$blocked->reason}");
                     return [
                         'available' => false,
@@ -493,7 +514,7 @@ class AvailabilityService
             }
 
             // Check for existing appointments
-            $existingAppointments = $this->getExistingAppointments($provider, $date);
+            $existingAppointments = $this->getExistingAppointments($provider, $cleanDate);
 
             foreach ($existingAppointments as $appointment) {
                 $appointmentStart = Carbon::parse($appointment->appointment_time);
@@ -554,7 +575,12 @@ class AvailabilityService
     public function getWorkingHours($provider, $date)
     {
         try {
-            $dayOfWeek = Carbon::parse($date)->dayOfWeek;
+            // Clean the date string - extract just the date part if it contains time/timezone info
+            $cleanDate = is_string($date) && strpos($date, 'T') !== false 
+                ? explode('T', $date)[0] 
+                : $date;
+                
+            $dayOfWeek = Carbon::parse($cleanDate)->dayOfWeek;
 
             // Get provider's weekly availability
             $availability = ProviderAvailability::where('provider_id', $provider->id)
@@ -567,8 +593,8 @@ class AvailabilityService
 
             // Check for blocked times on this specific date
             $blockedTimes = BlockedTime::where('provider_id', $provider->id)
-                ->where('start_date', '<=', $date)
-                ->where('end_date', '>=', $date)
+                ->where('start_date', '<=', $cleanDate)
+                ->where('end_date', '>=', $cleanDate)
                 ->get();
 
             // If there's an all-day block, provider is not available
@@ -580,13 +606,17 @@ class AvailabilityService
 
             return [
                 'is_available' => true,
-                'start_time' => $availability->start_time->format('H:i'),
-                'end_time' => $availability->end_time->format('H:i'),
+                'start_time' => is_string($availability->start_time) 
+                    ? substr($availability->start_time, 0, 5)
+                    : $availability->start_time->format('H:i'),
+                'end_time' => is_string($availability->end_time) 
+                    ? substr($availability->end_time, 0, 5)
+                    : $availability->end_time->format('H:i'),
                 'day_of_week' => $dayOfWeek,
                 'blocked_times' => $blockedTimes->map(function ($block) {
                     return [
-                        'start_time' => $block->start_time ? $block->start_time->format('H:i') : null,
-                        'end_time' => $block->end_time ? $block->end_time->format('H:i') : null,
+                        'start_time' => $block->start_time ? (is_string($block->start_time) ? substr($block->start_time, 0, 5) : $block->start_time->format('H:i')) : null,
+                        'end_time' => $block->end_time ? (is_string($block->end_time) ? substr($block->end_time, 0, 5) : $block->end_time->format('H:i')) : null,
                         'all_day' => $block->all_day,
                         'reason' => $block->reason
                     ];

@@ -123,6 +123,28 @@ class Appointment extends Model
         return $this->hasMany(Payment::class);
     }
 
+    public function invoice()
+    {
+        return $this->hasOne(Invoice::class);
+    }
+
+    public function rescheduleRequests()
+    {
+        return $this->hasMany(RescheduleRequest::class);
+    }
+
+    public function pendingRescheduleRequest()
+    {
+        return $this->hasOne(RescheduleRequest::class)
+            ->where('status', RescheduleRequest::STATUS_PENDING)
+            ->latest();
+    }
+
+    public function latestRescheduleRequest()
+    {
+        return $this->hasOne(RescheduleRequest::class)->latest();
+    }
+
     // Scopes
     public function scopePending($query)
     {
@@ -280,6 +302,36 @@ class Appointment extends Model
         return in_array($this->status, [self::STATUS_PENDING, self::STATUS_CONFIRMED]);
     }
 
+    public function canBeRescheduled()
+    {
+        return in_array($this->status, [self::STATUS_PENDING, self::STATUS_CONFIRMED])
+            && !$this->hasPendingRescheduleRequest();
+    }
+
+    public function hasPendingRescheduleRequest()
+    {
+        return $this->pendingRescheduleRequest()->exists();
+    }
+
+    public function getPendingRescheduleRequestAttribute()
+    {
+        return $this->pendingRescheduleRequest;
+    }
+
+    public function applyReschedule(RescheduleRequest $rescheduleRequest)
+    {
+        $this->update([
+            'appointment_date' => $rescheduleRequest->requested_date,
+            'appointment_time' => $rescheduleRequest->requested_time,
+            'client_phone' => $rescheduleRequest->client_phone ?: $this->client_phone,
+            'client_email' => $rescheduleRequest->client_email ?: $this->client_email,
+            'client_address' => $rescheduleRequest->client_address ?: $this->client_address,
+            'location_type' => $rescheduleRequest->location_type ?: $this->location_type,
+        ]);
+
+        return $this;
+    }
+
     public function markInvoiceSent()
     {
         $this->update([
@@ -356,11 +408,6 @@ class Appointment extends Model
     public function invoices()
     {
         return $this->hasMany(Invoice::class);
-    }
-
-    public function invoice()
-    {
-        return $this->hasOne(Invoice::class);
     }
 
     // Add this method

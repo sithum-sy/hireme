@@ -32,6 +32,8 @@ const ProviderAvailabilitySlots = ({
 
             if (response.success) {
                 setAvailableSlots(response.data);
+            } else {
+                setAvailableSlots([]);
             }
         } catch (error) {
             console.error("Failed to load available slots:", error);

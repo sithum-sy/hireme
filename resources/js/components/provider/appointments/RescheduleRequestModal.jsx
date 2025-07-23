@@ -12,9 +12,9 @@ const RescheduleRequestModal = ({
     const [declineReason, setDeclineReason] = useState("");
     const [errors, setErrors] = useState({});
 
-    if (!show || !appointment?.reschedule_request) return null;
+    if (!show || !appointment?.pending_reschedule_request) return null;
 
-    const rescheduleRequest = appointment.reschedule_request;
+    const rescheduleRequest = appointment.pending_reschedule_request;
 
     // Helper functions
     const formatDate = (dateString) => {
@@ -274,6 +274,12 @@ const RescheduleRequestModal = ({
                                                 {new Date(
                                                     rescheduleRequest.created_at
                                                 ).toLocaleDateString()}
+                                            </div>
+                                            <div className="col-md-6 mt-2">
+                                                <strong>Status:</strong>{" "}
+                                                <span className={`badge ${rescheduleRequest.status_badge_class || 'bg-warning text-dark'}`}>
+                                                    {rescheduleRequest.status_text || rescheduleRequest.status}
+                                                </span>
                                             </div>
                                         </div>
 

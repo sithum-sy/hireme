@@ -62,6 +62,11 @@ Route::prefix('appointments')->group(function () {
     Route::post('/{appointment}/complete', [App\Http\Controllers\API\Provider\AppointmentController::class, 'completeService']); // Add this
     Route::post('/{appointment}/start', [App\Http\Controllers\API\Provider\AppointmentController::class, 'startService']);
     Route::post('/{appointment}/cancel', [App\Http\Controllers\API\Provider\AppointmentController::class, 'cancelAppointment']);
+    
+    // Reschedule request management
+    Route::post('/{appointment}/reschedule-request/approve', [App\Http\Controllers\API\Provider\AppointmentController::class, 'approveReschedule']);
+    Route::post('/{appointment}/reschedule-request/decline', [App\Http\Controllers\API\Provider\AppointmentController::class, 'declineReschedule']);
+    
     Route::get('/dashboard/today', [App\Http\Controllers\API\Provider\AppointmentController::class, 'todayForDashboard']);
     Route::get('/dashboard/upcoming', [App\Http\Controllers\API\Provider\AppointmentController::class, 'upcomingForDashboard']);
     Route::get('/dashboard/past', [App\Http\Controllers\API\Provider\AppointmentController::class, 'pastForDashboard']);
