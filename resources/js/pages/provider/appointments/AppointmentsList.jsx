@@ -31,6 +31,7 @@ const AppointmentsList = () => {
         pending: 0,
         confirmed: 0,
         completed: 0,
+        reschedule_requests: 0,
     });
 
     // Load appointments when filters change
@@ -173,6 +174,9 @@ const AppointmentsList = () => {
                 .length,
             completed: appointments.filter((apt) => apt.status === "completed")
                 .length,
+            reschedule_requests: appointments.filter((apt) => 
+                apt.reschedule_request && apt.reschedule_request.status === "pending"
+            ).length,
         });
     };
 
@@ -285,6 +289,24 @@ const AppointmentsList = () => {
                             </div>
                         </div>
                     </div>
+                    <div className="col-md-3 col-6 mb-3">
+                        <div className="card border-0 shadow-sm text-center">
+                            <div className="card-body py-3">
+                                <div className="text-orange mb-1">
+                                    <i className="fas fa-calendar-alt fa-2x"></i>
+                                </div>
+                                <h4 className="fw-bold mb-0">
+                                    {stats.reschedule_requests}
+                                </h4>
+                                <small className="text-muted">Reschedule Requests</small>
+                                {stats.reschedule_requests > 0 && (
+                                    <span className="badge bg-warning text-dark mt-1">
+                                        Needs Review
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 {/* Filters */}
@@ -304,6 +326,7 @@ const AppointmentsList = () => {
                                 <option value="all">All Statuses</option>
                                 <option value="pending">Pending</option>
                                 <option value="confirmed">Confirmed</option>
+                                <option value="reschedule_pending">Reschedule Requests</option>
                                 <option value="in_progress">In Progress</option>
                                 <option value="completed">Completed</option>
                                 <option value="cancelled_by_client">

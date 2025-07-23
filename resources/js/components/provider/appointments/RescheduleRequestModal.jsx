@@ -1,1 +1,485 @@
-import React, { useState } from \"react\";\nimport providerAppointmentService from \"../../../services/providerAppointmentService\";\n\nconst RescheduleRequestModal = ({\n    show,\n    onHide,\n    appointment,\n    onResponseSuccess,\n}) => {\n    const [loading, setLoading] = useState(false);\n    const [showDeclineReason, setShowDeclineReason] = useState(false);\n    const [declineReason, setDeclineReason] = useState(\"\");\n    const [errors, setErrors] = useState({});\n\n    if (!show || !appointment?.reschedule_request) return null;\n\n    const rescheduleRequest = appointment.reschedule_request;\n\n    // Helper functions\n    const formatDate = (dateString) => {\n        if (!dateString) return \"\";\n        try {\n            return new Date(dateString).toLocaleDateString(\"en-US\", {\n                weekday: \"long\",\n                year: \"numeric\",\n                month: \"long\",\n                day: \"numeric\",\n            });\n        } catch (error) {\n            return dateString;\n        }\n    };\n\n    const formatTime = (timeString) => {\n        if (!timeString) return \"\";\n        try {\n            const [hours, minutes] = timeString.split(\":\");\n            const hour = parseInt(hours);\n            const ampm = hour >= 12 ? \"PM\" : \"AM\";\n            const displayHour = hour % 12 || 12;\n            return `${displayHour}:${minutes} ${ampm}`;\n        } catch (error) {\n            return timeString;\n        }\n    };\n\n    const getRescheduleReasonText = (reason) => {\n        const reasons = {\n            personal_emergency: \"Personal emergency\",\n            work_conflict: \"Work schedule conflict\",\n            travel_plans: \"Travel plans changed\",\n            health_reasons: \"Health reasons\",\n            weather_concerns: \"Weather concerns\",\n            other: \"Other reason\",\n        };\n        return reasons[reason] || reason;\n    };\n\n    // Handle accept reschedule\n    const handleAccept = async () => {\n        if (loading) return;\n        \n        setLoading(true);\n        setErrors({});\n        \n        try {\n            const result = await providerAppointmentService.acceptRescheduleRequest(\n                appointment.id\n            );\n            \n            if (result.success) {\n                onResponseSuccess(result.data);\n                onHide();\n                alert(\"Reschedule request accepted! The appointment has been updated.\");\n            } else {\n                setErrors({ general: result.message || \"Failed to accept reschedule request\" });\n            }\n        } catch (error) {\n            console.error(\"Accept reschedule failed:\", error);\n            setErrors({ general: \"Failed to accept reschedule request. Please try again.\" });\n        } finally {\n            setLoading(false);\n        }\n    };\n\n    // Handle decline reschedule\n    const handleDecline = async () => {\n        if (loading) return;\n        \n        if (!showDeclineReason) {\n            setShowDeclineReason(true);\n            return;\n        }\n        \n        if (!declineReason.trim()) {\n            setErrors({ decline_reason: \"Please provide a reason for declining\" });\n            return;\n        }\n        \n        setLoading(true);\n        setErrors({});\n        \n        try {\n            const result = await providerAppointmentService.declineRescheduleRequest(\n                appointment.id,\n                declineReason\n            );\n            \n            if (result.success) {\n                onResponseSuccess(result.data);\n                onHide();\n                alert(\"Reschedule request declined. The original appointment time remains unchanged.\");\n            } else {\n                setErrors({ general: result.message || \"Failed to decline reschedule request\" });\n            }\n        } catch (error) {\n            console.error(\"Decline reschedule failed:\", error);\n            setErrors({ general: \"Failed to decline reschedule request. Please try again.\" });\n        } finally {\n            setLoading(false);\n        }\n    };\n\n    const handleClose = () => {\n        if (!loading) {\n            setShowDeclineReason(false);\n            setDeclineReason(\"\");\n            setErrors({});\n            onHide();\n        }\n    };\n\n    return (\n        <>\n            {/* Modal Backdrop */}\n            <div className=\"modal-backdrop fade show\" style={{ zIndex: 1040 }}></div>\n\n            {/* Modal */}\n            <div className=\"modal fade show d-block\" style={{ zIndex: 1050 }} tabIndex=\"-1\">\n                <div className=\"modal-dialog modal-lg modal-dialog-centered\">\n                    <div className=\"modal-content\">\n                        {/* Header */}\n                        <div className=\"modal-header border-bottom\">\n                            <div>\n                                <h5 className=\"modal-title fw-bold text-orange\">\n                                    <i className=\"fas fa-calendar-alt me-2\"></i>\n                                    Reschedule Request\n                                </h5>\n                                <p className=\"text-muted mb-0 small\">\n                                    Client has requested to reschedule this appointment\n                                </p>\n                            </div>\n                            <button\n                                type=\"button\"\n                                className=\"btn-close\"\n                                onClick={handleClose}\n                                disabled={loading}\n                            ></button>\n                        </div>\n\n                        {/* Body */}\n                        <div className=\"modal-body\">\n                            {errors.general && (\n                                <div className=\"alert alert-danger\">\n                                    <i className=\"fas fa-exclamation-triangle me-2\"></i>\n                                    {errors.general}\n                                </div>\n                            )}\n\n                            {/* Current Appointment Info */}\n                            <div className=\"current-appointment mb-4\">\n                                <h6 className=\"fw-bold mb-3\">\n                                    <i className=\"fas fa-info-circle me-2 text-info\"></i>\n                                    Current Appointment\n                                </h6>\n                                <div className=\"card bg-light\">\n                                    <div className=\"card-body\">\n                                        <div className=\"row\">\n                                            <div className=\"col-md-6\">\n                                                <strong>Service:</strong> {appointment.service?.title || \"N/A\"}\n                                            </div>\n                                            <div className=\"col-md-6\">\n                                                <strong>Client:</strong> {appointment.client?.name || appointment.client_name || \"N/A\"}\n                                            </div>\n                                            <div className=\"col-md-6 mt-2\">\n                                                <strong>Current Date:</strong> {formatDate(appointment.appointment_date)}\n                                            </div>\n                                            <div className=\"col-md-6 mt-2\">\n                                                <strong>Current Time:</strong> {formatTime(appointment.appointment_time)}\n                                            </div>\n                                            <div className=\"col-md-6 mt-2\">\n                                                <strong>Duration:</strong> {appointment.duration_hours} hour(s)\n                                            </div>\n                                            <div className=\"col-md-6 mt-2\">\n                                                <strong>Price:</strong> Rs. {appointment.total_price}\n                                            </div>\n                                        </div>\n                                    </div>\n                                </div>\n                            </div>\n\n                            {/* Reschedule Request Details */}\n                            <div className=\"reschedule-request mb-4\">\n                                <h6 className=\"fw-bold mb-3\">\n                                    <i className=\"fas fa-calendar-check me-2 text-warning\"></i>\n                                    Requested Changes\n                                </h6>\n                                <div className=\"card border-warning\">\n                                    <div className=\"card-body\">\n                                        <div className=\"row\">\n                                            <div className=\"col-md-6\">\n                                                <strong>New Date:</strong> {formatDate(rescheduleRequest.requested_date)}\n                                            </div>\n                                            <div className=\"col-md-6\">\n                                                <strong>New Time:</strong> {formatTime(rescheduleRequest.requested_time)}\n                                            </div>\n                                            <div className=\"col-md-6 mt-2\">\n                                                <strong>Reason:</strong> {getRescheduleReasonText(rescheduleRequest.reason)}\n                                            </div>\n                                            <div className=\"col-md-6 mt-2\">\n                                                <strong>Requested:</strong> {new Date(rescheduleRequest.created_at).toLocaleDateString()}\n                                            </div>\n                                        </div>\n                                        \n                                        {rescheduleRequest.notes && (\n                                            <div className=\"mt-3\">\n                                                <strong>Additional Notes:</strong>\n                                                <p className=\"mt-1 mb-0 p-2 bg-white rounded border-start border-warning border-3\">\n                                                    {rescheduleRequest.notes}\n                                                </p>\n                                            </div>\n                                        )}\n                                    </div>\n                                </div>\n                            </div>\n\n                            {/* Decline Reason Input */}\n                            {showDeclineReason && (\n                                <div className=\"decline-reason mb-4\">\n                                    <h6 className=\"fw-bold mb-3 text-danger\">\n                                        <i className=\"fas fa-times-circle me-2\"></i>\n                                        Reason for Declining\n                                    </h6>\n                                    <div className=\"card border-danger\">\n                                        <div className=\"card-body\">\n                                            <textarea\n                                                className={`form-control ${errors.decline_reason ? \"is-invalid\" : \"\"}`}\n                                                rows=\"3\"\n                                                placeholder=\"Please explain why you cannot accommodate this reschedule request...\"\n                                                value={declineReason}\n                                                onChange={(e) => {\n                                                    setDeclineReason(e.target.value);\n                                                    if (errors.decline_reason) {\n                                                        setErrors(prev => ({ ...prev, decline_reason: null }));\n                                                    }\n                                                }}\n                                                maxLength=\"500\"\n                                                disabled={loading}\n                                            ></textarea>\n                                            {errors.decline_reason && (\n                                                <div className=\"invalid-feedback\">\n                                                    {errors.decline_reason}\n                                                </div>\n                                            )}\n                                            <small className=\"text-muted d-block mt-1\">\n                                                {declineReason.length}/500 characters\n                                            </small>\n                                        </div>\n                                    </div>\n                                </div>\n                            )}\n\n                            {/* Action Info */}\n                            <div className=\"action-info\">\n                                <div className=\"alert alert-info\">\n                                    <h6 className=\"fw-bold mb-2\">\n                                        <i className=\"fas fa-lightbulb me-2\"></i>\n                                        What happens next?\n                                    </h6>\n                                    <ul className=\"mb-0 ps-3\">\n                                        <li><strong>Accept:</strong> The appointment will be updated to the new date/time, and the client will be notified</li>\n                                        <li><strong>Decline:</strong> The original appointment remains unchanged, and the client will be notified with your reason</li>\n                                    </ul>\n                                </div>\n                            </div>\n                        </div>\n\n                        {/* Footer */}\n                        <div className=\"modal-footer border-top\">\n                            <div className=\"d-flex justify-content-between w-100\">\n                                <button\n                                    type=\"button\"\n                                    className=\"btn btn-outline-secondary\"\n                                    onClick={handleClose}\n                                    disabled={loading}\n                                >\n                                    Cancel\n                                </button>\n                                \n                                <div className=\"d-flex gap-2\">\n                                    {!showDeclineReason ? (\n                                        <>\n                                            <button\n                                                type=\"button\"\n                                                className=\"btn btn-outline-danger\"\n                                                onClick={handleDecline}\n                                                disabled={loading}\n                                            >\n                                                <i className=\"fas fa-times me-2\"></i>\n                                                Decline\n                                            </button>\n                                            \n                                            <button\n                                                type=\"button\"\n                                                className=\"btn btn-success\"\n                                                onClick={handleAccept}\n                                                disabled={loading}\n                                            >\n                                                {loading ? (\n                                                    <>\n                                                        <span className=\"spinner-border spinner-border-sm me-2\" role=\"status\" aria-hidden=\"true\"></span>\n                                                        Processing...\n                                                    </>\n                                                ) : (\n                                                    <>\n                                                        <i className=\"fas fa-check me-2\"></i>\n                                                        Accept Reschedule\n                                                    </>\n                                                )}\n                                            </button>\n                                        </>\n                                    ) : (\n                                        <>\n                                            <button\n                                                type=\"button\"\n                                                className=\"btn btn-outline-secondary\"\n                                                onClick={() => setShowDeclineReason(false)}\n                                                disabled={loading}\n                                            >\n                                                Back\n                                            </button>\n                                            \n                                            <button\n                                                type=\"button\"\n                                                className=\"btn btn-danger\"\n                                                onClick={handleDecline}\n                                                disabled={loading || !declineReason.trim()}\n                                            >\n                                                {loading ? (\n                                                    <>\n                                                        <span className=\"spinner-border spinner-border-sm me-2\" role=\"status\" aria-hidden=\"true\"></span>\n                                                        Declining...\n                                                    </>\n                                                ) : (\n                                                    <>\n                                                        <i className=\"fas fa-times me-2\"></i>\n                                                        Confirm Decline\n                                                    </>\n                                                )}\n                                            </button>\n                                        </>\n                                    )}\n                                </div>\n                            </div>\n                        </div>\n                    </div>\n                </div>\n            </div>\n\n            {/* Custom Styles */}\n            <style>{`\n                .text-orange { color: #fd7e14 !important; }\n                .btn-orange {\n                    background-color: #fd7e14;\n                    border-color: #fd7e14;\n                    color: white;\n                }\n                .btn-orange:hover {\n                    background-color: #e8681c;\n                    border-color: #e8681c;\n                    color: white;\n                }\n                .border-warning {\n                    border-color: #ffc107 !important;\n                }\n                .border-3 {\n                    border-width: 3px !important;\n                }\n            `}</style>\n        </>\n    );\n};\n\nexport default RescheduleRequestModal;
+import React, { useState } from "react";
+import providerAppointmentService from "../../../services/providerAppointmentService";
+
+const RescheduleRequestModal = ({
+    show,
+    onHide,
+    appointment,
+    onResponseSuccess,
+}) => {
+    const [loading, setLoading] = useState(false);
+    const [showDeclineReason, setShowDeclineReason] = useState(false);
+    const [declineReason, setDeclineReason] = useState("");
+    const [errors, setErrors] = useState({});
+
+    if (!show || !appointment?.reschedule_request) return null;
+
+    const rescheduleRequest = appointment.reschedule_request;
+
+    // Helper functions
+    const formatDate = (dateString) => {
+        if (!dateString) return "";
+        try {
+            return new Date(dateString).toLocaleDateString("en-US", {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+            });
+        } catch (error) {
+            return dateString;
+        }
+    };
+
+    const formatTime = (timeString) => {
+        if (!timeString) return "";
+        try {
+            const [hours, minutes] = timeString.split(":");
+            const hour = parseInt(hours);
+            const ampm = hour >= 12 ? "PM" : "AM";
+            const displayHour = hour % 12 || 12;
+            return `${displayHour}:${minutes} ${ampm}`;
+        } catch (error) {
+            return timeString;
+        }
+    };
+
+    const getRescheduleReasonText = (reason) => {
+        const reasons = {
+            personal_emergency: "Personal emergency",
+            work_conflict: "Work schedule conflict",
+            travel_plans: "Travel plans changed",
+            health_reasons: "Health reasons",
+            weather_concerns: "Weather concerns",
+            other: "Other reason",
+        };
+        return reasons[reason] || reason;
+    };
+
+    // Handle accept reschedule
+    const handleAccept = async () => {
+        if (loading) return;
+
+        setLoading(true);
+        setErrors({});
+
+        try {
+            const result =
+                await providerAppointmentService.acceptRescheduleRequest(
+                    appointment.id
+                );
+
+            if (result.success) {
+                onResponseSuccess(result.data);
+                onHide();
+                alert(
+                    "Reschedule request accepted! The appointment has been updated."
+                );
+            } else {
+                setErrors({
+                    general:
+                        result.message || "Failed to accept reschedule request",
+                });
+            }
+        } catch (error) {
+            console.error("Accept reschedule failed:", error);
+            setErrors({
+                general:
+                    "Failed to accept reschedule request. Please try again.",
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Handle decline reschedule
+    const handleDecline = async () => {
+        if (loading) return;
+
+        if (!showDeclineReason) {
+            setShowDeclineReason(true);
+            return;
+        }
+
+        if (!declineReason.trim()) {
+            setErrors({
+                decline_reason: "Please provide a reason for declining",
+            });
+            return;
+        }
+
+        setLoading(true);
+        setErrors({});
+
+        try {
+            const result =
+                await providerAppointmentService.declineRescheduleRequest(
+                    appointment.id,
+                    declineReason
+                );
+
+            if (result.success) {
+                onResponseSuccess(result.data);
+                onHide();
+                alert(
+                    "Reschedule request declined. The original appointment time remains unchanged."
+                );
+            } else {
+                setErrors({
+                    general:
+                        result.message ||
+                        "Failed to decline reschedule request",
+                });
+            }
+        } catch (error) {
+            console.error("Decline reschedule failed:", error);
+            setErrors({
+                general:
+                    "Failed to decline reschedule request. Please try again.",
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleClose = () => {
+        if (!loading) {
+            setShowDeclineReason(false);
+            setDeclineReason("");
+            setErrors({});
+            onHide();
+        }
+    };
+
+    return (
+        <>
+            {/* Modal Backdrop */}
+            <div
+                className="modal-backdrop fade show"
+                style={{ zIndex: 1040 }}
+            ></div>
+
+            {/* Modal */}
+            <div
+                className="modal fade show d-block"
+                style={{ zIndex: 1050 }}
+                tabIndex="-1"
+            >
+                <div className="modal-dialog modal-lg modal-dialog-centered">
+                    <div className="modal-content">
+                        {/* Header */}
+                        <div className="modal-header border-bottom">
+                            <div>
+                                <h5 className="modal-title fw-bold text-orange">
+                                    <i className="fas fa-calendar-alt me-2"></i>
+                                    Reschedule Request
+                                </h5>
+                                <p className="text-muted mb-0 small">
+                                    Client has requested to reschedule this
+                                    appointment
+                                </p>
+                            </div>
+                            <button
+                                type="button"
+                                className="btn-close"
+                                onClick={handleClose}
+                                disabled={loading}
+                            ></button>
+                        </div>
+
+                        {/* Body */}
+                        <div className="modal-body">
+                            {errors.general && (
+                                <div className="alert alert-danger">
+                                    <i className="fas fa-exclamation-triangle me-2"></i>
+                                    {errors.general}
+                                </div>
+                            )}
+
+                            {/* Current Appointment Info */}
+                            <div className="current-appointment mb-4">
+                                <h6 className="fw-bold mb-3">
+                                    <i className="fas fa-info-circle me-2 text-info"></i>
+                                    Current Appointment
+                                </h6>
+                                <div className="card bg-light">
+                                    <div className="card-body">
+                                        <div className="row">
+                                            <div className="col-md-6">
+                                                <strong>Service:</strong>{" "}
+                                                {appointment.service?.title ||
+                                                    "N/A"}
+                                            </div>
+                                            <div className="col-md-6">
+                                                <strong>Client:</strong>{" "}
+                                                {appointment.client?.name ||
+                                                    appointment.client_name ||
+                                                    "N/A"}
+                                            </div>
+                                            <div className="col-md-6 mt-2">
+                                                <strong>Current Date:</strong>{" "}
+                                                {formatDate(
+                                                    appointment.appointment_date
+                                                )}
+                                            </div>
+                                            <div className="col-md-6 mt-2">
+                                                <strong>Current Time:</strong>{" "}
+                                                {formatTime(
+                                                    appointment.appointment_time
+                                                )}
+                                            </div>
+                                            <div className="col-md-6 mt-2">
+                                                <strong>Duration:</strong>{" "}
+                                                {appointment.duration_hours}{" "}
+                                                hour(s)
+                                            </div>
+                                            <div className="col-md-6 mt-2">
+                                                <strong>Price:</strong> Rs.{" "}
+                                                {appointment.total_price}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Reschedule Request Details */}
+                            <div className="reschedule-request mb-4">
+                                <h6 className="fw-bold mb-3">
+                                    <i className="fas fa-calendar-check me-2 text-warning"></i>
+                                    Requested Changes
+                                </h6>
+                                <div className="card border-warning">
+                                    <div className="card-body">
+                                        <div className="row">
+                                            <div className="col-md-6">
+                                                <strong>New Date:</strong>{" "}
+                                                {formatDate(
+                                                    rescheduleRequest.requested_date
+                                                )}
+                                            </div>
+                                            <div className="col-md-6">
+                                                <strong>New Time:</strong>{" "}
+                                                {formatTime(
+                                                    rescheduleRequest.requested_time
+                                                )}
+                                            </div>
+                                            <div className="col-md-6 mt-2">
+                                                <strong>Reason:</strong>{" "}
+                                                {getRescheduleReasonText(
+                                                    rescheduleRequest.reason
+                                                )}
+                                            </div>
+                                            <div className="col-md-6 mt-2">
+                                                <strong>Requested:</strong>{" "}
+                                                {new Date(
+                                                    rescheduleRequest.created_at
+                                                ).toLocaleDateString()}
+                                            </div>
+                                        </div>
+
+                                        {rescheduleRequest.notes && (
+                                            <div className="mt-3">
+                                                <strong>
+                                                    Additional Notes:
+                                                </strong>
+                                                <p className="mt-1 mb-0 p-2 bg-white rounded border-start border-warning border-3">
+                                                    {rescheduleRequest.notes}
+                                                </p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Decline Reason Input */}
+                            {showDeclineReason && (
+                                <div className="decline-reason mb-4">
+                                    <h6 className="fw-bold mb-3 text-danger">
+                                        <i className="fas fa-times-circle me-2"></i>
+                                        Reason for Declining
+                                    </h6>
+                                    <div className="card border-danger">
+                                        <div className="card-body">
+                                            <textarea
+                                                className={`form-control ${
+                                                    errors.decline_reason
+                                                        ? "is-invalid"
+                                                        : ""
+                                                }`}
+                                                rows="3"
+                                                placeholder="Please explain why you cannot accommodate this reschedule request..."
+                                                value={declineReason}
+                                                onChange={(e) => {
+                                                    setDeclineReason(
+                                                        e.target.value
+                                                    );
+                                                    if (errors.decline_reason) {
+                                                        setErrors((prev) => ({
+                                                            ...prev,
+                                                            decline_reason:
+                                                                null,
+                                                        }));
+                                                    }
+                                                }}
+                                                maxLength="500"
+                                                disabled={loading}
+                                            ></textarea>
+                                            {errors.decline_reason && (
+                                                <div className="invalid-feedback">
+                                                    {errors.decline_reason}
+                                                </div>
+                                            )}
+                                            <small className="text-muted d-block mt-1">
+                                                {declineReason.length}/500
+                                                characters
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Action Info */}
+                            <div className="action-info">
+                                <div className="alert alert-info">
+                                    <h6 className="fw-bold mb-2">
+                                        <i className="fas fa-lightbulb me-2"></i>
+                                        What happens next?
+                                    </h6>
+                                    <ul className="mb-0 ps-3">
+                                        <li>
+                                            <strong>Accept:</strong> The
+                                            appointment will be updated to the
+                                            new date/time, and the client will
+                                            be notified
+                                        </li>
+                                        <li>
+                                            <strong>Decline:</strong> The
+                                            original appointment remains
+                                            unchanged, and the client will be
+                                            notified with your reason
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Footer */}
+                        <div className="modal-footer border-top">
+                            <div className="d-flex justify-content-between w-100">
+                                <button
+                                    type="button"
+                                    className="btn btn-outline-secondary"
+                                    onClick={handleClose}
+                                    disabled={loading}
+                                >
+                                    Cancel
+                                </button>
+
+                                <div className="d-flex gap-2">
+                                    {!showDeclineReason ? (
+                                        <>
+                                            <button
+                                                type="button"
+                                                className="btn btn-outline-danger"
+                                                onClick={handleDecline}
+                                                disabled={loading}
+                                            >
+                                                <i className="fas fa-times me-2"></i>
+                                                Decline
+                                            </button>
+
+                                            <button
+                                                type="button"
+                                                className="btn btn-success"
+                                                onClick={handleAccept}
+                                                disabled={loading}
+                                            >
+                                                {loading ? (
+                                                    <>
+                                                        <span
+                                                            className="spinner-border spinner-border-sm me-2"
+                                                            role="status"
+                                                            aria-hidden="true"
+                                                        ></span>
+                                                        Processing...
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <i className="fas fa-check me-2"></i>
+                                                        Accept Reschedule
+                                                    </>
+                                                )}
+                                            </button>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <button
+                                                type="button"
+                                                className="btn btn-outline-secondary"
+                                                onClick={() =>
+                                                    setShowDeclineReason(false)
+                                                }
+                                                disabled={loading}
+                                            >
+                                                Back
+                                            </button>
+
+                                            <button
+                                                type="button"
+                                                className="btn btn-danger"
+                                                onClick={handleDecline}
+                                                disabled={
+                                                    loading ||
+                                                    !declineReason.trim()
+                                                }
+                                            >
+                                                {loading ? (
+                                                    <>
+                                                        <span
+                                                            className="spinner-border spinner-border-sm me-2"
+                                                            role="status"
+                                                            aria-hidden="true"
+                                                        ></span>
+                                                        Declining...
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <i className="fas fa-times me-2"></i>
+                                                        Confirm Decline
+                                                    </>
+                                                )}
+                                            </button>
+                                        </>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Custom Styles */}
+            <style>{`
+                .text-orange { color: #fd7e14 !important; }
+                .btn-orange {
+                    background-color: #fd7e14;
+                    border-color: #fd7e14;
+                    color: white;
+                }
+                .btn-orange:hover {
+                    background-color: #e8681c;
+                    border-color: #e8681c;
+                    color: white;
+                }
+                .border-warning {
+                    border-color: #ffc107 !important;
+                }
+                .border-3 {
+                    border-width: 3px !important;
+                }
+            `}</style>
+        </>
+    );
+};
+
+export default RescheduleRequestModal;
