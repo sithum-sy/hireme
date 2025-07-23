@@ -38,7 +38,7 @@ const AppointmentActions = ({
             key: "view",
             label: "View Details",
             icon: "fas fa-eye",
-            className: "btn-outline-purple",
+            className: "btn-outline-primary",
             action: () =>
                 (window.location.href = `/client/appointments/${appointment.id}`),
             primary: true,
@@ -140,7 +140,7 @@ const AppointmentActions = ({
                     key: "book_again",
                     label: "Book Again",
                     icon: "fas fa-redo",
-                    className: "btn-outline-purple",
+                    className: "btn-outline-primary",
                     action: () =>
                         (window.location.href = `/client/services/${appointment.service?.id}`),
                 });
@@ -263,7 +263,7 @@ const AppointmentActions = ({
                 {/* Loading Indicator */}
                 {loading && (
                     <div
-                        className="spinner-border spinner-border-sm text-purple ms-2"
+                        className="spinner-border spinner-border-sm text-primary ms-2"
                         role="status"
                     >
                         <span className="visually-hidden">Loading...</span>

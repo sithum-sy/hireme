@@ -443,14 +443,11 @@ const ReviewModal = ({ show, onHide, appointment, onReviewSuccess }) => {
             </div>
 
             <style>{`
-                .cursor-pointer {
-                    cursor: pointer;
-                }
                 .stars {
-                    gap: 2px;
+                    gap: var(--space-1);
                 }
                 .star-rating {
-                    margin-bottom: 1rem;
+                    margin-bottom: var(--space-4);
                 }
             `}</style>
         </>

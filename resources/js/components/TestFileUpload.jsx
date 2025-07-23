@@ -67,37 +67,43 @@ const TestFileUpload = () => {
     };
 
     return (
-        <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
-            <h2>File Upload Test</h2>
+        <div className="container-custom px-4 px-md-6 py-5 mx-auto" style="max-width: 600px;">
+            <h2 className="mb-4 text-xl md:text-2xl font-semibold text-primary">File Upload Test</h2>
             <form onSubmit={handleSubmit}>
-                <div style={{ marginBottom: '20px' }}>
-                    <label>Profile Picture:</label>
+                <div className="mb-5">
+                    <label className="form-label">Profile Picture:</label>
                     <input 
                         type="file" 
                         accept="image/*" 
                         onChange={handleFileChange}
-                        style={{ display: 'block', marginTop: '5px' }}
+                        className="form-control mt-2"
                     />
                 </div>
                 
                 {file && (
-                    <div style={{ marginBottom: '20px' }}>
-                        <h3>File Info:</h3>
-                        <p>Name: {file.name}</p>
-                        <p>Type: {file.type}</p>
-                        <p>Size: {file.size} bytes</p>
+                    <div className="mb-5">
+                        <h3 className="text-lg font-semibold mb-3 text-secondary">File Info:</h3>
+                        <div className="bg-light p-3 rounded">
+                            <p className="mb-2 text-sm"><strong>Name:</strong> {file.name}</p>
+                            <p className="mb-2 text-sm"><strong>Type:</strong> {file.type}</p>
+                            <p className="mb-0 text-sm"><strong>Size:</strong> {file.size} bytes</p>
+                        </div>
                     </div>
                 )}
                 
-                <button type="submit" disabled={!file}>
+                <button 
+                    type="submit" 
+                    disabled={!file}
+                    className="btn btn-primary w-100 w-md-auto"
+                >
                     Test Upload
                 </button>
             </form>
             
             {response && (
-                <div style={{ marginTop: '20px', padding: '10px', backgroundColor: response.success ? '#d4edda' : '#f8d7da' }}>
-                    <h3>Response:</h3>
-                    <pre>{JSON.stringify(response, null, 2)}</pre>
+                <div className={`mt-5 p-4 rounded ${response.success ? 'alert alert-success' : 'alert alert-danger'}`}>
+                    <h3 className="text-lg font-semibold mb-3">Response:</h3>
+                    <pre className="text-xs text-sm overflow-auto">{JSON.stringify(response, null, 2)}</pre>
                 </div>
             )}
         </div>

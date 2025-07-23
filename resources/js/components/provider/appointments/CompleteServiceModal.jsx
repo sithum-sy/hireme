@@ -235,38 +235,16 @@ const CompleteServiceModal = ({ appointment, isOpen, onClose, onComplete }) => {
 
     return (
         <div
-            className="modal-overlay"
+            className="modal-overlay modal-responsive"
             onClick={handleBackdropClick}
-            style={{
-                position: "fixed",
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                backgroundColor: "rgba(0, 0, 0, 0.5)",
-                zIndex: 1050,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                padding: "1rem",
-            }}
         >
             <div
-                className="modal-content-wrapper"
+                className="modal-content bg-white rounded-lg shadow-xl mx-3 mx-md-0"
                 onClick={handleModalContentClick}
-                style={{
-                    backgroundColor: "white",
-                    borderRadius: "0.5rem",
-                    boxShadow: "0 10px 25px rgba(0, 0, 0, 0.3)",
-                    width: "100%",
-                    maxWidth: "500px",
-                    maxHeight: "90vh",
-                    overflow: "hidden",
-                    animation: "modalFadeIn 0.15s ease-out",
-                }}
+                style={{ maxWidth: "500px", width: "100%" }}
             >
-                <div className="modal-header border-bottom p-3">
-                    <h5 className="modal-title mb-0">
+                <div className="modal-header border-bottom p-4">
+                    <h5 className="modal-title mb-0 font-semibold text-lg">
                         <i className="fas fa-check-circle text-success me-2"></i>
                         Complete Service
                     </h5>
@@ -275,14 +253,6 @@ const CompleteServiceModal = ({ appointment, isOpen, onClose, onComplete }) => {
                         className="btn-close"
                         onClick={handleClose}
                         disabled={loading}
-                        style={{
-                            background: "none",
-                            border: "none",
-                            fontSize: "1.5rem",
-                            lineHeight: 1,
-                            opacity: 0.5,
-                            cursor: "pointer",
-                        }}
                     >
                         &times;
                     </button>
@@ -293,7 +263,7 @@ const CompleteServiceModal = ({ appointment, isOpen, onClose, onComplete }) => {
                         className="modal-body p-3"
                         style={{ maxHeight: "60vh", overflowY: "auto" }}
                     >
-                        <div className="alert alert-info">
+                        <div className="alert alert-info mb-4">
                             <i className="fas fa-info-circle me-2"></i>
                             Completing this service will automatically create an
                             invoice for the client.
@@ -418,33 +388,6 @@ const CompleteServiceModal = ({ appointment, isOpen, onClose, onComplete }) => {
                 </form>
             </div>
 
-            <style>{`
-                @keyframes modalFadeIn {
-                    from {
-                        opacity: 0;
-                        transform: scale(0.9) translateY(-20px);
-                    }
-                    to {
-                        opacity: 1;
-                        transform: scale(1) translateY(0);
-                    }
-                }
-
-                .btn-close:hover {
-                    opacity: 0.8 !important;
-                }
-
-                .modal-content-wrapper {
-                    transform-origin: center;
-                }
-
-                @media (max-width: 576px) {
-                    .modal-content-wrapper {
-                        margin: 0.5rem;
-                        width: calc(100% - 1rem) !important;
-                    }
-                }
-            `}</style>
         </div>
     );
 };

@@ -343,7 +343,7 @@ const BookingWizard = ({
                             <div className="selected-slot-info">
                                 <i className="fas fa-calendar-check text-success me-2"></i>
                                 {/* <strong>Selected Time: </strong> */}
-                                <span className="text-purple fw-semibold">
+                                <span className="text-primary font-semibold">
                                     {selectedSlot.formatted_date ||
                                         selectedSlot.formatted_date_short}{" "}
                                     at {selectedSlot.formatted_time}
@@ -388,7 +388,7 @@ const BookingWizard = ({
                                     <div
                                         className={`step-circle d-flex align-items-center justify-content-center ${
                                             currentStep === step.id
-                                                ? "bg-purple text-white"
+                                                ? "bg-primary text-white"
                                                 : currentStep > step.id
                                                 ? "bg-success text-white"
                                                 : "bg-light text-muted"
@@ -509,20 +509,14 @@ const BookingWizard = ({
                     background: #28a745;
                 }
                 .step-item.active .step-title {
-                    color: #6f42c1;
+                    color: var(--current-role-primary);
                 }
                 .step-item.completed .step-title {
                     color: #28a745;
                 }
-                .bg-purple {
-                    background-color: #6f42c1 !important;
-                }
-                .text-purple {
-                    color: #6f42c1 !important;
-                }
                 .selected-slot-banner {
                     background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-                    border-left: 4px solid #6f42c1;
+                    border-left: 4px solid var(--current-role-primary);
                 }
                 /* Enhanced scrolling and transitions */
                 .wizard-content {

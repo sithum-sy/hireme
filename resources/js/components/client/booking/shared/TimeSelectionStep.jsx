@@ -72,7 +72,7 @@ const TimeSelectionStep = ({
                 <div className="row justify-content-center">
                     <div className="col-lg-10">
                         <div className="text-center mb-4">
-                            <h4 className="fw-bold text-purple">
+                            <h4 className="fw-bold text-primary">
                                 Select Your Preferred Date & Time
                             </h4>
                             <p className="text-muted">
@@ -94,7 +94,7 @@ const TimeSelectionStep = ({
             </div>
 
             <style>{`
-                .text-purple { color: #6f42c1 !important; }
+                .text-primary { color: var(--current-role-primary) !important; }
             `}</style>
         </div>
     );

@@ -401,28 +401,28 @@ const AppointmentsList = () => {
                 )}
 
                 {/* Page Header */}
-                <div className="page-header d-flex justify-content-between align-items-center mb-4">
-                    <div>
-                        <h2 className="fw-bold mb-1">My Appointments</h2>
-                        <p className="text-muted mb-0">
+                <div className="page-header d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-6 gap-3">
+                    <div className="flex-grow-1">
+                        <h2 className="font-bold mb-2 text-2xl text-primary">My Appointments</h2>
+                        <p className="text-secondary mb-0 text-sm">
                             Manage and track your service appointments
                         </p>
                     </div>
-                    <Link to="/client/services" className="btn btn-purple">
+                    <Link to="/client/services" className="btn btn-primary btn-responsive">
                         <i className="fas fa-plus me-2"></i>
                         Book New Service
                     </Link>
                 </div>
 
                 {/* Filters Section - Enhanced with payment statuses */}
-                <div className="filters-section bg-white rounded-4 shadow-sm p-3 mb-4">
+                <div className="filters-section bg-white rounded-lg shadow p-4 mb-6">
                     <div className="row g-3 align-items-end">
-                        <div className="col-md-3">
-                            <label className="form-label small fw-semibold">
+                        <div className="col-12 col-md-3">
+                            <label className="form-label text-sm font-semibold">
                                 Status
                             </label>
                             <select
-                                className="form-select"
+                                className="form-control"
                                 value={filters.status}
                                 onChange={(e) =>
                                     handleFilterChange("status", e.target.value)
@@ -447,8 +447,8 @@ const AppointmentsList = () => {
                             </select>
                         </div>
 
-                        <div className="col-md-3">
-                            <label className="form-label small fw-semibold">
+                        <div className="col-12 col-md-3">
+                            <label className="form-label text-sm font-semibold">
                                 From Date
                             </label>
                             <input
@@ -463,8 +463,8 @@ const AppointmentsList = () => {
                                 }
                             />
                         </div>
-                        <div className="col-md-3">
-                            <label className="form-label small fw-semibold">
+                        <div className="col-12 col-md-3">
+                            <label className="form-label text-sm font-semibold">
                                 To Date
                             </label>
                             <input
@@ -480,9 +480,9 @@ const AppointmentsList = () => {
                             />
                         </div>
 
-                        <div className="col-md-3">
+                        <div className="col-12 col-md-3">
                             <button
-                                className="btn btn-outline-secondary w-100"
+                                className="btn btn-outline-secondary w-100 btn-responsive"
                                 onClick={() => {
                                     setFilters({
                                         status: "all",
@@ -507,8 +507,8 @@ const AppointmentsList = () => {
                     <div className="appointments-list">
                         {appointments.length > 0 ? (
                             <>
-                                <div className="results-summary mb-3">
-                                    <small className="text-muted">
+                                <div className="results-summary mb-4">
+                                    <small className="text-secondary text-sm">
                                         Showing {appointments.length} of{" "}
                                         {pagination.total} appointments
                                     </small>

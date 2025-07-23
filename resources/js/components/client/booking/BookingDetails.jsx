@@ -227,7 +227,7 @@ const BookingDetails = ({
                     {/* Service Location */}
                     <div className="location-section mb-4">
                         <h5 className="fw-bold mb-3">
-                            <i className="fas fa-map-marker-alt me-2 text-purple"></i>
+                            <i className="fas fa-map-marker-alt me-2 text-primary"></i>
                             Service Location
                         </h5>
 
@@ -264,7 +264,7 @@ const BookingDetails = ({
                                                     <div className="d-flex align-items-center">
                                                         <div className="option-icon me-3">
                                                             <i
-                                                                className={`${option.icon} fa-lg text-purple`}
+                                                                className={`${option.icon} fa-lg text-primary`}
                                                             ></i>
                                                         </div>
                                                         <div className="flex-grow-1">
@@ -480,7 +480,7 @@ const BookingDetails = ({
                     {/* Contact Information */}
                     <div className="contact-section mb-4">
                         <h5 className="fw-bold mb-3">
-                            <i className="fas fa-phone me-2 text-purple"></i>
+                            <i className="fas fa-phone me-2 text-primary"></i>
                             Contact Information
                         </h5>
 
@@ -634,7 +634,7 @@ const BookingDetails = ({
                     {/* Additional Information */}
                     <div className="additional-info mb-4">
                         <h5 className="fw-bold mb-3">
-                            <i className="fas fa-clipboard-list me-2 text-purple"></i>
+                            <i className="fas fa-clipboard-list me-2 text-primary"></i>
                             Additional Information
                         </h5>
 
@@ -695,7 +695,7 @@ const BookingDetails = ({
                         style={{ top: "2rem" }}
                     >
                         <div className="card border-0 shadow-sm">
-                            <div className="card-header bg-purple text-white">
+                            <div className="card-header bg-primary text-white">
                                 <h6 className="fw-bold mb-0">
                                     <i className="fas fa-receipt me-2"></i>
                                     Booking Summary
@@ -828,7 +828,7 @@ const BookingDetails = ({
 
                                     <div className="d-flex justify-content-between">
                                         <span className="fw-bold">Total</span>
-                                        <span className="fw-bold text-purple h5 mb-0">
+                                        <span className="fw-bold text-primary h5 mb-0">
                                             Rs.{" "}
                                             {(bookingData.total_price ||
                                                 service.price ||
@@ -882,7 +882,7 @@ const BookingDetails = ({
                 </button>
 
                 <button
-                    className="btn btn-purple btn-lg"
+                    className="btn btn-primary btn-lg"
                     onClick={handleContinue}
                     disabled={loading}
                 >
@@ -901,32 +901,32 @@ const BookingDetails = ({
             </div>
 
             <style>{`
-               .text-purple { color: #6f42c1 !important; }
-               .bg-purple { background-color: #6f42c1 !important; }
-               .btn-purple {
-                   background-color: #6f42c1;
-                   border-color: #6f42c1;
+               .text-primary { color: var(--current-role-primary) !important; }
+               .bg-primary { background-color: var(--current-role-primary) !important; }
+               .btn-primary {
+                   background-color: var(--current-role-primary);
+                   border-color: var(--current-role-primary);
                    color: white;
                }
-               .btn-purple:hover {
+               .btn-primary:hover {
                    background-color: #5a2d91;
                    border-color: #5a2d91;
                    color: white;
                }
                .form-check-input:checked {
-                   background-color: #6f42c1;
-                   border-color: #6f42c1;
+                   background-color: var(--current-role-primary);
+                   border-color: var(--current-role-primary);
                }
                .option-card {
                    transition: all 0.2s ease;
                    cursor: pointer;
                }
                .form-check-input:checked + .form-check-label .option-card {
-                   border-color: #6f42c1;
+                   border-color: var(--current-role-primary);
                    background-color: rgba(111, 66, 193, 0.05);
                }
                .option-card:hover {
-                   border-color: #6f42c1;
+                   border-color: var(--current-role-primary);
                    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
                }
                .is-invalid {

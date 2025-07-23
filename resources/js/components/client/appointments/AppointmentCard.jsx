@@ -312,7 +312,7 @@ const AppointmentCard = ({
                     {/* Price & Actions */}
                     <div className="col-md-6 text-end">
                         <div className="appointment-price mb-3">
-                            <div className="fw-bold text-purple h5 mb-0">
+                            <div className="fw-bold text-primary h5 mb-0">
                                 Rs. {appointment.total_price}
                             </div>
                             <div className="price-details small text-muted">
@@ -379,7 +379,7 @@ const AppointmentCard = ({
                                 {/* View Details - Always Available */}
                                 <Link
                                     to={`/client/appointments/${appointment.id}`}
-                                    className="btn btn-outline-purple btn-sm"
+                                    className="btn btn-outline-primary btn-sm"
                                 >
                                     <i className="fas fa-eye me-1"></i>
                                     <span className="d-none d-md-inline">
@@ -420,30 +420,26 @@ const AppointmentCard = ({
                                     <>
                                         {onContact && (
                                             <button
-                                                className="btn btn-outline-info btn-sm"
+                                                className="btn btn-outline-info btn-sm touch-friendly btn-responsive"
                                                 onClick={() =>
                                                     onContact(appointment)
                                                 }
                                                 disabled={loading}
                                             >
-                                                <i className="fas fa-phone me-1"></i>
-                                                <span className="d-none d-lg-inline">
-                                                    Contact
-                                                </span>
+                                                <i className="fas fa-phone me-2"></i>
+                                                <span>Contact</span>
                                             </button>
                                         )}
                                         {canCancel && onCancel && (
                                             <button
-                                                className="btn btn-outline-danger btn-sm"
+                                                className="btn btn-outline-danger btn-sm touch-friendly btn-responsive"
                                                 onClick={() =>
                                                     onCancel(appointment)
                                                 }
                                                 disabled={loading}
                                             >
-                                                <i className="fas fa-times me-1"></i>
-                                                <span className="d-none d-md-inline">
-                                                    Cancel
-                                                </span>
+                                                <i className="fas fa-times me-2"></i>
+                                                <span>Cancel</span>
                                             </button>
                                         )}
                                     </>
@@ -453,44 +449,38 @@ const AppointmentCard = ({
                                     <>
                                         {onReschedule && (
                                             <button
-                                                className="btn btn-outline-warning btn-sm"
+                                                className="btn btn-outline-warning btn-sm touch-friendly btn-responsive"
                                                 onClick={() =>
                                                     onReschedule(appointment)
                                                 }
                                                 disabled={loading}
                                             >
-                                                <i className="fas fa-edit me-1"></i>
-                                                <span className="d-none d-lg-inline">
-                                                    Reschedule
-                                                </span>
+                                                <i className="fas fa-edit me-2"></i>
+                                                <span>Reschedule</span>
                                             </button>
                                         )}
                                         {onContact && (
                                             <button
-                                                className="btn btn-outline-info btn-sm"
+                                                className="btn btn-outline-info btn-sm touch-friendly btn-responsive"
                                                 onClick={() =>
                                                     onContact(appointment)
                                                 }
                                                 disabled={loading}
                                             >
-                                                <i className="fas fa-phone me-1"></i>
-                                                <span className="d-none d-lg-inline">
-                                                    Contact
-                                                </span>
+                                                <i className="fas fa-phone me-2"></i>
+                                                <span>Contact</span>
                                             </button>
                                         )}
                                         {canCancel && onCancel && (
                                             <button
-                                                className="btn btn-outline-danger btn-sm"
+                                                className="btn btn-outline-danger btn-sm touch-friendly btn-responsive"
                                                 onClick={() =>
                                                     onCancel(appointment)
                                                 }
                                                 disabled={loading}
                                             >
-                                                <i className="fas fa-times me-1"></i>
-                                                <span className="d-none d-md-inline">
-                                                    Cancel
-                                                </span>
+                                                <i className="fas fa-times me-2"></i>
+                                                <span>Cancel</span>
                                             </button>
                                         )}
                                     </>
@@ -502,16 +492,14 @@ const AppointmentCard = ({
                                     !canBeReviewed() &&
                                     onReview && (
                                         <button
-                                            className="btn btn-outline-success btn-sm"
+                                            className="btn btn-outline-success btn-sm touch-friendly btn-responsive"
                                             onClick={() =>
                                                 onReview(appointment)
                                             }
                                             disabled={loading}
                                         >
-                                            <i className="fas fa-star me-1"></i>
-                                            <span className="d-none d-md-inline">
-                                                Review
-                                            </span>
+                                            <i className="fas fa-star me-2"></i>
+                                            <span>Review</span>
                                         </button>
                                     )}
 
@@ -600,7 +588,7 @@ const AppointmentCard = ({
                 {loading && (
                     <div className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center bg-white bg-opacity-75 rounded">
                         <div
-                            className="spinner-border text-purple"
+                            className="spinner-border text-primary"
                             role="status"
                         >
                             <span className="visually-hidden">Loading...</span>
@@ -609,35 +597,6 @@ const AppointmentCard = ({
                 )}
             </div>
 
-            {/* Enhanced Custom Styles */}
-            <style>{`
-                .text-purple { color: #6f42c1 !important; }
-                .btn-outline-purple {
-                    color: #6f42c1;
-                    border-color: #6f42c1;
-                }
-                .btn-outline-purple:hover {
-                    background-color: #6f42c1;
-                    border-color: #6f42c1;
-                    color: white;
-                }
-                .appointment-card {
-                    transition: transform 0.2s ease, box-shadow 0.2s ease;
-                }
-                .appointment-card:hover {
-                    transform: translateY(-2px);
-                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
-                }
-                .text-sm {
-                    font-size: 0.875rem;
-                }
-                .status-badges .badge {
-                    font-size: 0.75rem;
-                }
-                .rating-stars .fa-star {
-                    font-size: 0.75rem;
-                }
-            `}</style>
         </div>
     );
 };

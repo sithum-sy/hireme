@@ -188,7 +188,7 @@ const AppointmentTimeline = ({ appointment, timeline = null }) => {
 
                 .timeline-event {
                     display: flex;
-                    margin-bottom: 1.5rem;
+                    margin-bottom: var(--space-6);
                     position: relative;
                 }
 
@@ -198,32 +198,32 @@ const AppointmentTimeline = ({ appointment, timeline = null }) => {
 
                 .timeline-marker-container {
                     position: relative;
-                    margin-right: 1rem;
+                    margin-right: var(--space-4);
                     display: flex;
                     flex-direction: column;
                     align-items: center;
                 }
 
                 .timeline-marker {
-                    width: 40px;
-                    height: 40px;
+                    width: var(--space-10);
+                    height: var(--space-10);
                     border-radius: 50%;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                    box-shadow: var(--shadow-sm);
                     position: relative;
                     z-index: 2;
                 }
 
                 .timeline-marker.pending {
                     opacity: 0.5;
-                    border: 2px solid #dee2e6;
+                    border: 2px solid var(--border-color);
                 }
 
                 .timeline-line {
                     width: 2px;
-                    background-color: #dee2e6;
+                    background-color: var(--border-color);
                     position: absolute;
                     top: 40px;
                     bottom: -24px;
@@ -233,31 +233,31 @@ const AppointmentTimeline = ({ appointment, timeline = null }) => {
                 }
 
                 .timeline-line.completed {
-                    background-color: #28a745;
+                    background-color: var(--success-color);
                 }
 
                 .timeline-content {
                     flex: 1;
-                    padding-top: 0.25rem;
+                    padding-top: var(--space-1);
                 }
 
                 .timeline-header {
-                    margin-bottom: 0.5rem;
+                    margin-bottom: var(--space-2);
                 }
 
                 .timeline-description {
-                    font-size: 0.875rem;
+                    font-size: var(--text-sm);
                     line-height: 1.4;
                 }
 
                 @media (max-width: 576px) {
                     .timeline-marker {
-                        width: 32px;
-                        height: 32px;
+                        width: var(--space-8);
+                        height: var(--space-8);
                     }
                     
                     .timeline-marker i {
-                        font-size: 0.875rem;
+                        font-size: var(--text-sm);
                     }
                 }
             `}</style>

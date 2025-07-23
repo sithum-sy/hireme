@@ -236,7 +236,7 @@ const DateTimeSelection = ({
                     {/* Date Selection */}
                     <div className="date-selection mb-4">
                         <h5 className="fw-bold mb-3">
-                            <i className="fas fa-calendar me-2 text-purple"></i>
+                            <i className="fas fa-calendar me-2 text-primary"></i>
                             Select Date
                         </h5>
 
@@ -305,7 +305,7 @@ const DateTimeSelection = ({
                                             <button
                                                 className={`date-card w-100 btn ${
                                                     isSelected
-                                                        ? "btn-purple"
+                                                        ? "btn-primary"
                                                         : isDisabled
                                                         ? "btn-light disabled"
                                                         : "btn-outline-secondary"
@@ -349,14 +349,14 @@ const DateTimeSelection = ({
                     {selectedDate && (
                         <div className="time-selection mb-4">
                             <h5 className="fw-bold mb-3">
-                                <i className="fas fa-clock me-2 text-purple"></i>
+                                <i className="fas fa-clock me-2 text-primary"></i>
                                 Select Time
                             </h5>
 
                             {loading ? (
                                 <div className="text-center py-4">
                                     <div
-                                        className="spinner-border text-purple"
+                                        className="spinner-border text-primary"
                                         role="status"
                                     >
                                         <span className="visually-hidden">
@@ -398,7 +398,7 @@ const DateTimeSelection = ({
                                                                 <button
                                                                     className={`time-slot w-100 btn ${
                                                                         isSelected
-                                                                            ? "btn-purple"
+                                                                            ? "btn-primary"
                                                                             : "btn-outline-secondary"
                                                                     }`}
                                                                     onClick={() =>
@@ -451,7 +451,7 @@ const DateTimeSelection = ({
                                                 directly.
                                             </p>
                                             <button
-                                                className="btn btn-outline-purple btn-sm"
+                                                className="btn btn-outline-primary btn-sm"
                                                 onClick={() =>
                                                     window.open(
                                                         `tel:${provider.contact_number}`,
@@ -525,7 +525,7 @@ const DateTimeSelection = ({
                         style={{ top: "2rem" }}
                     >
                         <div className="card border-0 shadow-sm">
-                            <div className="card-header bg-purple text-white">
+                            <div className="card-header bg-primary text-white">
                                 <h6 className="fw-bold mb-0">
                                     <i className="fas fa-calendar-check me-2"></i>
                                     Booking Details
@@ -621,7 +621,7 @@ const DateTimeSelection = ({
                                                 />
                                             ) : (
                                                 <div
-                                                    className="bg-purple bg-opacity-10 text-purple rounded-circle d-flex align-items-center justify-content-center"
+                                                    className="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center"
                                                     style={{
                                                         width: "30px",
                                                         height: "30px",
@@ -677,7 +677,7 @@ const DateTimeSelection = ({
                 </button>
 
                 <button
-                    className="btn btn-purple btn-lg"
+                    className="btn btn-primary btn-lg"
                     onClick={handleContinue}
                     disabled={!selectedDate || !selectedTime || loading}
                 >
@@ -696,14 +696,14 @@ const DateTimeSelection = ({
             </div>
 
             <style>{`
-                .text-purple { color: #6f42c1 !important; }
-                .bg-purple { background-color: #6f42c1 !important; }
-                .btn-purple {
-                    background-color: #6f42c1;
-                    border-color: #6f42c1;
+                .text-primary { color: var(--current-role-primary) !important; }
+                .bg-primary { background-color: var(--current-role-primary) !important; }
+                .btn-primary {
+                    background-color: var(--current-role-primary);
+                    border-color: var(--current-role-primary);
                     color: white;
                 }
-                .btn-purple:hover {
+                .btn-primary:hover {
                     background-color: #5a2d91;
                     border-color: #5a2d91;
                     color: white;
@@ -735,7 +735,7 @@ const DateTimeSelection = ({
                     box-shadow: 0 4px 8px rgba(0,0,0,0.15);
                 }
                 .spinner-border-purple {
-                    color: #6f42c1;
+                    color: var(--current-role-primary);
                 }
             `}</style>
         </div>

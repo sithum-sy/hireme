@@ -1,2 +1,205 @@
-.test {
+/* Enhanced Form Components */
+.form-field {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: var(--space-6);
+}
+
+@media (max-width: 576px) {
+    .form-field {
+        margin-bottom: var(--space-4);
+    }
+}
+
+.form-field .form-label {
+    display: block;
+    font-weight: var(--font-semibold);
+    color: var(--text-primary);
+    margin-bottom: var(--space-2);
+    font-size: var(--text-sm);
+}
+
+.form-field .required {
+    color: var(--danger-color);
+    margin-left: var(--space-1);
+}
+
+.form-input-wrapper {
+    position: relative;
+    margin-bottom: var(--space-2);
+}
+
+.form-field .form-input {
+    width: 100%;
+    padding: var(--space-3);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    font-size: var(--text-base);
+    transition: var(--transition);
+    background: var(--bg-white);
+    font-family: inherit;
+    color: var(--text-primary);
+}
+
+@media (max-width: 576px) {
+    .form-field .form-input {
+        padding: var(--space-2) var(--space-3);
+        font-size: var(--text-base);
+    }
+}
+
+.form-field .form-input:focus {
+    outline: none;
+    border-color: var(--current-role-primary);
+    background: var(--bg-white);
+    box-shadow: 0 0 0 2px var(--current-role-light);
+}
+
+.form-field .form-input.is-invalid {
+    border-color: var(--danger-color);
+    background: var(--bg-white);
+}
+
+.form-field .form-input.is-invalid:focus {
+    border-color: var(--danger-color);
+    box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.1);
+}
+
+.form-field .form-error {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--danger-color);
+    font-size: var(--text-xs);
+    margin-top: var(--space-1);
+    line-height: 1.4;
+}
+
+.form-field .form-error i {
+    font-size: var(--text-xs);
+    flex-shrink: 0;
+}
+
+.form-field .form-help-text {
+    color: var(--text-muted);
+    font-size: var(--text-xs);
+    margin-top: var(--space-1);
+    line-height: 1.4;
+}
+
+/* Textarea specific styles */
+.form-field .form-input[type="textarea"],
+.form-field .form-input:is(textarea) {
+    resize: vertical;
+    min-height: 80px;
+    padding: var(--space-3);
+}
+
+/* Select specific styles */
+.form-field .form-input:is(select) {
+    cursor: pointer;
+    padding-right: var(--space-8);
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right var(--space-2) center;
+    background-repeat: no-repeat;
+    background-size: 1.5em 1.5em;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}
+
+/* Half width for grid layouts */
+.form-field.half-width {
+    margin-bottom: var(--space-6);
+}
+
+/* File input styling */
+.form-field .form-input[type="file"] {
+    padding: var(--space-3);
+    background: var(--bg-white);
+    border: 2px dashed var(--border-color);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.form-field .form-input[type="file"]:hover {
+    border-color: var(--current-role-primary);
+    background: var(--current-role-light);
+}
+
+@media (max-width: 576px) {
+    .form-field .form-input[type="file"] {
+        padding: var(--space-2);
+    }
+}
+
+/* Checkbox and radio styling */
+.form-field .form-check {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-bottom: var(--space-2);
+}
+
+.form-field .form-check-input {
+    width: auto;
+    margin: 0;
+    accent-color: var(--current-role-primary);
+}
+
+.form-field .form-check-label {
+    margin-bottom: 0;
+    font-weight: var(--font-normal);
+    cursor: pointer;
+}
+
+/* Form groups */
+.form-group {
+    margin-bottom: var(--space-6);
+}
+
+.form-group-inline {
+    display: flex;
+    gap: var(--space-4);
+    flex-wrap: wrap;
+}
+
+.form-group-inline .form-field {
+    flex: 1;
+    min-width: 200px;
+}
+
+/* Enhanced responsive form adjustments */
+@media (max-width: 768px) {
+    .form-field {
+        margin-bottom: var(--space-4);
+    }
+
+    .form-group-inline {
+        flex-direction: column;
+        gap: var(--space-3);
+    }
+
+    .form-group-inline .form-field {
+        min-width: auto;
+        margin-bottom: var(--space-3);
+    }
+
+    .form-field .form-input {
+        font-size: var(--text-base);
+        padding: var(--space-3);
+    }
+
+    .form-field .form-label {
+        font-size: var(--text-sm);
+        margin-bottom: var(--space-2);
+    }
+
+    .form-field .form-error {
+        font-size: var(--text-xs);
+    }
+
+    .form-field .form-help-text {
+        font-size: var(--text-xs);
+    }
 }

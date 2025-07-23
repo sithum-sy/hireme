@@ -242,7 +242,7 @@ const BookingConfirmation = ({
                                 <div className="confirmation-section border-bottom pb-3 mb-3">
                                     <div className="row">
                                         <div className="col-md-8">
-                                            <h6 className="fw-bold text-purple mb-2">
+                                            <h6 className="fw-bold text-primary mb-2">
                                                 Service Details
                                             </h6>
                                             <div className="service-info">
@@ -296,7 +296,7 @@ const BookingConfirmation = ({
 
                                 {/* Provider Details */}
                                 <div className="confirmation-section border-bottom pb-3 mb-3">
-                                    <h6 className="fw-bold text-purple mb-2">
+                                    <h6 className="fw-bold text-primary mb-2">
                                         Provider
                                     </h6>
                                     <div className="provider-info d-flex align-items-center">
@@ -316,7 +316,7 @@ const BookingConfirmation = ({
                                                 />
                                             ) : (
                                                 <div
-                                                    className="bg-purple bg-opacity-10 text-purple rounded-circle d-flex align-items-center justify-content-center"
+                                                    className="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center"
                                                     style={{
                                                         width: "50px",
                                                         height: "50px",
@@ -348,7 +348,7 @@ const BookingConfirmation = ({
 
                                 {/* Date & Time */}
                                 <div className="confirmation-section border-bottom pb-3 mb-3">
-                                    <h6 className="fw-bold text-purple mb-2">
+                                    <h6 className="fw-bold text-primary mb-2">
                                         Date & Time
                                     </h6>
                                     <div className="datetime-info">
@@ -377,7 +377,7 @@ const BookingConfirmation = ({
 
                                 {/* Location */}
                                 <div className="confirmation-section border-bottom pb-3 mb-3">
-                                    <h6 className="fw-bold text-purple mb-2">
+                                    <h6 className="fw-bold text-primary mb-2">
                                         Service Location
                                     </h6>
                                     <div className="location-info">
@@ -417,7 +417,7 @@ const BookingConfirmation = ({
 
                                 {/* Contact Information */}
                                 <div className="confirmation-section border-bottom pb-3 mb-3">
-                                    <h6 className="fw-bold text-purple mb-2">
+                                    <h6 className="fw-bold text-primary mb-2">
                                         Contact Information
                                     </h6>
                                     <div className="contact-info">
@@ -447,7 +447,7 @@ const BookingConfirmation = ({
                                 {(bookingData.requirements ||
                                     bookingData.special_instructions) && (
                                     <div className="confirmation-section">
-                                        <h6 className="fw-bold text-purple mb-2">
+                                        <h6 className="fw-bold text-primary mb-2">
                                             Special Instructions
                                         </h6>
                                         <div className="text-muted">
@@ -463,7 +463,7 @@ const BookingConfirmation = ({
                     {/* Payment Method */}
                     <div className="payment-method-section mb-4">
                         <h5 className="fw-bold mb-3">
-                            <i className="fas fa-credit-card me-2 text-purple"></i>
+                            <i className="fas fa-credit-card me-2 text-primary"></i>
                             Payment Method
                         </h5>
 
@@ -659,7 +659,7 @@ const BookingConfirmation = ({
                                         <a
                                             href="/terms"
                                             target="_blank"
-                                            className="text-purple"
+                                            className="text-primary"
                                         >
                                             Terms of Service
                                         </a>{" "}
@@ -667,7 +667,7 @@ const BookingConfirmation = ({
                                         <a
                                             href="/privacy"
                                             target="_blank"
-                                            className="text-purple"
+                                            className="text-primary"
                                         >
                                             Privacy Policy
                                         </a>
@@ -709,7 +709,7 @@ const BookingConfirmation = ({
                         style={{ top: "2rem" }}
                     >
                         <div className="card border-0 shadow-lg">
-                            <div className="card-header bg-purple text-white">
+                            <div className="card-header bg-primary text-white">
                                 <h6 className="fw-bold mb-0">
                                     <i className="fas fa-receipt me-2"></i>
                                     Final Summary
@@ -817,7 +817,7 @@ const BookingConfirmation = ({
                                         <span className="fw-bold h6">
                                             Total Amount
                                         </span>
-                                        <span className="fw-bold text-purple h4 mb-0">
+                                        <span className="fw-bold text-primary h4 mb-0">
                                             Rs. {totalAmount}
                                         </span>
                                     </div>
@@ -826,7 +826,7 @@ const BookingConfirmation = ({
                                 {/* Confirm Button */}
                                 <div className="d-grid">
                                     <button
-                                        className="btn btn-purple btn-lg"
+                                        className="btn btn-primary btn-lg"
                                         onClick={handleSubmitBooking}
                                         disabled={loading || !agreedToTerms}
                                     >
@@ -864,7 +864,7 @@ const BookingConfirmation = ({
                                     options
                                 </p>
                                 <button
-                                    className="btn btn-outline-purple btn-sm"
+                                    className="btn btn-outline-primary btn-sm"
                                     onClick={onFullFlow}
                                 >
                                     Use Advanced Booking
@@ -887,7 +887,7 @@ const BookingConfirmation = ({
 
                 <div className="d-flex gap-2">
                     <button
-                        className="btn btn-outline-purple btn-lg"
+                        className="btn btn-outline-primary btn-lg"
                         onClick={onFullFlow}
                     >
                         <i className="fas fa-cog me-2"></i>
@@ -895,7 +895,7 @@ const BookingConfirmation = ({
                     </button>
 
                     <button
-                        className="btn btn-purple btn-lg"
+                        className="btn btn-primary btn-lg"
                         onClick={handleSubmitBooking}
                         disabled={loading || !agreedToTerms}
                     >
@@ -915,41 +915,41 @@ const BookingConfirmation = ({
             </div>
 
             <style>{`
-                .text-purple { color: #6f42c1 !important; }
-                .bg-purple { background-color: #6f42c1 !important; }
-                .btn-purple {
-                    background-color: #6f42c1;
-                    border-color: #6f42c1;
+                .text-primary { color: var(--current-role-primary) !important; }
+                .bg-primary { background-color: var(--current-role-primary) !important; }
+                .btn-primary {
+                    background-color: var(--current-role-primary);
+                    border-color: var(--current-role-primary);
                     color: white;
                 }
-                .btn-purple:hover {
+                .btn-primary:hover {
                     background-color: #5a2d91;
                     border-color: #5a2d91;
                     color: white;
                 }
-                .btn-outline-purple {
-                    color: #6f42c1;
-                    border-color: #6f42c1;
+                .btn-outline-primary {
+                    color: var(--current-role-primary);
+                    border-color: var(--current-role-primary);
                 }
-                .btn-outline-purple:hover {
-                    background-color: #6f42c1;
-                    border-color: #6f42c1;
+                .btn-outline-primary:hover {
+                    background-color: var(--current-role-primary);
+                    border-color: var(--current-role-primary);
                     color: white;
                 }
                 .form-check-input:checked {
-                    background-color: #6f42c1;
-                    border-color: #6f42c1;
+                    background-color: var(--current-role-primary);
+                    border-color: var(--current-role-primary);
                 }
                 .payment-card {
                     transition: all 0.2s ease;
                     cursor: pointer;
                 }
                 .form-check-input:checked + .form-check-label .payment-card {
-                    border-color: #6f42c1;
+                    border-color: var(--current-role-primary);
                     background-color: rgba(111, 66, 193, 0.05);
                 }
                 .payment-card:hover {
-                    border-color: #6f42c1;
+                    border-color: var(--current-role-primary);
                 }
                 .confirmation-section:last-child {
                     border-bottom: none !important;

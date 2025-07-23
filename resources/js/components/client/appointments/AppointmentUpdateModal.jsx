@@ -294,7 +294,7 @@ const AppointmentUpdateModal = ({
                             <div>
                                 <h5
                                     id="appointmentUpdateModalTitle"
-                                    className="modal-title fw-bold text-purple"
+                                    className="modal-title font-bold text-primary"
                                 >
                                     <i className={`${getModalIcon()} me-2`} />
                                     {getModalTitle()}
@@ -540,31 +540,18 @@ const AppointmentUpdateModal = ({
 
             {/* Custom Styles */}
             <style>{`
-                .text-purple { 
-                    color: #6f42c1 !important; 
-                }
-                .btn-purple {
-                    background-color: #6f42c1;
-                    border-color: #6f42c1;
-                    color: white;
-                }
-                .btn-purple:hover {
-                    background-color: #5a2d91;
-                    border-color: #5a2d91;
-                    color: white;
-                }
                 .modal-xl {
                     max-width: 1200px;
                 }
                 
                 /* Enhanced modal scrolling */
                 .modal-dialog {
-                    margin: 1rem auto;
-                    max-height: calc(100vh - 2rem);
+                    margin: var(--space-4) auto;
+                    max-height: calc(100vh - var(--space-8));
                 }
                 
                 .modal-content {
-                    max-height: calc(100vh - 2rem);
+                    max-height: calc(100vh - var(--space-8));
                     display: flex;
                     flex-direction: column;
                 }

@@ -162,7 +162,7 @@ const PaymentConfirmationStep = ({
                                     <div className="confirmation-section border-bottom pb-3 mb-3">
                                         <div className="row">
                                             <div className="col-md-8">
-                                                <h6 className="fw-bold text-purple mb-2">
+                                                <h6 className="fw-bold text-primary mb-2">
                                                     Service Details
                                                 </h6>
                                                 <div className="service-info">
@@ -203,7 +203,7 @@ const PaymentConfirmationStep = ({
                                         </div>
                                     </div>
                                     <div className="confirmation-section border-bottom pb-3 mb-3">
-                                        <h6 className="fw-bold text-purple mb-2">
+                                        <h6 className="fw-bold text-primary mb-2">
                                             Provider
                                         </h6>
                                         <div className="provider-info d-flex align-items-center">
@@ -243,7 +243,7 @@ const PaymentConfirmationStep = ({
                                                     } else {
                                                         return (
                                                             <div
-                                                                className="bg-opacity-10 text-purple rounded-circle d-flex align-items-center justify-content-center"
+                                                                className="bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center"
                                                                 style={{
                                                                     width: "50px",
                                                                     height: "50px",
@@ -283,7 +283,7 @@ const PaymentConfirmationStep = ({
 
                                     {/* Date & Time */}
                                     <div className="confirmation-section border-bottom pb-3 mb-3">
-                                        <h6 className="fw-bold text-purple mb-2">
+                                        <h6 className="fw-bold text-primary mb-2">
                                             Date & Time
                                         </h6>
                                         <div className="datetime-info">
@@ -312,7 +312,7 @@ const PaymentConfirmationStep = ({
 
                                     {/* Location */}
                                     <div className="confirmation-section border-bottom pb-3 mb-3">
-                                        <h6 className="fw-bold text-purple mb-2">
+                                        <h6 className="fw-bold text-primary mb-2">
                                             Service Location
                                         </h6>
                                         <div className="location-info">
@@ -350,7 +350,7 @@ const PaymentConfirmationStep = ({
 
                                     {/* Contact Information */}
                                     <div className="confirmation-section border-bottom pb-3 mb-3">
-                                        <h6 className="fw-bold text-purple mb-2">
+                                        <h6 className="fw-bold text-primary mb-2">
                                             Contact Information
                                         </h6>
                                         <div className="contact-info">
@@ -379,7 +379,7 @@ const PaymentConfirmationStep = ({
                                     {/* Special Requirements */}
                                     {bookingData.special_requirements && (
                                         <div className="confirmation-section">
-                                            <h6 className="fw-bold text-purple mb-2">
+                                            <h6 className="fw-bold text-primary mb-2">
                                                 Special Requirements
                                             </h6>
                                             <div className="text-muted">
@@ -398,7 +398,7 @@ const PaymentConfirmationStep = ({
                             <div className="card border-0 shadow-sm">
                                 <div className="card-body">
                                     <h5 className="fw-bold mb-3">
-                                        <i className="fas fa-credit-card me-2 text-purple" />
+                                        <i className="fas fa-credit-card me-2 text-primary" />
                                         Payment Method
                                     </h5>
 
@@ -589,7 +589,7 @@ const PaymentConfirmationStep = ({
                                             <a
                                                 href="/terms"
                                                 target="_blank"
-                                                className="text-purple"
+                                                className="text-primary"
                                             >
                                                 Terms of Service
                                             </a>{" "}
@@ -597,7 +597,7 @@ const PaymentConfirmationStep = ({
                                             <a
                                                 href="/privacy"
                                                 target="_blank"
-                                                className="text-purple"
+                                                className="text-primary"
                                             >
                                                 Privacy Policy
                                             </a>
@@ -676,7 +676,7 @@ const PaymentConfirmationStep = ({
                     </button>
 
                     <button
-                        className="btn btn-purple btn-lg"
+                        className="btn btn-primary btn-lg"
                         onClick={handleSubmitBooking}
                         disabled={loading || !agreedToTerms}
                     >
@@ -696,32 +696,32 @@ const PaymentConfirmationStep = ({
             </div>
 
             <style>{`
-               .text-purple { color: #6f42c1 !important; }
-               .bg-purple { background-color: #6f42c1 !important; }
-               .btn-purple {
-                   background-color: #6f42c1;
-                   border-color: #6f42c1;
+               .text-primary { color: var(--current-role-primary) !important; }
+               .bg-primary { background-color: var(--current-role-primary) !important; }
+               .btn-primary {
+                   background-color: var(--current-role-primary);
+                   border-color: var(--current-role-primary);
                    color: white;
                }
-               .btn-purple:hover {
+               .btn-primary:hover {
                    background-color: #5a2d91;
                    border-color: #5a2d91;
                    color: white;
                }
                .form-check-input:checked {
-                   background-color: #6f42c1;
-                   border-color: #6f42c1;
+                   background-color: var(--current-role-primary);
+                   border-color: var(--current-role-primary);
                }
                .payment-card {
                    transition: all 0.2s ease;
                    cursor: pointer;
                }
                .form-check-input:checked + .form-check-label .payment-card {
-                   border-color: #6f42c1;
+                   border-color: var(--current-role-primary);
                    background-color: rgba(111, 66, 193, 0.05);
                }
                .payment-card:hover {
-                   border-color: #6f42c1;
+                   border-color: var(--current-role-primary);
                }
                .confirmation-section:last-child {
                    border-bottom: none !important;

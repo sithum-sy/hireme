@@ -100,7 +100,7 @@ const AppointmentSummary = ({
             style={isSticky ? { top: "2rem" } : {}}
         >
             <div className="card border-0 shadow">
-                <div className="card-header bg-purple text-white">
+                <div className="card-header bg-primary text-white">
                     <h6 className="fw-bold mb-0">
                         <i className="fas fa-receipt me-2" />
                         Appointment Summary
@@ -110,7 +110,7 @@ const AppointmentSummary = ({
                     {/* Service Details - Always shown */}
                     <div className="summary-section mb-3">
                         <div className="d-flex justify-content-between align-items-start mb-2">
-                            <h6 className="fw-semibold text-purple mb-0">
+                            <h6 className="fw-semibold text-primary mb-0">
                                 Service
                             </h6>
                         </div>
@@ -135,7 +135,7 @@ const AppointmentSummary = ({
 
                     {/* Provider Details - Always shown */}
                     <div className="summary-section mb-3">
-                        <h6 className="fw-semibold text-purple">Provider</h6>
+                        <h6 className="fw-semibold text-primary">Provider</h6>
                         <div className="d-flex align-items-center">
                             <div className="me-2">
                                 {(() => {
@@ -168,7 +168,7 @@ const AppointmentSummary = ({
                                     } else {
                                         return (
                                             <div
-                                                className="bg-opacity-10 text-purple rounded-circle d-flex align-items-center justify-content-center"
+                                                className="bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center"
                                                 style={{
                                                     width: "30px",
                                                     height: "30px",
@@ -206,7 +206,7 @@ const AppointmentSummary = ({
                     {showSchedule && (
                         <div className="summary-section mb-3">
                             <div className="d-flex justify-content-between align-items-start mb-2">
-                                <h6 className="fw-semibold text-purple mb-0">
+                                <h6 className="fw-semibold text-primary mb-0">
                                     Schedule
                                 </h6>
                             </div>
@@ -243,7 +243,7 @@ const AppointmentSummary = ({
                     {showLocation && (
                         <div className="summary-section mb-3">
                             <div className="d-flex justify-content-between align-items-start mb-2">
-                                <h6 className="fw-semibold text-purple mb-0">
+                                <h6 className="fw-semibold text-primary mb-0">
                                     Location
                                 </h6>
                             </div>
@@ -273,7 +273,7 @@ const AppointmentSummary = ({
                     {showContact && (
                         <div className="summary-section mb-3">
                             <div className="d-flex justify-content-between align-items-start mb-2">
-                                <h6 className="fw-semibold text-purple mb-0">
+                                <h6 className="fw-semibold text-primary mb-0">
                                     Contact
                                 </h6>
                             </div>
@@ -297,7 +297,7 @@ const AppointmentSummary = ({
                     {/* Special Requirements Section */}
                     {showSpecialRequirements && (
                         <div className="summary-section mb-3">
-                            <h6 className="fw-semibold text-purple">
+                            <h6 className="fw-semibold text-primary">
                                 Special Requirements
                             </h6>
                             <div className="text-muted small">
@@ -332,7 +332,7 @@ const AppointmentSummary = ({
 
                         <div className="d-flex justify-content-between">
                             <span className="fw-bold">Total</span>
-                            <span className="fw-bold text-purple h5 mb-0">
+                            <span className="fw-bold text-primary h5 mb-0">
                                 {formatPrice(calculateTotal())}
                             </span>
                         </div>
@@ -413,7 +413,7 @@ const AppointmentSummary = ({
                                     Secure booking guarantee
                                 </li>
                                 <li className="mb-1">
-                                    <i className="fas fa-headset text-purple me-2" />
+                                    <i className="fas fa-headset text-primary me-2" />
                                     24/7 customer support
                                 </li>
                             </>
@@ -424,8 +424,8 @@ const AppointmentSummary = ({
 
             {/* Styles */}
             <style>{`
-                .text-purple { color: #6f42c1 !important; }
-                .bg-purple { background-color: #6f42c1 !important; }
+                .text-primary { color: var(--current-role-primary) !important; }
+                .bg-primary { background-color: var(--current-role-primary) !important; }
                 .summary-section:last-child {
                     margin-bottom: 0 !important;
                 }

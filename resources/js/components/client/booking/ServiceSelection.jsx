@@ -61,7 +61,7 @@ const ServiceSelection = ({
                     {/* Selected Service Display */}
                     <div className="selected-service mb-4">
                         <h5 className="fw-bold mb-3">Selected Service</h5>
-                        <div className="card border-2 border-purple">
+                        <div className="card border-2 border-primary">
                             <div className="card-body">
                                 <div className="row align-items-center">
                                     <div className="col-md-3">
@@ -107,7 +107,7 @@ const ServiceSelection = ({
                                     </div>
                                     <div className="col-md-3 text-end">
                                         <div className="price">
-                                            <div className="base-price fw-bold text-purple">
+                                            <div className="base-price fw-bold text-primary">
                                                 Rs. {servicePrice}
                                             </div>
                                             <small className="text-muted">
@@ -174,7 +174,7 @@ const ServiceSelection = ({
                                         </div>
                                         <div className="col-md-6 text-end">
                                             <div className="duration-price">
-                                                <div className="fw-bold text-purple">
+                                                <div className="fw-bold text-primary">
                                                     Rs.{" "}
                                                     {servicePrice * duration}
                                                 </div>
@@ -233,7 +233,7 @@ const ServiceSelection = ({
                                                             </div>
                                                         </div>
                                                         <div className="text-end">
-                                                            <div className="fw-bold text-purple">
+                                                            <div className="fw-bold text-primary">
                                                                 +Rs.{" "}
                                                                 {addOn.price}
                                                             </div>
@@ -282,7 +282,7 @@ const ServiceSelection = ({
                         style={{ top: "2rem" }}
                     >
                         <div className="card border-0 shadow-sm">
-                            <div className="card-header bg-purple text-white">
+                            <div className="card-header bg-primary text-white">
                                 <h6 className="fw-bold mb-0">
                                     Booking Summary
                                 </h6>
@@ -332,7 +332,7 @@ const ServiceSelection = ({
                                 {/* Total */}
                                 <div className="summary-total d-flex justify-content-between">
                                     <span className="fw-bold">Total</span>
-                                    <span className="fw-bold text-purple h5 mb-0">
+                                    <span className="fw-bold text-primary h5 mb-0">
                                         Rs.{" "}
                                         {(() => {
                                             const baseTotal =
@@ -383,7 +383,7 @@ const ServiceSelection = ({
                                             />
                                         ) : (
                                             <div
-                                                className="bg-purple bg-opacity-10 text-purple rounded-circle d-flex align-items-center justify-content-center"
+                                                className="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center"
                                                 style={{
                                                     width: "50px",
                                                     height: "50px",
@@ -420,7 +420,7 @@ const ServiceSelection = ({
             {/* Navigation */}
             <div className="wizard-navigation d-flex justify-content-end mt-4 pt-4 border-top">
                 <button
-                    className="btn btn-purple btn-lg"
+                    className="btn btn-primary btn-lg"
                     onClick={handleContinue}
                 >
                     Continue to Date & Time
@@ -429,15 +429,15 @@ const ServiceSelection = ({
             </div>
 
             <style>{`
-                .border-purple { border-color: #6f42c1 !important; }
-                .text-purple { color: #6f42c1 !important; }
-                .bg-purple { background-color: #6f42c1 !important; }
-                .btn-purple {
-                    background-color: #6f42c1;
-                    border-color: #6f42c1;
+                .border-primary { border-color: var(--current-role-primary) !important; }
+                .text-primary { color: var(--current-role-primary) !important; }
+                .bg-primary { background-color: var(--current-role-primary) !important; }
+                .btn-primary {
+                    background-color: var(--current-role-primary);
+                    border-color: var(--current-role-primary);
                     color: white;
                 }
-                .btn-purple:hover {
+                .btn-primary:hover {
                     background-color: #5a2d91;
                     border-color: #5a2d91;
                     color: white;
@@ -448,8 +448,8 @@ const ServiceSelection = ({
                     padding-bottom: 0 !important;
                 }
                 .form-check-input:checked {
-                    background-color: #6f42c1;
-                    border-color: #6f42c1;
+                    background-color: var(--current-role-primary);
+                    border-color: var(--current-role-primary);
                 }
                 .duration-controls .btn {
                     width: 40px;

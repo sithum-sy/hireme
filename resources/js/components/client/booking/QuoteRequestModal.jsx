@@ -149,7 +149,7 @@ const QuoteRequestModal = ({
                                             <div className="text-muted small">
                                                 Starting from
                                             </div>
-                                            <div className="fw-bold text-purple h5 mb-0">
+                                            <div className="fw-bold text-primary h5 mb-0">
                                                 {service.formatted_price}
                                             </div>
                                         </div>
@@ -465,7 +465,7 @@ const QuoteRequestModal = ({
 
                                     <button
                                         type="submit"
-                                        className="btn btn-purple"
+                                        className="btn btn-primary"
                                         disabled={
                                             loading || !formData.message.trim()
                                         }
@@ -490,22 +490,22 @@ const QuoteRequestModal = ({
             </div>
 
             <style>{`
-                .text-purple {
-                    color: #6f42c1 !important;
+                .text-primary {
+                    color: var(--current-role-primary) !important;
                 }
-                .btn-purple {
-                    background-color: #6f42c1;
-                    border-color: #6f42c1;
+                .btn-primary {
+                    background-color: var(--current-role-primary);
+                    border-color: var(--current-role-primary);
                     color: white;
                 }
-                .btn-purple:hover {
+                .btn-primary:hover {
                     background-color: #5a2d91;
                     border-color: #5a2d91;
                     color: white;
                 }
                 .form-check-input:checked {
-                    background-color: #6f42c1;
-                    border-color: #6f42c1;
+                    background-color: var(--current-role-primary);
+                    border-color: var(--current-role-primary);
                 }
             `}</style>
         </>

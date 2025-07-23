@@ -35,7 +35,7 @@ const StepIndicator = ({
                                 <div
                                     className={`step-circle d-flex align-items-center justify-content-center ${
                                         isActive
-                                            ? "bg-purple text-white"
+                                            ? "bg-primary text-white"
                                             : isCompleted
                                             ? "bg-success text-white"
                                             : "bg-light text-muted"
@@ -53,7 +53,7 @@ const StepIndicator = ({
                                     <div
                                         className={`step-title fw-semibold ${
                                             isActive
-                                                ? "text-purple"
+                                                ? "text-primary"
                                                 : isCompleted
                                                 ? "text-success"
                                                 : "text-muted"
@@ -71,7 +71,7 @@ const StepIndicator = ({
                                             </small>
                                         )}
                                         {isActive && (
-                                            <small className="text-purple">
+                                            <small className="text-primary">
                                                 <i className="fas fa-arrow-right me-1" />
                                                 Current
                                             </small>

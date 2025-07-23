@@ -148,7 +148,7 @@ const DurationDetailsStep = ({
                                 <div className="card-body">
                                     <div className="row align-items-center">
                                         <div className="col-md-8">
-                                            <h5 className="fw-bold text-purple mb-2">
+                                            <h5 className="fw-bold text-primary mb-2">
                                                 {service?.title} by{" "}
                                                 {provider?.business_name}
                                             </h5>
@@ -183,7 +183,7 @@ const DurationDetailsStep = ({
                                                             bookingData.appointment_time}
                                                     </span>
                                                     <button
-                                                        className="btn btn-sm btn-link text-purple"
+                                                        className="btn btn-sm btn-link text-primary"
                                                         onClick={onPrevious}
                                                     >
                                                         Change Time
@@ -218,14 +218,14 @@ const DurationDetailsStep = ({
                             <div className="card border-0 shadow-sm">
                                 <div className="card-body">
                                     <h6 className="fw-bold mb-3">
-                                        <i className="fas fa-hourglass-half text-purple me-2" />
+                                        <i className="fas fa-hourglass-half text-primary me-2" />
                                         How many hours do you need?
                                     </h6>
 
                                     {loading && (
                                         <div className="text-center py-3">
                                             <div
-                                                className="spinner-border text-purple"
+                                                className="spinner-border text-primary"
                                                 role="status"
                                             >
                                                 <span className="visually-hidden">
@@ -260,7 +260,7 @@ const DurationDetailsStep = ({
                                                             </button>
 
                                                             <div className="duration-display mx-4 text-center">
-                                                                <div className="duration-number display-6 fw-bold text-purple">
+                                                                <div className="duration-number display-6 fw-bold text-primary">
                                                                     {duration}
                                                                 </div>
                                                                 <div className="duration-unit text-muted">
@@ -332,7 +332,7 @@ const DurationDetailsStep = ({
                                                                     <span>
                                                                         Total:
                                                                     </span>
-                                                                    <span className="text-purple h5 mb-0">
+                                                                    <span className="text-primary h5 mb-0">
                                                                         {formatPrice(
                                                                             totalPrice
                                                                         )}
@@ -360,7 +360,7 @@ const DurationDetailsStep = ({
                                                                     className={`btn w-100 ${
                                                                         duration ===
                                                                         hours
-                                                                            ? "btn-purple"
+                                                                            ? "btn-primary"
                                                                             : "btn-outline-secondary"
                                                                     }`}
                                                                     onClick={() =>
@@ -394,7 +394,7 @@ const DurationDetailsStep = ({
                             <div className="card border-0 shadow-sm">
                                 <div className="card-body">
                                     <h6 className="fw-bold mb-3">
-                                        <i className="fas fa-clipboard-list text-purple me-2" />
+                                        <i className="fas fa-clipboard-list text-primary me-2" />
                                         Special Requirements{" "}
                                         <span className="text-muted fw-normal">
                                             (Optional)
@@ -459,7 +459,7 @@ const DurationDetailsStep = ({
                     </button>
 
                     <button
-                        className="btn btn-purple btn-lg"
+                        className="btn btn-primary btn-lg"
                         onClick={validateAndContinue}
                         disabled={
                             loading || duration < 1 || duration > maxDuration
@@ -491,14 +491,14 @@ const DurationDetailsStep = ({
                    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
                }
 
-               .text-purple { color: #6f42c1 !important; }
-               .bg-purple { background-color: #6f42c1 !important; }
-               .btn-purple {
-                   background-color: #6f42c1;
-                   border-color: #6f42c1;
+               .text-primary { color: var(--current-role-primary) !important; }
+               .bg-purple { background-color: var(--current-role-primary) !important; }
+               .btn-primary {
+                   background-color: var(--current-role-primary);
+                   border-color: var(--current-role-primary);
                    color: white;
                }
-               .btn-purple:hover {
+               .btn-primary:hover {
                    background-color: #5a2d91;
                    border-color: #5a2d91;
                    color: white;

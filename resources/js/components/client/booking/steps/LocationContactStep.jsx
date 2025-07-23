@@ -279,7 +279,7 @@ const LocationContactStep = ({
                             <div className="card border-0 shadow-sm">
                                 <div className="card-body">
                                     <h5 className="fw-bold mb-3">
-                                        <i className="fas fa-map-marker-alt me-2 text-purple" />
+                                        <i className="fas fa-map-marker-alt me-2 text-primary" />
                                         Service Location
                                     </h5>
 
@@ -316,7 +316,7 @@ const LocationContactStep = ({
                                                                 <div className="d-flex align-items-center">
                                                                     <div className="option-icon me-3">
                                                                         <i
-                                                                            className={`${option.icon} fa-lg text-purple`}
+                                                                            className={`${option.icon} fa-lg text-primary`}
                                                                         />
                                                                     </div>
                                                                     <div className="flex-grow-1">
@@ -587,7 +587,7 @@ const LocationContactStep = ({
                                 <div className="card-body">
                                     <div className="d-flex justify-content-between align-items-center mb-3">
                                         <h5 className="fw-bold mb-0">
-                                            <i className="fas fa-phone me-2 text-purple" />
+                                            <i className="fas fa-phone me-2 text-primary" />
                                             Contact Information
                                         </h5>
 
@@ -754,11 +754,11 @@ const LocationContactStep = ({
 
             {/* Styles */}
             <style>{`
-               .text-purple { color: #6f42c1 !important; }
-               .bg-purple { background-color: #6f42c1 !important; }
+               .text-primary { color: var(--current-role-primary) !important; }
+               .bg-purple { background-color: var(--current-role-primary) !important; }
                .btn-purple {
-                   background-color: #6f42c1;
-                   border-color: #6f42c1;
+                   background-color: var(--current-role-primary);
+                   border-color: var(--current-role-primary);
                    color: white;
                }
                .btn-purple:hover {
@@ -771,11 +771,11 @@ const LocationContactStep = ({
                    cursor: pointer;
                }
                .form-check-input:checked + .form-check-label .option-card {
-                   border-color: #6f42c1 !important;
+                   border-color: var(--current-role-primary) !important;
                    background-color: rgba(111, 66, 193, 0.05);
                }
                .option-card:hover {
-                   border-color: #6f42c1 !important;
+                   border-color: var(--current-role-primary) !important;
                    box-shadow: 0 2px 4px rgba(111, 66, 193, 0.1);
                }
                .alert-sm {

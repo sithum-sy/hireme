@@ -128,11 +128,11 @@ const AppointmentFilters = ({
             <div className="filter-header p-3 border-bottom d-flex justify-content-between align-items-center">
                 <div className="d-flex align-items-center">
                     <h6 className="fw-bold mb-0">
-                        <i className="fas fa-filter me-2 text-purple"></i>
+                        <i className="fas fa-filter me-2 text-primary"></i>
                         Filter Appointments
                     </h6>
                     {hasActiveFilters() && (
-                        <span className="badge bg-purple bg-opacity-10 text-purple ms-2">
+                        <span className="badge bg-primary bg-opacity-10 text-primary ms-2">
                             {
                                 Object.values(filters).filter(
                                     (v) => v && v !== "all"
@@ -185,7 +185,7 @@ const AppointmentFilters = ({
                                     key={option.value}
                                     className={`btn btn-sm ${
                                         filters.status === option.value
-                                            ? "btn-purple"
+                                            ? "btn-primary"
                                             : "btn-outline-secondary"
                                     }`}
                                     onClick={() =>
@@ -335,7 +335,7 @@ const AppointmentFilters = ({
                                 </span>
 
                                 {filters.status !== "all" && (
-                                    <span className="badge bg-purple bg-opacity-10 text-purple">
+                                    <span className="badge bg-primary bg-opacity-10 text-primary">
                                         Status:{" "}
                                         {
                                             statusOptions.find(
@@ -399,21 +399,9 @@ const AppointmentFilters = ({
             </div>
 
             <style>{`
-                .text-purple { color: #6f42c1 !important; }
-                .bg-purple { background-color: #6f42c1 !important; }
-                .btn-purple {
-                    background-color: #6f42c1;
-                    border-color: #6f42c1;
-                    color: white;
-                }
-                .btn-purple:hover {
-                    background-color: #5a2d91;
-                    border-color: #5a2d91;
-                    color: white;
-                }
                 .btn-close-sm {
-                    font-size: 0.7rem;
-                    padding: 0.1rem 0.2rem;
+                    font-size: var(--text-xs);
+                    padding: var(--space-1) var(--space-2);
                 }
             `}</style>
         </div>

@@ -541,7 +541,7 @@ const BookingModal = ({
                                     style={{ height: "3px" }}
                                 >
                                     <div
-                                        className="progress-bar bg-purple"
+                                        className="progress-bar bg-primary"
                                         style={{
                                             width: `${
                                                 (currentStep / 3) * 100
@@ -567,7 +567,7 @@ const BookingModal = ({
                                         <div className="selected-slot-info">
                                             <i className="fas fa-calendar-check text-success me-2" />
                                             <strong>Selected Time: </strong>
-                                            <span className="text-purple fw-semibold">
+                                            <span className="text-primary fw-semibold">
                                                 {currentSelectedSlot.formatted_date ||
                                                     formatDate(
                                                         bookingData.appointment_date
@@ -648,9 +648,9 @@ const BookingModal = ({
 
             {/* Styles */}
             <style>{`
-                .bg-purple { background-color: #6f42c1 !important; }
-                .text-purple { color: #6f42c1 !important; }
-                .progress-bar.bg-purple { background-color: #6f42c1 !important; }
+                .bg-primary { background-color: var(--current-role-primary) !important; }
+                .text-primary { color: var(--current-role-primary) !important; }
+                .progress-bar.bg-primary { background-color: var(--current-role-primary) !important; }
                 
                 /* Enhanced modal scrolling */
                 .modal-dialog {
