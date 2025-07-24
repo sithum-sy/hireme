@@ -10,8 +10,8 @@ const ProtectedRoute = ({
     const { user, loading, isAuthenticated } = useAuth();
     const location = useLocation();
 
-    // Show loading spinner while checking authentication
-    if (loading) {
+    // Show loading spinner while checking authentication - but only for protected routes
+    if (loading && requireAuth) {
         return (
             <div className="min-vh-100 d-flex align-items-center justify-content-center">
                 <div className="text-center">

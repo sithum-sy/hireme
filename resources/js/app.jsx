@@ -25,6 +25,9 @@ import PlaceholderPage from "./components/Navigation/shared/PlaceholderPage";
 import LandingPage from "./pages/LandingPage";
 import Register from "./pages/Register";
 import Login from "./pages/Login";
+import EmailVerification from "./pages/EmailVerification";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 
 // Client Pages
 import ClientDashboard from "./pages/client/Dashboard";
@@ -105,6 +108,30 @@ function App() {
                             element={
                                 <ProtectedRoute requireAuth={false}>
                                     <Login />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/verify-email"
+                            element={
+                                <ProtectedRoute requireAuth={false}>
+                                    <EmailVerification />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/forgot-password"
+                            element={
+                                <ProtectedRoute requireAuth={false}>
+                                    <ForgotPassword />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/reset-password"
+                            element={
+                                <ProtectedRoute requireAuth={false}>
+                                    <ResetPassword />
                                 </ProtectedRoute>
                             }
                         />

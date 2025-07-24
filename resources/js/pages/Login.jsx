@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import axios from "axios";
 
 const Login = () => {
     const navigate = useNavigate();
@@ -15,6 +16,25 @@ const Login = () => {
 
     const [errors, setErrors] = useState({});
     const [showPassword, setShowPassword] = useState(false);
+    const [showResendVerification, setShowResendVerification] = useState(false);
+    const [unverifiedEmail, setUnverifiedEmail] = useState('');
+    const [resendingVerification, setResendingVerification] = useState(false);
+    const [successMessage, setSuccessMessage] = useState('');
+
+    // Handle success message from registration
+    useEffect(() => {
+        if (location.state?.message) {
+            if (location.state.type === 'success') {
+                setSuccessMessage(location.state.message);
+                if (location.state.email) {
+                    setUnverifiedEmail(location.state.email);
+                }
+            }
+            // Clear the location state
+            navigate(location.pathname, { replace: true, state: {} });
+        }
+    }, [location, navigate]);
+
 
     // Redirect if already authenticated
     useEffect(() => {
@@ -64,7 +84,11 @@ const Login = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setErrors({});
+        
+        // Clear only general errors, keep field errors for validation
+        setErrors(prev => ({ ...prev, general: undefined }));
+        setShowResendVerification(false);
+        setSuccessMessage('');
 
         const formErrors = validateForm();
         if (Object.keys(formErrors).length > 0) {
@@ -76,6 +100,7 @@ const Login = () => {
             const result = await login({
                 email: formData.email,
                 password: formData.password,
+                remember: formData.remember,
             });
 
             if (result.success) {
@@ -91,11 +116,12 @@ const Login = () => {
 
                 navigate(from || defaultPath, { replace: true });
             } else {
-                console.log("Login failed, setting errors...");
-                console.log("   - Message:", result.message);
-                console.log("   - Errors:", result.errors);
-                // Handle login failure
-                if (result.errors) {
+                // Handle email verification error
+                if (result.error_code === 'EMAIL_NOT_VERIFIED') {
+                    setShowResendVerification(true);
+                    setUnverifiedEmail(result.data?.email || formData.email);
+                    setErrors({ general: result.message });
+                } else if (result.errors) {
                     // Handle field-specific errors (422 validation errors)
                     setErrors(result.errors);
                 } else {
@@ -117,6 +143,31 @@ const Login = () => {
             email,
             password,
         }));
+    };
+
+    const handleResendVerification = async () => {
+        try {
+            setResendingVerification(true);
+            
+            // Use axios to ensure proper CSRF token handling
+            const response = await axios.post('/api/resend-verification', {
+                email: unverifiedEmail
+            });
+            
+            if (response.data.success) {
+                setSuccessMessage('Verification email sent! Please check your inbox.');
+                setShowResendVerification(false);
+                setErrors({});
+            } else {
+                setErrors({ general: response.data.message || 'Failed to send verification email.' });
+            }
+        } catch (error) {
+            console.error('Resend verification error:', error);
+            const errorMessage = error.response?.data?.message || 'Failed to send verification email. Please try again.';
+            setErrors({ general: errorMessage });
+        } finally {
+            setResendingVerification(false);
+        }
     };
 
     return (
@@ -202,13 +253,51 @@ const Login = () => {
                                 </div>
                             )} */}
 
-                            {typeof errors.general === "string" &&
-                                errors.general.length > 0 && (
-                                    <div className="alert alert-danger">
-                                        <i className="fas fa-exclamation-triangle me-2"></i>
-                                        {errors.general}
+                            {/* Success Message */}
+                            {successMessage && (
+                                <div className="auth-alert success">
+                                    <i className="fas fa-check-circle"></i>
+                                    {successMessage}
+                                </div>
+                            )}
+
+                            {/* General Error */}
+                            {errors.general && (
+                                <div className="auth-alert danger">
+                                    <i className="fas fa-exclamation-triangle"></i>
+                                    {errors.general}
+                                </div>
+                            )}
+
+                            {/* Email Verification Resend */}
+                            {showResendVerification && (
+                                <div className="auth-alert" style={{ 
+                                    background: '#fefbf3', 
+                                    border: '1px solid #fed7aa', 
+                                    color: '#c2410c' 
+                                }}>
+                                    <div style={{ marginBottom: '0.75rem' }}>
+                                        <i className="fas fa-envelope"></i>
+                                        Your email address is not verified.
                                     </div>
-                                )}
+                                    <button
+                                        type="button"
+                                        onClick={handleResendVerification}
+                                        className="btn btn-sm btn-outline-primary"
+                                        disabled={resendingVerification}
+                                        style={{ fontSize: '0.875rem' }}
+                                    >
+                                        {resendingVerification ? (
+                                            <>
+                                                <span className="spinner-border spinner-border-sm" style={{ marginRight: '0.5rem' }}></span>
+                                                Sending...
+                                            </>
+                                        ) : (
+                                            'Resend Verification Email'
+                                        )}
+                                    </button>
+                                </div>
+                            )}
 
                             <form onSubmit={handleSubmit}>
                                 {/* Email Field */}
@@ -653,6 +742,10 @@ const Login = () => {
                 .card-header {
                     text-align: center;
                     padding: 2rem 2rem 1rem 2rem;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
                 }
 
                 .card-title {

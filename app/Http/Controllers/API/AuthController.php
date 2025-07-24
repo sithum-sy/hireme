@@ -8,6 +8,8 @@ use App\Http\Requests\RegisterRequest;
 use App\Models\User;
 use App\Models\ServiceCategory;
 use App\Services\ProviderProfileService;
+use App\Notifications\VerifyEmailNotification;
+use App\Notifications\ResetPasswordNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -15,6 +17,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
 
 class AuthController extends Controller
 {
@@ -66,7 +69,7 @@ class AuthController extends Controller
                 $userData['profile_picture'] = 'images/profile_pictures/' . $filename;
             }
 
-            // Create user
+            // Create user - NOT ACTIVE until email verified
             $user = User::create([
                 'first_name' => $userData['first_name'],
                 'last_name' => $userData['last_name'],
@@ -77,8 +80,8 @@ class AuthController extends Controller
                 'contact_number' => $userData['contact_number'],
                 'date_of_birth' => $userData['date_of_birth'],
                 'profile_picture' => $userData['profile_picture'] ?? null,
-                'is_active' => true,
-                'last_login_at' => now(),
+                'is_active' => false, // User inactive until email verified
+                'email_verified_at' => null, // Not verified yet
             ]);
 
             // Create provider profile if user is service provider
@@ -94,29 +97,30 @@ class AuthController extends Controller
                 }
             }
 
-            // Create token
-            $token = $user->createToken('auth_token')->plainTextToken;
+            // Generate email verification token
+            $token = hash('sha256', Str::random(60) . $user->email . time());
+            
+            // Store verification token
+            DB::table('email_verification_tokens')->insert([
+                'email' => $user->email,
+                'token' => $token,
+                'created_at' => now(),
+            ]);
 
-            // Prepare response data
+            // Send verification email
+            $user->notify(new VerifyEmailNotification($token));
+
+            // Prepare response data (no auth token until email verified)
             $responseData = [
                 'user' => [
                     'id' => $user->id,
                     'first_name' => $user->first_name,
                     'last_name' => $user->last_name,
-                    'full_name' => $user->full_name,
                     'email' => $user->email,
                     'role' => $user->role,
-                    'address' => $user->address,
-                    'contact_number' => $user->contact_number,
-                    'date_of_birth' => $user->date_of_birth?->format('Y-m-d'),
-                    'age' => $user->age,
-                    // 'profile_picture' => $user->profile_picture ? Storage::url($user->profile_picture) : null,
-                    'profile_picture' => $user->profile_picture ? asset($user->profile_picture) : null,
-                    'is_active' => $user->is_active,
-                    'last_login_at' => $user->last_login_at?->format('Y-m-d H:i:s'),
-                ],
-                'token' => $token,
-                'token_type' => 'Bearer',
+                    'email_verified' => false,
+                    'requires_verification' => true,
+                ]
             ];
 
             // Add provider profile data if applicable
@@ -138,9 +142,7 @@ class AuthController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => $user->role === 'service_provider'
-                    ? 'Registration successful! Your profile is pending verification.'
-                    : 'Registration successful!',
+                'message' => 'Registration successful! Please check your email and click the verification link before logging in.',
                 'data' => $responseData
             ], 201);
         } catch (\Exception $e) {
@@ -158,6 +160,10 @@ class AuthController extends Controller
     {
         try {
             $credentials = $request->validated();
+            
+            // Extract remember me option and remove it from credentials
+            $rememberMe = $request->boolean('remember', false);
+            unset($credentials['remember']);
 
             if (!Auth::attempt($credentials)) {
                 return response()->json([
@@ -168,8 +174,24 @@ class AuthController extends Controller
 
             $user = Auth::user();
 
+            // CRITICAL: Check if email is verified FIRST
+            if (!$user->hasVerifiedEmail()) {
+                Auth::logout(); // Logout the user immediately
+                
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Please verify your email address before logging in. Check your inbox for the verification link.',
+                    'error_code' => 'EMAIL_NOT_VERIFIED',
+                    'data' => [
+                        'email' => $user->email,
+                        'can_resend_verification' => true
+                    ]
+                ], 403);
+            }
+
             // Check if user is active
             if (!$user->is_active) {
+                Auth::logout();
                 return response()->json([
                     'success' => false,
                     'message' => 'Your account has been deactivated. Please contact support for assistance.'
@@ -182,8 +204,11 @@ class AuthController extends Controller
             // Update last login timestamp
             $user->updateLastLogin();
 
-            // Create new token
-            $token = $user->createToken('auth_token', ['*'], now()->addHours(24))->plainTextToken;
+            // Create new token with different expiration based on remember me
+            $tokenName = $rememberMe ? 'long-term-token' : 'session-token';
+            $expiresAt = $rememberMe ? now()->addDays(30) : now()->addHours(2);
+            
+            $token = $user->createToken($tokenName, ['*'], $expiresAt)->plainTextToken;
 
             // Prepare response data
             $responseData = [
@@ -207,6 +232,9 @@ class AuthController extends Controller
                 ],
                 'token' => $token,
                 'token_type' => 'Bearer',
+                'token_name' => $tokenName,
+                'expires_at' => $expiresAt->toDateTimeString(),
+                'remembered' => $rememberMe,
             ];
 
             // Add creator information if user was created by admin
@@ -415,5 +443,374 @@ class AuthController extends Controller
                 'error' => app()->environment('local') ? $e->getMessage() : 'Internal server error'
             ], 500);
         }
+    }
+
+    /**
+     * Verify user email address
+     */
+    public function verifyEmail(Request $request)
+    {
+        $request->validate([
+            'token' => 'required|string',
+            'email' => 'required|email'
+        ]);
+
+        try {
+            // Find the verification token
+            $verificationToken = DB::table('email_verification_tokens')
+                ->where('email', $request->email)
+                ->where('token', $request->token)
+                ->first();
+
+            if (!$verificationToken) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid or expired verification token.',
+                    'error_code' => 'INVALID_TOKEN'
+                ], 400);
+            }
+
+            // Check if token is expired (60 minutes)
+            if (Carbon::parse($verificationToken->created_at)->addMinutes(60)->isPast()) {
+                // Delete expired token
+                DB::table('email_verification_tokens')
+                    ->where('email', $request->email)
+                    ->where('token', $request->token)
+                    ->delete();
+                    
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Verification token has expired. Please request a new verification email.',
+                    'error_code' => 'TOKEN_EXPIRED',
+                    'data' => [
+                        'can_resend' => true,
+                        'email' => $request->email
+                    ]
+                ], 400);
+            }
+
+            // Find user and verify email
+            $user = User::where('email', $request->email)->first();
+            
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User not found.'
+                ], 404);
+            }
+
+            if ($user->hasVerifiedEmail()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Email is already verified.',
+                    'error_code' => 'ALREADY_VERIFIED'
+                ], 400);
+            }
+
+            // Mark email as verified and activate user
+            $user->markEmailAsVerified();
+            $user->update(['is_active' => true]);
+
+            // Delete the used token
+            DB::table('email_verification_tokens')
+                ->where('email', $request->email)
+                ->where('token', $request->token)
+                ->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Email verified successfully! You can now log in to your account.',
+                'data' => [
+                    'email_verified' => true,
+                    'can_login' => true
+                ]
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Email verification failed',
+                'error' => app()->environment('local') ? $e->getMessage() : 'An error occurred during verification'
+            ], 500);
+        }
+    }
+
+    /**
+     * Resend email verification
+     */
+    public function resendVerification(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email|exists:users,email'
+        ]);
+
+        try {
+            $user = User::where('email', $request->email)->first();
+
+            if ($user->hasVerifiedEmail()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Email is already verified.',
+                    'error_code' => 'ALREADY_VERIFIED'
+                ], 400);
+            }
+
+            // Check rate limiting (optional but recommended)
+            $recentToken = DB::table('email_verification_tokens')
+                ->where('email', $user->email)
+                ->where('created_at', '>', Carbon::now()->subMinutes(2))
+                ->first();
+
+            if ($recentToken) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Please wait at least 2 minutes before requesting another verification email.',
+                    'error_code' => 'RATE_LIMITED'
+                ], 429);
+            }
+
+            // Delete old tokens for this email
+            DB::table('email_verification_tokens')
+                ->where('email', $user->email)
+                ->delete();
+
+            // Generate new token
+            $token = hash('sha256', Str::random(60) . $user->email . time());
+            
+            DB::table('email_verification_tokens')->insert([
+                'email' => $user->email,
+                'token' => $token,
+                'created_at' => now(),
+            ]);
+
+            // Send verification email
+            $user->notify(new VerifyEmailNotification($token));
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Verification email sent! Please check your inbox and spam folder.',
+                'data' => [
+                    'email' => $user->email,
+                    'expires_in_minutes' => 60
+                ]
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to send verification email',
+                'error' => app()->environment('local') ? $e->getMessage() : 'An error occurred while sending verification email'
+            ], 500);
+        }
+    }
+
+    /**
+     * Send password reset email
+     */
+    public function forgotPassword(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email|exists:users,email'
+        ]);
+
+        try {
+            $user = User::where('email', $request->email)->first();
+
+            // Check rate limiting
+            $recentToken = DB::table('password_reset_tokens')
+                ->where('email', $user->email)
+                ->where('created_at', '>', Carbon::now()->subMinutes(2))
+                ->first();
+
+            if ($recentToken) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Please wait at least 2 minutes before requesting another password reset email.',
+                    'error_code' => 'RATE_LIMITED'
+                ], 429);
+            }
+
+            // Generate reset token
+            $token = Str::random(60);
+            $hashedToken = hash('sha256', $token);
+            
+            // Delete old tokens for this email
+            DB::table('password_reset_tokens')
+                ->where('email', $user->email)
+                ->delete();
+
+            // Store reset token
+            DB::table('password_reset_tokens')->insert([
+                'email' => $user->email,
+                'token' => $hashedToken,
+                'created_at' => now(),
+            ]);
+
+            // Send reset email
+            $user->notify(new ResetPasswordNotification($token));
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Password reset email sent! Please check your inbox and spam folder.',
+                'data' => [
+                    'email' => $user->email,
+                    'expires_in_minutes' => 60
+                ]
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to send password reset email',
+                'error' => app()->environment('local') ? $e->getMessage() : 'An error occurred while sending reset email'
+            ], 500);
+        }
+    }
+
+    /**
+     * Reset user password
+     */
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'token' => 'required|string',
+            'email' => 'required|email|exists:users,email',
+            'password' => 'required|string|min:8|confirmed'
+        ]);
+
+        try {
+            $hashedToken = hash('sha256', $request->token);
+
+            // Find reset token
+            $resetToken = DB::table('password_reset_tokens')
+                ->where('email', $request->email)
+                ->where('token', $hashedToken)
+                ->first();
+
+            if (!$resetToken) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid or expired reset token.',
+                    'error_code' => 'INVALID_TOKEN'
+                ], 400);
+            }
+
+            // Check if token is expired (60 minutes)
+            if (Carbon::parse($resetToken->created_at)->addMinutes(60)->isPast()) {
+                DB::table('password_reset_tokens')
+                    ->where('email', $request->email)
+                    ->where('token', $hashedToken)
+                    ->delete();
+                    
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Reset token has expired. Please request a new password reset.',
+                    'error_code' => 'TOKEN_EXPIRED',
+                    'data' => [
+                        'can_request_new' => true
+                    ]
+                ], 400);
+            }
+
+            // Update user password
+            $user = User::where('email', $request->email)->first();
+            $user->update([
+                'password' => Hash::make($request->password)
+            ]);
+
+            // Delete used token
+            DB::table('password_reset_tokens')
+                ->where('email', $request->email)
+                ->delete();
+
+            // Revoke all existing tokens for security
+            $user->tokens()->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Password reset successfully! Please log in with your new password.',
+                'data' => [
+                    'password_reset' => true,
+                    'tokens_revoked' => true
+                ]
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Password reset failed',
+                'error' => app()->environment('local') ? $e->getMessage() : 'An error occurred during password reset'
+            ], 500);
+        }
+    }
+
+    /**
+     * Validate password reset token without consuming it
+     */
+    public function validateResetToken(Request $request)
+    {
+        $request->validate([
+            'token' => 'required|string',
+            'email' => 'required|email|exists:users,email'
+        ]);
+
+        try {
+            $hashedToken = hash('sha256', $request->token);
+
+            // Find reset token
+            $resetToken = DB::table('password_reset_tokens')
+                ->where('email', $request->email)
+                ->where('token', $hashedToken)
+                ->first();
+
+            if (!$resetToken) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid reset token.',
+                    'error_code' => 'INVALID_TOKEN'
+                ], 400);
+            }
+
+            // Check if token is expired (60 minutes)
+            if (Carbon::parse($resetToken->created_at)->addMinutes(60)->isPast()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Reset token has expired. Please request a new password reset.',
+                    'error_code' => 'TOKEN_EXPIRED'
+                ], 400);
+            }
+
+            // Token is valid
+            return response()->json([
+                'success' => true,
+                'message' => 'Token is valid',
+                'data' => [
+                    'email' => $request->email,
+                    'expires_at' => Carbon::parse($resetToken->created_at)->addMinutes(60)->toDateTimeString()
+                ]
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Token validation failed',
+                'error' => app()->environment('local') ? $e->getMessage() : 'An error occurred during token validation'
+            ], 500);
+        }
+    }
+
+    /**
+     * Refresh CSRF token
+     */
+    public function refreshCSRF(Request $request)
+    {
+        // Regenerate the session to get a fresh CSRF token
+        $request->session()->regenerateToken();
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'CSRF token refreshed',
+            'csrf_token' => csrf_token()
+        ]);
     }
 }

@@ -10,6 +10,33 @@ window.axios = axios;
 window.axios.defaults.headers.common["X-Requested-With"] = "XMLHttpRequest";
 window.axios.defaults.headers.common["Accept"] = "application/json";
 
+// Function to refresh CSRF token
+window.refreshCSRFToken = async () => {
+    try {
+        // Get a fresh CSRF token from our Laravel endpoint
+        const response = await window.axios.post('/api/csrf-refresh');
+        
+        if (response.data.success && response.data.csrf_token) {
+            // Update the meta tag with the new token
+            const metaTag = document.head.querySelector('meta[name="csrf-token"]');
+            if (metaTag) {
+                metaTag.content = response.data.csrf_token;
+            }
+            
+            // Update axios headers with the new token
+            window.axios.defaults.headers.common["X-CSRF-TOKEN"] = response.data.csrf_token;
+            
+            return true;
+        }
+        
+        console.error('Failed to get new CSRF token from response');
+        return false;
+    } catch (error) {
+        console.error('Failed to refresh CSRF token:', error);
+        return false;
+    }
+};
+
 // Add CSRF token to all requests
 const token = document.head.querySelector('meta[name="csrf-token"]');
 if (token) {

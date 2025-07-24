@@ -321,11 +321,23 @@ const RegisterForm = () => {
 
         const result = await register(submitData);
         if (result.success) {
-            navigate(
-                result.user.role === "client"
-                    ? "/client/dashboard"
-                    : "/provider/dashboard"
-            );
+            if (result.requires_verification) {
+                // Show success message and redirect to login with verification message
+                navigate('/login', { 
+                    state: { 
+                        message: result.message || 'Registration successful! Please check your email to verify your account before logging in.',
+                        type: 'success',
+                        email: result.user.email
+                    }
+                });
+            } else {
+                // Normal registration with immediate login (shouldn't happen now)
+                navigate(
+                    result.user.role === "client"
+                        ? "/client/dashboard"
+                        : "/provider/dashboard"
+                );
+            }
         } else {
             setErrors(result.errors || { general: result.message });
         }
@@ -428,8 +440,8 @@ const RegisterForm = () => {
                     <form onSubmit={handleSubmit} className="register-form">
                         {/* General Error */}
                         {errors.general && (
-                            <div className="general-error">
-                                <i className="fas fa-exclamation-triangle me-2"></i>
+                            <div className="auth-alert danger">
+                                <i className="fas fa-exclamation-triangle"></i>
                                 {errors.general}
                             </div>
                         )}

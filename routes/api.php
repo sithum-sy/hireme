@@ -24,6 +24,17 @@ use App\Http\Controllers\GeocodingController;
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
+// Email verification routes (public)
+Route::post('/verify-email', [AuthController::class, 'verifyEmail']);
+Route::post('/resend-verification', [AuthController::class, 'resendVerification']);
+
+// Password reset routes (public)  
+Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+Route::post('/reset-password', [AuthController::class, 'resetPassword']);
+
+// CSRF token refresh route (public)
+Route::post('/csrf-refresh', [AuthController::class, 'refreshCSRF']);
+
 // Public geocoding routes (no auth required)
 Route::prefix('geocoding')->group(function () {
     Route::get('/search', [GeocodingController::class, 'search']);

@@ -107,6 +107,7 @@ export const AuthProvider = ({ children }) => {
 
     const clearAuthData = () => {
         localStorage.removeItem("auth_token");
+        localStorage.removeItem("token_metadata");
         localStorage.removeItem("client_preferred_radius");
         localStorage.removeItem("profile_image_2");
         // Remove any other auth-related localStorage items
@@ -149,9 +150,25 @@ export const AuthProvider = ({ children }) => {
 
             if (response.data.success) {
                 const { user, token } = response.data.data;
-                setUser(user);
-                setToken(token);
-                localStorage.setItem("auth_token", token);
+                
+                // Check if user requires email verification (no token provided)
+                if (user && user.requires_verification) {
+                    // Don't set auth state for unverified users
+                    return { 
+                        success: true, 
+                        user,
+                        requires_verification: true,
+                        message: response.data.message 
+                    };
+                }
+                
+                // Normal registration with immediate login
+                if (token) {
+                    setUser(user);
+                    setToken(token);
+                    localStorage.setItem("auth_token", token);
+                }
+                
                 return { success: true, user };
             }
         } catch (error) {
@@ -179,13 +196,34 @@ export const AuthProvider = ({ children }) => {
             const response = await axios.post("/api/login", credentials);
 
             if (response.data.success) {
-                const { user: userData, token: userToken } = response.data.data;
+                const { 
+                    user: userData, 
+                    token: userToken, 
+                    token_name: tokenName,
+                    expires_at: expiresAt,
+                    remembered 
+                } = response.data.data;
 
                 setUser(userData);
                 setToken(userToken);
                 localStorage.setItem("auth_token", userToken);
+                
+                // Store token metadata for user information
+                localStorage.setItem("token_metadata", JSON.stringify({
+                    token_name: tokenName,
+                    expires_at: expiresAt,
+                    remembered: remembered
+                }));
 
-                return { success: true, user: userData };
+                return { 
+                    success: true, 
+                    user: userData,
+                    tokenInfo: {
+                        token_name: tokenName,
+                        expires_at: expiresAt,
+                        remembered: remembered
+                    }
+                };
             } else {
                 return {
                     success: false,
@@ -209,10 +247,41 @@ export const AuthProvider = ({ children }) => {
                             message:
                                 data.message || "Invalid email or password",
                         };
+                    case 419:
+                        // CSRF token mismatch - try to refresh and retry once
+                        if (window.refreshCSRFToken) {
+                            try {
+                                const refreshed = await window.refreshCSRFToken();
+                                if (refreshed) {
+                                    // Retry the login with the fresh token
+                                    const retryResponse = await axios.post("/api/login", credentials);
+                                    if (retryResponse.data.success) {
+                                        const { user: userData, token: userToken } = retryResponse.data.data;
+                                        setUser(userData);
+                                        setToken(userToken);
+                                        localStorage.setItem("auth_token", userToken);
+                                        return { success: true, user: userData };
+                                    } else {
+                                        return {
+                                            success: false,
+                                            message: retryResponse.data.message || "Login failed after token refresh",
+                                        };
+                                    }
+                                }
+                            } catch (retryError) {
+                                console.error('Retry login failed:', retryError);
+                            }
+                        }
+                        return {
+                            success: false,
+                            message: data.message || "Session expired. Please try again.",
+                        };
                     case 403:
                         return {
                             success: false,
                             message: data.message || "Account is deactivated",
+                            error_code: data.error_code,
+                            data: data.data,
                         };
                     case 422:
                         return {
@@ -285,6 +354,7 @@ export const AuthProvider = ({ children }) => {
             setUser(null);
             setToken(null);
             localStorage.removeItem("auth_token");
+            localStorage.removeItem("token_metadata");
             delete axios.defaults.headers.common["Authorization"];
 
             // Optional: Clear all localStorage if needed
@@ -322,6 +392,16 @@ export const AuthProvider = ({ children }) => {
         return isStaff() && user?.permissions?.includes(permission);
     };
 
+    const getTokenInfo = () => {
+        try {
+            const tokenMetadata = localStorage.getItem("token_metadata");
+            return tokenMetadata ? JSON.parse(tokenMetadata) : null;
+        } catch (error) {
+            console.error("Error parsing token metadata:", error);
+            return null;
+        }
+    };
+
     const value = {
         user,
         loading,
@@ -333,6 +413,7 @@ export const AuthProvider = ({ children }) => {
         isAuthenticated: !!user,
         isStaff,
         hasStaffPermission,
+        getTokenInfo,
     };
 
     return (
