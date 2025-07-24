@@ -14,6 +14,9 @@ class Kernel extends ConsoleKernel
     {
         // $schedule->command('inspire')->hourly();
         $schedule->command('quotes:mark-expired')->hourly();
+        
+        // Process expired appointments every hour
+        $schedule->job(new \App\Jobs\ProcessExpiredAppointments)->hourly();
     }
 
     /**

@@ -118,8 +118,7 @@
     width: 60px;
     height: 60px;
     border-radius: var(--border-radius);
-    background: var(--current-role-gradient);
-    color: white;
+    background: rgba(var(--bs-primary-rgb), 0.1);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -127,6 +126,16 @@
     font-size: 1.5rem;
     transition: var(--transition);
 }
+
+/* Category-specific icon styling */
+.action-icon.text-primary { background: rgba(var(--bs-primary-rgb), 0.1); color: var(--bs-primary); }
+.action-icon.text-secondary { background: rgba(var(--bs-secondary-rgb), 0.1); color: var(--bs-secondary); }
+.action-icon.text-success { background: rgba(var(--bs-success-rgb), 0.1); color: var(--bs-success); }
+.action-icon.text-danger { background: rgba(var(--bs-danger-rgb), 0.1); color: var(--bs-danger); }
+.action-icon.text-warning { background: rgba(var(--bs-warning-rgb), 0.1); color: var(--bs-warning); }
+.action-icon.text-info { background: rgba(var(--bs-info-rgb), 0.1); color: var(--bs-info); }
+.action-icon.text-light { background: rgba(var(--bs-light-rgb), 0.1); color: var(--bs-dark); }
+.action-icon.text-dark { background: rgba(var(--bs-dark-rgb), 0.1); color: var(--bs-dark); }
 
 .action-card:hover .action-icon {
     transform: scale(1.1);

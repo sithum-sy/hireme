@@ -84,7 +84,7 @@ class AppointmentController extends Controller
             $appointments = Appointment::where('provider_id', $user->id)
                 ->where('appointment_date', $today)
                 ->whereIn('status', ['pending', 'confirmed', 'in_progress'])
-                ->with(['client', 'service'])
+                ->with(['client', 'service', 'pendingRescheduleRequest'])
                 ->orderBy('appointment_time', 'asc') // Earliest time first
                 ->get();
 
@@ -811,8 +811,12 @@ class AppointmentController extends Controller
             'created_at' => $appointment->created_at,
             'can_confirm' => $appointment->canBeConfirmed(),
             'can_cancel' => $appointment->canBeCancelled(),
-            'has_pending_reschedule' => $appointment->hasPendingRescheduleRequest(),
-            'pending_reschedule_request' => $appointment->pendingRescheduleRequest,
+            'has_pending_reschedule' => $appointment->relationLoaded('pendingRescheduleRequest') ? 
+                ($appointment->pendingRescheduleRequest !== null) : 
+                $appointment->hasPendingRescheduleRequest(),
+            'pending_reschedule_request' => $appointment->relationLoaded('pendingRescheduleRequest') ? 
+                $appointment->pendingRescheduleRequest : 
+                null,
             // Add earnings calculation
             'earnings' => $appointment->status === 'completed' ?
                 $appointment->total_price : ($appointment->status === 'confirmed' ? $appointment->total_price : 0)

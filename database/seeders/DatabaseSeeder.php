@@ -3,6 +3,8 @@
 namespace Database\Seeders;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+
+use App\Models\Quote;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -22,8 +24,10 @@ class DatabaseSeeder extends Seeder
         // Run in order due to foreign key constraints
         $this->call([
             // ServiceCategorySeeder::class,
-            ServiceProviderSeeder::class,
-            AdditionalServiceProviderSeeder::class,
+            // ServiceProviderSeeder::class,
+            ServiceSeeder::class,
+            // AdditionalServiceProviderSeeder::class,
+            // QuoteSeeder::class,
             // AdminSeeder::class,
             // Add more seeders here as needed
         ]);

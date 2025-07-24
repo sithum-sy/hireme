@@ -38,7 +38,9 @@ class Appointment extends Model
         'provider_notes',
         'invoice_sent_at',
         'payment_received_at',
-        'reviews_completed_at'
+        'reviews_completed_at',
+        'expires_at',
+        'auto_expired'
     ];
 
     protected $casts = [
@@ -57,7 +59,9 @@ class Appointment extends Model
         'cancelled_at' => 'datetime',
         'invoice_sent_at' => 'datetime',
         'payment_received_at' => 'datetime',
-        'reviews_completed_at' => 'datetime'
+        'reviews_completed_at' => 'datetime',
+        'expires_at' => 'datetime',
+        'auto_expired' => 'boolean'
     ];
 
     // Status constants to match migration
@@ -74,6 +78,7 @@ class Appointment extends Model
     public const STATUS_CANCELLED_BY_PROVIDER = 'cancelled_by_provider';
     public const STATUS_NO_SHOW = 'no_show';
     public const STATUS_DISPUTED = 'disputed';
+    public const STATUS_EXPIRED = 'expired';
 
     // Relationships
     public function client()

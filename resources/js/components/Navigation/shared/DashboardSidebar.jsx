@@ -304,12 +304,6 @@ const DashboardSidebar = ({
                     label: "Dashboard",
                     path: "/client/dashboard",
                 },
-                // {
-                //     id: "bookings",
-                //     icon: "fas fa-plus-circle",
-                //     label: "Book A Service",
-                //     path: "/client/book",
-                // },
                 {
                     id: "services",
                     icon: "fas fa-search",
@@ -331,17 +325,11 @@ const DashboardSidebar = ({
                     icon: "fas fa-quote-left",
                     label: "My Quotes",
                     path: "/client/quotes",
-                    children: [
-                        {
-                            label: "All Quotes",
-                            path: "/client/quotes",
-                        },
-                    ],
                 },
                 {
                     id: "payments",
                     icon: "fas fa-credit-card",
-                    label: "Payments",
+                    label: "My Payments",
                     path: "/client/payments",
                     children: [
                         {
@@ -354,12 +342,7 @@ const DashboardSidebar = ({
                         },
                     ],
                 },
-                {
-                    id: "reviews",
-                    icon: "fas fa-star",
-                    label: "Reviews & Ratings",
-                    path: "/client/reviews",
-                },
+
                 {
                     id: "reports",
                     icon: "fas fa-chart-line",
@@ -393,27 +376,19 @@ const DashboardSidebar = ({
                     icon: "fas fa-user",
                     label: "My Profile",
                     path: "/client/profile",
-                    children: [
-                        {
-                            label: "Profile Overview",
-                            path: "/client/profile",
-                        },
-                        {
-                            label: "Personal Information",
-                            path: "/client/profile/personal",
-                        },
-                        {
-                            label: "Security Settings",
-                            path: "/client/profile/security",
-                        },
-                    ],
                 },
                 {
-                    id: "support",
-                    icon: "fas fa-headset",
-                    label: "Help & Support",
-                    path: "/client/support",
+                    id: "reviews",
+                    icon: "fas fa-star",
+                    label: "Reviews & Ratings",
+                    path: "/client/reviews",
                 },
+                // {
+                //     id: "support",
+                //     icon: "fas fa-headset",
+                //     label: "Help & Support",
+                //     path: "/client/support",
+                // },
             ],
             provider: [
                 {

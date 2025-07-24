@@ -264,7 +264,7 @@ class AppointmentService
     public function getAppointments($user, $filters = [])
     {
         $query = Appointment::where('provider_id', $user->id)
-            ->with(['client', 'service', 'quote', 'invoice']);
+            ->with(['client', 'service', 'quote', 'invoice', 'pendingRescheduleRequest']);
 
         // Apply filters
         if (isset($filters['status']) && $filters['status'] !== 'all') {

@@ -11,11 +11,14 @@ use App\Models\User;
 use App\Services\AppointmentService;
 use App\Services\InvoiceService;
 use App\Services\ReviewService;
+use App\Mail\AppointmentBookingConfirmation;
+use App\Mail\AppointmentProviderNotification;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class AppointmentController extends Controller
 {
@@ -488,6 +491,7 @@ class AppointmentController extends Controller
                 'status' => 'pending',
                 'booking_source' => $validatedData['booking_source'] ?? 'web_app',
                 'quote_id' => $validatedData['quote_id'] ?? null,
+                'expires_at' => now()->addHours(24), // Set 24-hour expiration
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
@@ -524,6 +528,9 @@ class AppointmentController extends Controller
 
             // Load relationships for response
             $appointment->load(['service', 'provider', 'client']);
+
+            // Send notification emails
+            $this->sendAppointmentNotifications($appointment);
 
             DB::commit();
 
@@ -1132,6 +1139,43 @@ class AppointmentController extends Controller
                 'message' => $e->getMessage() ?: 'Failed to submit review',
                 'error' => config('app.debug') ? $e->getMessage() : 'Internal server error'
             ], 500);
+        }
+    }
+
+    /**
+     * Send appointment notification emails
+     */
+    private function sendAppointmentNotifications(Appointment $appointment)
+    {
+        try {
+            // Send booking confirmation to client
+            if ($appointment->client && $appointment->client->email) {
+                Mail::to($appointment->client->email)->send(
+                    new AppointmentBookingConfirmation($appointment)
+                );
+                Log::info('Booking confirmation email sent to client', [
+                    'appointment_id' => $appointment->id,
+                    'client_email' => $appointment->client->email
+                ]);
+            }
+
+            // Send notification to provider
+            if ($appointment->provider && $appointment->provider->email) {
+                Mail::to($appointment->provider->email)->send(
+                    new AppointmentProviderNotification($appointment)
+                );
+                Log::info('New appointment notification sent to provider', [
+                    'appointment_id' => $appointment->id,
+                    'provider_email' => $appointment->provider->email
+                ]);
+            }
+
+        } catch (\Exception $e) {
+            Log::error('Failed to send appointment notifications', [
+                'appointment_id' => $appointment->id,
+                'error' => $e->getMessage()
+            ]);
+            // Don't throw exception as the appointment was created successfully
         }
     }
 
