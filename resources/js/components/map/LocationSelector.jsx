@@ -6,7 +6,7 @@ const LocationSelector = ({ value, onChange, error, radius = 5 }) => {
     console.log("🎯 LocationSelector props:", {
         radius: radius,
         hasValue: !!value,
-        valueRadius: value?.radius
+        valueRadius: value?.radius,
     });
     // console.log("LocationSelector: Component rendering", {
     //     hasValue: !!value,
@@ -24,298 +24,309 @@ const LocationSelector = ({ value, onChange, error, radius = 5 }) => {
     const isUserInteraction = useRef(false);
 
     // Centralized reverse geocoding using Laravel backend
-    const reverseGeocode = useCallback(async (lat, lng) => {
-        // console.log(`Reverse geocoding coordinates: ${lat}, ${lng}`);
+    const reverseGeocode = useCallback(
+        async (lat, lng) => {
+            // console.log(`Reverse geocoding coordinates: ${lat}, ${lng}`);
 
-        try {
-            // Using Laravel backend proxy
-            const response = await fetch(
-                `/api/geocoding/reverse?lat=${lat}&lon=${lng}`
-            );
+            try {
+                // Using Laravel backend proxy
+                const response = await fetch(
+                    `/api/geocoding/reverse?lat=${lat}&lon=${lng}`
+                );
 
-            if (response.ok) {
-                const data = await response.json();
-                console.log("Geocoding response:", data);
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log("Geocoding response:", data);
 
-                const address = data.address || {};
-                const displayName = data.display_name || "";
+                    const address = data.address || {};
+                    const displayName = data.display_name || "";
 
-                // Parse address components for Sri Lankan addresses
-                const city =
-                    address.city ||
-                    address.town ||
-                    address.village ||
-                    address.municipality ||
-                    address.county ||
-                    "Unknown City";
-                const province =
-                    address.state ||
-                    address.province ||
-                    address.state_district ||
-                    "Sri Lanka";
-                const neighborhood =
-                    address.suburb ||
-                    address.neighbourhood ||
-                    address.hamlet ||
-                    address.residential ||
-                    "";
-                const postcode = address.postcode || "";
-                const houseNumber = address.house_number || "";
-                const road = address.road || "";
+                    // Parse address components for Sri Lankan addresses
+                    const city =
+                        address.city ||
+                        address.town ||
+                        address.village ||
+                        address.municipality ||
+                        address.county ||
+                        "Unknown City";
+                    const province =
+                        address.state ||
+                        address.province ||
+                        address.state_district ||
+                        "Sri Lanka";
+                    const neighborhood =
+                        address.suburb ||
+                        address.neighbourhood ||
+                        address.hamlet ||
+                        address.residential ||
+                        "";
+                    const postcode = address.postcode || "";
+                    const houseNumber = address.house_number || "";
+                    const road = address.road || "";
 
-                // Create detailed readable address with accuracy levels
-                let readableAddress = "";
-                let accuracyLevel = "city";
-                let addressComponents = [];
+                    // Create detailed readable address with accuracy levels
+                    let readableAddress = "";
+                    let accuracyLevel = "city";
+                    let addressComponents = [];
 
-                // Build address from most specific to least specific
-                if (houseNumber && road) {
-                    addressComponents.push(`${houseNumber} ${road}`);
-                    accuracyLevel = "street_address";
-                } else if (road) {
-                    addressComponents.push(road);
-                    accuracyLevel = "street";
-                } else if (neighborhood) {
-                    addressComponents.push(neighborhood);
-                    accuracyLevel = "neighborhood";
-                }
-
-                // Add neighborhood if we have street but different neighborhood
-                if (
-                    accuracyLevel === "street_address" ||
-                    accuracyLevel === "street"
-                ) {
-                    if (neighborhood && !road.includes(neighborhood)) {
+                    // Build address from most specific to least specific
+                    if (houseNumber && road) {
+                        addressComponents.push(`${houseNumber} ${road}`);
+                        accuracyLevel = "street_address";
+                    } else if (road) {
+                        addressComponents.push(road);
+                        accuracyLevel = "street";
+                    } else if (neighborhood) {
                         addressComponents.push(neighborhood);
+                        accuracyLevel = "neighborhood";
                     }
-                }
 
-                // Add city with postal code if available
-                if (postcode) {
-                    addressComponents.push(`${city} ${postcode}`);
-                } else {
-                    addressComponents.push(city);
-                }
+                    // Add neighborhood if we have street but different neighborhood
+                    if (
+                        accuracyLevel === "street_address" ||
+                        accuracyLevel === "street"
+                    ) {
+                        if (neighborhood && !road.includes(neighborhood)) {
+                            addressComponents.push(neighborhood);
+                        }
+                    }
 
-                // Add province if not Western Province (to reduce redundancy)
-                if (province && province !== "Western Province") {
-                    addressComponents.push(province);
-                }
+                    // Add city with postal code if available
+                    if (postcode) {
+                        addressComponents.push(`${city} ${postcode}`);
+                    } else {
+                        addressComponents.push(city);
+                    }
 
-                readableAddress = addressComponents.join(", ");
+                    // Add province if not Western Province (to reduce redundancy)
+                    if (province && province !== "Western Province") {
+                        addressComponents.push(province);
+                    }
 
-                // Fallback if no good address found
-                if (!readableAddress || readableAddress === ", ") {
-                    readableAddress = `${city}, ${province}`;
-                    accuracyLevel = "city";
-                }
+                    readableAddress = addressComponents.join(", ");
 
-                // Return detailed location object
-                return {
-                    lat,
-                    lng,
-                    address: readableAddress,
-                    neighborhood: neighborhood,
-                    city: city,
-                    province: province,
-                    country: "Sri Lanka",
-                    radius: radius,
+                    // Fallback if no good address found
+                    if (!readableAddress || readableAddress === ", ") {
+                        readableAddress = `${city}, ${province}`;
+                        accuracyLevel = "city";
+                    }
 
-                    // Detailed accuracy and address components
-                    accuracy: `nominatim_${accuracyLevel}`,
-                    accuracy_level: accuracyLevel,
-
-                    // Detailed address components
-                    address_components: {
-                        house_number: houseNumber,
-                        road: road,
+                    // Return detailed location object
+                    return {
+                        lat,
+                        lng,
+                        address: readableAddress,
                         neighborhood: neighborhood,
                         city: city,
-                        postcode: postcode,
                         province: province,
                         country: "Sri Lanka",
-                    },
+                        radius: radius,
 
-                    // Display helpers
-                    short_address:
-                        houseNumber && road
-                            ? `${houseNumber} ${road}`
-                            : road || neighborhood || city,
-                    postal_code: postcode,
+                        // Detailed accuracy and address components
+                        accuracy: `nominatim_${accuracyLevel}`,
+                        accuracy_level: accuracyLevel,
 
-                    raw_data: data, // Keep raw data for debugging
-                };
+                        // Detailed address components
+                        address_components: {
+                            house_number: houseNumber,
+                            road: road,
+                            neighborhood: neighborhood,
+                            city: city,
+                            postcode: postcode,
+                            province: province,
+                            country: "Sri Lanka",
+                        },
+
+                        // Display helpers
+                        short_address:
+                            houseNumber && road
+                                ? `${houseNumber} ${road}`
+                                : road || neighborhood || city,
+                        postal_code: postcode,
+
+                        raw_data: data, // Keep raw data for debugging
+                    };
+                }
+            } catch (error) {
+                console.warn(
+                    "Backend geocoding failed, using offline fallback:",
+                    error
+                );
             }
-        } catch (error) {
-            console.warn(
-                "Backend geocoding failed, using offline fallback:",
-                error
-            );
-        }
 
-        // Fallback to offline geocoding with Sri Lankan cities
-        return reverseGeocodeOffline(lat, lng);
-    }, [radius]);
+            // Fallback to offline geocoding with Sri Lankan cities
+            return reverseGeocodeOffline(lat, lng);
+        },
+        [radius]
+    );
 
     //   ENHANCED: Offline geocoding for Sri Lankan locations
-    const reverseGeocodeOffline = useCallback((lat, lng) => {
-        // console.log(`Using offline geocoding for: ${lat}, ${lng}`);
+    const reverseGeocodeOffline = useCallback(
+        (lat, lng) => {
+            // console.log(`Using offline geocoding for: ${lat}, ${lng}`);
 
-        const sriLankanCities = [
-            {
-                name: "Colombo",
-                lat: 6.9271,
-                lng: 79.8612,
-                province: "Western Province",
-            },
-            {
-                name: "Negombo",
-                lat: 7.2083,
-                lng: 79.8358,
-                province: "Western Province",
-            },
-            {
-                name: "Kandy",
-                lat: 7.2906,
-                lng: 80.6337,
-                province: "Central Province",
-            },
-            {
-                name: "Gampaha",
-                lat: 7.0873,
-                lng: 79.999,
-                province: "Western Province",
-            },
-            {
-                name: "Kalutara",
-                lat: 6.5854,
-                lng: 79.9607,
-                province: "Western Province",
-            },
-            {
-                name: "Galle",
-                lat: 6.0535,
-                lng: 80.221,
-                province: "Southern Province",
-            },
-            {
-                name: "Matara",
-                lat: 5.9485,
-                lng: 80.5353,
-                province: "Southern Province",
-            },
-            {
-                name: "Jaffna",
-                lat: 9.6615,
-                lng: 80.0255,
-                province: "Northern Province",
-            },
-            {
-                name: "Batticaloa",
-                lat: 7.7102,
-                lng: 81.6924,
-                province: "Eastern Province",
-            },
-            {
-                name: "Trincomalee",
-                lat: 8.5874,
-                lng: 81.2152,
-                province: "Eastern Province",
-            },
-            {
-                name: "Anuradhapura",
-                lat: 8.3114,
-                lng: 80.4037,
-                province: "North Central Province",
-            },
-            {
-                name: "Polonnaruwa",
-                lat: 7.9403,
-                lng: 81.0188,
-                province: "North Central Province",
-            },
-            {
-                name: "Kurunegala",
-                lat: 7.4818,
-                lng: 80.3609,
-                province: "North Western Province",
-            },
-            {
-                name: "Puttalam",
-                lat: 8.0362,
-                lng: 79.8283,
-                province: "North Western Province",
-            },
-            {
-                name: "Ratnapura",
-                lat: 6.6828,
-                lng: 80.4036,
-                province: "Sabaragamuwa Province",
-            },
-            {
-                name: "Kegalle",
-                lat: 7.2513,
-                lng: 80.3464,
-                province: "Sabaragamuwa Province",
-            },
-            {
-                name: "Badulla",
-                lat: 6.9934,
-                lng: 81.055,
-                province: "Uva Province",
-            },
-            {
-                name: "Monaragala",
-                lat: 6.8728,
-                lng: 81.351,
-                province: "Uva Province",
-            },
-        ];
+            const sriLankanCities = [
+                {
+                    name: "Colombo",
+                    lat: 6.9271,
+                    lng: 79.8612,
+                    province: "Western Province",
+                },
+                {
+                    name: "Negombo",
+                    lat: 7.2083,
+                    lng: 79.8358,
+                    province: "Western Province",
+                },
+                {
+                    name: "Kandy",
+                    lat: 7.2906,
+                    lng: 80.6337,
+                    province: "Central Province",
+                },
+                {
+                    name: "Gampaha",
+                    lat: 7.0873,
+                    lng: 79.999,
+                    province: "Western Province",
+                },
+                {
+                    name: "Kalutara",
+                    lat: 6.5854,
+                    lng: 79.9607,
+                    province: "Western Province",
+                },
+                {
+                    name: "Galle",
+                    lat: 6.0535,
+                    lng: 80.221,
+                    province: "Southern Province",
+                },
+                {
+                    name: "Matara",
+                    lat: 5.9485,
+                    lng: 80.5353,
+                    province: "Southern Province",
+                },
+                {
+                    name: "Jaffna",
+                    lat: 9.6615,
+                    lng: 80.0255,
+                    province: "Northern Province",
+                },
+                {
+                    name: "Batticaloa",
+                    lat: 7.7102,
+                    lng: 81.6924,
+                    province: "Eastern Province",
+                },
+                {
+                    name: "Trincomalee",
+                    lat: 8.5874,
+                    lng: 81.2152,
+                    province: "Eastern Province",
+                },
+                {
+                    name: "Anuradhapura",
+                    lat: 8.3114,
+                    lng: 80.4037,
+                    province: "North Central Province",
+                },
+                {
+                    name: "Polonnaruwa",
+                    lat: 7.9403,
+                    lng: 81.0188,
+                    province: "North Central Province",
+                },
+                {
+                    name: "Kurunegala",
+                    lat: 7.4818,
+                    lng: 80.3609,
+                    province: "North Western Province",
+                },
+                {
+                    name: "Puttalam",
+                    lat: 8.0362,
+                    lng: 79.8283,
+                    province: "North Western Province",
+                },
+                {
+                    name: "Ratnapura",
+                    lat: 6.6828,
+                    lng: 80.4036,
+                    province: "Sabaragamuwa Province",
+                },
+                {
+                    name: "Kegalle",
+                    lat: 7.2513,
+                    lng: 80.3464,
+                    province: "Sabaragamuwa Province",
+                },
+                {
+                    name: "Badulla",
+                    lat: 6.9934,
+                    lng: 81.055,
+                    province: "Uva Province",
+                },
+                {
+                    name: "Monaragala",
+                    lat: 6.8728,
+                    lng: 81.351,
+                    province: "Uva Province",
+                },
+            ];
 
-        let closestCity = sriLankanCities[0];
-        let minDistance = calculateDistance(
-            lat,
-            lng,
-            closestCity.lat,
-            closestCity.lng
-        );
+            let closestCity = sriLankanCities[0];
+            let minDistance = calculateDistance(
+                lat,
+                lng,
+                closestCity.lat,
+                closestCity.lng
+            );
 
-        sriLankanCities.forEach((city) => {
-            const distance = calculateDistance(lat, lng, city.lat, city.lng);
-            if (distance < minDistance) {
-                minDistance = distance;
-                closestCity = city;
+            sriLankanCities.forEach((city) => {
+                const distance = calculateDistance(
+                    lat,
+                    lng,
+                    city.lat,
+                    city.lng
+                );
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    closestCity = city;
+                }
+            });
+
+            // Determine neighborhood based on distance
+            let neighborhood = "";
+            let address = "";
+
+            if (minDistance < 2) {
+                neighborhood = `${closestCity.name} Center`;
+                address = `${closestCity.name}, ${closestCity.province}`;
+            } else if (minDistance < 10) {
+                neighborhood = `Near ${closestCity.name}`;
+                address = `Near ${closestCity.name}, ${closestCity.province}`;
+            } else {
+                neighborhood = `${closestCity.province} Area`;
+                address = `${closestCity.province}, Sri Lanka`;
             }
-        });
 
-        // Determine neighborhood based on distance
-        let neighborhood = "";
-        let address = "";
-
-        if (minDistance < 2) {
-            neighborhood = `${closestCity.name} Center`;
-            address = `${closestCity.name}, ${closestCity.province}`;
-        } else if (minDistance < 10) {
-            neighborhood = `Near ${closestCity.name}`;
-            address = `Near ${closestCity.name}, ${closestCity.province}`;
-        } else {
-            neighborhood = `${closestCity.province} Area`;
-            address = `${closestCity.province}, Sri Lanka`;
-        }
-
-        return {
-            lat,
-            lng,
-            address,
-            neighborhood,
-            city: closestCity.name,
-            province: closestCity.province,
-            country: "Sri Lanka",
-            radius: radius,
-            accuracy: "gps_offline",
-            distance_to_city: Math.round(minDistance),
-        };
-    }, [radius]);
+            return {
+                lat,
+                lng,
+                address,
+                neighborhood,
+                city: closestCity.name,
+                province: closestCity.province,
+                country: "Sri Lanka",
+                radius: radius,
+                accuracy: "gps_offline",
+                distance_to_city: Math.round(minDistance),
+            };
+        },
+        [radius]
+    );
 
     const calculateDistance = (lat1, lng1, lat2, lng2) => {
         const R = 6371; // Earth radius in kilometers
@@ -523,7 +534,7 @@ const LocationSelector = ({ value, onChange, error, radius = 5 }) => {
                 radius: locationData.radius,
                 propRadius: radius,
                 currentLocationRadius: currentLocation.radius,
-                finalRadius: locationData.radius
+                finalRadius: locationData.radius,
             });
 
             // console.log(
@@ -740,60 +751,60 @@ const LocationSelector = ({ value, onChange, error, radius = 5 }) => {
                 .location-selector {
                     position: relative;
                 }
-                
+
                 @media (max-width: 767.98px) {
                     .location-selector {
                         overflow: visible;
                         padding: 0;
                     }
-                    
+
                     .city-selector .row {
                         margin: 0 -0.375rem;
                     }
-                    
+
                     .city-selector .col-6 {
                         padding: 0 0.375rem;
                         margin-bottom: 0.5rem;
                     }
-                    
+
                     .area-search {
                         position: relative;
                         z-index: 1040;
                         margin: 1rem 0;
                     }
-                    
+
                     .advanced-map-selector {
                         margin: 1rem 0;
                     }
-                    
+
                     .location-confirm,
                     .current-location-display {
                         margin: 1rem 0;
                         padding: 0.75rem;
                     }
-                    
+
                     .gps-accuracy-info,
                     .address-breakdown {
                         margin: 0.75rem 0;
                     }
                 }
-                
+
                 @media (max-width: 575.98px) {
                     .city-selector .col-6 {
                         flex: 0 0 100%;
                         max-width: 100%;
                     }
-                    
+
                     .location-confirm,
                     .current-location-display {
                         margin: 0.75rem 0;
                     }
-                    
+
                     .d-flex.gap-2 {
                         flex-direction: column;
                         gap: 0.5rem !important;
                     }
-                    
+
                     .d-flex.gap-2 .btn {
                         width: 100%;
                     }
@@ -1020,7 +1031,7 @@ const LocationSelector = ({ value, onChange, error, radius = 5 }) => {
                 locationState === "confirmed" &&
                 !useAdvancedMap && (
                     <div className="current-location-display p-3 bg-success bg-opacity-10 rounded mb-3 border-start border-success border-3">
-                        <h6 className="fw-bold text-success mb-2">
+                        <h6 className="fw-bold mb-2">
                             <i className="fas fa-check-circle me-2"></i>
                             Selected Location
                         </h6>

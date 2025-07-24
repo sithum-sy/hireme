@@ -325,24 +325,6 @@ const DashboardSidebar = ({
                     icon: "fas fa-calendar-alt",
                     label: "My Appointments",
                     path: "/client/appointments",
-                    children: [
-                        {
-                            label: "Today's Schedule",
-                            path: "/client/appointments/today",
-                        },
-                        {
-                            label: "Upcoming",
-                            path: "/client/appointments/upcoming",
-                        },
-                        {
-                            label: "Past Appointments",
-                            path: "/client/appointments/past",
-                        },
-                        {
-                            label: "Cancelled",
-                            path: "/client/appointments/cancelled",
-                        },
-                    ],
                 },
                 {
                     id: "quotes",
@@ -445,32 +427,6 @@ const DashboardSidebar = ({
                     icon: "fas fa-calendar-alt",
                     label: "Appointments",
                     path: "/provider/appointments",
-                    children: [
-                        {
-                            label: "Pending Requests",
-                            path: "/provider/appointments?status=pending",
-                        },
-                        {
-                            label: "Today's Schedule",
-                            path: "/provider/appointments/today",
-                        },
-                        {
-                            label: "Upcoming",
-                            path: "/provider/appointments?status=confirmed",
-                        },
-                        {
-                            label: "Past Appointments",
-                            path: "/provider/appointments?status=completed",
-                        },
-                        {
-                            label: "Cancelled",
-                            path: "/provider/appointments?status=cancelled_by_client",
-                        },
-                        {
-                            label: "All Appointments",
-                            path: "/provider/appointments",
-                        },
-                    ],
                 },
                 {
                     id: "services",

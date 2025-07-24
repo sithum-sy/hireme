@@ -1,7 +1,15 @@
 import React, { useState, useEffect } from "react";
-import { Link, useSearchParams, useLocation } from "react-router-dom";
+import {
+    Link,
+    useSearchParams,
+    useLocation,
+    useNavigate,
+} from "react-router-dom";
 import ClientLayout from "../../../components/layouts/ClientLayout";
 import LoadingSpinner from "../../../components/LoadingSpinner";
+import TodaysSchedule from "../../../components/client/appointments/TodaysSchedule";
+import QuickFilterTabs from "../../../components/client/appointments/QuickFilterTabs";
+import AppointmentsTable from "../../../components/client/appointments/AppointmentsTable";
 import CancelAppointmentModal from "../../../components/client/appointments/CancelAppointmentModal";
 // import RescheduleModal from "../../../components/client/appointments/RescheduleModal";
 import ReviewModal from "../../../components/client/appointments/ReviewModal";
@@ -11,19 +19,27 @@ import clientAppointmentService from "../../../services/clientAppointmentService
 const AppointmentsList = () => {
     const [searchParams, setSearchParams] = useSearchParams();
     const location = useLocation();
+    const navigate = useNavigate();
 
     // State management
     const [appointments, setAppointments] = useState([]);
-    // console.log("Appointment total:", appointments.total);
-
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState(false);
+    const [activeFilter, setActiveFilter] = useState(
+        searchParams.get("filter") || "today"
+    );
+    const [sortField, setSortField] = useState("appointment_date");
+    const [sortDirection, setSortDirection] = useState("asc");
+    const [appointmentCounts, setAppointmentCounts] = useState({});
     const [filters, setFilters] = useState({
         status: searchParams.get("status") || "all",
         date_from: searchParams.get("date_from") || "",
         date_to: searchParams.get("date_to") || "",
         service_type: searchParams.get("service_type") || "",
+        category: searchParams.get("category") || "all",
     });
+    const [pendingFilters, setPendingFilters] = useState({ ...filters });
+    const [categories, setCategories] = useState([]);
     const [pagination, setPagination] = useState({
         current_page: 1,
         last_page: 1,
@@ -42,6 +58,77 @@ const AppointmentsList = () => {
     useEffect(() => {
         loadAppointments();
     }, [filters, pagination.current_page]);
+
+    // Load categories for filter dropdown
+    useEffect(() => {
+        loadCategories();
+    }, []);
+
+    const loadCategories = async () => {
+        try {
+            // Try multiple endpoints to find categories
+            const endpoints = [
+                '/api/service-categories',
+                '/api/client/service-categories', 
+                '/api/categories'
+            ];
+            
+            for (const endpoint of endpoints) {
+                try {
+                    const response = await fetch(endpoint, {
+                        headers: {
+                            Authorization: `Bearer ${localStorage.getItem('token')}`,
+                            'Content-Type': 'application/json',
+                        },
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        const categoryData = data.success ? data.data : (data.data || data);
+                        if (categoryData && Array.isArray(categoryData) && categoryData.length > 0) {
+                            setCategories(categoryData);
+                            console.log('Categories loaded from:', endpoint);
+                            return; // Success, exit the loop
+                        }
+                    }
+                } catch (err) {
+                    console.log(`Endpoint ${endpoint} failed:`, err.message);
+                    continue; // Try next endpoint
+                }
+            }
+            
+            // If all endpoints fail, extract categories from existing appointments
+            extractCategoriesFromAppointments();
+            
+        } catch (error) {
+            console.error('Failed to load categories:', error);
+            extractCategoriesFromAppointments();
+        }
+    };
+    
+    // Fallback: Extract unique categories from current appointments
+    const extractCategoriesFromAppointments = () => {
+        const uniqueCategories = [];
+        const seenCategories = new Set();
+        
+        appointments.forEach(appointment => {
+            const category = appointment.service?.category;
+            if (category && category.id && !seenCategories.has(category.id)) {
+                seenCategories.add(category.id);
+                uniqueCategories.push({
+                    id: category.id,
+                    name: category.name || 'Unknown Category'
+                });
+            }
+        });
+        
+        if (uniqueCategories.length > 0) {
+            setCategories(uniqueCategories);
+            console.log('Categories extracted from appointments:', uniqueCategories.length);
+        } else {
+            console.log('No categories found in appointments');
+        }
+    };
 
     // Show success message if navigated from booking completion
     const [successMessage, setSuccessMessage] = useState(null);
@@ -72,6 +159,7 @@ const AppointmentsList = () => {
                 date_from: filters.date_from || undefined,
                 date_to: filters.date_to || undefined,
                 service_type: filters.service_type || undefined,
+                category: filters.category !== "all" ? filters.category : undefined,
                 per_page: pagination.per_page,
                 page: pagination.current_page,
             };
@@ -115,6 +203,8 @@ const AppointmentsList = () => {
             if (filters.date_to) params.append("date_to", filters.date_to);
             if (filters.service_type)
                 params.append("service_type", filters.service_type);
+            if (filters.category !== "all")
+                params.append("category", filters.category);
             params.append("page", pagination.current_page);
 
             const response = await fetch(`/api/client/bookings?${params}`, {
@@ -142,10 +232,99 @@ const AppointmentsList = () => {
         }
     };
 
-    // Handle filter changes and update URL
+    // Handle filter changes for quick tabs
+    const handleQuickFilterChange = (filterType) => {
+        setActiveFilter(filterType);
+
+        // Update URL parameters
+        const newParams = new URLSearchParams(searchParams);
+        newParams.set("filter", filterType);
+        setSearchParams(newParams);
+
+        // Update filters based on quick filter type
+        const today = new Date().toISOString().split("T")[0];
+        let newFilters = { ...filters };
+
+        switch (filterType) {
+            case "today":
+                newFilters = {
+                    ...filters,
+                    date_from: today,
+                    date_to: today,
+                    status: "all",
+                };
+                break;
+            case "upcoming":
+                newFilters = {
+                    ...filters,
+                    date_from: today,
+                    date_to: "",
+                    status: "confirmed",
+                };
+                break;
+            case "completed":
+                newFilters = {
+                    ...filters,
+                    status: "completed",
+                    date_from: "",
+                    date_to: "",
+                };
+                break;
+            case "cancelled":
+                newFilters = {
+                    ...filters,
+                    status: "cancelled_by_client",
+                    date_from: "",
+                    date_to: "",
+                };
+                break;
+            case "all":
+            default:
+                newFilters = {
+                    status: "all",
+                    date_from: "",
+                    date_to: "",
+                    service_type: "",
+                    category: "all",
+                };
+                break;
+        }
+
+        setFilters(newFilters);
+        setPendingFilters(newFilters);
+        setPagination((prev) => ({ ...prev, current_page: 1 }));
+    };
+
+    // Handle pending filter changes (don't apply immediately)
+    const handlePendingFilterChange = (key, value) => {
+        setPendingFilters(prev => ({ ...prev, [key]: value }));
+    };
+
+    // Apply filters when Apply button is clicked
+    const applyFilters = () => {
+        setFilters(pendingFilters);
+        
+        // Update URL parameters
+        const newParams = new URLSearchParams();
+        Object.entries(pendingFilters).forEach(([k, v]) => {
+            if (v && v !== "all") newParams.set(k, v);
+        });
+        setSearchParams(newParams);
+
+        // Reset to first page when filters change
+        setPagination((prev) => ({ ...prev, current_page: 1 }));
+    };
+
+    // Reset pending filters to match current filters
+    const resetPendingFilters = () => {
+        setPendingFilters({ ...filters });
+    };
+
+    // Handle filter changes and update URL (for quick filters)
     const handleFilterChange = (key, value) => {
         const newFilters = { ...filters, [key]: value };
         setFilters(newFilters);
+        setPendingFilters(newFilters);
 
         // Update URL parameters
         const newParams = new URLSearchParams();
@@ -156,6 +335,240 @@ const AppointmentsList = () => {
 
         // Reset to first page when filters change
         setPagination((prev) => ({ ...prev, current_page: 1 }));
+    };
+
+    // Handle table sorting
+    const handleSort = (field) => {
+        const newDirection =
+            sortField === field && sortDirection === "asc" ? "desc" : "asc";
+        setSortField(field);
+        setSortDirection(newDirection);
+    };
+
+    // Calculate appointment counts for quick filter tabs
+    const calculateAppointmentCounts = () => {
+        const today = new Date().toISOString().split("T")[0];
+        const counts = {
+            today: appointments.filter((apt) => apt.appointment_date === today)
+                .length,
+            upcoming: appointments.filter(
+                (apt) =>
+                    apt.appointment_date >= today &&
+                    ["pending", "confirmed"].includes(apt.status)
+            ).length,
+            completed: appointments.filter((apt) => apt.status === "completed")
+                .length,
+            cancelled: appointments.filter((apt) =>
+                ["cancelled_by_client", "cancelled_by_provider"].includes(
+                    apt.status
+                )
+            ).length,
+            total: appointments.length,
+        };
+        setAppointmentCounts(counts);
+        return counts;
+    };
+
+    // Update appointment counts when appointments change
+    useEffect(() => {
+        calculateAppointmentCounts();
+        // Also update categories from appointments if we don't have any
+        if (categories.length === 0 && appointments.length > 0) {
+            extractCategoriesFromAppointments();
+        }
+    }, [appointments]);
+
+    // Handle appointment actions from table components
+    const handleAppointmentAction = (action, appointment) => {
+        setSelectedAppointment(appointment);
+
+        switch (action) {
+            case "view":
+                navigate(`/client/appointments/${appointment.id}`);
+                break;
+            case "cancel":
+                setShowCancelModal(true);
+                break;
+            case "reschedule":
+                // Handle reschedule - uncomment when modal is ready
+                // setShowRescheduleModal(true);
+                break;
+            case "review":
+                setShowReviewModal(true);
+                break;
+            case "pay":
+                setShowPaymentModal(true);
+                break;
+            default:
+                break;
+        }
+    };
+
+    // Download appointments as PDF
+    const downloadAppointmentsPDF = () => {
+        const doc = {
+            content: [
+                {
+                    text: 'My Appointments',
+                    style: 'header',
+                    margin: [0, 0, 0, 20]
+                },
+                {
+                    text: `Generated on: ${new Date().toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    })}`,
+                    style: 'subheader',
+                    margin: [0, 0, 0, 20]
+                },
+                {
+                    table: {
+                        headerRows: 1,
+                        widths: ['15%', '20%', '20%', '15%', '15%', '15%'],
+                        body: [
+                            ['Date', 'Service', 'Provider', 'Status', 'Price', 'Location'],
+                            ...appointments.map(appointment => [
+                                new Date(appointment.appointment_date).toLocaleDateString(),
+                                appointment.service?.name || appointment.service?.title || 'Service',
+                                appointment.provider?.full_name || 
+                                `${appointment.provider?.first_name || ''} ${appointment.provider?.last_name || ''}`.trim() ||
+                                appointment.provider?.name || 'Provider',
+                                appointment.status.replace(/_/g, ' ').toUpperCase(),
+                                `Rs. ${appointment.total_price || 0}`,
+                                (() => {
+                                    const getLocationDisplay = () => {
+                                        // For all location types, try to show the actual address if available
+                                        const address = appointment.custom_address || appointment.client_address || '';
+                                        const city = appointment.custom_city || appointment.client_city || '';
+                                        const fullAddress = address + (city ? ', ' + city : '');
+                                        
+                                        if (appointment.location_type === 'client_address') {
+                                            return fullAddress || 'Your Location';
+                                        } else if (appointment.location_type === 'provider_location') {
+                                            return 'Provider Location';
+                                        } else if (appointment.location_type === 'custom_location') {
+                                            return fullAddress || 'Custom Location';
+                                        } else {
+                                            return fullAddress || 'Location not set';
+                                        }
+                                    };
+                                    return getLocationDisplay();
+                                })()
+                            ])
+                        ]
+                    },
+                    layout: {
+                        fillColor: function (rowIndex, node, columnIndex) {
+                            return (rowIndex === 0) ? '#f2f2f2' : null;
+                        }
+                    }
+                }
+            ],
+            styles: {
+                header: {
+                    fontSize: 18,
+                    bold: true,
+                    alignment: 'center'
+                },
+                subheader: {
+                    fontSize: 12,
+                    alignment: 'center',
+                    color: '#666'
+                }
+            },
+            defaultStyle: {
+                fontSize: 10
+            }
+        };
+
+        // Simple PDF generation using browser's print functionality
+        const printWindow = window.open('', '_blank');
+        const htmlContent = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>My Appointments</title>
+                <style>
+                    body { font-family: Arial, sans-serif; margin: 20px; }
+                    h1 { text-align: center; color: #333; }
+                    .meta { text-align: center; color: #666; margin-bottom: 30px; }
+                    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                    th { background-color: #f2f2f2; font-weight: bold; }
+                    .status { text-transform: capitalize; }
+                    .price { text-align: right; }
+                    @media print {
+                        body { margin: 0; }
+                        .no-print { display: none; }
+                    }
+                </style>
+            </head>
+            <body>
+                <h1>My Appointments</h1>
+                <div class="meta">
+                    Generated on: ${new Date().toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    })}
+                    <br/>Total Appointments: ${appointments.length}
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date & Time</th>
+                            <th>Service</th>
+                            <th>Provider</th>
+                            <th>Status</th>
+                            <th>Price</th>
+                            <th>Location</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${appointments.map(appointment => `
+                            <tr>
+                                <td>${new Date(appointment.appointment_date).toLocaleDateString()} ${appointment.appointment_time || ''}</td>
+                                <td>${appointment.service?.name || appointment.service?.title || 'Service'}</td>
+                                <td>${appointment.provider?.full_name || 
+                                      `${appointment.provider?.first_name || ''} ${appointment.provider?.last_name || ''}`.trim() ||
+                                      appointment.provider?.name || 'Provider'}</td>
+                                <td class="status">${appointment.status.replace(/_/g, ' ')}</td>
+                                <td class="price">Rs. ${appointment.total_price || 0}</td>
+                                <td>${(() => {
+                                    const address = appointment.custom_address || appointment.client_address || '';
+                                    const city = appointment.custom_city || appointment.client_city || '';
+                                    const fullAddress = address + (city ? ', ' + city : '');
+                                    
+                                    if (appointment.location_type === 'client_address') {
+                                        return fullAddress || 'Your Location';
+                                    } else if (appointment.location_type === 'provider_location') {
+                                        return 'Provider Location';
+                                    } else if (appointment.location_type === 'custom_location') {
+                                        return fullAddress || 'Custom Location';
+                                    } else {
+                                        return fullAddress || 'Location not set';
+                                    }
+                                })()}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+                <div class="no-print" style="margin-top: 30px; text-align: center;">
+                    <button onclick="window.print()" style="padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">Print PDF</button>
+                    <button onclick="window.close()" style="padding: 10px 20px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; margin-left: 10px;">Close</button>
+                </div>
+            </body>
+            </html>
+        `;
+        
+        printWindow.document.write(htmlContent);
+        printWindow.document.close();
+        printWindow.focus();
     };
 
     // Check if appointment can be cancelled (24 hour policy)
@@ -336,16 +749,6 @@ const AppointmentsList = () => {
         setSelectedAppointment(null);
     };
 
-    // const handleRescheduleSuccess = (updatedAppointment) => {
-    //     setAppointments((prev) =>
-    //         prev.map((apt) =>
-    //             apt.id === updatedAppointment.id ? updatedAppointment : apt
-    //         )
-    //     );
-    //     setShowRescheduleModal(false);
-    //     setSelectedAppointment(null);
-    // };
-
     const handleReviewSuccess = (updatedAppointment) => {
         setAppointments((prev) =>
             prev.map((apt) =>
@@ -408,600 +811,318 @@ const AppointmentsList = () => {
                             Manage and track your service appointments
                         </p>
                     </div>
-                    <Link to="/client/services" className="btn btn-primary btn-responsive">
-                        <i className="fas fa-plus me-2"></i>
-                        Book New Service
-                    </Link>
-                </div>
-
-                {/* Filters Section */}
-                <div className="filters-section mb-6">
-                    <div className="row g-3 align-items-end">
-                        <div className="col-md-3 col-sm-6">
-                            <label className="form-label font-medium">
-                                Status
-                            </label>
-                            <select
-                                className="form-select"
-                                value={filters.status}
-                                onChange={(e) =>
-                                    handleFilterChange("status", e.target.value)
-                                }
-                            >
-                                <option value="all">All Statuses</option>
-                                <option value="pending">Pending</option>
-                                <option value="confirmed">Confirmed</option>
-                                <option value="in_progress">In Progress</option>
-                                <option value="completed">Completed</option>
-                                <option value="invoice_sent">
-                                    Invoice Sent
-                                </option>
-                                <option value="payment_pending">
-                                    Payment Pending
-                                </option>
-                                <option value="paid">Paid</option>
-                                <option value="reviewed">Reviewed</option>
-                                <option value="cancelled_by_client">
-                                    Cancelled
-                                </option>
-                            </select>
-                        </div>
-
-                        <div className="col-md-3 col-sm-6">
-                            <label className="form-label font-medium">
-                                From Date
-                            </label>
-                            <input
-                                type="date"
-                                className="form-control"
-                                value={filters.date_from}
-                                onChange={(e) =>
-                                    handleFilterChange(
-                                        "date_from",
-                                        e.target.value
-                                    )
-                                }
-                            />
-                        </div>
-                        <div className="col-md-3 col-sm-6">
-                            <label className="form-label font-medium">
-                                To Date
-                            </label>
-                            <input
-                                type="date"
-                                className="form-control"
-                                value={filters.date_to}
-                                onChange={(e) =>
-                                    handleFilterChange(
-                                        "date_to",
-                                        e.target.value
-                                    )
-                                }
-                            />
-                        </div>
-
-                        <div className="col-12 col-md-3">
-                            <button
-                                className="btn btn-outline-secondary w-100 btn-responsive"
-                                onClick={() => {
-                                    setFilters({
-                                        status: "all",
-                                        date_from: "",
-                                        date_to: "",
-                                        service_type: "",
-                                    });
-                                    setSearchParams({});
-                                }}
-                            >
-                                <i className="fas fa-times me-2"></i>
-                                Clear Filters
-                            </button>
-                        </div>
+                    <div className="d-flex gap-2">
+                        <button
+                            className="btn btn-outline-success btn-responsive"
+                            onClick={downloadAppointmentsPDF}
+                            disabled={loading || appointments.length === 0}
+                        >
+                            <i className="fas fa-download me-2"></i>
+                            Download PDF
+                        </button>
+                        <Link
+                            to="/client/services"
+                            className="btn btn-primary btn-responsive"
+                        >
+                            <i className="fas fa-plus me-2"></i>
+                            Book New Service
+                        </Link>
                     </div>
                 </div>
 
-                {/* Appointments List */}
-                {loading ? (
-                    <LoadingSpinner message="Loading appointments..." />
-                ) : (
-                    <div className="appointments-list">
-                        {appointments.length > 0 ? (
-                            <>
-                                <div className="results-summary mb-4">
-                                    <small className="text-secondary text-sm">
-                                        Showing {appointments.length} of{" "}
-                                        {pagination.total} appointments
-                                    </small>
+                {/* Today's Schedule Priority Section */}
+                {activeFilter === "today" && (
+                    <TodaysSchedule
+                        onAppointmentAction={handleAppointmentAction}
+                    />
+                )}
+
+                {/* Quick Filter Tabs */}
+                <QuickFilterTabs
+                    activeFilter={activeFilter}
+                    onFilterChange={handleQuickFilterChange}
+                    appointmentCounts={appointmentCounts}
+                />
+
+                {/* Advanced Filters Section - Collapsible */}
+                <div className="filters-section mb-6">
+                    <div className="d-flex justify-content-between align-items-center mb-3">
+                        <h5 className="mb-0">Advanced Filters</h5>
+                        <button
+                            className="btn btn-outline-secondary btn-sm"
+                            type="button"
+                            data-bs-toggle="collapse"
+                            data-bs-target="#advancedFilters"
+                            aria-expanded="false"
+                            aria-controls="advancedFilters"
+                        >
+                            <i className="fas fa-filter me-2"></i>
+                            More Filters
+                        </button>
+                    </div>
+
+                    <div className="collapse" id="advancedFilters">
+                        <div className="row g-3 align-items-end">
+                            <div className="col-12">
+                                <div className="alert alert-info small">
+                                    <i className="fas fa-info-circle me-2"></i>
+                                    <strong>Multi-Filter Support:</strong> You can combine multiple filters (status, dates, and service type) to narrow down your search. Make changes and click "Apply Filters" to update the results.
                                 </div>
+                            </div>
+                            <div className="col-md-3 col-sm-6">
+                                <label className="form-label font-medium">
+                                    Status
+                                </label>
+                                <select
+                                    className="form-select"
+                                    value={pendingFilters.status}
+                                    onChange={(e) =>
+                                        handlePendingFilterChange(
+                                            "status",
+                                            e.target.value
+                                        )
+                                    }
+                                >
+                                    <option value="all">All Statuses</option>
+                                    <option value="pending">Pending</option>
+                                    <option value="confirmed">Confirmed</option>
+                                    <option value="in_progress">
+                                        In Progress
+                                    </option>
+                                    <option value="completed">Completed</option>
+                                    <option value="invoice_sent">
+                                        Invoice Sent
+                                    </option>
+                                    <option value="payment_pending">
+                                        Payment Pending
+                                    </option>
+                                    <option value="paid">Paid</option>
+                                    <option value="reviewed">Reviewed</option>
+                                    <option value="cancelled_by_client">
+                                        Cancelled
+                                    </option>
+                                </select>
+                            </div>
 
-                                {/* Enhanced Appointment Cards */}
-                                {appointments.map((appointment) => {
-                                    const dateTime = formatDateTime(
-                                        appointment.appointment_date,
-                                        appointment.appointment_time
-                                    );
-                                    const canCancel = canCancelAppointment(
-                                        appointment.appointment_date,
-                                        appointment.appointment_time,
-                                        appointment.status
-                                    );
+                            <div className="col-md-3 col-sm-6">
+                                <label className="form-label font-medium">
+                                    From Date
+                                </label>
+                                <input
+                                    type="date"
+                                    className="form-control"
+                                    value={pendingFilters.date_from}
+                                    onChange={(e) =>
+                                        handlePendingFilterChange(
+                                            "date_from",
+                                            e.target.value
+                                        )
+                                    }
+                                />
+                            </div>
+                            <div className="col-md-3 col-sm-6">
+                                <label className="form-label font-medium">
+                                    To Date
+                                </label>
+                                <input
+                                    type="date"
+                                    className="form-control"
+                                    value={pendingFilters.date_to}
+                                    onChange={(e) =>
+                                        handlePendingFilterChange(
+                                            "date_to",
+                                            e.target.value
+                                        )
+                                    }
+                                />
+                            </div>
+                            
+                            <div className="col-md-3 col-sm-6">
+                                <label className="form-label font-medium">
+                                    Service Type
+                                </label>
+                                <input
+                                    type="text"
+                                    className="form-control"
+                                    placeholder="Search by service name..."
+                                    value={pendingFilters.service_type}
+                                    onChange={(e) =>
+                                        handlePendingFilterChange(
+                                            "service_type",
+                                            e.target.value
+                                        )
+                                    }
+                                />
+                            </div>
+                            
+                            <div className="col-md-3 col-sm-6">
+                                <label className="form-label font-medium">
+                                    Category
+                                </label>
+                                <select
+                                    className="form-select"
+                                    value={pendingFilters.category}
+                                    onChange={(e) =>
+                                        handlePendingFilterChange(
+                                            "category",
+                                            e.target.value
+                                        )
+                                    }
+                                >
+                                    <option value="all">All Categories</option>
+                                    {categories.map((category) => (
+                                        <option key={category.id} value={category.id}>
+                                            {category.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
 
-                                    return (
-                                        <div
-                                            key={appointment.id}
-                                            className="appointment-card card border-0 shadow-sm mb-3"
-                                        >
-                                            <div className="card-body">
-                                                <div className="row align-items-center">
-                                                    {/* Service & Provider Info */}
-                                                    <div className="col-md-6">
-                                                        <div className="d-flex justify-content-between align-items-start mb-2">
-                                                            <div>
-                                                                <h6 className="fw-bold mb-1">
-                                                                    {appointment
-                                                                        .service
-                                                                        ?.title ||
-                                                                        "Service"}
-                                                                </h6>
-                                                                <div className="text-muted small">
-                                                                    <i className="fas fa-user me-1"></i>
-                                                                    {
-                                                                        appointment
-                                                                            .provider
-                                                                            ?.first_name
-                                                                    }{" "}
-                                                                    {
-                                                                        appointment
-                                                                            .provider
-                                                                            ?.last_name
-                                                                    }
-                                                                    {appointment
-                                                                        .provider
-                                                                        ?.provider_profile
-                                                                        ?.business_name && (
-                                                                        <span className="ms-1">
-                                                                            (
-                                                                            {
-                                                                                appointment
-                                                                                    .provider
-                                                                                    .provider_profile
-                                                                                    .business_name
-                                                                            }
-                                                                            )
-                                                                        </span>
-                                                                    )}
-                                                                </div>
-                                                            </div>
-
-                                                            {/* Enhanced Status Badges */}
-                                                            <div className="status-badges text-end">
-                                                                <span
-                                                                    className={`badge ${getStatusBadge(
-                                                                        appointment.status
-                                                                    )} px-2 py-1 mb-1 d-block`}
-                                                                >
-                                                                    {getStatusText(
-                                                                        appointment.status
-                                                                    )}
-                                                                </span>
-
-                                                                {/* Payment Status Badge */}
-                                                                {appointment.invoice && (
-                                                                    <span
-                                                                        className={`badge ${
-                                                                            appointment
-                                                                                .invoice
-                                                                                .payment_status ===
-                                                                            "pending"
-                                                                                ? "bg-warning text-dark"
-                                                                                : appointment
-                                                                                      .invoice
-                                                                                      .payment_status ===
-                                                                                  "completed"
-                                                                                ? "bg-success text-white"
-                                                                                : "bg-secondary text-white"
-                                                                        } px-2 py-1 d-block small`}
-                                                                    >
-                                                                        <i className="fas fa-credit-card me-1"></i>
-                                                                        {
-                                                                            appointment
-                                                                                .invoice
-                                                                                .payment_status
-                                                                        }
-                                                                    </span>
-                                                                )}
-                                                            </div>
-                                                        </div>
-
-                                                        {/* Date, Time, Location */}
-                                                        <div className="appointment-details">
-                                                            <div className="row text-sm">
-                                                                <div className="col-6">
-                                                                    <i className="fas fa-calendar text-muted me-2"></i>
-                                                                    <span>
-                                                                        {
-                                                                            dateTime.date
-                                                                        }
-                                                                    </span>
-                                                                </div>
-                                                                <div className="col-6">
-                                                                    <i className="fas fa-clock text-muted me-2"></i>
-                                                                    <span>
-                                                                        {
-                                                                            dateTime.time
-                                                                        }
-                                                                    </span>
-                                                                </div>
-                                                            </div>
-                                                            <div className="mt-1">
-                                                                <i className="fas fa-map-marker-alt text-muted me-2"></i>
-                                                                <span className="text-muted small">
-                                                                    {appointment.location_type ===
-                                                                        "client_address" &&
-                                                                        "At your location"}
-                                                                    {appointment.location_type ===
-                                                                        "provider_location" &&
-                                                                        "At provider location"}
-                                                                    {appointment.location_type ===
-                                                                        "custom_location" &&
-                                                                        "Custom location"}
-                                                                </span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-
-                                                    {/* Price & Actions */}
-                                                    <div className="col-md-6 text-end">
-                                                        <div className="appointment-price mb-2">
-                                                            <div className="fw-bold text-primary h5 mb-0">
-                                                                Rs.{" "}
-                                                                {
-                                                                    appointment.total_price
-                                                                }
-                                                            </div>
-                                                            {appointment.duration_hours && (
-                                                                <small className="text-muted">
-                                                                    {
-                                                                        appointment.duration_hours
-                                                                    }{" "}
-                                                                    hour
-                                                                    {appointment.duration_hours >
-                                                                    1
-                                                                        ? "s"
-                                                                        : ""}
-                                                                </small>
-                                                            )}
-
-                                                            {/* Payment Info */}
-                                                            {appointment.invoice && (
-                                                                <div className="payment-info mt-1">
-                                                                    <small className="text-muted d-block">
-                                                                        Invoice:
-                                                                        Rs.{" "}
-                                                                        {
-                                                                            appointment
-                                                                                .invoice
-                                                                                .total_amount
-                                                                        }
-                                                                    </small>
-                                                                    {appointment
-                                                                        .invoice
-                                                                        .is_overdue && (
-                                                                        <small className="text-danger">
-                                                                            <i className="fas fa-exclamation-triangle me-1"></i>
-                                                                            {
-                                                                                appointment
-                                                                                    .invoice
-                                                                                    .days_overdue
-                                                                            }{" "}
-                                                                            days
-                                                                            overdue
-                                                                        </small>
-                                                                    )}
-                                                                </div>
-                                                            )}
-                                                        </div>
-
-                                                        {/* Action Buttons - Enhanced */}
-                                                        <div className="appointment-actions">
-                                                            <Link
-                                                                to={`/client/appointments/${appointment.id}`}
-                                                                className="btn btn-outline-primary btn-sm me-2"
-                                                            >
-                                                                <i className="fas fa-eye me-1"></i>
-                                                                View Details
-                                                            </Link>
-
-                                                            {/* Payment Button */}
-                                                            {canBePaid(
-                                                                appointment
-                                                            ) && (
-                                                                <button
-                                                                    className="btn btn-success btn-sm me-2"
-                                                                    onClick={() =>
-                                                                        handlePaymentClick(
-                                                                            appointment
-                                                                        )
-                                                                    }
-                                                                    disabled={
-                                                                        actionLoading
-                                                                    }
-                                                                >
-                                                                    <i className="fas fa-credit-card me-1"></i>
-                                                                    Pay Now
-                                                                </button>
-                                                            )}
-
-                                                            {/* Review Button */}
-                                                            {canBeReviewed(
-                                                                appointment
-                                                            ) && (
-                                                                <button
-                                                                    className="btn btn-warning btn-sm me-2"
-                                                                    onClick={() =>
-                                                                        handleReviewClick(
-                                                                            appointment
-                                                                        )
-                                                                    }
-                                                                    disabled={
-                                                                        actionLoading
-                                                                    }
-                                                                >
-                                                                    <i className="fas fa-star me-1"></i>
-                                                                    Review
-                                                                </button>
-                                                            )}
-
-                                                            {/* Existing Status-specific Actions */}
-                                                            {appointment.status ===
-                                                                "pending" &&
-                                                                canCancel && (
-                                                                    <button
-                                                                        className="btn btn-outline-danger btn-sm"
-                                                                        onClick={() =>
-                                                                            handleCancelClick(
-                                                                                appointment
-                                                                            )
-                                                                        }
-                                                                    >
-                                                                        <i className="fas fa-times me-1"></i>
-                                                                        Cancel
-                                                                    </button>
-                                                                )}
-
-                                                            {appointment.status ===
-                                                                "confirmed" && (
-                                                                <>
-                                                                    {/* <button
-                                                                        className="btn btn-outline-warning btn-sm me-2"
-                                                                        onClick={() =>
-                                                                            handleRescheduleClick(
-                                                                                appointment,
-                                                                                "reschedule"
-                                                                            )
-                                                                        }
-                                                                    >
-                                                                        <i className="fas fa-calendar-alt me-1"></i>
-                                                                        Reschedule
-                                                                    </button> */}
-                                                                    {canCancel && (
-                                                                        <button
-                                                                            className="btn btn-outline-danger btn-sm"
-                                                                            onClick={() =>
-                                                                                handleCancelClick(
-                                                                                    appointment
-                                                                                )
-                                                                            }
-                                                                        >
-                                                                            <i className="fas fa-times me-1"></i>
-                                                                            Cancel
-                                                                        </button>
-                                                                    )}
-                                                                </>
-                                                            )}
-
-                                                            {appointment.status ===
-                                                                "completed" &&
-                                                                !appointment.provider_rating &&
-                                                                !canBeReviewed(
-                                                                    appointment
-                                                                ) && (
-                                                                    <button
-                                                                        className="btn btn-outline-success btn-sm"
-                                                                        onClick={() =>
-                                                                            handleReviewClick(
-                                                                                appointment
-                                                                            )
-                                                                        }
-                                                                    >
-                                                                        <i className="fas fa-star me-1"></i>
-                                                                        Review
-                                                                    </button>
-                                                                )}
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                {/* Quote Origin */}
-                                                {appointment.quote_id && (
-                                                    <div className="mt-2 pt-2 border-top">
-                                                        <small className="text-info">
-                                                            <i className="fas fa-quote-left me-1"></i>
-                                                            Created from Quote #
-                                                            {
-                                                                appointment.quote_id
-                                                            }
-                                                        </small>
-                                                    </div>
-                                                )}
-
-                                                {/* Payment Warning */}
-                                                {appointment.invoice
-                                                    ?.is_overdue && (
-                                                    <div className="payment-warning mt-2 pt-2 border-top bg-danger bg-opacity-10 rounded p-2">
-                                                        <small className="text-danger fw-semibold">
-                                                            <i className="fas fa-exclamation-circle me-1"></i>
-                                                            Payment overdue by{" "}
-                                                            {
-                                                                appointment
-                                                                    .invoice
-                                                                    .days_overdue
-                                                            }{" "}
-                                                            days
-                                                        </small>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-
-                                {/* Pagination - Your existing pagination code */}
-                                {pagination.last_page > 1 && (
-                                    <div className="pagination-wrapper d-flex justify-content-center mt-4">
-                                        <nav>
-                                            <ul className="pagination">
-                                                <li
-                                                    className={`page-item ${
-                                                        pagination.current_page ===
-                                                        1
-                                                            ? "disabled"
-                                                            : ""
-                                                    }`}
-                                                >
-                                                    <button
-                                                        className="page-link"
-                                                        onClick={() =>
-                                                            setPagination(
-                                                                (prev) => ({
-                                                                    ...prev,
-                                                                    current_page:
-                                                                        prev.current_page -
-                                                                        1,
-                                                                })
-                                                            )
-                                                        }
-                                                        disabled={
-                                                            pagination.current_page ===
-                                                            1
-                                                        }
-                                                    >
-                                                        Previous
-                                                    </button>
-                                                </li>
-
-                                                {Array.from(
-                                                    {
-                                                        length: Math.min(
-                                                            5,
-                                                            pagination.last_page
-                                                        ),
-                                                    },
-                                                    (_, i) => {
-                                                        const page = i + 1;
-                                                        return (
-                                                            <li
-                                                                key={page}
-                                                                className={`page-item ${
-                                                                    pagination.current_page ===
-                                                                    page
-                                                                        ? "active"
-                                                                        : ""
-                                                                }`}
-                                                            >
-                                                                <button
-                                                                    className="page-link"
-                                                                    onClick={() =>
-                                                                        setPagination(
-                                                                            (
-                                                                                prev
-                                                                            ) => ({
-                                                                                ...prev,
-                                                                                current_page:
-                                                                                    page,
-                                                                            })
-                                                                        )
-                                                                    }
-                                                                >
-                                                                    {page}
-                                                                </button>
-                                                            </li>
-                                                        );
-                                                    }
-                                                )}
-
-                                                <li
-                                                    className={`page-item ${
-                                                        pagination.current_page ===
-                                                        pagination.last_page
-                                                            ? "disabled"
-                                                            : ""
-                                                    }`}
-                                                >
-                                                    <button
-                                                        className="page-link"
-                                                        onClick={() =>
-                                                            setPagination(
-                                                                (prev) => ({
-                                                                    ...prev,
-                                                                    current_page:
-                                                                        prev.current_page +
-                                                                        1,
-                                                                })
-                                                            )
-                                                        }
-                                                        disabled={
-                                                            pagination.current_page ===
-                                                            pagination.last_page
-                                                        }
-                                                    >
-                                                        Next
-                                                    </button>
-                                                </li>
-                                            </ul>
-                                        </nav>
-                                    </div>
-                                )}
-                            </>
-                        ) : (
-                            // Empty state
-                            <div className="no-appointments text-center py-5">
-                                <i className="fas fa-calendar-times fa-3x text-muted mb-3"></i>
-                                <h5 className="text-muted">
-                                    {filters.status === "all"
-                                        ? "No appointments found"
-                                        : `No ${filters.status} appointments`}
-                                </h5>
-                                <p className="text-muted">
-                                    {filters.status === "all"
-                                        ? "You haven't booked any services yet"
-                                        : `No appointments match your current filters`}
-                                </p>
-                                {filters.status === "all" ? (
-                                    <Link
-                                        to="/client/services"
-                                        className="btn btn-primary"
-                                    >
-                                        <i className="fas fa-search me-2"></i>
-                                        Browse Services
-                                    </Link>
-                                ) : (
+                            <div className="col-12 mt-3">
+                                <div className="d-flex gap-2 justify-content-center">
                                     <button
-                                        className="btn btn-outline-primary"
+                                        className="btn btn-primary btn-responsive"
+                                        onClick={applyFilters}
+                                        disabled={JSON.stringify(filters) === JSON.stringify(pendingFilters)}
+                                    >
+                                        <i className="fas fa-check me-2"></i>
+                                        Apply Filters
+                                    </button>
+                                    <button
+                                        className="btn btn-outline-secondary btn-responsive"
                                         onClick={() => {
-                                            setFilters((prev) => ({
-                                                ...prev,
+                                            const clearedFilters = {
                                                 status: "all",
-                                            }));
+                                                date_from: "",
+                                                date_to: "",
+                                                service_type: "",
+                                                category: "all",
+                                            };
+                                            setFilters(clearedFilters);
+                                            setPendingFilters(clearedFilters);
+                                            setActiveFilter("all");
                                             setSearchParams({});
                                         }}
                                     >
                                         <i className="fas fa-times me-2"></i>
-                                        Clear Filters
+                                        Clear All
                                     </button>
-                                )}
+                                    <button
+                                        className="btn btn-outline-info btn-responsive"
+                                        onClick={resetPendingFilters}
+                                        disabled={JSON.stringify(filters) === JSON.stringify(pendingFilters)}
+                                    >
+                                        <i className="fas fa-undo me-2"></i>
+                                        Reset
+                                    </button>
+                                </div>
                             </div>
-                        )}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Appointments Table */}
+                <AppointmentsTable
+                    appointments={appointments}
+                    loading={loading}
+                    onSort={handleSort}
+                    sortField={sortField}
+                    sortDirection={sortDirection}
+                    onAppointmentAction={handleAppointmentAction}
+                />
+
+                {/* Pagination */}
+                {pagination.last_page > 1 && (
+                    <div className="pagination-wrapper d-flex justify-content-center mt-4">
+                        <nav>
+                            <ul className="pagination">
+                                <li
+                                    className={`page-item ${
+                                        pagination.current_page === 1
+                                            ? "disabled"
+                                            : ""
+                                    }`}
+                                >
+                                    <button
+                                        className="page-link"
+                                        onClick={() =>
+                                            setPagination((prev) => ({
+                                                ...prev,
+                                                current_page:
+                                                    prev.current_page - 1,
+                                            }))
+                                        }
+                                        disabled={pagination.current_page === 1}
+                                    >
+                                        Previous
+                                    </button>
+                                </li>
+
+                                {Array.from(
+                                    {
+                                        length: Math.min(
+                                            5,
+                                            pagination.last_page
+                                        ),
+                                    },
+                                    (_, i) => {
+                                        const page = i + 1;
+                                        return (
+                                            <li
+                                                key={page}
+                                                className={`page-item ${
+                                                    pagination.current_page ===
+                                                    page
+                                                        ? "active"
+                                                        : ""
+                                                }`}
+                                            >
+                                                <button
+                                                    className="page-link"
+                                                    onClick={() =>
+                                                        setPagination(
+                                                            (prev) => ({
+                                                                ...prev,
+                                                                current_page:
+                                                                    page,
+                                                            })
+                                                        )
+                                                    }
+                                                >
+                                                    {page}
+                                                </button>
+                                            </li>
+                                        );
+                                    }
+                                )}
+
+                                <li
+                                    className={`page-item ${
+                                        pagination.current_page ===
+                                        pagination.last_page
+                                            ? "disabled"
+                                            : ""
+                                    }`}
+                                >
+                                    <button
+                                        className="page-link"
+                                        onClick={() =>
+                                            setPagination((prev) => ({
+                                                ...prev,
+                                                current_page:
+                                                    prev.current_page + 1,
+                                            }))
+                                        }
+                                        disabled={
+                                            pagination.current_page ===
+                                            pagination.last_page
+                                        }
+                                    >
+                                        Next
+                                    </button>
+                                </li>
+                            </ul>
+                        </nav>
                     </div>
                 )}
 
@@ -1067,17 +1188,6 @@ const AppointmentsList = () => {
                         }}
                         appointment={selectedAppointment}
                         onCancellationSuccess={handleCancellationSuccess}
-                    />
-
-                    <AppointmentUpdateModal
-                        show={showUpdateModal}
-                        onHide={() => {
-                            setShowUpdateModal(false);
-                            setSelectedAppointment(null);
-                        }}
-                        appointment={selectedAppointment}
-                        mode={updateMode}
-                        onUpdateSuccess={handleUpdateSuccess}
                     />
 
                     <ReviewModal
