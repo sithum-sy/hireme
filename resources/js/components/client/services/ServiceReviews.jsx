@@ -148,7 +148,7 @@ const ServiceReviews = ({ serviceId }) => {
                                                         />
                                                     ) : (
                                                         <div
-                                                            className="bg-purple bg-opacity-10 text-purple rounded-circle d-flex align-items-center justify-content-center"
+                                                            className="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center"
                                                             style={{
                                                                 width: "40px",
                                                                 height: "40px",
@@ -240,7 +240,7 @@ const ServiceReviews = ({ serviceId }) => {
                                             {review.provider_response && (
                                                 <div className="provider-response bg-light rounded p-3 mt-3">
                                                     <div className="response-header d-flex align-items-center mb-2">
-                                                        <i className="fas fa-reply text-purple me-2"></i>
+                                                        <i className="fas fa-reply text-primary me-2"></i>
                                                         <span className="fw-semibold">
                                                             Response from
                                                             Provider
@@ -405,12 +405,7 @@ const ServiceReviews = ({ serviceId }) => {
             </div>
 
             <style>{`
-                .text-purple {
-                    color: #6f42c1 !important;
-                }
-                .bg-purple {
-                    background-color: #6f42c1 !important;
-                }
+                /* Using CSS variables for consistent theming */
                 .review-item:last-child {
                     border-bottom: none !important;
                     margin-bottom: 0 !important;

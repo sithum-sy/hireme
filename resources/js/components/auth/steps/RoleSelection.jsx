@@ -60,12 +60,12 @@ const RoleSelection = ({ selectedRole, onRoleSelect, error }) => {
                 .step-title {
                     font-size: 1.5rem;
                     font-weight: 700;
-                    color: #1a202c;
+                    color: var(--text-primary);
                     margin-bottom: 0.5rem;
                 }
 
                 .step-subtitle {
-                    color: #6b7280;
+                    color: var(--text-secondary);
                     font-size: 1rem;
                     margin: 0;
                 }
@@ -78,9 +78,9 @@ const RoleSelection = ({ selectedRole, onRoleSelect, error }) => {
                 }
 
                 .error-alert {
-                    background: #fef2f2;
+                    background: rgba(220, 38, 38, 0.1);
                     border: 1px solid #fecaca;
-                    color: #b91c1c;
+                    color: var(--danger-color);
                     padding: 1rem;
                     border-radius: 8px;
                     display: flex;

@@ -187,14 +187,14 @@ const StaffList = () => {
     return (
         <AdminLayout>
             {/* Page Header */}
-            <div className="d-flex justify-content-between align-items-center mb-4">
-                <div>
-                    <h1 className="h3 mb-1">Staff Management</h1>
+            <div className="page-header d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-6">
+                <div className="mb-3 mb-md-0">
+                    <h1 className="h2 mb-2 text-primary">Staff Management</h1>
                     <p className="text-muted mb-0">
                         Manage staff members and their permissions
                     </p>
                 </div>
-                <div className="d-flex gap-2">
+                <div className="d-flex flex-column flex-sm-row gap-2">
                     {selectedStaff.length > 0 && (
                         <div className="dropdown">
                             <button
@@ -245,7 +245,7 @@ const StaffList = () => {
                             </ul>
                         </div>
                     )}
-                    <Link to="/admin/staff/create" className="btn btn-primary">
+                    <Link to="/admin/staff/create" className="btn btn-primary btn-responsive">
                         <i className="fas fa-plus me-2"></i>
                         Create Staff
                     </Link>
@@ -253,7 +253,7 @@ const StaffList = () => {
             </div>
 
             {/* Filters */}
-            <div className="card border-0 shadow-sm mb-4">
+            <div className="filters-section mb-6">
                 <div className="card-body">
                     <div className="row g-3">
                         <div className="col-md-4">
@@ -320,9 +320,9 @@ const StaffList = () => {
                         </div>
                         <div className="col-md-3">
                             <label className="form-label">&nbsp;</label>
-                            <div className="d-flex gap-2">
+                            <div className="d-flex flex-column flex-sm-row gap-2">
                                 <button
-                                    className="btn btn-primary w-100"
+                                    className="btn btn-primary flex-fill"
                                     onClick={handleSearch}
                                     disabled={staffLoading}
                                 >
@@ -333,6 +333,7 @@ const StaffList = () => {
                                     className="btn btn-outline-secondary"
                                     onClick={handleClearFilters}
                                     disabled={staffLoading}
+                                    title="Clear filters"
                                 >
                                     <i className="fas fa-times"></i>
                                 </button>
@@ -343,14 +344,14 @@ const StaffList = () => {
             </div>
 
             {/* Staff Table */}
-            <div className="card border-0 shadow-sm">
-                <div className="card-header bg-white border-bottom">
-                    <div className="d-flex justify-content-between align-items-center">
+            <div className="card">
+                <div className="card-header">
+                    <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
                         <h5 className="card-title mb-0">
                             <i className="fas fa-users-cog text-primary me-2"></i>
                             Staff Members
                         </h5>
-                        <div className="d-flex align-items-center gap-3">
+                        <div className="d-flex flex-column flex-sm-row align-items-start align-items-sm-center gap-3">
                             {staffPagination.total > 0 && (
                                 <small className="text-muted">
                                     Showing {staffPagination.from}-
@@ -377,7 +378,7 @@ const StaffList = () => {
                 </div>
 
                 <div className="card-body p-0">
-                    <div className="table-responsive">
+                    <div className="table-responsive table-mobile-cards">
                         <table className="table table-hover mb-0">
                             <thead className="bg-light">
                                 <tr>

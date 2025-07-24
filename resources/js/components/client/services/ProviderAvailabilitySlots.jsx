@@ -266,7 +266,7 @@ const ProviderAvailabilitySlots = ({
                                 <button
                                     className={`date-option w-100 btn ${
                                         isSelected
-                                            ? "btn-purple"
+                                            ? "btn-primary"
                                             : isDisabled
                                             ? "btn-outline-secondary disabled"
                                             : "btn-outline-secondary"
@@ -321,7 +321,7 @@ const ProviderAvailabilitySlots = ({
                     {loading ? (
                         <div className="text-center py-4">
                             <div
-                                className="spinner-border text-purple"
+                                className="spinner-border text-primary"
                                 role="status"
                             >
                                 <span className="visually-hidden">
@@ -345,7 +345,7 @@ const ProviderAvailabilitySlots = ({
                                                 className="col-6 col-md-4 col-lg-3"
                                             >
                                                 <button
-                                                    className="time-slot-btn w-100 btn btn-outline-purple"
+                                                    className="time-slot-btn w-100 btn btn-outline-primary"
                                                     onClick={() =>
                                                         handleSlotSelect(slot)
                                                     }
@@ -391,7 +391,7 @@ const ProviderAvailabilitySlots = ({
                                                         bookings.
                                                     </p>
                                                     <button
-                                                        className="btn btn-outline-purple btn-sm"
+                                                        className="btn btn-outline-primary btn-sm"
                                                         onClick={
                                                             handleContactProvider
                                                         }
@@ -427,7 +427,7 @@ const ProviderAvailabilitySlots = ({
                                                     })()}
                                                 </p>
                                                 <button
-                                                    className="btn btn-outline-purple btn-sm"
+                                                    className="btn btn-outline-primary btn-sm"
                                                     onClick={
                                                         handleContactProvider
                                                     }
@@ -548,28 +548,7 @@ const ProviderAvailabilitySlots = ({
                     document.body
                 )}
             <style>{`
-                .text-purple {
-                    color: #6f42c1 !important;
-                }
-                .btn-purple {
-                    background-color: #6f42c1;
-                    border-color: #6f42c1;
-                    color: white;
-                }
-                .btn-purple:hover {
-                    background-color: #5a2d91;
-                    border-color: #5a2d91;
-                    color: white;
-                }
-                .btn-outline-purple {
-                    color: #6f42c1;
-                    border-color: #6f42c1;
-                }
-                .btn-outline-purple:hover {
-                    background-color: #6f42c1;
-                    border-color: #6f42c1;
-                    color: white;
-                }
+                /* Using CSS variables for consistent theming */
                 .date-option,
                 .time-slot-btn {
                     transition: all 0.2s ease;

@@ -1361,26 +1361,26 @@ const ProviderServices = () => {
 
                 /* Performance indicator colors */
                 .text-success {
-                    color: #198754 !important;
+                    color: var(--success-color) !important;
                 }
                 .text-warning {
-                    color: #ffc107 !important;
+                    color: var(--warning-color) !important;
                 }
                 .text-info {
-                    color: #0dcaf0 !important;
+                    color: var(--info-color) !important;
                 }
                 .text-secondary {
-                    color: #6c757d !important;
+                    color: var(--secondary-color) !important;
                 }
 
                 .bg-success {
-                    background-color: #198754 !important;
+                    background-color: var(--success-color) !important;
                 }
                 .bg-warning {
-                    background-color: #ffc107 !important;
+                    background-color: var(--warning-color) !important;
                 }
                 .bg-info {
-                    background-color: #0dcaf0 !important;
+                    background-color: var(--info-color) !important;
                 }
                 .bg-secondary {
                     background-color: #6c757d !important;

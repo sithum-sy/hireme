@@ -251,7 +251,7 @@ const QuoteCard = ({ quote, onQuoteUpdate, loading = false }) => {
                         {/* Price & Actions */}
                         <div className="col-md-6 text-end">
                             <div className="quote-price mb-3">
-                                <div className="fw-bold text-orange h5 mb-0">
+                                <div className="fw-bold text-primary h5 mb-0">
                                     Rs. {quote.quoted_price?.toLocaleString()}
                                 </div>
                                 {quote.estimated_duration && (
@@ -272,7 +272,7 @@ const QuoteCard = ({ quote, onQuoteUpdate, loading = false }) => {
                                 <div className="d-flex gap-2 justify-content-end">
                                     <Link
                                         to={`/provider/quotes/${quote.id}`}
-                                        className="btn btn-outline-orange btn-sm"
+                                        className="btn btn-outline-primary btn-sm"
                                     >
                                         <i className="fas fa-eye me-1"></i>
                                         View

@@ -1,4 +1,5 @@
 import React from "react";
+import { constructProfileImageUrl } from "../../hooks/useServiceImages";
 
 // User Activity Feed Component
 export const UserActivityFeed = ({ users = [], loading = false }) => {
@@ -19,17 +20,17 @@ export const UserActivityFeed = ({ users = [], loading = false }) => {
     );
 
     return (
-        <div className="dashboard-card activity-feed-card">
-            <div className="dashboard-card-header">
-                <div className="header-content">
-                    <h6 className="dashboard-card-title">
-                        <i className="fas fa-users"></i>
+        <div className="card border-0 shadow-sm">
+            <div className="card-header bg-white border-bottom">
+                <div className="d-flex justify-content-between align-items-center">
+                    <h5 className="card-title mb-0">
+                        <i className="fas fa-users text-primary me-2"></i>
                         <span>Recent User Activity</span>
-                    </h6>
-                    <span className="badge primary">{users.length}</span>
+                    </h5>
+                    <span className="badge bg-primary">{users.length}</span>
                 </div>
             </div>
-            <div className="dashboard-card-body">
+            <div className="card-body">
                 {loading ? (
                     <div className="activity-list">
                         {[1, 2, 3, 4, 5].map((i) => (
@@ -44,13 +45,37 @@ export const UserActivityFeed = ({ users = [], loading = false }) => {
                                 className="activity-item"
                             >
                                 <div className="activity-avatar">
-                                    {user.profile_picture ? (
-                                        <img
-                                            src={user.profile_picture}
-                                            alt={user.name || user.full_name}
-                                            className="avatar-img"
-                                        />
-                                    ) : (
+                                    {(() => {
+                                        const profileImageUrl = constructProfileImageUrl(user.profile_picture);
+                                        return profileImageUrl ? (
+                                            <img
+                                                src={profileImageUrl}
+                                                alt={user.name || user.full_name}
+                                                className="avatar-img"
+                                                onError={(e) => {
+                                                    e.target.style.display = "none";
+                                                    const fallback = e.target.nextSibling;
+                                                    if (fallback) {
+                                                        fallback.style.display = "flex";
+                                                    }
+                                                }}
+                                            />
+                                        ) : null;
+                                    })()}
+                                    {/* Fallback avatar */}
+                                    <div
+                                        className="avatar-placeholder primary"
+                                        style={{
+                                            display: user.profile_picture ? "none" : "flex",
+                                        }}
+                                    >
+                                        <span className="placeholder-initial">
+                                            {(user.name || user.full_name || "U")
+                                                .charAt(0)
+                                                .toUpperCase()}
+                                        </span>
+                                    </div>
+                                    {user.profile_picture && (
                                         <div className="avatar-placeholder primary">
                                             <i className="fas fa-user"></i>
                                         </div>

@@ -405,7 +405,7 @@ const AppointmentCard = ({ appointment, onStatusUpdate }) => {
                         <div className="d-flex align-items-center mb-2">
                             <div className="client-avatar me-3">
                                 <div
-                                    className="bg-orange bg-opacity-10 text-orange rounded-circle d-flex align-items-center justify-content-center"
+                                    className="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center"
                                     style={{ width: "50px", height: "50px" }}
                                 >
                                     {clientInitials}
@@ -510,7 +510,7 @@ const AppointmentCard = ({ appointment, onStatusUpdate }) => {
                             </span>
                         </div>
 
-                        <div className="fw-bold text-orange mb-3">
+                        <div className="fw-bold text-primary mb-3">
                             Rs.{" "}
                             {appointment.total_price?.toLocaleString() || "0"}
                         </div>
@@ -519,7 +519,7 @@ const AppointmentCard = ({ appointment, onStatusUpdate }) => {
                         <div className="d-flex gap-2 justify-content-end">
                             <Link
                                 to={`/provider/appointments/${appointment.id}`}
-                                className="btn btn-outline-orange btn-sm"
+                                className="btn btn-outline-primary btn-sm"
                             >
                                 <i className="fas fa-eye me-1"></i>
                                 View

@@ -124,29 +124,57 @@ class ReportService
         $startDate = Carbon::parse($filters['start_date'] ?? now()->subDays(90));
         $endDate = Carbon::parse($filters['end_date'] ?? now());
 
+        // Start with basic data and expand gradually for debugging
         $data = [
             'client' => [
-                'name' => $client->full_name,
+                'name' => $client->full_name ?? ($client->first_name . ' ' . $client->last_name) ?? 'Unknown User',
                 'email' => $client->email,
-                'member_since' => $client->created_at->format('M Y')
+                'member_since' => $client->created_at ? $client->created_at->format('M Y') : 'Unknown'
             ],
             'period' => [
                 'start_date' => $startDate->format('M d, Y'),
                 'end_date' => $endDate->format('M d, Y'),
                 'days' => $startDate->diffInDays($endDate) + 1
             ],
-            'activity_summary' => $this->getClientActivitySummary($client, $startDate, $endDate),
-            'booking_history' => $this->getClientBookingHistory($client, $startDate, $endDate),
-            'spending_analysis' => $this->getClientSpendingAnalysis($client, $startDate, $endDate),
-            'service_preferences' => $this->getClientServicePreferences($client, $startDate, $endDate),
-            'review_summary' => $this->getClientReviewSummary($client, $startDate, $endDate),
+            'activity_summary' => [
+                'total_bookings' => 0,
+                'completed_services' => 0,
+                'pending_requests' => 0,
+                'total_spent' => 0,
+                'average_rating_given' => 0,
+                'reviews_given' => 0,
+                'favorite_category' => 'N/A'
+            ],
+            'booking_history' => [],
+            'spending_analysis' => [
+                'by_category' => collect([]),
+                'monthly_trend' => collect([]),
+                'monthly_spending' => collect([]),
+                'total_amount' => 0
+            ],
+            'service_preferences' => [
+                'most_booked_services' => collect([]),
+                'preferred_providers' => collect([]),
+                'favorite_categories' => collect([])
+            ],
+            'review_summary' => [
+                'total_reviews' => 0,
+                'average_rating_given' => 0,
+                'reviews_given' => 0,
+                'recent_reviews' => collect([])
+            ],
             'generated_at' => now()->format('M d, Y \a\t g:i A')
         ];
 
-        $pdf = Pdf::loadView('reports.client.activity', $data);
-        $pdf->setPaper('A4', 'portrait');
-        
-        return $pdf;
+        // Try to load the view safely
+        try {
+            $pdf = Pdf::loadView('reports.client.activity', $data);
+            $pdf->setPaper('A4', 'portrait');
+            return $pdf;
+        } catch (\Exception $e) {
+            \Log::error('PDF Generation Error: ' . $e->getMessage());
+            throw new \Exception('Failed to generate PDF: ' . $e->getMessage());
+        }
     }
 
     // Admin Analytics Helper Methods

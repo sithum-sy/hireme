@@ -48,5 +48,12 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
         Route::get('/overview', [DashboardController::class, 'getOverviewReport']);
         Route::get('/users', [UserController::class, 'getUsersReport']);
         Route::get('/activities', [DashboardController::class, 'getActivitiesReport']);
+        
+        // New PDF Report endpoints
+        Route::get('/platform-analytics', [\App\Http\Controllers\API\Admin\ReportController::class, 'platformAnalytics']);
+        Route::get('/user-management', [\App\Http\Controllers\API\Admin\ReportController::class, 'userManagement']);
+        Route::get('/financial-performance', [\App\Http\Controllers\API\Admin\ReportController::class, 'financialPerformance']);
+        Route::get('/service-analytics', [\App\Http\Controllers\API\Admin\ReportController::class, 'serviceCategoryAnalytics']);
+        Route::get('/provider-performance', [\App\Http\Controllers\API\Admin\ReportController::class, 'providerPerformance']);
     });
 });

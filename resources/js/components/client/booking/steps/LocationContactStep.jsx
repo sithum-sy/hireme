@@ -742,7 +742,7 @@ const LocationContactStep = ({
 
                         <button
                             type="button"
-                            className="btn btn-purple"
+                            className="btn btn-primary"
                             onClick={handleContinue}
                         >
                             Continue to Payment
@@ -762,9 +762,10 @@ const LocationContactStep = ({
                    color: white;
                }
                .btn-purple:hover {
-                   background-color: #5a2d91;
-                   border-color: #5a2d91;
+                   background-color: var(--current-role-primary);
+                   border-color: var(--current-role-primary);
                    color: white;
+                   opacity: 0.9;
                }
                .option-card {
                    transition: all 0.2s ease;
@@ -783,7 +784,7 @@ const LocationContactStep = ({
                    font-size: 0.875rem;
                }
                .border-success {
-                   border-color: #198754 !important;
+                   border-color: var(--success-color) !important;
                }
                .auto-fill-indicator {
                    animation: fadeIn 0.3s ease-in;

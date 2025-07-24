@@ -93,3 +93,12 @@ Route::prefix('dashboard')->group(function () {
     Route::get('/recommendations', [DashboardController::class, 'getRecommendations']);
     Route::get('/recent-activity', [DashboardController::class, 'getRecentActivity']);
 });
+
+// Client Reports
+Route::prefix('reports')->group(function () {
+    Route::get('/personal-activity', [\App\Http\Controllers\API\Client\ReportController::class, 'personalActivity']);
+    Route::get('/spending-analysis', [\App\Http\Controllers\API\Client\ReportController::class, 'spendingAnalysis']);
+    Route::get('/service-history', [\App\Http\Controllers\API\Client\ReportController::class, 'serviceHistory']);
+    Route::get('/preferences', [\App\Http\Controllers\API\Client\ReportController::class, 'preferences']);
+    Route::get('/transaction-history', [\App\Http\Controllers\API\Client\ReportController::class, 'transactionHistory']);
+});

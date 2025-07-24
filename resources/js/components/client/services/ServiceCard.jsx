@@ -152,7 +152,7 @@ const ServiceCard = ({ service, showDistance = true }) => {
 
                                 {/* Fallback avatar */}
                                 <div
-                                    className="bg-purple bg-opacity-10 text-purple rounded-circle d-flex align-items-center justify-content-center"
+                                    className="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center"
                                     style={{
                                         width: "24px",
                                         height: "24px",
@@ -197,7 +197,7 @@ const ServiceCard = ({ service, showDistance = true }) => {
                         {/* Price and Distance */}
                         <div className="service-meta d-flex justify-content-between align-items-center">
                             <div className="price">
-                                <span className="fw-bold text-purple">
+                                <span className="fw-bold text-primary">
                                     {service.formatted_price ||
                                         `Rs. ${
                                             service.base_price ||
@@ -220,7 +220,7 @@ const ServiceCard = ({ service, showDistance = true }) => {
                         {/* Quick Actions */}
                         <div className="quick-actions mt-3 d-flex gap-2">
                             <button
-                                className="btn btn-purple btn-sm flex-grow-1"
+                                className="btn btn-primary btn-sm flex-grow-1"
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     e.stopPropagation(); // Prevent event bubbling
@@ -272,31 +272,7 @@ const ServiceCard = ({ service, showDistance = true }) => {
                 .service-card:hover .card {
                     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15) !important;
                 }
-                .text-purple {
-                    color: #6f42c1 !important;
-                }
-                .bg-purple {
-                    background-color: #6f42c1 !important;
-                }
-                .btn-purple {
-                    background-color: #6f42c1;
-                    border-color: #6f42c1;
-                    color: white;
-                }
-                .btn-purple:hover {
-                    background-color: #5a2d91;
-                    border-color: #5a2d91;
-                    color: white;
-                }
-                .btn-outline-purple {
-                    color: #6f42c1;
-                    border-color: #6f42c1;
-                }
-                .btn-outline-purple:hover {
-                    background-color: #6f42c1;
-                    border-color: #6f42c1;
-                    color: white;
-                }
+                /* Using CSS variables for consistent theming */
             `}</style>
         </div>
     );

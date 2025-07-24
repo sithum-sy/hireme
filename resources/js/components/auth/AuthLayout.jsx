@@ -248,7 +248,7 @@ const AuthLayout = ({ children, showBranding = true }) => {
                 }
 
                 .feature-item i {
-                    color: #10b981;
+                    color: var(--success-color);
                     width: 24px;
                     font-size: 1.25rem;
                     flex-shrink: 0;
@@ -267,7 +267,7 @@ const AuthLayout = ({ children, showBranding = true }) => {
                 .auth-form-panel.full-width {
                     width: 100%;
                     padding: 2rem;
-                    background: #f8fafc;
+                    background: var(--bg-light);
                 }
 
                 /* Mobile adjustments */

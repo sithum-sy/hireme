@@ -284,70 +284,71 @@ const ProviderDashboard = () => {
 
     return (
         <ProviderLayout>
-            <div className="page-content provider-dashboard-content">
+            <div className="page-content">
                 {/* Quick Actions */}
-                <div className="quick-actions-section">
-                    <div className="section-header">
-                        <h2 className="section-title">
-                            <i className="fas fa-bolt"></i>
-                            <span>Quick Actions</span>
+                <div className="quick-actions-section mb-6">
+                    <div className="section-header mb-4">
+                        <h2 className="section-title h3 text-primary">
+                            <i className="fas fa-bolt me-2"></i>
+                            Quick Actions
                         </h2>
                     </div>
-                    <div className="dashboard-grid dashboard-grid-4">
+                    <div className="responsive-grid responsive-grid-sm responsive-grid-md">
                         {quickActions.map((action, index) => (
                             <Link
                                 key={index}
                                 to={action.path}
-                                className="action-card-link"
+                                className="text-decoration-none"
                             >
-                                <div className="action-card quick-action-card">
-                                    <div
-                                        className={`action-icon ${action.variant} position-relative`}
-                                    >
-                                        <i className={action.icon}></i>
-                                        {action.count && action.count > 0 && (
-                                            <span className="action-badge">
-                                                {action.count > 99
-                                                    ? "99+"
-                                                    : action.count}
-                                            </span>
-                                        )}
+                                <div className="card action-card h-100 transition">
+                                    <div className="card-body text-center p-4">
+                                        <div
+                                            className={`action-icon mb-3 text-${action.variant} position-relative`}
+                                        >
+                                            <i className={`${action.icon} fa-2x`}></i>
+                                            {action.count && action.count > 0 && (
+                                                <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                                    {action.count > 99
+                                                        ? "99+"
+                                                        : action.count}
+                                                </span>
+                                            )}
+                                        </div>
+                                        <h6 className="card-title mb-2">
+                                            {action.title}
+                                        </h6>
+                                        <p className="card-text text-muted small mb-0">
+                                            {action.description}
+                                        </p>
                                     </div>
-                                    <h6 className="action-title">
-                                        {action.title}
-                                    </h6>
-                                    <p className="action-description">
-                                        {action.description}
-                                    </p>
                                 </div>
                             </Link>
                         ))}
                     </div>
                 </div>
 
-                {/* Main Content Grid */}
-                {/* Today's Schedule Section - MOVED UP */}
-                <div className="todays-schedule-section">
+                {/* Today's Schedule Section */}
+                <div className="todays-schedule-section mb-6">
                     <AppointmentSections />
                 </div>
 
                 {/* Sidebar Widgets in Grid Layout */}
-                <div className="widgets-grid">
+                <div className="row mb-6">
                     {/* Availability Widget */}
-                    <div className="widget-item">
+                    <div className="col-lg-6 mb-4">
                         <AvailabilityWidget />
                     </div>
 
                     {/* Performance Summary */}
-                    <div className="widget-item">
-                        <div className="dashboard-card performance-card">
-                            <div className="dashboard-card-header">
-                                <h6 className="dashboard-card-title">
-                                    <i className="fas fa-chart-bar"></i>
-                                    <span>Performance Summary</span>
+                    <div className="col-lg-6 mb-4">
+                        <div className="card h-100">
+                            <div className="card-header">
+                                <h6 className="card-title mb-0">
+                                    <i className="fas fa-chart-bar me-2"></i>
+                                    Performance Summary
                                 </h6>
                             </div>
-                            <div className="dashboard-card-body">
+                            <div className="card-body">
                                 <div className="performance-metrics">
                                     <div className="metric-item">
                                         <span className="metric-label">
@@ -395,13 +396,16 @@ const ProviderDashboard = () => {
                         </div>
                     </div>
 
+                </div>
+
+                <div className="row mb-6">
                     {/* Recent Reviews */}
-                    <div className="widget-item">
-                        <div className="dashboard-card reviews-card">
-                            <div className="dashboard-card-header">
-                                <h6 className="dashboard-card-title">
-                                    <i className="fas fa-star"></i>
-                                    <span>Recent Reviews</span>
+                    <div className="col-lg-6 mb-4">
+                        <div className="card h-100">
+                            <div className="card-header d-flex justify-content-between align-items-center">
+                                <h6 className="card-title mb-0">
+                                    <i className="fas fa-star me-2"></i>
+                                    Recent Reviews
                                 </h6>
                                 <Link
                                     to="/provider/reviews"
@@ -410,7 +414,7 @@ const ProviderDashboard = () => {
                                     View All
                                 </Link>
                             </div>
-                            <div className="dashboard-card-body">
+                            <div className="card-body">
                                 {dashboardMetrics?.clientReviews &&
                                 dashboardMetrics.clientReviews.length > 0 ? (
                                     <div className="reviews-list">
@@ -481,15 +485,15 @@ const ProviderDashboard = () => {
                     </div>
 
                     {/* Success Tips */}
-                    <div className="widget-item">
-                        <div className="dashboard-card tips-card">
-                            <div className="dashboard-card-header">
-                                <h6 className="dashboard-card-title">
-                                    <i className="fas fa-lightbulb"></i>
-                                    <span>Tips for Success</span>
+                    <div className="col-lg-6">
+                        <div className="card h-100">
+                            <div className="card-header">
+                                <h6 className="card-title mb-0">
+                                    <i className="fas fa-lightbulb me-2"></i>
+                                    Tips for Success
                                 </h6>
                             </div>
-                            <div className="dashboard-card-body">
+                            <div className="card-body">
                                 <div className="tips-list">
                                     <div className="tip-item">
                                         <i className="fas fa-clock tip-icon success"></i>
@@ -525,70 +529,78 @@ const ProviderDashboard = () => {
                     </div>
                 </div>
 
-                {/* Achievements Section - Remains at bottom */}
+                {/* Achievements Section */}
                 <div className="achievements-section">
-                    <div className="dashboard-card achievements-card">
-                        <div className="dashboard-card-header">
-                            <h6 className="dashboard-card-title">
-                                <i className="fas fa-trophy"></i>
-                                <span>Your Achievements</span>
+                    <div className="card">
+                        <div className="card-header">
+                            <h6 className="card-title mb-0">
+                                <i className="fas fa-trophy me-2"></i>
+                                Your Achievements
                             </h6>
                         </div>
-                        <div className="dashboard-card-body">
-                            <div className="achievements-grid">
-                                <div className="achievement-item">
-                                    <div className="achievement-icon success">
-                                        <i className="fas fa-eye"></i>
-                                    </div>
-                                    <div className="achievement-value">
-                                        {businessStats?.totalViews?.toLocaleString() ||
-                                            "N/A"}
-                                    </div>
-                                    <div className="achievement-label">
-                                        Profile Views
-                                    </div>
-                                </div>
-                                <div className="achievement-item">
-                                    <div className="achievement-icon info">
-                                        <i className="fas fa-percentage"></i>
-                                    </div>
-                                    <div className="achievement-value">
-                                        {businessStats?.conversionRate?.toFixed(
-                                            1
-                                        ) || "N/A"}
-                                        %
-                                    </div>
-                                    <div className="achievement-label">
-                                        Conversion Rate
+                        <div className="card-body">
+                            <div className="row g-3">
+                                <div className="col-lg-3 col-md-6">
+                                    <div className="text-center p-3 bg-success bg-opacity-10 rounded">
+                                        <div className="mb-2">
+                                            <i className="fas fa-eye fa-2x text-success"></i>
+                                        </div>
+                                        <div className="h4 mb-1 text-success">
+                                            {businessStats?.totalViews?.toLocaleString() ||
+                                                "N/A"}
+                                        </div>
+                                        <div className="small text-muted">
+                                            Profile Views
+                                        </div>
                                     </div>
                                 </div>
-                                <div className="achievement-item">
-                                    <div className="achievement-icon warning">
-                                        <i className="fas fa-medal"></i>
-                                    </div>
-                                    <div className="achievement-value">
-                                        {performanceIndicators.rating.value >=
-                                        4.5
-                                            ? "Elite"
-                                            : performanceIndicators.rating
-                                                  .value >= 4.0
-                                            ? "Pro"
-                                            : "Rising"}
-                                    </div>
-                                    <div className="achievement-label">
-                                        Provider Level
+                                <div className="col-lg-3 col-md-6">
+                                    <div className="text-center p-3 bg-info bg-opacity-10 rounded">
+                                        <div className="mb-2">
+                                            <i className="fas fa-percentage fa-2x text-info"></i>
+                                        </div>
+                                        <div className="h4 mb-1 text-info">
+                                            {businessStats?.conversionRate?.toFixed(
+                                                1
+                                            ) || "N/A"}
+                                            %
+                                        </div>
+                                        <div className="small text-muted">
+                                            Conversion Rate
+                                        </div>
                                     </div>
                                 </div>
-                                <div className="achievement-item">
-                                    <div className="achievement-icon primary">
-                                        <i className="fas fa-calendar-check"></i>
+                                <div className="col-lg-3 col-md-6">
+                                    <div className="text-center p-3 bg-warning bg-opacity-10 rounded">
+                                        <div className="mb-2">
+                                            <i className="fas fa-medal fa-2x text-warning"></i>
+                                        </div>
+                                        <div className="h4 mb-1 text-warning">
+                                            {performanceIndicators.rating.value >=
+                                            4.5
+                                                ? "Elite"
+                                                : performanceIndicators.rating
+                                                      .value >= 4.0
+                                                ? "Pro"
+                                                : "Rising"}
+                                        </div>
+                                        <div className="small text-muted">
+                                            Provider Level
+                                        </div>
                                     </div>
-                                    <div className="achievement-value">
-                                        {businessStats?.totalAppointments ||
-                                            "N/A"}
-                                    </div>
-                                    <div className="achievement-label">
-                                        Total Bookings
+                                </div>
+                                <div className="col-lg-3 col-md-6">
+                                    <div className="text-center p-3 bg-primary bg-opacity-10 rounded">
+                                        <div className="mb-2">
+                                            <i className="fas fa-calendar-check fa-2x text-primary"></i>
+                                        </div>
+                                        <div className="h4 mb-1 text-primary">
+                                            {businessStats?.totalAppointments ||
+                                                "N/A"}
+                                        </div>
+                                        <div className="small text-muted">
+                                            Total Bookings
+                                        </div>
                                     </div>
                                 </div>
                             </div>

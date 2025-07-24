@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { constructProfileImageUrl } from "../../../hooks/useServiceImages";
 
 const ServiceSelection = ({
     service,
@@ -370,18 +371,40 @@ const ServiceSelection = ({
                                 <h6 className="fw-bold mb-3">Your Provider</h6>
                                 <div className="provider-info d-flex align-items-center">
                                     <div className="provider-avatar me-3">
-                                        {provider.profile_image_url ? (
-                                            <img
-                                                src={provider.profile_image_url}
-                                                alt={provider.name}
-                                                className="rounded-circle"
-                                                style={{
-                                                    width: "50px",
-                                                    height: "50px",
-                                                    objectFit: "cover",
-                                                }}
-                                            />
-                                        ) : (
+                                        {(() => {
+                                            const profileImageUrl = constructProfileImageUrl(provider.profile_image_url);
+                                            return profileImageUrl ? (
+                                                <img
+                                                    src={profileImageUrl}
+                                                    alt={provider.name}
+                                                    className="rounded-circle"
+                                                    style={{
+                                                        width: "50px",
+                                                        height: "50px",
+                                                        objectFit: "cover",
+                                                    }}
+                                                    onError={(e) => {
+                                                        e.target.style.display = "none";
+                                                        const fallback = e.target.nextSibling;
+                                                        if (fallback) {
+                                                            fallback.style.display = "flex";
+                                                        }
+                                                    }}
+                                                />
+                                            ) : null;
+                                        })()}
+                                        {/* Fallback avatar */}
+                                        <div
+                                            className="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center"
+                                            style={{
+                                                width: "50px",
+                                                height: "50px",
+                                                display: provider.profile_image_url ? "none" : "flex",
+                                            }}
+                                        >
+                                            <i className="fas fa-user"></i>
+                                        </div>
+                                        {provider.profile_image_url && (
                                             <div
                                                 className="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center"
                                                 style={{

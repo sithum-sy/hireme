@@ -182,7 +182,7 @@ const ServiceSearch = () => {
                                 <div className="position-relative">
                                     <div className="input-group input-group-lg">
                                         <span className="input-group-text bg-white border-end-0">
-                                            <i className="fas fa-search text-purple"></i>
+                                            <i className="fas fa-search text-primary"></i>
                                         </span>
                                         <input
                                             type="text"
@@ -206,7 +206,7 @@ const ServiceSearch = () => {
                                         />
                                         <button
                                             type="submit"
-                                            className="btn btn-purple px-4"
+                                            className="btn btn-primary px-4"
                                             disabled={loading}
                                         >
                                             {loading ? (
@@ -251,7 +251,7 @@ const ServiceSearch = () => {
                                         </div>
                                     )}
                                     <button
-                                        className="btn btn-outline-purple btn-sm"
+                                        className="btn btn-outline-primary btn-sm"
                                         onClick={() =>
                                             setShowLocationSelector(
                                                 !showLocationSelector
@@ -531,28 +531,7 @@ const ServiceSearch = () => {
 
             {/* debugging styles */}
             <style>{`
-                .text-purple {
-                    color: #6f42c1 !important;
-                }
-                .btn-purple {
-                    background-color: #6f42c1;
-                    border-color: #6f42c1;
-                    color: white;
-                }
-                .btn-purple:hover {
-                    background-color: #5a2d91;
-                    border-color: #5a2d91;
-                    color: white;
-                }
-                .btn-outline-purple {
-                    color: #6f42c1;
-                    border-color: #6f42c1;
-                }
-                .btn-outline-purple:hover {
-                    background-color: #6f42c1;
-                    border-color: #6f42c1;
-                    color: white;
-                }
+                /* Using CSS variables for consistent theming */
                 
                 /* ✅ Ensure map container has proper styling */
                 .leaflet-container {

@@ -117,31 +117,33 @@ const AdminDashboard = () => {
 
     return (
         <AdminLayout>
-            <div className="page-content admin-dashboard-content">
+            <div className="page-content">
                 {/* Dashboard Header */}
-                <div className="dashboard-header">
-                    <div className="header-content">
-                        <h1 className="dashboard-title">Admin Dashboard</h1>
-                        <p className="dashboard-subtitle">
+                <div className="page-header d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-6">
+                    <div className="mb-3 mb-md-0">
+                        <h1 className="h2 mb-2 text-primary">
+                            Admin Dashboard
+                        </h1>
+                        <p className="text-muted mb-0">
                             Welcome back! Here's what's happening with your
                             platform.
                         </p>
                     </div>
-                    <div className="header-actions">
+                    <div className="d-flex flex-column flex-md-row align-items-start align-items-md-center gap-3">
                         {lastUpdated && (
-                            <small className="last-updated">
+                            <small className="text-muted">
                                 Last updated: {lastUpdated.toLocaleTimeString()}
                             </small>
                         )}
                         <button
-                            className="btn btn-outline-primary"
+                            className="btn btn-outline-primary btn-responsive"
                             onClick={handleRefresh}
                             disabled={refreshing}
                         >
                             <i
                                 className={`fas fa-sync-alt ${
                                     refreshing ? "fa-spin" : ""
-                                }`}
+                                } me-2`}
                             ></i>
                             <span>Refresh</span>
                         </button>
@@ -165,7 +167,7 @@ const AdminDashboard = () => {
                 {dashboardStats && (
                     <>
                         {/* Main Statistics Cards */}
-                        <div className="stats-grid">
+                        <div className="responsive-grid responsive-grid-sm responsive-grid-md responsive-grid-lg mb-6">
                             <UserStatsCard
                                 users={dashboardStats.users}
                                 loading={dashboardLoading}
@@ -186,7 +188,7 @@ const AdminDashboard = () => {
                         </div>
 
                         {/* Secondary Statistics Cards */}
-                        <div className="stats-grid">
+                        <div className="responsive-grid responsive-grid-sm responsive-grid-md responsive-grid-lg mb-6">
                             <ServicesCard
                                 services={dashboardStats.services}
                                 loading={dashboardLoading}
@@ -234,9 +236,9 @@ const AdminDashboard = () => {
                         </div>
 
                         {/* Charts and Actions Section */}
-                        <div className="dashboard-content-grid">
+                        <div className="row mb-6">
                             {/* User Growth Chart */}
-                            <div className="content-main">
+                            <div className="col-lg-8 mb-4 mb-lg-0">
                                 <UserGrowthChart
                                     data={
                                         dashboardStats.charts?.user_growth || []
@@ -249,114 +251,125 @@ const AdminDashboard = () => {
                             </div>
 
                             {/* Quick Actions Sidebar */}
-                            <div className="content-sidebar">
+                            <div className="col-lg-4">
                                 <AdminQuickActions />
                             </div>
                         </div>
 
                         {/* Activity Section */}
-                        <div className="activity-grid">
+                        <div className="row mb-6">
                             {/* Recent User Activity */}
-                            <UserActivityFeed
-                                users={dashboardStats.recent_users || []}
-                                loading={dashboardLoading}
-                            />
+                            <div className="col-lg-6 mb-4 mb-lg-0">
+                                <UserActivityFeed
+                                    users={dashboardStats.recent_users || []}
+                                    loading={dashboardLoading}
+                                />
+                            </div>
 
                             {/* System Activities */}
-                            <SystemActivityFeed
-                                activities={systemActivities}
-                                loading={activitiesLoading}
-                            />
+                            <div className="col-lg-6">
+                                <SystemActivityFeed
+                                    activities={systemActivities}
+                                    loading={activitiesLoading}
+                                />
+                            </div>
                         </div>
 
                         {/* Management Tools */}
-                        <div className="management-grid">
+                        <div className="row">
                             {/* Manager Quick Actions */}
-                            <ManagerQuickActions
-                                stats={{ issues: 0 }}
-                                onAction={handleQuickAction}
-                            />
+                            <div className="col-lg-6 mb-4 mb-lg-0">
+                                <ManagerQuickActions
+                                    stats={{ issues: 0 }}
+                                    onAction={handleQuickAction}
+                                />
+                            </div>
 
                             {/* System Overview */}
-                            <div className="dashboard-card system-overview-card">
-                                <div className="dashboard-card-header">
-                                    <h6 className="dashboard-card-title">
-                                        <i className="fas fa-server"></i>
-                                        <span>System Overview</span>
-                                    </h6>
-                                </div>
-                                <div className="dashboard-card-body">
-                                    <div className="system-metrics">
-                                        {/* Server Status */}
-                                        <div className="metric-item">
-                                            <div className="metric-icon success">
-                                                <i className="fas fa-server"></i>
-                                            </div>
-                                            <div className="metric-content">
-                                                <h6 className="metric-title">
-                                                    Server Status
-                                                </h6>
-                                                <div className="metric-value success">
-                                                    <i className="fas fa-check-circle"></i>
-                                                    <span>
-                                                        Online - 99.9% uptime
-                                                    </span>
+                            <div className="col-lg-6">
+                                <div className="card h-100">
+                                    <div className="card-header">
+                                        <h6 className="card-title mb-0">
+                                            <i className="fas fa-server me-2"></i>
+                                            System Overview
+                                        </h6>
+                                    </div>
+                                    <div className="card-body">
+                                        <div className="system-metrics">
+                                            {/* Server Status */}
+                                            <div className="metric-item">
+                                                <div className="metric-icon success">
+                                                    <i className="fas fa-server"></i>
+                                                </div>
+                                                <div className="metric-content">
+                                                    <h6 className="metric-title">
+                                                        Server Status
+                                                    </h6>
+                                                    <div className="metric-value success">
+                                                        <i className="fas fa-check-circle"></i>
+                                                        <span>
+                                                            Online - 99.9%
+                                                            uptime
+                                                        </span>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
 
-                                        {/* Active Sessions */}
-                                        <div className="metric-item">
-                                            <div className="metric-icon info">
-                                                <i className="fas fa-users"></i>
-                                            </div>
-                                            <div className="metric-content">
-                                                <h6 className="metric-title">
-                                                    Active Sessions
-                                                </h6>
-                                                <div className="metric-value info">
-                                                    <i className="fas fa-circle"></i>
-                                                    <span>
-                                                        {dashboardStats.users
-                                                            ?.active || 0}{" "}
-                                                        users online
-                                                    </span>
+                                            {/* Active Sessions */}
+                                            <div className="metric-item">
+                                                <div className="metric-icon info">
+                                                    <i className="fas fa-users"></i>
+                                                </div>
+                                                <div className="metric-content">
+                                                    <h6 className="metric-title">
+                                                        Active Sessions
+                                                    </h6>
+                                                    <div className="metric-value info">
+                                                        <i className="fas fa-circle"></i>
+                                                        <span>
+                                                            {dashboardStats
+                                                                .users
+                                                                ?.active ||
+                                                                0}{" "}
+                                                            users online
+                                                        </span>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
 
-                                        {/* API Requests */}
-                                        <div className="metric-item">
-                                            <div className="metric-icon warning">
-                                                <i className="fas fa-exchange-alt"></i>
-                                            </div>
-                                            <div className="metric-content">
-                                                <h6 className="metric-title">
-                                                    API Requests
-                                                </h6>
-                                                <div className="metric-value warning">
-                                                    <i className="fas fa-chart-line"></i>
-                                                    <span>
-                                                        1.2K requests/hour
-                                                    </span>
+                                            {/* API Requests */}
+                                            <div className="metric-item">
+                                                <div className="metric-icon warning">
+                                                    <i className="fas fa-exchange-alt"></i>
+                                                </div>
+                                                <div className="metric-content">
+                                                    <h6 className="metric-title">
+                                                        API Requests
+                                                    </h6>
+                                                    <div className="metric-value warning">
+                                                        <i className="fas fa-chart-line"></i>
+                                                        <span>
+                                                            1.2K requests/hour
+                                                        </span>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
 
-                                        {/* Response Time */}
-                                        <div className="metric-item">
-                                            <div className="metric-icon success">
-                                                <i className="fas fa-tachometer-alt"></i>
-                                            </div>
-                                            <div className="metric-content">
-                                                <h6 className="metric-title">
-                                                    Response Time
-                                                </h6>
-                                                <div className="metric-value success">
-                                                    <i className="fas fa-bolt"></i>
-                                                    <span>
-                                                        &lt;125ms average
-                                                    </span>
+                                            {/* Response Time */}
+                                            <div className="metric-item">
+                                                <div className="metric-icon success">
+                                                    <i className="fas fa-tachometer-alt"></i>
+                                                </div>
+                                                <div className="metric-content">
+                                                    <h6 className="metric-title">
+                                                        Response Time
+                                                    </h6>
+                                                    <div className="metric-value success">
+                                                        <i className="fas fa-bolt"></i>
+                                                        <span>
+                                                            &lt;125ms average
+                                                        </span>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -364,17 +377,15 @@ const AdminDashboard = () => {
                                 </div>
 
                                 {/* Performance Footer */}
-                                <div className="dashboard-card-footer">
-                                    <div className="card-footer-content">
-                                        <small className="footer-text">
-                                            Last checked:{" "}
-                                            {new Date().toLocaleTimeString()}
-                                        </small>
-                                        <button className="btn btn-sm btn-outline-primary">
-                                            <i className="fas fa-chart-bar"></i>
-                                            <span>View Details</span>
-                                        </button>
-                                    </div>
+                                <div className="card-footer d-flex justify-content-between align-items-center">
+                                    <small className="text-muted">
+                                        Last checked:{" "}
+                                        {new Date().toLocaleTimeString()}
+                                    </small>
+                                    <button className="btn btn-sm btn-outline-primary">
+                                        <i className="fas fa-chart-bar me-2"></i>
+                                        View Details
+                                    </button>
                                 </div>
                             </div>
                         </div>

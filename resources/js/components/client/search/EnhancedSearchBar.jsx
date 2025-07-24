@@ -150,7 +150,7 @@ const EnhancedSearchBar = ({
             <form onSubmit={handleSubmit} className="search-form">
                 <div className="input-group input-group-lg">
                     <span className="input-group-text bg-white border-end-0">
-                        <i className="fas fa-search text-purple"></i>
+                        <i className="fas fa-search text-primary"></i>
                     </span>
                     <input
                         ref={searchInputRef}
@@ -179,7 +179,7 @@ const EnhancedSearchBar = ({
                     )}
                     <button
                         type="submit"
-                        className="btn btn-purple px-4"
+                        className="btn btn-primary px-4"
                         disabled={loading}
                     >
                         {loading ? (
@@ -243,8 +243,8 @@ const EnhancedSearchBar = ({
 
             <style>{`
                 .enhanced-search-bar .form-control:focus {
-                    border-color: #6f42c1;
-                    box-shadow: 0 0 0 0.2rem rgba(111, 66, 193, 0.25);
+                    border-color: var(--current-role-primary);
+                    box-shadow: 0 0 0 0.2rem var(--current-role-light);
                 }
                 
                 .suggestion-item:hover {
@@ -257,17 +257,7 @@ const EnhancedSearchBar = ({
                     border-top-right-radius: 0;
                 }
                 
-                .text-purple { color: #6f42c1 !important; }
-                .btn-purple {
-                    background-color: #6f42c1;
-                    border-color: #6f42c1;
-                    color: white;
-                }
-                .btn-purple:hover {
-                    background-color: #5a2d91;
-                    border-color: #5a2d91;
-                    color: white;
-                }
+                /* Using CSS variables for consistent theming */
             `}</style>
         </div>
     );

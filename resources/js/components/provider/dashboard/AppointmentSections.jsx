@@ -106,12 +106,12 @@ const AppointmentSections = () => {
                     </div>
                 </div>
                 <div className="text-end">
-                    <div className="fw-bold text-orange">
+                    <div className="fw-bold text-primary">
                         Rs. {appointment.total_price?.toLocaleString()}
                     </div>
                     <Link
                         to={`/provider/appointments/${appointment.id}`}
-                        className="btn btn-outline-orange btn-sm mt-1"
+                        className="btn btn-outline-primary btn-sm mt-1"
                     >
                         View
                     </Link>
@@ -200,7 +200,7 @@ const AppointmentSections = () => {
                             >
                                 Today's Schedule
                                 {appointmentData.today.length > 0 && (
-                                    <span className="badge bg-orange ms-2">
+                                    <span className="badge bg-primary ms-2">
                                         {appointmentData.today.length}
                                     </span>
                                 )}
@@ -215,7 +215,7 @@ const AppointmentSections = () => {
                             >
                                 Upcoming
                                 {appointmentData.upcoming.length > 0 && (
-                                    <span className="badge bg-orange ms-2">
+                                    <span className="badge bg-primary ms-2">
                                         {appointmentData.upcoming.length}
                                     </span>
                                 )}
@@ -265,7 +265,7 @@ const AppointmentSections = () => {
                                     <div className="text-center mt-3">
                                         <Link
                                             to="/provider/appointments/today"
-                                            className="btn btn-outline-orange"
+                                            className="btn btn-outline-primary"
                                         >
                                             View Full Schedule
                                         </Link>
@@ -299,7 +299,7 @@ const AppointmentSections = () => {
                                     <div className="text-center mt-3">
                                         <Link
                                             to="/provider/appointments?status=confirmed"
-                                            className="btn btn-outline-orange"
+                                            className="btn btn-outline-primary"
                                         >
                                             View All Upcoming
                                         </Link>
@@ -331,7 +331,7 @@ const AppointmentSections = () => {
                                     <div className="text-center mt-3">
                                         <Link
                                             to="/provider/appointments?status=completed"
-                                            className="btn btn-outline-orange"
+                                            className="btn btn-outline-primary"
                                         >
                                             View All Completed
                                         </Link>
@@ -365,7 +365,7 @@ const AppointmentSections = () => {
                                     <div className="text-center mt-3">
                                         <Link
                                             to="/provider/appointments?status=cancelled_by_client"
-                                            className="btn btn-outline-orange"
+                                            className="btn btn-outline-primary"
                                         >
                                             View All Cancelled
                                         </Link>

@@ -418,8 +418,8 @@ const Login = () => {
                     min-height: 100vh;
                     background: linear-gradient(
                         135deg,
-                        #4a90e2 0%,
-                        #357abd 100%
+                        var(--primary-color) 0%,
+                        var(--primary-hover) 100%
                     );
                     font-family: "Inter", -apple-system, BlinkMacSystemFont,
                         sans-serif;
@@ -437,8 +437,8 @@ const Login = () => {
                     display: none;
                     background: linear-gradient(
                         135deg,
-                        #4a90e2 0%,
-                        #357abd 100%
+                        var(--primary-color) 0%,
+                        var(--primary-hover) 100%
                     );
                     color: white;
                     position: relative;
@@ -581,7 +581,7 @@ const Login = () => {
                 }
 
                 .feature-item i {
-                    color: #10b981;
+                    color: var(--success-color);
                     width: 24px;
                     font-size: 1.25rem;
                     flex-shrink: 0;
@@ -636,7 +636,7 @@ const Login = () => {
                     align-items: center;
                     justify-content: center;
                     padding: 2rem;
-                    background: #f8fafc;
+                    background: var(--bg-light);
                 }
 
                 .auth-card {
@@ -658,12 +658,12 @@ const Login = () => {
                 .card-title {
                     font-size: 1.875rem;
                     font-weight: 700;
-                    color: #1a202c;
+                    color: var(--text-primary);
                     margin-bottom: 0.5rem;
                 }
 
                 .card-subtitle {
-                    color: #718096;
+                    color: var(--text-secondary);
                     font-size: 1rem;
                     margin: 0;
                 }
@@ -680,7 +680,7 @@ const Login = () => {
                 .form-label {
                     display: block;
                     font-weight: 600;
-                    color: #374151;
+                    color: var(--text-primary);
                     margin-bottom: 0.5rem;
                     font-size: 0.875rem;
                 }
@@ -703,7 +703,7 @@ const Login = () => {
                     grid-row: 1;
                     display: block;
                     font-weight: 600;
-                    color: #374151;
+                    color: var(--text-primary);
                     font-size: 0.875rem;
                     margin-bottom: 0; /* Remove margin since we're using grid gap */
                 }
@@ -718,29 +718,29 @@ const Login = () => {
                 .input-icon {
                     position: absolute;
                     left: 1rem;
-                    color: #9ca3af;
+                    color: var(--text-muted);
                     z-index: 5;
                 }
 
                 .form-input {
                     width: 100%;
                     padding: 0.75rem 1rem 0.75rem 2.5rem;
-                    border: 2px solid #e5e7eb;
+                    border: 2px solid var(--border-color);
                     border-radius: 8px;
                     font-size: 0.95rem;
                     transition: all 0.2s ease;
-                    background: #fafafa;
+                    background: var(--bg-light);
                 }
 
                 .form-input:focus {
                     outline: none;
-                    border-color: #4a90e2;
+                    border-color: var(--primary-color);
                     background: white;
                     box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
                 }
 
                 .form-input.is-invalid {
-                    border-color: #ef4444;
+                    border-color: var(--danger-color);
                     background: #fef2f2;
                 }
 
@@ -749,19 +749,19 @@ const Login = () => {
                     right: 1rem;
                     background: none;
                     border: none;
-                    color: #9ca3af;
+                    color: var(--text-muted);
                     cursor: pointer;
                     padding: 0.25rem;
                     z-index: 5;
                 }
 
                 .password-toggle:hover {
-                    color: #6b7280;
+                    color: var(--text-secondary);
                 }
 
                  {
                     /* .error-message {
-                    color: #ef4444;
+                    color: var(--danger-color);
                     font-size: 0.8rem;
                     margin-top: 0.375rem;
                     display: flex;
@@ -771,7 +771,7 @@ const Login = () => {
                 }
                 .error-message {
                     grid-row: 3;
-                    color: #ef4444;
+                    color: var(--danger-color);
                     font-size: 0.8rem;
                     line-height: 1.4;
                     padding-left: 0.25rem;
@@ -795,7 +795,7 @@ const Login = () => {
                     align-items: center;
                     cursor: pointer;
                     font-size: 0.875rem;
-                    color: #6b7280;
+                    color: var(--text-secondary);
                 }
 
                 .checkbox-label input {
@@ -803,14 +803,14 @@ const Login = () => {
                 }
 
                 .forgot-link {
-                    color: #4a90e2;
+                    color: var(--primary-color);
                     text-decoration: none;
                     font-size: 0.875rem;
                     font-weight: 500;
                 }
 
                 .forgot-link:hover {
-                    color: #357abd;
+                    color: var(--primary-hover);
                     text-decoration: underline;
                 }
 
@@ -819,8 +819,8 @@ const Login = () => {
                     padding: 0.875rem;
                     background: linear-gradient(
                         135deg,
-                        #4a90e2 0%,
-                        #357abd 100%
+                        var(--primary-color) 0%,
+                        var(--primary-hover) 100%
                     );
                     color: white;
                     border: none;
@@ -860,7 +860,7 @@ const Login = () => {
                     text-align: center;
                     margin: 1.5rem 0;
                     position: relative;
-                    color: #9ca3af;
+                    color: var(--text-muted);
                     font-size: 0.875rem;
                 }
 
@@ -871,7 +871,7 @@ const Login = () => {
                     left: 0;
                     right: 0;
                     height: 1px;
-                    background: #e5e7eb;
+                    background: var(--border-color);
                 }
 
                 .divider span {
@@ -893,13 +893,13 @@ const Login = () => {
                     justify-content: center;
                     gap: 0.5rem;
                     padding: 0.75rem;
-                    border: 2px solid #e5e7eb;
+                    border: 2px solid var(--border-color);
                     border-radius: 8px;
                     text-decoration: none;
                     font-size: 0.875rem;
                     font-weight: 500;
                     transition: all 0.2s ease;
-                    color: #374151;
+                    color: var(--text-primary);
                 }
 
                 .register-btn:hover {
@@ -908,26 +908,26 @@ const Login = () => {
                 }
 
                 .register-btn.client:hover {
-                    border-color: #4a90e2;
+                    border-color: var(--primary-color);
                     background: rgba(74, 144, 226, 0.05);
-                    color: #4a90e2;
+                    color: var(--primary-color);
                 }
 
                 .register-btn.provider:hover {
-                    border-color: #10b981;
+                    border-color: var(--success-color);
                     background: rgba(16, 185, 129, 0.05);
-                    color: #10b981;
+                    color: var(--success-color);
                 }
 
                 .demo-section {
-                    background: #f8fafc;
-                    border-top: 1px solid #e5e7eb;
+                    background: var(--bg-light);
+                    border-top: 1px solid var(--border-color);
                     padding: 1.5rem 2rem;
                 }
 
                 .demo-header {
                     text-align: center;
-                    color: #6b7280;
+                    color: var(--text-secondary);
                     font-size: 0.875rem;
                     font-weight: 600;
                     margin-bottom: 1rem;
@@ -941,7 +941,7 @@ const Login = () => {
 
                 .demo-btn {
                     background: white;
-                    border: 1px solid #e5e7eb;
+                    border: 1px solid var(--border-color);
                     border-radius: 8px;
                     padding: 0.875rem;
                     cursor: pointer;
@@ -970,12 +970,12 @@ const Login = () => {
 
                 .demo-icon.client {
                     background: rgba(74, 144, 226, 0.1);
-                    color: #4a90e2;
+                    color: var(--primary-color);
                 }
 
                 .demo-icon.provider {
                     background: rgba(16, 185, 129, 0.1);
-                    color: #10b981;
+                    color: var(--success-color);
                 }
 
                 .demo-info {
@@ -986,13 +986,13 @@ const Login = () => {
 
                 .demo-title {
                     font-weight: 600;
-                    color: #1a202c;
+                    color: var(--text-primary);
                     font-size: 0.8rem;
                     margin-bottom: 0.125rem;
                 }
 
                 .demo-desc {
-                    color: #6b7280;
+                    color: var(--text-secondary);
                     font-size: 0.7rem;
                 }
 

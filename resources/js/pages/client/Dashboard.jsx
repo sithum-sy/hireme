@@ -103,9 +103,9 @@ const ClientDashboard = () => {
         <ClientLayout>
             <div className="page-content">
                 {/* Service Categories Grid */}
-                <div className="categories-section">
-                    <div className="section-header">
-                        <h2 className="section-title">Browse by Category</h2>
+                <div className="categories-section mb-6">
+                    <div className="section-header d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4">
+                        <h2 className="section-title h3 mb-3 mb-md-0 text-primary">Browse by Category</h2>
                         <Link
                             to="/client/services/categories"
                             className="btn btn-outline-primary btn-sm"
@@ -122,25 +122,27 @@ const ClientDashboard = () => {
                             />
                         </div>
                     ) : (
-                        <div className="dashboard-grid dashboard-grid-6">
+                        <div className="responsive-grid responsive-grid-sm responsive-grid-md responsive-grid-lg">
                             {categories.slice(0, 12).map((category) => (
                                 <Link
                                     key={category.id}
                                     to={`/client/services?category_id=${category.id}`}
-                                    className="category-card-link"
+                                    className="text-decoration-none"
                                 >
-                                    <div className="action-card category-card">
-                                        <div
-                                            className={`action-icon category-icon text-${category.color}`}
-                                        >
-                                            <i className={category.icon}></i>
+                                    <div className="card action-card h-100 transition">
+                                        <div className="card-body text-center p-4">
+                                            <div
+                                                className={`action-icon mb-3 text-${category.color || 'primary'}`}
+                                            >
+                                                <i className={`${category.icon} fa-2x`}></i>
+                                            </div>
+                                            <h6 className="card-title mb-2">
+                                                {category.name}
+                                            </h6>
+                                            <p className="card-text text-muted small mb-0">
+                                                {category.service_count} services
+                                            </p>
                                         </div>
-                                        <h6 className="action-title category-title">
-                                            {category.name}
-                                        </h6>
-                                        <p className="action-description category-count">
-                                            {category.service_count} services
-                                        </p>
                                     </div>
                                 </Link>
                             ))}
@@ -149,27 +151,29 @@ const ClientDashboard = () => {
                 </div>
 
                 {/* Quick Actions */}
-                <div className="quick-actions-section">
-                    <h2 className="section-title">Quick Actions</h2>
-                    <div className="dashboard-grid dashboard-grid-4">
+                <div className="quick-actions-section mb-6">
+                    <h2 className="section-title h3 mb-4 text-primary">Quick Actions</h2>
+                    <div className="responsive-grid responsive-grid-sm responsive-grid-md">
                         {quickActions.map((action, index) => (
                             <Link
                                 key={index}
                                 to={action.path}
-                                className="action-card-link"
+                                className="text-decoration-none"
                             >
-                                <div className="action-card">
-                                    <div
-                                        className={`action-icon ${action.variant}`}
-                                    >
-                                        <i className={action.icon}></i>
+                                <div className="card action-card h-100 transition">
+                                    <div className="card-body text-center p-4">
+                                        <div
+                                            className={`action-icon mb-3 text-${action.variant}`}
+                                        >
+                                            <i className={`${action.icon} fa-2x`}></i>
+                                        </div>
+                                        <h6 className="card-title mb-2">
+                                            {action.title}
+                                        </h6>
+                                        <p className="card-text text-muted small mb-0">
+                                            {action.description}
+                                        </p>
                                     </div>
-                                    <h6 className="action-title">
-                                        {action.title}
-                                    </h6>
-                                    <p className="action-description">
-                                        {action.description}
-                                    </p>
                                 </div>
                             </Link>
                         ))}
@@ -178,8 +182,8 @@ const ClientDashboard = () => {
 
                 {/* Popular Services */}
                 <div className="popular-services-section">
-                    <div className="section-header">
-                        <h2 className="section-title">Popular Services</h2>
+                    <div className="section-header d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4">
+                        <h2 className="section-title h3 mb-3 mb-md-0 text-primary">Popular Services</h2>
                         <Link
                             to="/client/services?sort_by=popularity"
                             className="btn btn-outline-primary btn-sm"
@@ -196,54 +200,56 @@ const ClientDashboard = () => {
                             />
                         </div>
                     ) : (
-                        <div className="dashboard-grid dashboard-grid-4">
+                        <div className="responsive-grid responsive-grid-sm responsive-grid-md">
                             {popularServices.slice(0, 4).map((service) => (
                                 <Link
                                     key={service.id}
                                     to={`/client/services/${service.id}`}
-                                    className="service-card-link"
+                                    className="text-decoration-none"
                                 >
-                                    <div className="dashboard-card service-card">
-                                        <div className="service-image">
+                                    <div className="card service-card h-100 transition">
+                                        <div className="service-image position-relative overflow-hidden">
                                             {service.first_image_url ? (
                                                 <img
-                                                    src={
-                                                        service.first_image_url
-                                                    }
+                                                    src={service.first_image_url}
                                                     alt={service.title}
-                                                    className="service-img"
+                                                    className="card-img-top img-responsive"
+                                                    style={{ height: '200px', objectFit: 'cover' }}
                                                 />
                                             ) : (
-                                                <div className="service-img-placeholder">
-                                                    <i className="fas fa-image"></i>
+                                                <div className="card-img-top d-flex align-items-center justify-content-center bg-light" style={{ height: '200px' }}>
+                                                    <i className="fas fa-image fa-3x text-muted"></i>
                                                 </div>
                                             )}
                                         </div>
-                                        <div className="service-content">
-                                            <h6 className="service-title">
+                                        <div className="card-body">
+                                            <h6 className="card-title mb-2">
                                                 {service.title}
                                             </h6>
-                                            <p className="service-description">
+                                            <p className="card-text text-muted small mb-3" style={{ 
+                                                display: '-webkit-box',
+                                                WebkitLineClamp: 2,
+                                                WebkitBoxOrient: 'vertical',
+                                                overflow: 'hidden'
+                                            }}>
                                                 {service.description}
                                             </p>
-                                            <div className="service-footer">
-                                                <span className="service-price">
+                                            <div className="d-flex justify-content-between align-items-center mb-2">
+                                                <span className="text-primary fw-semibold">
                                                     {service.formatted_price}
                                                 </span>
-                                                <div className="service-rating">
-                                                    <i className="fas fa-star"></i>
-                                                    <span>
-                                                        {service.average_rating ||
-                                                            0}
+                                                <div className="d-flex align-items-center text-warning">
+                                                    <i className="fas fa-star me-1"></i>
+                                                    <span className="small">
+                                                        {service.average_rating || 0}
                                                     </span>
                                                 </div>
                                             </div>
                                             {service.distance && (
-                                                <div className="service-distance">
-                                                    <i className="fas fa-map-marker-alt"></i>
+                                                <div className="d-flex align-items-center text-muted small">
+                                                    <i className="fas fa-map-marker-alt me-1"></i>
                                                     <span>
-                                                        {service.distance}km
-                                                        away
+                                                        {service.distance}km away
                                                     </span>
                                                 </div>
                                             )}

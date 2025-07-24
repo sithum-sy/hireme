@@ -368,7 +368,7 @@ const AppointmentsList = () => {
 
     return (
         <ClientLayout>
-            <div className="appointments-page">
+            <div className="page-content">
                 {/* Success Message Banner */}
                 {successMessage && (
                     <div
@@ -378,7 +378,7 @@ const AppointmentsList = () => {
                         <div className="d-flex align-items-center">
                             <i className="fas fa-check-circle fa-lg me-3 text-success"></i>
                             <div className="flex-grow-1">
-                                <h6 className="alert-heading mb-1 fw-bold">
+                                <h6 className="alert-heading mb-1 fw-semibold">
                                     Booking Successful!
                                 </h6>
                                 <p className="mb-0">{successMessage.message}</p>
@@ -401,10 +401,10 @@ const AppointmentsList = () => {
                 )}
 
                 {/* Page Header */}
-                <div className="page-header d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-6 gap-3">
-                    <div className="flex-grow-1">
-                        <h2 className="font-bold mb-2 text-2xl text-primary">My Appointments</h2>
-                        <p className="text-secondary mb-0 text-sm">
+                <div className="page-header d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-6">
+                    <div className="mb-3 mb-md-0">
+                        <h1 className="h2 mb-2 text-primary">My Appointments</h1>
+                        <p className="text-muted mb-0">
                             Manage and track your service appointments
                         </p>
                     </div>
@@ -414,15 +414,15 @@ const AppointmentsList = () => {
                     </Link>
                 </div>
 
-                {/* Filters Section - Enhanced with payment statuses */}
-                <div className="filters-section bg-white rounded-lg shadow p-4 mb-6">
+                {/* Filters Section */}
+                <div className="filters-section mb-6">
                     <div className="row g-3 align-items-end">
-                        <div className="col-12 col-md-3">
-                            <label className="form-label text-sm font-semibold">
+                        <div className="col-md-3 col-sm-6">
+                            <label className="form-label font-medium">
                                 Status
                             </label>
                             <select
-                                className="form-control"
+                                className="form-select"
                                 value={filters.status}
                                 onChange={(e) =>
                                     handleFilterChange("status", e.target.value)
@@ -447,8 +447,8 @@ const AppointmentsList = () => {
                             </select>
                         </div>
 
-                        <div className="col-12 col-md-3">
-                            <label className="form-label text-sm font-semibold">
+                        <div className="col-md-3 col-sm-6">
+                            <label className="form-label font-medium">
                                 From Date
                             </label>
                             <input
@@ -463,8 +463,8 @@ const AppointmentsList = () => {
                                 }
                             />
                         </div>
-                        <div className="col-12 col-md-3">
-                            <label className="form-label text-sm font-semibold">
+                        <div className="col-md-3 col-sm-6">
+                            <label className="form-label font-medium">
                                 To Date
                             </label>
                             <input
@@ -653,7 +653,7 @@ const AppointmentsList = () => {
                                                     {/* Price & Actions */}
                                                     <div className="col-md-6 text-end">
                                                         <div className="appointment-price mb-2">
-                                                            <div className="fw-bold text-purple h5 mb-0">
+                                                            <div className="fw-bold text-primary h5 mb-0">
                                                                 Rs.{" "}
                                                                 {
                                                                     appointment.total_price
@@ -706,7 +706,7 @@ const AppointmentsList = () => {
                                                         <div className="appointment-actions">
                                                             <Link
                                                                 to={`/client/appointments/${appointment.id}`}
-                                                                className="btn btn-outline-purple btn-sm me-2"
+                                                                className="btn btn-outline-primary btn-sm me-2"
                                                             >
                                                                 <i className="fas fa-eye me-1"></i>
                                                                 View Details
@@ -980,14 +980,14 @@ const AppointmentsList = () => {
                                 {filters.status === "all" ? (
                                     <Link
                                         to="/client/services"
-                                        className="btn btn-purple"
+                                        className="btn btn-primary"
                                     >
                                         <i className="fas fa-search me-2"></i>
                                         Browse Services
                                     </Link>
                                 ) : (
                                     <button
-                                        className="btn btn-outline-purple"
+                                        className="btn btn-outline-primary"
                                         onClick={() => {
                                             setFilters((prev) => ({
                                                 ...prev,
@@ -1013,7 +1013,7 @@ const AppointmentsList = () => {
                                 to="/client/services"
                                 className="text-decoration-none"
                             >
-                                <i className="fas fa-plus-circle fa-2x text-purple mb-2 d-block"></i>
+                                <i className="fas fa-plus-circle fa-2x text-primary mb-2 d-block"></i>
                                 <span className="small fw-semibold">
                                     Book New Service
                                 </span>
@@ -1104,26 +1104,7 @@ const AppointmentsList = () => {
 
             {/* Custom Styles */}
             <style>{`
-               .text-purple { color: #6f42c1 !important; }
-               .btn-purple {
-                   background-color: #6f42c1;
-                   border-color: #6f42c1;
-                   color: white;
-               }
-               .btn-purple:hover {
-                   background-color: #5a2d91;
-                   border-color: #5a2d91;
-                   color: white;
-               }
-               .btn-outline-purple {
-                   color: #6f42c1;
-                   border-color: #6f42c1;
-               }
-               .btn-outline-purple:hover {
-                   background-color: #6f42c1;
-                   border-color: #6f42c1;
-                   color: white;
-               }
+               /* Using CSS variables for consistent theming */
                .appointment-card {
                    transition: transform 0.2s ease, box-shadow 0.2s ease;
                }
@@ -1135,11 +1116,11 @@ const AppointmentsList = () => {
                    font-size: 0.875rem;
                }
                .pagination .page-link {
-                   color: #6f42c1;
+                   color: var(--current-role-primary);
                }
                .pagination .page-item.active .page-link {
-                   background-color: #6f42c1;
-                   border-color: #6f42c1;
+                   background-color: var(--current-role-primary);
+                   border-color: var(--current-role-primary);
                }
                .status-badges .badge {
                    font-size: 0.75rem;

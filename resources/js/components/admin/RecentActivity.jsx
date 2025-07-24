@@ -219,7 +219,7 @@ const RecentActivity = ({
                         {displayActivities.map((activity, index) => (
                             <div
                                 key={activity.id || index}
-                                className="list-group-item border-0 px-0 py-3"
+                                className="list-group-item border-0 px-0 py-3 transition"
                             >
                                 <div className="d-flex align-items-start">
                                     {/* Activity Icon */}

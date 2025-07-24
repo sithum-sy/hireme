@@ -105,7 +105,7 @@ const QuoteDetail = () => {
                 <div className="error-state text-center py-5">
                     <i className="fas fa-exclamation-triangle fa-3x text-danger mb-3"></i>
                     <h4 className="text-danger">{error}</h4>
-                    <Link to="/client/quotes" className="btn btn-purple mt-3">
+                    <Link to="/client/quotes" className="btn btn-primary mt-3">
                         <i className="fas fa-arrow-left me-2"></i>
                         Back to Quotes
                     </Link>
@@ -121,7 +121,7 @@ const QuoteDetail = () => {
                 <nav aria-label="breadcrumb" className="mb-4">
                     <ol className="breadcrumb">
                         <li className="breadcrumb-item">
-                            <Link to="/client/quotes" className="text-purple">
+                            <Link to="/client/quotes" className="text-primary">
                                 My Quotes
                             </Link>
                         </li>
@@ -180,7 +180,7 @@ const QuoteDetail = () => {
                         <div className="card border-0 shadow-sm mb-4">
                             <div className="card-header bg-white border-bottom">
                                 <h5 className="fw-bold mb-0">
-                                    <i className="fas fa-quote-left me-2 text-purple"></i>
+                                    <i className="fas fa-quote-left me-2 text-primary"></i>
                                     Quote Details
                                 </h5>
                             </div>
@@ -301,7 +301,7 @@ const QuoteDetail = () => {
                         <div className="card border-0 shadow-sm">
                             <div className="card-header bg-white border-bottom">
                                 <h5 className="fw-bold mb-0">
-                                    <i className="fas fa-history me-2 text-purple"></i>
+                                    <i className="fas fa-history me-2 text-primary"></i>
                                     Quote Timeline
                                 </h5>
                             </div>
@@ -315,7 +315,7 @@ const QuoteDetail = () => {
                     <div className="col-lg-4">
                         {/* Provider Info */}
                         <div className="card border-0 shadow-sm mb-4">
-                            <div className="card-header bg-purple text-white">
+                            <div className="card-header bg-primary text-white">
                                 <h6 className="fw-bold mb-0">
                                     <i className="fas fa-user me-2"></i>
                                     Service Provider
@@ -338,7 +338,7 @@ const QuoteDetail = () => {
                                                 />
                                             ) : (
                                                 <div
-                                                    className="bg-purple bg-opacity-10 text-purple rounded-circle d-flex align-items-center justify-content-center"
+                                                    className="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center"
                                                     style={{
                                                         width: "50px",
                                                         height: "50px",
@@ -364,7 +364,7 @@ const QuoteDetail = () => {
                                     <div className="provider-contact">
                                         <Link
                                             to={`/client/providers/${quote.provider_id}`}
-                                            className="btn btn-outline-purple btn-sm w-100"
+                                            className="btn btn-outline-primary btn-sm w-100"
                                         >
                                             <i className="fas fa-eye me-2"></i>
                                             View Provider Profile
@@ -469,7 +469,7 @@ const QuoteDetail = () => {
                                         automatically
                                     </li>
                                     <li>
-                                        <i className="fas fa-phone text-purple me-2"></i>
+                                        <i className="fas fa-phone text-primary me-2"></i>
                                         Contact support if you have questions
                                     </li>
                                 </ul>
@@ -505,22 +505,7 @@ const QuoteDetail = () => {
             />
 
             <style>{`
-                .text-purple { color: #6f42c1 !important; }
-                .bg-purple { background-color: #6f42c1 !important; }
-                .btn-purple {
-                    background-color: #6f42c1;
-                    border-color: #6f42c1;
-                    color: white;
-                }
-                .btn-outline-purple {
-                    color: #6f42c1;
-                    border-color: #6f42c1;
-                }
-                .btn-outline-purple:hover {
-                    background-color: #6f42c1;
-                    border-color: #6f42c1;
-                    color: white;
-                }
+                /* Using CSS variables for consistent theming */
             `}</style>
         </ClientLayout>
     );

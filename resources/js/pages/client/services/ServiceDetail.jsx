@@ -449,7 +449,7 @@ const ServiceDetail = () => {
                     <p className="text-muted">
                         The service you're looking for doesn't exist.
                     </p>
-                    <Link to="/client/services" className="btn btn-purple">
+                    <Link to="/client/services" className="btn btn-primary">
                         Browse Services
                     </Link>
                 </div>
@@ -792,7 +792,7 @@ const ServiceDetail = () => {
 
                                                     {/* Fallback avatar */}
                                                     {/* <div
-                                                        className="bg-purple bg-opacity-10 text-purple rounded-circle d-flex align-items-center justify-content-center"
+                                                        className="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center"
                                                         style={{
                                                             width: "80px",
                                                             height: "80px",
@@ -1020,7 +1020,7 @@ const ServiceDetail = () => {
                                                                 3 && (
                                                                 <Link
                                                                     to={`/client/providers/${provider.id}`}
-                                                                    className="btn btn-outline-purple btn-sm"
+                                                                    className="btn btn-outline-primary btn-sm"
                                                                 >
                                                                     View All (
                                                                     {
@@ -1062,7 +1062,7 @@ const ServiceDetail = () => {
                                                                                                     ?.name ||
                                                                                                     "Service"}
                                                                                             </small>
-                                                                                            <span className="fw-bold text-purple">
+                                                                                            <span className="fw-bold text-primary">
                                                                                                 {
                                                                                                     otherService.formatted_price
                                                                                                 }
@@ -1083,7 +1083,7 @@ const ServiceDetail = () => {
                                                 <div className="row g-2">
                                                     <div className="col-md-6">
                                                         <button
-                                                            className="btn btn-outline-purple w-100"
+                                                            className="btn btn-outline-primary w-100"
                                                             onClick={
                                                                 handleContactProvider
                                                             }
@@ -1095,7 +1095,7 @@ const ServiceDetail = () => {
                                                     <div className="col-md-6">
                                                         <Link
                                                             to={`/client/providers/${provider.id}`}
-                                                            className="btn btn-purple w-100"
+                                                            className="btn btn-primary w-100"
                                                         >
                                                             <i className="fas fa-user me-2"></i>
                                                             View Profile
@@ -1121,7 +1121,7 @@ const ServiceDetail = () => {
                                 <div className="card-body">
                                     <div className="pricing-info mb-4">
                                         <div className="price d-flex align-items-baseline mb-2">
-                                            <span className="price-amount fw-bold h4 text-purple mb-0">
+                                            <span className="price-amount fw-bold h4 text-primary mb-0">
                                                 {service.formatted_price ||
                                                     `Rs. ${service.base_price}`}
                                             </span>
@@ -1321,7 +1321,7 @@ const ServiceDetail = () => {
 
                                                 <div className="d-grid gap-2">
                                                     <button
-                                                        className="btn btn-purple"
+                                                        className="btn btn-primary"
                                                         onClick={() => {
                                                             if (!selectedDate) {
                                                                 // Set today as default if no date selected
@@ -1370,7 +1370,7 @@ const ServiceDetail = () => {
                                                     </button>
 
                                                     {/* <button
-                                                        className="btn btn-outline-purple"
+                                                        className="btn btn-outline-primary"
                                                         onClick={
                                                             handleContactProvider
                                                         }
@@ -1539,38 +1539,14 @@ const ServiceDetail = () => {
             </div>
 
             <style>{`
-                .text-purple {
-                    color: #6f42c1 !important;
-                }
-                .bg-purple {
-                    background-color: #6f42c1 !important;
-                }
-                .btn-purple {
-                    background-color: #6f42c1;
-                    border-color: #6f42c1;
-                    color: white;
-                }
-                .btn-purple:hover {
-                    background-color: #5a2d91;
-                    border-color: #5a2d91;
-                    color: white;
-                }
-                .btn-outline-purple {
-                    color: #6f42c1;
-                    border-color: #6f42c1;
-                }
-                .btn-outline-purple:hover {
-                    background-color: #6f42c1;
-                    border-color: #6f42c1;
-                    color: white;
-                }
+                /* Using CSS variables for consistent theming */
                 .nav-tabs .nav-link.active {
-                    color: #6f42c1;
-                    border-bottom-color: #6f42c1;
+                    color: var(--current-role-primary);
+                    border-bottom-color: var(--current-role-primary);
                 }
                 .nav-pills .nav-link.active {
-                    background-color: #6f42c1;
-                    border-color: #6f42c1;
+                    background-color: var(--current-role-primary);
+                    border-color: var(--current-role-primary);
                 }
                 .nav-pills.nav-fill {
                     gap: 0.5rem;

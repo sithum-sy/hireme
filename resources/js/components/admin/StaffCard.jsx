@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import { constructProfileImageUrl } from "../../hooks/useServiceImages";
 
 const StaffCard = ({
     staff,
@@ -56,18 +57,40 @@ const StaffCard = ({
                 {/* Profile Section */}
                 <div className="text-center mb-3">
                     <div className="position-relative d-inline-block">
-                        {staff.profile_picture ? (
-                            <img
-                                src={staff.profile_picture}
-                                alt={staff.full_name}
-                                className="rounded-circle mb-2"
-                                style={{
-                                    width: "80px",
-                                    height: "80px",
-                                    objectFit: "cover",
-                                }}
-                            />
-                        ) : (
+                        {(() => {
+                            const profileImageUrl = constructProfileImageUrl(staff.profile_picture);
+                            return profileImageUrl ? (
+                                <img
+                                    src={profileImageUrl}
+                                    alt={staff.full_name}
+                                    className="rounded-circle mb-2"
+                                    style={{
+                                        width: "80px",
+                                        height: "80px",
+                                        objectFit: "cover",
+                                    }}
+                                    onError={(e) => {
+                                        e.target.style.display = "none";
+                                        const fallback = e.target.nextSibling;
+                                        if (fallback) {
+                                            fallback.style.display = "flex";
+                                        }
+                                    }}
+                                />
+                            ) : null;
+                        })()}
+                        {/* Fallback avatar */}
+                        <div
+                            className="bg-secondary bg-opacity-10 text-secondary rounded-circle d-flex align-items-center justify-content-center mb-2"
+                            style={{
+                                width: "80px",
+                                height: "80px",
+                                display: staff.profile_picture ? "none" : "flex",
+                            }}
+                        >
+                            <i className="fas fa-user fa-2x"></i>
+                        </div>
+                        {staff.profile_picture && (
                             <div
                                 className="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center mb-2 mx-auto"
                                 style={{ width: "80px", height: "80px" }}

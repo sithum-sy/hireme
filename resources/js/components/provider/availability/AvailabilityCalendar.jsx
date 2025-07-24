@@ -317,12 +317,12 @@ const AvailabilityCalendar = ({ className = "" }) => {
                 }
 
                 .calendar-day.has-date:hover {
-                    border-color: #fd7e14;
+                    border-color: var(--current-role-primary);
                     box-shadow: 0 2px 4px rgba(253, 126, 20, 0.1);
                 }
 
                 .calendar-day.today {
-                    border-color: #fd7e14;
+                    border-color: var(--current-role-primary);
                     box-shadow: 0 0 0 2px rgba(253, 126, 20, 0.2);
                 }
 
@@ -333,7 +333,7 @@ const AvailabilityCalendar = ({ className = "" }) => {
 
                 .day-number {
                     font-weight: bold;
-                    color: #333;
+                    color: var(--text-primary);
                     margin-bottom: 0.25rem;
                 }
 
@@ -350,17 +350,17 @@ const AvailabilityCalendar = ({ className = "" }) => {
                 }
 
                 .text-orange {
-                    color: #fd7e14 !important;
+                    color: var(--current-role-primary) !important;
                 }
 
                 .btn-outline-orange {
-                    color: #fd7e14;
-                    border-color: #fd7e14;
+                    color: var(--current-role-primary);
+                    border-color: var(--current-role-primary);
                 }
 
                 .btn-outline-orange:hover {
-                    background-color: #fd7e14;
-                    border-color: #fd7e14;
+                    background-color: var(--current-role-primary);
+                    border-color: var(--current-role-primary);
                     color: white;
                 }
             `}</style>

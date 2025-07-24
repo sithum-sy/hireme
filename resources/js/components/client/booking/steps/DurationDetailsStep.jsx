@@ -487,7 +487,7 @@ const DurationDetailsStep = ({
                }
 
                .service-thumbnail {
-                   border: 2px solid #f8f9fa;
+                   border: 2px solid var(--bg-light);
                    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
                }
 
@@ -499,9 +499,10 @@ const DurationDetailsStep = ({
                    color: white;
                }
                .btn-primary:hover {
-                   background-color: #5a2d91;
-                   border-color: #5a2d91;
+                   background-color: var(--current-role-primary);
+                   border-color: var(--current-role-primary);
                    color: white;
+                   opacity: 0.9;
                }
 
                .summary-section:last-child {

@@ -3,7 +3,7 @@ import { useStaff } from "../../../context/StaffContext";
 
 const CategoriesList = () => {
     const {
-        categories,
+        categories = [],
         categoriesLoading,
         categoriesPagination,
         categoriesFilters,

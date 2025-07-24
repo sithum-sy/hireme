@@ -1,5 +1,6 @@
 import React, { memo, useState, useCallback } from "react";
 import { useStableImageUrl } from "../../hooks/useStableImageUrl.js";
+import { constructProfileImageUrl } from "../../hooks/useServiceImages";
 
 /**
  * Optimized profile image component that prevents flickering
@@ -16,7 +17,9 @@ const ProfileImage = memo(
         ...props
     }) => {
         const [hasError, setHasError] = useState(false);
-        const stableImageUrl = useStableImageUrl(src, fallbackSrc);
+        // First construct the proper URL using our profile image constructor
+        const properImageUrl = constructProfileImageUrl(src);
+        const stableImageUrl = useStableImageUrl(properImageUrl, fallbackSrc);
 
         const handleError = useCallback(
             (e) => {
@@ -36,7 +39,7 @@ const ProfileImage = memo(
         // Reset error state when image URL changes
         React.useEffect(() => {
             setHasError(false);
-        }, [stableImageUrl]);
+        }, [stableImageUrl, properImageUrl]);
 
         return (
             <img

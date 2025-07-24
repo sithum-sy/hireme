@@ -120,36 +120,35 @@ const StaffDashboard = () => {
 
     return (
         <StaffLayout>
-            <div className="page-content staff-dashboard-content">
+            <div className="page-content">
                 {/* Dashboard Header */}
-                {/* <div className="dashboard-header">
-                    <div className="header-content">
-                        <h1 className="dashboard-title">Staff Dashboard</h1>
-                        <p className="dashboard-subtitle">
-                            Welcome back! Here's what's happening on the
-                            platform.
+                <div className="page-header d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-6">
+                    <div className="mb-3 mb-md-0">
+                        <h1 className="h2 mb-2 text-primary">Staff Dashboard</h1>
+                        <p className="text-muted mb-0">
+                            Welcome back! Here's what's happening on the platform.
                         </p>
                     </div>
-                    <div className="header-actions">
+                    <div className="d-flex flex-column flex-md-row align-items-start align-items-md-center gap-3">
                         {lastUpdated && (
-                            <small className="last-updated">
+                            <small className="text-muted">
                                 Last updated: {lastUpdated.toLocaleTimeString()}
                             </small>
                         )}
                         <button
-                            className="btn btn-outline-primary"
+                            className="btn btn-outline-primary btn-responsive"
                             onClick={handleRefresh}
                             disabled={refreshing}
                         >
                             <i
                                 className={`fas fa-sync-alt ${
                                     refreshing ? "fa-spin" : ""
-                                }`}
+                                } me-2`}
                             ></i>
                             <span>Refresh</span>
                         </button>
                     </div>
-                </div> */}
+                </div>
 
                 {/* Error State */}
                 {errors.dashboard && (
@@ -197,7 +196,7 @@ const StaffDashboard = () => {
                 {dashboardStats && (
                     <>
                         {/* Main Statistics Cards */}
-                        <div className="stats-grid">
+                        <div className="responsive-grid responsive-grid-sm responsive-grid-md responsive-grid-lg mb-6">
                             <UserStatsCard
                                 users={dashboardStats.users || {}}
                                 loading={dashboardLoading}
@@ -218,7 +217,7 @@ const StaffDashboard = () => {
                         </div>
 
                         {/* Secondary Statistics Cards */}
-                        <div className="stats-grid">
+                        <div className="responsive-grid responsive-grid-sm responsive-grid-md mb-6">
                             <ServicesCard
                                 services={dashboardStats.services || {}}
                                 loading={dashboardLoading}

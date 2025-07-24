@@ -66,7 +66,7 @@ class UserController extends Controller
                     'address' => $user->address,
                     'date_of_birth' => $user->date_of_birth?->format('Y-m-d'),
                     'age' => $user->age,
-                    'profile_picture' => $user->profile_picture ? Storage::url($user->profile_picture) : null,
+                    'profile_picture' => $user->profile_picture ? asset($user->profile_picture) : null,
                     'is_active' => $user->is_active,
                     'last_login_at' => $user->last_login_at?->format('Y-m-d H:i:s'),
                     'last_login_human' => $user->last_login_human,
@@ -295,21 +295,30 @@ class UserController extends Controller
 
             // Delete profile picture if exists
             if ($user->profile_picture) {
-                Storage::disk('public')->delete($user->profile_picture);
+                $oldPath = public_path($user->profile_picture);
+                if (file_exists($oldPath)) {
+                    unlink($oldPath);
+                }
             }
 
             // If service provider, handle provider profile deletion
             if ($user->role === User::ROLE_SERVICE_PROVIDER && $user->providerProfile) {
                 // Delete provider documents
                 if ($user->providerProfile->business_license_url) {
-                    Storage::disk('public')->delete($user->providerProfile->business_license_url);
+                    $oldPath = public_path($user->providerProfile->business_license_url);
+                    if (file_exists($oldPath)) {
+                        unlink($oldPath);
+                    }
                 }
 
                 if ($user->providerProfile->certification_urls) {
                     $certifications = json_decode($user->providerProfile->certification_urls, true);
                     if (is_array($certifications)) {
                         foreach ($certifications as $cert) {
-                            Storage::disk('public')->delete($cert);
+                            $oldPath = public_path($cert);
+                            if (file_exists($oldPath)) {
+                                unlink($oldPath);
+                            }
                         }
                     }
                 }
@@ -318,7 +327,10 @@ class UserController extends Controller
                     $portfolios = json_decode($user->providerProfile->portfolio_image_urls, true);
                     if (is_array($portfolios)) {
                         foreach ($portfolios as $portfolio) {
-                            Storage::disk('public')->delete($portfolio);
+                            $oldPath = public_path($portfolio);
+                            if (file_exists($oldPath)) {
+                                unlink($oldPath);
+                            }
                         }
                     }
                 }

@@ -2227,15 +2227,15 @@ const ServiceForm = () => {
                 }
 
                 .final-review {
-                    border-left: 4px solid #28a745;
+                    border-left: 4px solid var(--success-color);
                 }
 
                 .includes-preview .bg-light {
-                    border-left: 3px solid #198754;
+                    border-left: 3px solid var(--success-color);
                 }
 
                 .requirements-preview .bg-warning {
-                    border-left: 3px solid #ffc107;
+                    border-left: 3px solid var(--warning-color);
                 }
 
                 @media (max-width: 992px) {

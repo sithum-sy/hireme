@@ -9,6 +9,7 @@ import PaymentModal from "../../../components/client/appointments/PaymentModal";
 import InvoiceSection from "../../../components/client/appointments/InvoiceSection";
 import ContactProvider from "../../../components/client/appointments/ContactProvider";
 import clientAppointmentService from "../../../services/clientAppointmentService";
+import { constructProfileImageUrl } from "../../../hooks/useServiceImages";
 
 const AppointmentDetail = () => {
     const { id } = useParams();
@@ -265,7 +266,7 @@ const AppointmentDetail = () => {
                     <p className="text-muted">
                         Please check the appointment ID and try again.
                     </p>
-                    <Link to="/client/appointments" className="btn btn-purple">
+                    <Link to="/client/appointments" className="btn btn-primary">
                         <i className="fas fa-arrow-left me-2"></i>
                         Back to Appointments
                     </Link>
@@ -289,7 +290,7 @@ const AppointmentDetail = () => {
                         <li className="breadcrumb-item">
                             <Link
                                 to="/client/appointments"
-                                className="text-purple text-decoration-none"
+                                className="text-primary text-decoration-none"
                             >
                                 My Appointments
                             </Link>
@@ -442,7 +443,7 @@ const AppointmentDetail = () => {
                         <div className="card border-0 shadow-sm mb-4">
                             <div className="card-header bg-white border-bottom">
                                 <h5 className="fw-bold mb-0">
-                                    <i className="fas fa-concierge-bell me-2 text-purple"></i>
+                                    <i className="fas fa-concierge-bell me-2 text-primary"></i>
                                     Service Details
                                 </h5>
                             </div>
@@ -534,7 +535,7 @@ const AppointmentDetail = () => {
                         <div className="card border-0 shadow-sm mb-4">
                             <div className="card-header bg-white border-bottom">
                                 <h5 className="fw-bold mb-0">
-                                    <i className="fas fa-user me-2 text-purple"></i>
+                                    <i className="fas fa-user me-2 text-primary"></i>
                                     Service Provider
                                 </h5>
                             </div>
@@ -543,32 +544,49 @@ const AppointmentDetail = () => {
                                     <div className="col-md-8">
                                         <div className="d-flex align-items-center mb-3">
                                             <div className="provider-avatar me-3">
-                                                {appointment.provider
-                                                    ?.profile_picture ? (
-                                                    <img
-                                                        src={
-                                                            appointment.provider
-                                                                .profile_picture
-                                                        }
-                                                        alt={`${appointment.provider.first_name} ${appointment.provider.last_name}`}
-                                                        className="rounded-circle"
-                                                        style={{
-                                                            width: "60px",
-                                                            height: "60px",
-                                                            objectFit: "cover",
-                                                        }}
-                                                    />
-                                                ) : (
-                                                    <div
-                                                        className="bg-purple bg-opacity-10 text-purple rounded-circle d-flex align-items-center justify-content-center"
-                                                        style={{
-                                                            width: "60px",
-                                                            height: "60px",
-                                                        }}
-                                                    >
-                                                        <i className="fas fa-user fa-lg"></i>
-                                                    </div>
-                                                )}
+                                                {(() => {
+                                                    // Use the dedicated profile image URL constructor
+                                                    const profileImageUrl = constructProfileImageUrl(
+                                                        appointment.provider?.profile_picture
+                                                    );
+
+                                                    return profileImageUrl ? (
+                                                        <img
+                                                            src={profileImageUrl}
+                                                            alt={`${appointment.provider.first_name} ${appointment.provider.last_name}`}
+                                                            className="rounded-circle"
+                                                            style={{
+                                                                width: "60px",
+                                                                height: "60px",
+                                                                objectFit: "cover",
+                                                            }}
+                                                            onError={(e) => {
+                                                                console.error(
+                                                                    "Provider profile image failed to load:",
+                                                                    profileImageUrl
+                                                                );
+                                                                // Hide failed image and show fallback
+                                                                e.target.style.display = "none";
+                                                                const fallback = e.target.nextSibling;
+                                                                if (fallback) {
+                                                                    fallback.style.display = "flex";
+                                                                }
+                                                            }}
+                                                        />
+                                                    ) : null;
+                                                })()}
+
+                                                {/* Fallback avatar */}
+                                                <div
+                                                    className="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center"
+                                                    style={{
+                                                        width: "60px",
+                                                        height: "60px",
+                                                        display: appointment.provider?.profile_picture ? "none" : "flex",
+                                                    }}
+                                                >
+                                                    <i className="fas fa-user fa-lg"></i>
+                                                </div>
                                             </div>
 
                                             <div>
@@ -762,7 +780,7 @@ const AppointmentDetail = () => {
                             <div className="card border-0 shadow-sm mb-4">
                                 <div className="card-header bg-white border-bottom">
                                     <h5 className="fw-bold mb-0">
-                                        <i className="fas fa-sticky-note me-2 text-purple"></i>
+                                        <i className="fas fa-sticky-note me-2 text-primary"></i>
                                         Special Instructions
                                     </h5>
                                 </div>
@@ -804,7 +822,7 @@ const AppointmentDetail = () => {
                     <div className="col-lg-4">
                         {/* Appointment Summary - Enhanced */}
                         <div className="card border-0 shadow-sm mb-4">
-                            <div className="card-header bg-purple text-white">
+                            <div className="card-header bg-primary text-white">
                                 <h6 className="fw-bold mb-0">
                                     <i className="fas fa-calendar-check me-2"></i>
                                     Appointment Summary
@@ -918,7 +936,7 @@ const AppointmentDetail = () => {
                                         <hr className="my-2" />
                                         <div className="d-flex justify-content-between fw-bold">
                                             <span>Total Amount</span>
-                                            <span className="text-purple h5 mb-0">
+                                            <span className="text-primary h5 mb-0">
                                                 Rs. {appointment.total_price}
                                             </span>
                                         </div>
@@ -1107,18 +1125,7 @@ const AppointmentDetail = () => {
 
             {/* Custom Styles */}
             <style>{`
-               .text-purple { color: #6f42c1 !important; }
-               .bg-purple { background-color: #6f42c1 !important; }
-               .btn-purple {
-                   background-color: #6f42c1;
-                   border-color: #6f42c1;
-                   color: white;
-               }
-               .btn-purple:hover {
-                   background-color: #5a2d91;
-                   border-color: #5a2d91;
-                   color: white;
-               }
+               /* Using CSS variables for consistent theming */
                .summary-item {
                    padding-bottom: 0.75rem;
                    border-bottom: 1px solid #f1f1f1;

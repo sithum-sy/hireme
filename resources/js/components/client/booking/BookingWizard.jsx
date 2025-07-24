@@ -502,20 +502,20 @@ const BookingWizard = ({
                 .step-connector {
                     width: 60px;
                     height: 2px;
-                    background: #dee2e6;
+                    background: var(--border-color);
                     margin: 0 1rem;
                 }
                 .step-connector.completed {
-                    background: #28a745;
+                    background: var(--success-color);
                 }
                 .step-item.active .step-title {
                     color: var(--current-role-primary);
                 }
                 .step-item.completed .step-title {
-                    color: #28a745;
+                    color: var(--success-color);
                 }
                 .selected-slot-banner {
-                    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+                    background: linear-gradient(135deg, var(--bg-light) 0%, var(--border-color) 100%);
                     border-left: 4px solid var(--current-role-primary);
                 }
                 /* Enhanced scrolling and transitions */

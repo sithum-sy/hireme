@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useParams, useLocation } from "react-router-dom";
 import { useAdmin } from "../../../context/AdminContext";
 import AdminLayout from "../../../components/layouts/AdminLayout";
+import { constructProfileImageUrl } from "../../../hooks/useServiceImages";
 
 const StaffDetails = () => {
     const { id } = useParams();
@@ -138,21 +139,43 @@ const StaffDetails = () => {
             )}
 
             {/* Page Header */}
-            <div className="d-flex justify-content-between align-items-start mb-4">
-                <div className="d-flex align-items-center">
-                    <div className="me-3">
-                        {staffMember.profile_picture ? (
-                            <img
-                                src={staffMember.profile_picture}
-                                alt={staffMember.full_name}
-                                className="rounded-circle"
-                                style={{
-                                    width: "60px",
-                                    height: "60px",
-                                    objectFit: "cover",
-                                }}
-                            />
-                        ) : (
+            <div className="page-header d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center mb-6">
+                <div className="d-flex flex-column flex-sm-row align-items-start align-items-sm-center mb-3 mb-lg-0">
+                    <div className="me-3 mb-3 mb-sm-0">
+                        {(() => {
+                            const profileImageUrl = constructProfileImageUrl(staffMember.profile_picture);
+                            return profileImageUrl ? (
+                                <img
+                                    src={profileImageUrl}
+                                    alt={staffMember.full_name}
+                                    className="rounded-circle"
+                                    style={{
+                                        width: "60px",
+                                        height: "60px",
+                                        objectFit: "cover",
+                                    }}
+                                    onError={(e) => {
+                                        e.target.style.display = "none";
+                                        const fallback = e.target.nextSibling;
+                                        if (fallback) {
+                                            fallback.style.display = "flex";
+                                        }
+                                    }}
+                                />
+                            ) : null;
+                        })()}
+                        {/* Fallback avatar */}
+                        <div
+                            className="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center"
+                            style={{
+                                width: "60px",
+                                height: "60px",
+                                display: staffMember.profile_picture ? "none" : "flex",
+                            }}
+                        >
+                            <i className="fas fa-user fa-lg"></i>
+                        </div>
+                        {staffMember.profile_picture && (
                             <div
                                 className="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center"
                                 style={{ width: "60px", height: "60px" }}
@@ -162,8 +185,8 @@ const StaffDetails = () => {
                         )}
                     </div>
                     <div>
-                        <h1 className="h3 mb-1">{staffMember.full_name}</h1>
-                        <div className="d-flex align-items-center gap-3">
+                        <h1 className="h2 mb-2 text-primary">{staffMember.full_name}</h1>
+                        <div className="d-flex flex-column flex-sm-row align-items-start align-items-sm-center gap-3">
                             <span
                                 className={`badge ${
                                     staffMember.is_active
@@ -185,11 +208,11 @@ const StaffDetails = () => {
                     </div>
                 </div>
 
-                <div className="d-flex gap-2">
+                <div className="d-flex flex-column flex-sm-row gap-2 w-100 w-lg-auto">
                     <button
                         className={`btn btn-outline-${
                             staffMember.is_active ? "warning" : "success"
-                        }`}
+                        } btn-responsive`}
                         onClick={handleToggleStatus}
                         disabled={isProcessing}
                     >
@@ -202,7 +225,7 @@ const StaffDetails = () => {
                     </button>
                     <Link
                         to={`/admin/staff/${id}/edit`}
-                        className="btn btn-primary"
+                        className="btn btn-primary btn-responsive"
                     >
                         <i className="fas fa-edit me-2"></i>
                         Edit
@@ -252,9 +275,9 @@ const StaffDetails = () => {
             </div>
 
             {/* Tabs Navigation */}
-            <div className="card border-0 shadow-sm">
-                <div className="card-header bg-white border-bottom">
-                    <ul className="nav nav-tabs card-header-tabs">
+            <div className="card">
+                <div className="card-header">
+                    <ul className="nav nav-tabs card-header-tabs flex-column flex-sm-row">
                         <li className="nav-item">
                             <button
                                 className={`nav-link ${
@@ -297,13 +320,13 @@ const StaffDetails = () => {
                         <div className="row">
                             <div className="col-lg-8">
                                 {/* Quick Info Cards */}
-                                <div className="row mb-4">
-                                    <div className="col-md-4">
+                                <div className="row g-3 mb-4">
+                                    <div className="col-lg-4 col-md-6">
                                         <div className="card bg-primary bg-opacity-10 border-0 h-100">
-                                            <div className="card-body text-center">
-                                                <i className="fas fa-calendar-alt fa-2x text-primary mb-2"></i>
-                                                <h6>Member Since</h6>
-                                                <p className="mb-0">
+                                            <div className="card-body text-center p-4">
+                                                <i className="fas fa-calendar-alt fa-2x text-primary mb-3"></i>
+                                                <h6 className="mb-2">Member Since</h6>
+                                                <p className="mb-0 text-sm">
                                                     {formatDate(
                                                         staffMember.created_at
                                                     )}
@@ -311,12 +334,12 @@ const StaffDetails = () => {
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="col-md-4">
+                                    <div className="col-lg-4 col-md-6">
                                         <div className="card bg-success bg-opacity-10 border-0 h-100">
-                                            <div className="card-body text-center">
-                                                <i className="fas fa-clock fa-2x text-success mb-2"></i>
-                                                <h6>Last Login</h6>
-                                                <p className="mb-0">
+                                            <div className="card-body text-center p-4">
+                                                <i className="fas fa-clock fa-2x text-success mb-3"></i>
+                                                <h6 className="mb-2">Last Login</h6>
+                                                <p className="mb-0 text-sm">
                                                     {
                                                         staffMember.last_login_human
                                                     }
@@ -324,11 +347,11 @@ const StaffDetails = () => {
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="col-md-4">
+                                    <div className="col-lg-4 col-md-12">
                                         <div className="card bg-info bg-opacity-10 border-0 h-100">
-                                            <div className="card-body text-center">
-                                                <i className="fas fa-user-shield fa-2x text-info mb-2"></i>
-                                                <h6>Account Status</h6>
+                                            <div className="card-body text-center p-4">
+                                                <i className="fas fa-user-shield fa-2x text-info mb-3"></i>
+                                                <h6 className="mb-2">Account Status</h6>
                                                 <p className="mb-0">
                                                     <span
                                                         className={`badge ${

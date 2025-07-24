@@ -127,13 +127,24 @@ const DashboardSidebar = ({
                     children: [
                         {
                             label: "Platform Analytics",
-                            path: "/admin/reports/analytics",
+                            path: "/admin/reports",
                         },
                         {
-                            label: "Financial Reports",
-                            path: "/admin/reports/financial",
+                            label: "User Management",
+                            path: "/admin/reports/user-management",
                         },
-                        { label: "User Reports", path: "/admin/reports/users" },
+                        {
+                            label: "Financial Performance",
+                            path: "/admin/reports/financial-performance",
+                        },
+                        {
+                            label: "Service Analytics",
+                            path: "/admin/reports/service-analytics",
+                        },
+                        {
+                            label: "Provider Performance",
+                            path: "/admin/reports/provider-performance",
+                        },
                     ],
                 },
                 {
@@ -368,6 +379,34 @@ const DashboardSidebar = ({
                     path: "/client/reviews",
                 },
                 {
+                    id: "reports",
+                    icon: "fas fa-chart-line",
+                    label: "My Reports",
+                    path: "/client/reports",
+                    children: [
+                        {
+                            label: "Personal Activity",
+                            path: "/client/reports",
+                        },
+                        {
+                            label: "Spending Analysis",
+                            path: "/client/reports/spending-analysis",
+                        },
+                        {
+                            label: "Service History",
+                            path: "/client/reports/service-history",
+                        },
+                        {
+                            label: "Transaction History",
+                            path: "/client/reports/transaction-history",
+                        },
+                        {
+                            label: "Preferences",
+                            path: "/client/reports/preferences",
+                        },
+                    ],
+                },
+                {
                     id: "profile",
                     icon: "fas fa-user",
                     label: "My Profile",
@@ -525,22 +564,30 @@ const DashboardSidebar = ({
                     ],
                 },
                 {
-                    id: "analytics",
+                    id: "reports",
                     icon: "fas fa-chart-bar",
-                    label: "Analytics",
-                    path: "/provider/analytics",
+                    label: "Reports & Analytics",
+                    path: "/provider/reports",
                     children: [
                         {
-                            label: "Performance",
-                            path: "/provider/analytics/performance",
+                            label: "Business Performance",
+                            path: "/provider/reports",
                         },
                         {
-                            label: "Service Insights",
-                            path: "/provider/analytics/services",
+                            label: "Financial & Earnings",
+                            path: "/provider/reports/financial-earnings",
                         },
                         {
-                            label: "Customer Insights",
-                            path: "/provider/analytics/customers",
+                            label: "Customer Relationship",
+                            path: "/provider/reports/customer-relationship",
+                        },
+                        {
+                            label: "Service Performance",
+                            path: "/provider/reports/service-performance",
+                        },
+                        {
+                            label: "Marketing Analytics",
+                            path: "/provider/reports/marketing-analytics",
                         },
                     ],
                 },

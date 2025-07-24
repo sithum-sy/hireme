@@ -253,9 +253,17 @@ class Service extends Model
                 return $imagePath; // Already a full URL
             }
             
-            // Check if file exists in public directory
-            if (file_exists(public_path($imagePath))) {
-                return asset($imagePath);
+            // Check if path already starts with images/ (new structure)
+            if (str_starts_with($imagePath, 'images/')) {
+                if (file_exists(public_path($imagePath))) {
+                    return asset($imagePath);
+                }
+            }
+            
+            // Check if file exists in new public/images directory structure
+            $newPath = 'images/services/' . basename($imagePath);
+            if (file_exists(public_path($newPath))) {
+                return asset($newPath);
             }
             
             // Legacy fallback - check old storage location

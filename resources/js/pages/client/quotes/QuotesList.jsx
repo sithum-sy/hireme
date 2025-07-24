@@ -169,7 +169,7 @@ const QuotesList = () => {
                             )}
                         </p>
                     </div>
-                    <Link to="/client/services" className="btn btn-purple">
+                    <Link to="/client/services" className="btn btn-primary">
                         <i className="fas fa-plus me-2"></i>
                         Request New Quote
                     </Link>
@@ -191,7 +191,7 @@ const QuotesList = () => {
                                         <span
                                             className={`badge rounded-pill ms-2 ${
                                                 activeTab === tab.key
-                                                    ? "bg-purple text-white"
+                                                    ? "bg-primary text-white"
                                                     : "bg-light text-muted"
                                             }`}
                                         >
@@ -211,7 +211,7 @@ const QuotesList = () => {
                             Showing {quotes.length} {activeTab} quote
                             {quotes.length !== 1 ? "s" : ""}
                             <button
-                                className="btn btn-link btn-sm text-purple p-0 ms-2"
+                                className="btn btn-link btn-sm text-primary p-0 ms-2"
                                 onClick={() => handleTabChange("all")}
                             >
                                 View all quotes
@@ -324,7 +324,7 @@ const QuotesList = () => {
                                                             <div className="text-muted small">
                                                                 Quoted Price:
                                                             </div>
-                                                            <div className="fw-bold text-purple h5 mb-0">
+                                                            <div className="fw-bold text-primary h5 mb-0">
                                                                 Rs.{" "}
                                                                 {
                                                                     quote.quoted_price
@@ -361,7 +361,7 @@ const QuotesList = () => {
                                                     <div className="quote-actions">
                                                         <Link
                                                             to={`/client/quotes/${quote.id}`}
-                                                            className="btn btn-outline-purple btn-sm"
+                                                            className="btn btn-outline-primary btn-sm"
                                                         >
                                                             <i className="fas fa-eye me-1"></i>
                                                             View Details
@@ -405,14 +405,14 @@ const QuotesList = () => {
                                 activeTab === "pending" ? (
                                     <Link
                                         to="/client/services"
-                                        className="btn btn-purple"
+                                        className="btn btn-primary"
                                     >
                                         <i className="fas fa-search me-2"></i>
                                         Browse Services & Request Quotes
                                     </Link>
                                 ) : (
                                     <button
-                                        className="btn btn-outline-purple"
+                                        className="btn btn-outline-primary"
                                         onClick={() => handleTabChange("all")}
                                     >
                                         <i className="fas fa-list me-2"></i>
@@ -433,7 +433,7 @@ const QuotesList = () => {
                                     to="/client/services"
                                     className="text-decoration-none"
                                 >
-                                    <i className="fas fa-plus-circle fa-2x text-purple mb-2 d-block"></i>
+                                    <i className="fas fa-plus-circle fa-2x text-primary mb-2 d-block"></i>
                                     <span className="small fw-semibold">
                                         Request New Quote
                                     </span>
@@ -467,34 +467,10 @@ const QuotesList = () => {
             </div>
 
             <style>{`
-                .text-purple {
-                    color: #6f42c1 !important;
-                }
-                .bg-purple {
-                    background-color: #6f42c1 !important;
-                }
-                .btn-purple {
-                    background-color: #6f42c1;
-                    border-color: #6f42c1;
-                    color: white;
-                }
-                .btn-purple:hover {
-                    background-color: #5a2d91;
-                    border-color: #5a2d91;
-                    color: white;
-                }
-                .btn-outline-purple {
-                    color: #6f42c1;
-                    border-color: #6f42c1;
-                }
-                .btn-outline-purple:hover {
-                    background-color: #6f42c1;
-                    border-color: #6f42c1;
-                    color: white;
-                }
+                /* Using CSS variables for consistent theming */
                 .nav-tabs .nav-link.active {
-                    color: #6f42c1;
-                    border-bottom-color: #6f42c1;
+                    color: var(--current-role-primary);
+                    border-bottom-color: var(--current-role-primary);
                 }
                 .quote-card {
                     transition: transform 0.2s ease, box-shadow 0.2s ease;

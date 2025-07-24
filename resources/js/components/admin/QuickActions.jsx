@@ -62,34 +62,36 @@ const QuickActions = ({
 
     const ActionCard = ({ action }) => {
         const cardContent = (
-            <div className="action-card">
-                <div
-                    className={`action-icon ${action.variant} position-relative`}
-                >
-                    <i className={action.icon}></i>
-                    {action.badge && (
-                        <span
-                            className={`action-badge ${
-                                action.badgeColor || "primary"
-                            }`}
-                        >
-                            {action.badge}
-                        </span>
-                    )}
-                    {action.loading && (
-                        <div className="action-loading">
-                            <div className="loading-spinner"></div>
+            <div className="card h-100 border border-2 border-opacity-25 action-card">
+                <div className="card-body text-center d-flex flex-column">
+                    <div className={`mb-3 position-relative`}>
+                        <div className={`rounded-circle d-inline-flex align-items-center justify-content-center bg-${action.variant} bg-opacity-10 text-${action.variant}`} style={{width: '60px', height: '60px'}}>
+                            <i className={`${action.icon} fa-2x`}></i>
                         </div>
-                    )}
+                        {action.badge && (
+                            <span
+                                className={`position-absolute top-0 start-100 translate-middle badge bg-${
+                                    action.badgeColor || "primary"
+                                } rounded-pill`}
+                            >
+                                {action.badge}
+                            </span>
+                        )}
+                        {action.loading && (
+                            <div className="position-absolute top-50 start-50 translate-middle">
+                                <div className="spinner-border spinner-border-sm"></div>
+                            </div>
+                        )}
+                    </div>
+                    <h6 className="card-title fw-bold mb-2">{action.title}</h6>
+                    <p className="card-text text-muted small flex-grow-1">{action.description}</p>
                 </div>
-                <h6 className="action-title">{action.title}</h6>
-                <p className="action-description">{action.description}</p>
             </div>
         );
 
         if (action.link) {
             return (
-                <Link to={action.link} className="action-card-link">
+                <Link to={action.link} className="text-decoration-none">
                     {cardContent}
                 </Link>
             );
@@ -97,7 +99,7 @@ const QuickActions = ({
             return (
                 <button
                     onClick={action.onClick}
-                    className="action-card-btn"
+                    className="btn p-0 border-0 bg-transparent"
                     disabled={action.disabled || action.loading}
                 >
                     {cardContent}
@@ -109,13 +111,13 @@ const QuickActions = ({
     };
 
     return (
-        <div className={`dashboard-card quick-actions-widget ${className}`}>
-            <div className="dashboard-card-header">
-                <div className="header-content">
-                    <h6 className="dashboard-card-title">
-                        <i className="fas fa-bolt"></i>
+        <div className={`card border-0 shadow-sm ${className}`}>
+            <div className="card-header bg-white border-bottom">
+                <div className="d-flex justify-content-between align-items-center">
+                    <h5 className="card-title mb-0">
+                        <i className="fas fa-bolt text-primary me-2"></i>
                         <span>{title}</span>
-                    </h6>
+                    </h5>
                     <div className="dropdown">
                         <button
                             className="btn btn-sm btn-outline-secondary dropdown-toggle"
@@ -127,13 +129,13 @@ const QuickActions = ({
                         <ul className="dropdown-menu dropdown-menu-end">
                             <li>
                                 <button className="dropdown-item">
-                                    <i className="fas fa-plus"></i>
+                                    <i className="fas fa-plus me-2"></i>
                                     <span>Add Custom Action</span>
                                 </button>
                             </li>
                             <li>
                                 <button className="dropdown-item">
-                                    <i className="fas fa-edit"></i>
+                                    <i className="fas fa-edit me-2"></i>
                                     <span>Customize Layout</span>
                                 </button>
                             </li>
@@ -142,7 +144,7 @@ const QuickActions = ({
                             </li>
                             <li>
                                 <button className="dropdown-item">
-                                    <i className="fas fa-undo"></i>
+                                    <i className="fas fa-undo me-2"></i>
                                     <span>Reset to Default</span>
                                 </button>
                             </li>
@@ -151,34 +153,34 @@ const QuickActions = ({
                 </div>
             </div>
 
-            <div className="dashboard-card-body">
-                <div className={`quick-actions-grid columns-${columns}`}>
+            <div className="card-body">
+                <div className={`responsive-grid responsive-grid-sm responsive-grid-${columns === 2 ? 'md' : 'lg'}`}>
                     {displayActions.map((action, index) => (
                         <ActionCard key={action.id || index} action={action} />
                     ))}
                 </div>
             </div>
 
-            <div className="dashboard-card-footer">
-                <div className="actions-summary">
-                    <div className="summary-item">
-                        <span className="summary-label">Total Actions</span>
-                        <span className="summary-value primary">
+            <div className="card-footer bg-light">
+                <div className="row text-center">
+                    <div className="col-4">
+                        <small className="text-muted d-block">Total Actions</small>
+                        <strong className="text-primary">
                             {displayActions.length}
-                        </span>
+                        </strong>
                     </div>
-                    <div className="summary-item">
-                        <span className="summary-label">Quick Access</span>
-                        <span className="summary-value success">
-                            <i className="fas fa-check-circle"></i>
+                    <div className="col-4">
+                        <small className="text-muted d-block">Quick Access</small>
+                        <strong className="text-success">
+                            <i className="fas fa-check-circle me-1"></i>
                             <span>Available</span>
-                        </span>
+                        </strong>
                     </div>
-                    <div className="summary-item">
-                        <span className="summary-label">Most Used</span>
-                        <span className="summary-value info">
+                    <div className="col-4">
+                        <small className="text-muted d-block">Most Used</small>
+                        <strong className="text-info">
                             {displayActions[0]?.title || "Create Staff"}
-                        </span>
+                        </strong>
                     </div>
                 </div>
             </div>

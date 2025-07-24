@@ -202,13 +202,13 @@ const LocationSearch = ({ city, onLocationSelect }) => {
                 }
                 
                 .list-group-item:hover {
-                    background-color: #f8f9fa;
+                    background-color: var(--bg-light);
                     transform: translateY(-1px);
                     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
                 }
                 
                 .no-results {
-                    background-color: #f8f9fa;
+                    background-color: var(--bg-light);
                     border: 1px solid #e9ecef;
                     border-radius: 0.375rem;
                     padding: 1rem;
@@ -225,7 +225,7 @@ const LocationSearch = ({ city, onLocationSelect }) => {
                 }
                 
                 .suggestion-btn {
-                    background: #f8f9fa;
+                    background: var(--bg-light);
                     border: 1px solid #e9ecef;
                     border-radius: 0.375rem;
                     padding: 0.5rem 0.75rem;
@@ -299,7 +299,7 @@ const LocationSearch = ({ city, onLocationSelect }) => {
                         padding: 1rem 0.75rem;
                         font-size: 0.95rem;
                         border: none;
-                        border-bottom: 1px solid #f8f9fa;
+                        border-bottom: 1px solid var(--bg-light);
                     }
                     
                     .list-group-item:last-child {

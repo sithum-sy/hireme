@@ -186,27 +186,27 @@ const WeeklySchedule = () => {
                 }
 
                 .schedule-tip:hover {
-                    background-color: #f8f9fa;
+                    background-color: var(--bg-light);
                     padding: 0.75rem;
                     margin: -0.25rem;
                 }
 
                 .text-orange {
-                    color: #fd7e14 !important;
+                    color: var(--current-role-primary) !important;
                 }
 
                 .bg-orange {
-                    background-color: #fd7e14 !important;
+                    background-color: var(--current-role-primary) !important;
                 }
 
                 .btn-outline-orange {
-                    color: #fd7e14;
-                    border-color: #fd7e14;
+                    color: var(--current-role-primary);
+                    border-color: var(--current-role-primary);
                 }
 
                 .btn-outline-orange:hover {
-                    background-color: #fd7e14;
-                    border-color: #fd7e14;
+                    background-color: var(--current-role-primary);
+                    border-color: var(--current-role-primary);
                     color: white;
                 }
             `}</style>

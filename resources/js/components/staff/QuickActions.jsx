@@ -44,51 +44,51 @@ export const StaffQuickActions = ({ onAction }) => {
     };
 
     return (
-        <div className="dashboard-card quick-actions-card">
-            <div className="dashboard-card-header">
-                <h6 className="dashboard-card-title">
-                    <i className="fas fa-bolt"></i>
+        <div className="card border-0 shadow-sm">
+            <div className="card-header bg-white border-bottom">
+                <h5 className="card-title mb-0">
+                    <i className="fas fa-bolt text-primary me-2"></i>
                     <span>Quick Actions</span>
-                </h6>
+                </h5>
             </div>
-            <div className="dashboard-card-body">
-                <div className="quick-actions-grid">
+            <div className="card-body">
+                <div className="responsive-grid responsive-grid-sm responsive-grid-md">
                     {quickActions.map((action) => (
                         <button
                             key={action.id}
-                            className={`action-btn ${action.variant}`}
+                            className={`btn p-0 border-0 bg-transparent h-100`}
                             onClick={() => handleActionClick(action)}
                         >
-                            <div className="action-btn-content">
-                                <div className="action-btn-icon">
-                                    <i className={action.icon}></i>
-                                </div>
-                                <div className="action-btn-text">
-                                    <div className="action-btn-title">
+                            <div className="card h-100 border border-2 border-opacity-25">
+                                <div className="card-body text-center d-flex flex-column">
+                                    <div className={`mb-3 rounded-circle d-inline-flex align-items-center justify-content-center bg-${action.variant} bg-opacity-10 text-${action.variant} mx-auto`} style={{width: '60px', height: '60px'}}>
+                                        <i className={`${action.icon} fa-2x`}></i>
+                                    </div>
+                                    <h6 className="card-title fw-bold mb-2">
                                         {action.title}
-                                    </div>
-                                    <div className="action-btn-description">
+                                    </h6>
+                                    <p className="card-text text-muted small flex-grow-1">
                                         {action.description}
-                                    </div>
+                                    </p>
+                                    {action.count && (
+                                        <div className="mt-2">
+                                            <span
+                                                className={`badge bg-${action.variant}`}
+                                            >
+                                                {action.count}
+                                            </span>
+                                        </div>
+                                    )}
                                 </div>
-                                {action.count && (
-                                    <div className="action-btn-badge">
-                                        <span
-                                            className={`badge ${action.variant}`}
-                                        >
-                                            {action.count}
-                                        </span>
-                                    </div>
-                                )}
                             </div>
                         </button>
                     ))}
                 </div>
             </div>
-            <div className="dashboard-card-footer">
-                <div className="card-footer-content">
-                    <small className="footer-text">
-                        <i className="fas fa-info-circle"></i>
+            <div className="card-footer bg-light">
+                <div className="text-center">
+                    <small className="text-muted">
+                        <i className="fas fa-info-circle me-1"></i>
                         <span>Click any action to get started</span>
                     </small>
                 </div>
@@ -149,72 +149,75 @@ export const ManagementQuickActions = ({ stats = {}, onAction }) => {
     };
 
     return (
-        <div className="dashboard-card management-actions-card">
-            <div className="dashboard-card-header">
-                <div className="header-content">
-                    <h6 className="dashboard-card-title">
-                        <i className="fas fa-tasks"></i>
+        <div className="card border-0 shadow-sm">
+            <div className="card-header bg-white border-bottom">
+                <div className="d-flex justify-content-between align-items-center">
+                    <h5 className="card-title mb-0">
+                        <i className="fas fa-tasks text-primary me-2"></i>
                         <span>Management Tasks</span>
-                    </h6>
-                    <span className="badge primary">
+                    </h5>
+                    <span className="badge bg-primary">
                         {managementActions.filter((a) => a.count > 0).length}{" "}
                         active
                     </span>
                 </div>
             </div>
-            <div className="dashboard-card-body">
-                <div className="management-actions-list">
+            <div className="card-body">
+                <div className="list-group list-group-flush">
                     {managementActions.map((action) => (
                         <div
                             key={action.id}
-                            className={`management-action-item ${
-                                action.urgent ? "urgent" : ""
+                            className={`list-group-item list-group-item-action border-0 px-0 cursor-pointer ${
+                                action.urgent ? "bg-warning bg-opacity-10" : ""
                             }`}
                             onClick={() => handleActionClick(action)}
                         >
-                            <div className="action-item-icon">
-                                <div
-                                    className={`icon-container ${action.variant}`}
-                                >
-                                    <i className={action.icon}></i>
-                                </div>
-                            </div>
-                            <div className="action-item-content">
-                                <div className="action-item-header">
-                                    <h6 className="action-item-title">
-                                        {action.title}
-                                        {action.urgent && (
-                                            <i className="fas fa-exclamation-triangle urgent-indicator"></i>
-                                        )}
-                                    </h6>
-                                    <div className="action-item-meta">
-                                        {action.count !== null &&
-                                            action.count > 0 && (
-                                                <span
-                                                    className={`badge ${action.variant}`}
-                                                >
-                                                    {action.count}
-                                                </span>
-                                            )}
-                                        <i className="fas fa-chevron-right action-arrow"></i>
+                            <div className="d-flex align-items-center">
+                                <div className="me-3">
+                                    <div
+                                        className={`rounded-circle d-flex align-items-center justify-content-center bg-${action.variant} bg-opacity-10 text-${action.variant}`}
+                                        style={{width: '40px', height: '40px'}}
+                                    >
+                                        <i className={action.icon}></i>
                                     </div>
                                 </div>
-                                <p className="action-item-description">
-                                    {action.description}
-                                </p>
+                                <div className="flex-grow-1">
+                                    <div className="d-flex justify-content-between align-items-start">
+                                        <h6 className="mb-1 fw-semibold">
+                                            {action.title}
+                                            {action.urgent && (
+                                                <i className="fas fa-exclamation-triangle text-warning ms-2"></i>
+                                            )}
+                                        </h6>
+                                        <div className="d-flex align-items-center gap-2">
+                                            {action.count !== null &&
+                                                action.count > 0 && (
+                                                    <span
+                                                        className={`badge bg-${action.variant}`}
+                                                    >
+                                                        {action.count}
+                                                    </span>
+                                                )}
+                                            <i className="fas fa-chevron-right text-muted"></i>
+                                        </div>
+                                    </div>
+                                    <p className="text-muted mb-0 small">
+                                        {action.description}
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     ))}
                 </div>
             </div>
-            <div className="dashboard-card-footer">
-                <div className="card-footer-content">
-                    <small className="footer-text">
-                        <i className="fas fa-clock"></i>
+            <div className="card-footer bg-light">
+                <div className="d-flex justify-content-between align-items-center">
+                    <small className="text-muted">
+                        <i className="fas fa-clock me-1"></i>
                         <span>Updated: {new Date().toLocaleTimeString()}</span>
                     </small>
                     <button className="btn btn-sm btn-outline-primary">
-                        <i className="fas fa-list"></i>
+                        <i className="fas fa-list me-1"></i>
                         <span>View All Tasks</span>
                     </button>
                 </div>

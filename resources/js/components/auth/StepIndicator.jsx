@@ -76,8 +76,8 @@ const StepIndicator = ({ currentStep, totalSteps = 3, stepLabels }) => {
                     width: 40px;
                     height: 40px;
                     border-radius: 50%;
-                    background: #e5e7eb;
-                    color: #9ca3af;
+                    background: var(--border-color);
+                    color: var(--text-muted);
                     display: flex;
                     align-items: center;
                     justify-content: center;
@@ -87,31 +87,31 @@ const StepIndicator = ({ currentStep, totalSteps = 3, stepLabels }) => {
                 }
 
                 .step-circle.active {
-                    background: #4a90e2;
+                    background: var(--primary-color);
                     color: white;
                     box-shadow: 0 0 0 4px rgba(74, 144, 226, 0.2);
                 }
 
                 .step-circle.completed {
-                    background: #10b981;
+                    background: var(--success-color);
                     color: white;
                 }
 
                 .step-line {
                     width: 60px;
                     height: 3px;
-                    background: #e5e7eb;
+                    background: var(--border-color);
                     margin: 0 0.75rem;
                     transition: all 0.3s ease;
                 }
 
                 .step-line.completed {
-                    background: #10b981;
+                    background: var(--success-color);
                 }
 
                 .step-label {
                     text-align: center;
-                    color: #6b7280;
+                    color: var(--text-secondary);
                     font-weight: 500;
                 }
 

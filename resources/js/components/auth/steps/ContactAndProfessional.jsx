@@ -306,12 +306,12 @@ const ContactAndProfessional = ({
                 .step-title {
                     font-size: 1.5rem;
                     font-weight: 700;
-                    color: #1a202c;
+                    color: var(--text-primary);
                     margin-bottom: 0.5rem;
                 }
 
                 .step-subtitle {
-                    color: #6b7280;
+                    color: var(--text-secondary);
                     font-size: 1rem;
                     margin: 0;
                 }
@@ -357,7 +357,7 @@ const ContactAndProfessional = ({
                     width: 24px;
                     height: 24px;
                     border-radius: 50%;
-                    background: #ef4444;
+                    background: var(--danger-color);
                     color: white;
                     border: none;
                     cursor: pointer;
@@ -369,12 +369,12 @@ const ContactAndProfessional = ({
                 }
 
                 .remove-image-btn:hover {
-                    background: #dc2626;
+                    background: var(--danger-color);
                     transform: scale(1.1);
                 }
 
                 .provider-section {
-                    background: #f8f9fa;
+                    background: var(--bg-light);
                     border-radius: 12px;
                     padding: 1.5rem;
                     border-left: 4px solid #10b981;
@@ -387,14 +387,14 @@ const ContactAndProfessional = ({
                 .section-title {
                     font-size: 1.25rem;
                     font-weight: 600;
-                    color: #10b981;
+                    color: var(--success-color);
                     margin: 0;
                 }
 
                 .info-alert {
-                    background: #dbeafe;
+                    background: rgba(74, 144, 226, 0.1);
                     border: 1px solid #93c5fd;
-                    color: #1e40af;
+                    color: var(--primary-color);
                     padding: 1rem;
                     border-radius: 8px;
                     margin: 1.5rem 0;
@@ -410,7 +410,7 @@ const ContactAndProfessional = ({
                 .documents-title {
                     font-size: 1.125rem;
                     font-weight: 600;
-                    color: #6b7280;
+                    color: var(--text-secondary);
                     margin-bottom: 1.5rem;
                 }
 

@@ -52,7 +52,7 @@ class StaffController extends Controller
                     'date_of_birth' => $staffMember->date_of_birth?->format('Y-m-d'), // FIXED: Added null check with ?->
                     'contact_number' => $staffMember->contact_number,
                     'address' => $staffMember->address,
-                    'profile_picture' => $staffMember->profile_picture ? Storage::url($staffMember->profile_picture) : null,
+                    'profile_picture' => $staffMember->profile_picture ? asset($staffMember->profile_picture) : null,
                     'is_active' => $staffMember->is_active,
                     'last_login_at' => $staffMember->last_login_at?->format('Y-m-d H:i:s'),
                     'last_login_human' => $staffMember->last_login_human ?? 'Never logged in',
@@ -132,8 +132,12 @@ class StaffController extends Controller
             if ($request->hasFile('profile_picture')) {
                 $file = $request->file('profile_picture');
                 $filename = 'staff_' . Str::uuid() . '.' . $file->getClientOriginalExtension();
-                $path = $file->storeAs('profile_pictures', $filename, 'public');
-                $staffData['profile_picture'] = $path;
+                $publicPath = 'images/profile_pictures';
+                if (!file_exists(public_path($publicPath))) {
+                    mkdir(public_path($publicPath), 0755, true);
+                }
+                $file->move(public_path($publicPath), $filename);
+                $staffData['profile_picture'] = $publicPath . '/' . $filename;
             }
 
             $staff = User::create($staffData);
@@ -151,7 +155,7 @@ class StaffController extends Controller
                         'date_of_birth' => $staff->date_of_birth?->format('Y-m-d'),
                         'contact_number' => $staff->contact_number,
                         'address' => $staff->address,
-                        'profile_picture' => $staff->profile_picture ? Storage::url($staff->profile_picture) : null,
+                        'profile_picture' => $staff->profile_picture ? asset($staff->profile_picture) : null,
                         'is_active' => $staff->is_active,
                         'created_by' => $staff->created_by,
                         'creator_name' => $staff->creator?->full_name,
@@ -194,7 +198,7 @@ class StaffController extends Controller
                         'contact_number' => $staff->contact_number,
                         'address' => $staff->address,
                         'date_of_birth' => $staff->date_of_birth?->format('Y-m-d'),
-                        'profile_picture' => $staff->profile_picture ? Storage::url($staff->profile_picture) : null,
+                        'profile_picture' => $staff->profile_picture ? asset($staff->profile_picture) : null,
                         'is_active' => $staff->is_active,
                         'last_login_at' => $staff->last_login_at?->format('Y-m-d H:i:s'),
                         'last_login_human' => $staff->last_login_human,
@@ -280,13 +284,20 @@ class StaffController extends Controller
             if ($request->hasFile('profile_picture')) {
                 // Delete old profile picture if exists
                 if ($staff->profile_picture) {
-                    Storage::disk('public')->delete($staff->profile_picture);
+                    $oldPath = public_path($staff->profile_picture);
+                    if (file_exists($oldPath)) {
+                        unlink($oldPath);
+                    }
                 }
 
                 $file = $request->file('profile_picture');
                 $filename = 'staff_' . Str::uuid() . '.' . $file->getClientOriginalExtension();
-                $path = $file->storeAs('profile_pictures', $filename, 'public');
-                $updateData['profile_picture'] = $path;
+                $publicPath = 'images/profile_pictures';
+                if (!file_exists(public_path($publicPath))) {
+                    mkdir(public_path($publicPath), 0755, true);
+                }
+                $file->move(public_path($publicPath), $filename);
+                $updateData['profile_picture'] = $publicPath . '/' . $filename;
             }
 
             $staff->update($updateData);
@@ -304,7 +315,7 @@ class StaffController extends Controller
                         'contact_number' => $staff->contact_number,
                         'address' => $staff->address,
                         'date_of_birth' => $staff->date_of_birth?->format('Y-m-d'),
-                        'profile_picture' => $staff->profile_picture ? Storage::url($staff->profile_picture) : null,
+                        'profile_picture' => $staff->profile_picture ? asset($staff->profile_picture) : null,
                         'is_active' => $staff->is_active,
                         'updated_at' => $staff->updated_at->format('Y-m-d H:i:s'),
                     ]
@@ -343,7 +354,10 @@ class StaffController extends Controller
 
             // Delete profile picture if exists
             if ($staff->profile_picture) {
-                Storage::disk('public')->delete($staff->profile_picture);
+                $oldPath = public_path($staff->profile_picture);
+                if (file_exists($oldPath)) {
+                    unlink($oldPath);
+                }
             }
 
             $staffName = $staff->full_name;

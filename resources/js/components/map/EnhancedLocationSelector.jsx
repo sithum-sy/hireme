@@ -449,13 +449,13 @@ const EnhancedLocationSelector = ({ value, onChange, error }) => {
 
                 .search-result-item {
                     padding: 0.75rem;
-                    border-bottom: 1px solid #f8f9fa;
+                    border-bottom: 1px solid var(--bg-light);
                     cursor: pointer;
                     transition: background-color 0.15s ease-in-out;
                 }
 
                 .search-result-item:hover {
-                    background-color: #f8f9fa;
+                    background-color: var(--bg-light);
                 }
 
                 .search-result-item:last-child {
@@ -485,13 +485,13 @@ const EnhancedLocationSelector = ({ value, onChange, error }) => {
 
                 .leaflet-control-zoom a {
                     background-color: white;
-                    color: #333;
+                    color: var(--text-primary);
                     border: none;
                     box-shadow: none;
                 }
 
                 .leaflet-control-zoom a:hover {
-                    background-color: #f4f4f4;
+                    background-color: var(--bg-light);
                 }
 
                 /* Mobile Responsiveness */
@@ -518,7 +518,7 @@ const EnhancedLocationSelector = ({ value, onChange, error }) => {
 
                     .search-result-item {
                         padding: 1rem 0.75rem;
-                        border-bottom: 1px solid #f8f9fa;
+                        border-bottom: 1px solid var(--bg-light);
                         cursor: pointer;
                         transition: background-color 0.15s ease-in-out;
                         font-size: 0.95rem;

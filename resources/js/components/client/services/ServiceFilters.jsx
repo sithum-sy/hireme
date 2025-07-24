@@ -286,7 +286,7 @@ const ServiceFilters = ({
                                 <div className="d-flex justify-content-between align-items-center mt-2">
                                     <small className="text-muted">1 km</small>
                                     <div className="radius-display text-center">
-                                        <span className="badge bg-purple">
+                                        <span className="badge bg-primary">
                                             <i className="fas fa-map-marker-alt me-1"></i>
                                             {filters.radius || location.radius || 5} km
                                         </span>
@@ -304,7 +304,7 @@ const ServiceFilters = ({
                                         {[2, 5, 10, 20].map((radius) => (
                                             <button
                                                 key={radius}
-                                                className={`btn btn-outline-purple btn-xs ${
+                                                className={`btn btn-outline-primary btn-xs ${
                                                     (filters.radius || location.radius || 5) === radius
                                                         ? "active"
                                                         : ""
@@ -380,7 +380,7 @@ const ServiceFilters = ({
                     {/* Apply Button */}
                     <div className="d-grid mt-4">
                         <button
-                            className="btn btn-purple btn-sm"
+                            className="btn btn-primary btn-sm"
                             onClick={() => {
                                 // Filters are applied in real-time, this could trigger a search
                                 console.log("Apply filters:", filters);
@@ -401,37 +401,15 @@ const ServiceFilters = ({
                     line-height: 1.2;
                     border-radius: 0.25rem;
                 }
-                .text-purple {
-                    color: #6f42c1 !important;
-                }
-                .btn-purple {
-                    background-color: #6f42c1;
-                    border-color: #6f42c1;
-                    color: white;
-                }
-                .btn-purple:hover {
-                    background-color: #5a2d91;
-                    border-color: #5a2d91;
-                    color: white;
-                }
                 .form-check-input:checked {
-                    background-color: #6f42c1;
-                    border-color: #6f42c1;
+                    background-color: var(--current-role-primary);
+                    border-color: var(--current-role-primary);
                 }
                 .form-range::-webkit-slider-thumb {
-                    background: #6f42c1;
+                    background: var(--current-role-primary);
                 }
                 .form-range::-moz-range-thumb {
-                    background: #6f42c1;
-                }
-                .btn-outline-purple {
-                    color: #6f42c1;
-                    border-color: #6f42c1;
-                }
-                .btn-outline-purple:hover, .btn-outline-purple.active {
-                    background-color: #6f42c1;
-                    border-color: #6f42c1;
-                    color: white;
+                    background: var(--current-role-primary);
                 }
             `}</style>
         </div>

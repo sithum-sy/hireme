@@ -56,51 +56,58 @@ const StatsCard = ({
 
     return (
         <div
-            className={`dashboard-card stats-card ${variant} ${
-                onClick ? "clickable" : ""
+            className={`card h-100 transition ${
+                onClick ? "cursor-pointer" : ""
             } ${className}`}
             onClick={onClick}
             role={onClick ? "button" : undefined}
             tabIndex={onClick ? 0 : undefined}
         >
-            <div className="dashboard-card-body">
+            <div className="card-body d-flex align-items-center">
                 {loading ? (
                     <LoadingSkeleton />
                 ) : (
-                    <div className="stats-card-content">
-                        <div className="stats-info">
-                            <h6 className="stats-title">{title}</h6>
-                            <div className="stats-value">
+                    <>
+                        <div className="flex-grow-1">
+                            <h6 className="card-title text-muted mb-2 font-medium">{title}</h6>
+                            <div className="h3 mb-1 text-primary fw-bold">
                                 {formatValue(value)}
                             </div>
                             {(subtitle || trend) && (
-                                <div
-                                    className={`stats-subtitle ${
-                                        trend ? trendColor : "muted"
-                                    }`}
-                                >
+                                <div className="d-flex flex-column flex-sm-row align-items-start align-items-sm-center gap-2">
                                     {trend && trendIcon && (
-                                        <i
-                                            className={`${trendIcon} trend-icon`}
-                                        ></i>
+                                        <span
+                                            className={`badge bg-${trendColor} bg-opacity-10 text-${trendColor} d-flex align-items-center gap-1`}
+                                        >
+                                            <i
+                                                className={`${trendIcon} small`}
+                                            ></i>
+                                            <span className="small">
+                                                {trend.text}
+                                            </span>
+                                        </span>
                                     )}
-                                    <span>{trend ? trend.text : subtitle}</span>
+                                    {!trend && subtitle && (
+                                        <small className="text-muted">
+                                            {subtitle}
+                                        </small>
+                                    )}
                                 </div>
                             )}
                         </div>
-                        <div className={`stats-icon ${variant}`}>
-                            <i className={icon}></i>
+                        <div className={`ms-3 text-${variant}`}>
+                            <i className={`${icon} fa-2x`}></i>
                         </div>
-                    </div>
+                    </>
                 )}
             </div>
 
             {onClick && (
-                <div className="dashboard-card-footer">
-                    <div className="click-indicator">
+                <div className="card-footer bg-light text-center">
+                    <small className="text-muted d-flex align-items-center justify-content-center gap-1">
                         <i className="fas fa-external-link-alt"></i>
-                        <span>Click to view details</span>
-                    </div>
+                        Click to view details
+                    </small>
                 </div>
             )}
         </div>

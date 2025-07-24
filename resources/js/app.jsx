@@ -77,6 +77,11 @@ import EditCategory from "./pages/staff/categories/EditCategory";
 import CategoryDetails from "./pages/staff/categories/CategoryDetails";
 import StaffProfile from "./pages/staff/profile/StaffProfile";
 
+// Report Components
+import AdminReportsPage from "./components/admin/reports/ReportsPage";
+import ClientReportsPage from "./components/client/reports/ReportsPage";
+import ProviderReportsPage from "./components/provider/reports/ReportsPage";
+
 function App() {
     return (
         <AuthProvider>
@@ -322,6 +327,11 @@ function App() {
                                             <Route
                                                 path="profile"
                                                 element={<ClientProfile />}
+                                            />
+
+                                            <Route
+                                                path="reports/*"
+                                                element={<ClientReportsPage />}
                                             />
 
                                             <Route
@@ -655,44 +665,10 @@ function App() {
                                                     }
                                                 />
 
-                                                {/* Provider Analytics Routes */}
+                                                {/* Provider Reports Routes */}
                                                 <Route
-                                                    path="analytics/performance"
-                                                    element={
-                                                        <PlaceholderPage
-                                                            title="Performance Analytics"
-                                                            subtitle="Track your business performance"
-                                                            icon="fas fa-chart-line"
-                                                            description="View detailed analytics about your service performance and customer satisfaction."
-                                                            variant="success"
-                                                        />
-                                                    }
-                                                />
-
-                                                <Route
-                                                    path="analytics/services"
-                                                    element={
-                                                        <PlaceholderPage
-                                                            title="Service Insights"
-                                                            subtitle="Analyze your service performance"
-                                                            icon="fas fa-chart-bar"
-                                                            description="Get insights into which services are most popular and profitable."
-                                                            variant="info"
-                                                        />
-                                                    }
-                                                />
-
-                                                <Route
-                                                    path="analytics/customers"
-                                                    element={
-                                                        <PlaceholderPage
-                                                            title="Customer Insights"
-                                                            subtitle="Understand your customer base"
-                                                            icon="fas fa-users-cog"
-                                                            description="Learn about your customers and their preferences to improve your services."
-                                                            variant="info"
-                                                        />
-                                                    }
+                                                    path="reports/*"
+                                                    element={<ProviderReportsPage />}
                                                 />
 
                                                 {/* Provider Reviews */}
@@ -812,34 +788,8 @@ function App() {
                                             />
 
                                             <Route
-                                                path="reports"
-                                                element={
-                                                    <PlaceholderPage
-                                                        title="Reports & Analytics"
-                                                        subtitle="Platform insights and reports"
-                                                        icon="fas fa-chart-pie"
-                                                        description="Generate comprehensive reports and view platform analytics."
-                                                        variant="info"
-                                                        actions={
-                                                            <>
-                                                                <button className="btn btn-primary">
-                                                                    <i className="fas fa-chart-bar"></i>
-                                                                    <span>
-                                                                        View
-                                                                        Analytics
-                                                                    </span>
-                                                                </button>
-                                                                <button className="btn btn-outline-primary">
-                                                                    <i className="fas fa-file-export"></i>
-                                                                    <span>
-                                                                        Generate
-                                                                        Report
-                                                                    </span>
-                                                                </button>
-                                                            </>
-                                                        }
-                                                    />
-                                                }
+                                                path="reports/*"
+                                                element={<AdminReportsPage />}
                                             />
 
                                             <Route

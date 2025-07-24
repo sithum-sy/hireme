@@ -115,7 +115,7 @@ const PublicLayout = ({
             name: "Creative Services",
             icon: "fas fa-palette",
             path: "/services/creative",
-            color: "purple",
+            color: "primary",
             description: "Design, writing, photography",
         },
     ];

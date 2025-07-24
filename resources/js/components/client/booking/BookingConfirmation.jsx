@@ -923,9 +923,10 @@ const BookingConfirmation = ({
                     color: white;
                 }
                 .btn-primary:hover {
-                    background-color: #5a2d91;
-                    border-color: #5a2d91;
+                    background-color: var(--current-role-primary);
+                    border-color: var(--current-role-primary);
                     color: white;
+                    opacity: 0.9;
                 }
                 .btn-outline-primary {
                     color: var(--current-role-primary);

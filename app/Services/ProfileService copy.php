@@ -95,14 +95,23 @@ class ProfileService
     {
         // Delete old profile picture
         if ($user->profile_picture) {
-            Storage::disk('public')->delete($user->profile_picture);
+            $oldPath = public_path($user->profile_picture);
+            if (file_exists($oldPath)) {
+                unlink($oldPath);
+            }
         }
 
         // Generate unique filename
         $filename = 'profile_' . $user->id . '_' . time() . '.' . $image->getClientOriginalExtension();
 
-        // Store the image
-        $path = $image->storeAs('profile_pictures', $filename, 'public');
+        // Store the image in public/images/profile_pictures
+        $publicPath = 'images/profile_pictures';
+        if (!file_exists(public_path($publicPath))) {
+            mkdir(public_path($publicPath), 0755, true);
+        }
+        
+        $image->move(public_path($publicPath), $filename);
+        $path = $publicPath . '/' . $filename;
 
         // Update user record
         $user->update(['profile_picture' => $path]);
@@ -110,7 +119,7 @@ class ProfileService
         // Fire event
         event(new ProfileUpdated($user, 'profile_image_updated'));
 
-        return Storage::url($path);
+        return asset($path);
     }
 
     /**
@@ -161,11 +170,19 @@ class ProfileService
             if (isset($data['business_license']) && $data['business_license'] instanceof UploadedFile) {
                 // Delete old business license
                 if ($profile->business_license) {
-                    Storage::disk('public')->delete($profile->business_license);
+                    $oldPath = public_path($profile->business_license);
+                    if (file_exists($oldPath)) {
+                        unlink($oldPath);
+                    }
                 }
 
                 $filename = 'license_' . $user->id . '_' . time() . '.' . $data['business_license']->getClientOriginalExtension();
-                $data['business_license'] = $data['business_license']->storeAs('business_licenses', $filename, 'public');
+                $publicPath = 'images/business_licenses';
+                if (!file_exists(public_path($publicPath))) {
+                    mkdir(public_path($publicPath), 0755, true);
+                }
+                $data['business_license']->move(public_path($publicPath), $filename);
+                $data['business_license'] = $publicPath . '/' . $filename;
             }
 
             // Handle certifications upload
@@ -173,15 +190,23 @@ class ProfileService
                 // Delete old certifications
                 if ($profile->certifications) {
                     foreach ($profile->certifications as $oldCert) {
-                        Storage::disk('public')->delete($oldCert);
+                        $oldPath = public_path($oldCert);
+                        if (file_exists($oldPath)) {
+                            unlink($oldPath);
+                        }
                     }
                 }
 
                 $certificationPaths = [];
+                $publicPath = 'images/certifications';
+                if (!file_exists(public_path($publicPath))) {
+                    mkdir(public_path($publicPath), 0755, true);
+                }
                 foreach ($data['certifications'] as $index => $certification) {
                     if ($certification instanceof UploadedFile) {
                         $filename = 'cert_' . $user->id . '_' . time() . '_' . ($index + 1) . '.' . $certification->getClientOriginalExtension();
-                        $certificationPaths[] = $certification->storeAs('certifications', $filename, 'public');
+                        $certification->move(public_path($publicPath), $filename);
+                        $certificationPaths[] = $publicPath . '/' . $filename;
                     }
                 }
                 $data['certifications'] = $certificationPaths;
@@ -192,15 +217,23 @@ class ProfileService
                 // Delete old portfolio images
                 if ($profile->portfolio_images) {
                     foreach ($profile->portfolio_images as $oldImage) {
-                        Storage::disk('public')->delete($oldImage);
+                        $oldPath = public_path($oldImage);
+                        if (file_exists($oldPath)) {
+                            unlink($oldPath);
+                        }
                     }
                 }
 
                 $portfolioPaths = [];
+                $publicPath = 'images/portfolio';
+                if (!file_exists(public_path($publicPath))) {
+                    mkdir(public_path($publicPath), 0755, true);
+                }
                 foreach ($data['portfolio_images'] as $index => $image) {
                     if ($image instanceof UploadedFile) {
                         $filename = 'portfolio_' . $user->id . '_' . time() . '_' . ($index + 1) . '.' . $image->getClientOriginalExtension();
-                        $portfolioPaths[] = $image->storeAs('portfolio', $filename, 'public');
+                        $image->move(public_path($publicPath), $filename);
+                        $portfolioPaths[] = $publicPath . '/' . $filename;
                     }
                 }
                 $data['portfolio_images'] = $portfolioPaths;
@@ -261,7 +294,7 @@ class ProfileService
                 'contact_number' => $user->contact_number,
                 'date_of_birth' => $user->date_of_birth?->format('Y-m-d'),
                 'age' => $user->age,
-                'profile_picture' => $user->profile_picture ? Storage::url($user->profile_picture) : null,
+                'profile_picture' => $user->profile_picture ? asset($user->profile_picture) : null,
                 'is_active' => $user->is_active,
                 'email_verified_at' => $user->email_verified_at?->format('Y-m-d H:i:s'),
                 'created_at' => $user->created_at->format('Y-m-d H:i:s'),
@@ -376,7 +409,10 @@ class ProfileService
     public function deleteProfilePicture(User $user): bool
     {
         if ($user->profile_picture) {
-            Storage::disk('public')->delete($user->profile_picture);
+            $oldPath = public_path($user->profile_picture);
+            if (file_exists($oldPath)) {
+                unlink($oldPath);
+            }
             $user->update(['profile_picture' => null]);
 
             // Fire event
@@ -402,7 +438,10 @@ class ProfileService
         switch ($documentType) {
             case 'business_license':
                 if ($profile->business_license) {
-                    Storage::disk('public')->delete($profile->business_license);
+                    $oldPath = public_path($profile->business_license);
+                    if (file_exists($oldPath)) {
+                        unlink($oldPath);
+                    }
                     $profile->update(['business_license' => null]);
 
                     // Fire event
@@ -415,7 +454,10 @@ class ProfileService
             case 'certification':
                 if ($profile->certifications && isset($profile->certifications[$index])) {
                     $certifications = $profile->certifications;
-                    Storage::disk('public')->delete($certifications[$index]);
+                    $oldPath = public_path($certifications[$index]);
+                    if (file_exists($oldPath)) {
+                        unlink($oldPath);
+                    }
                     unset($certifications[$index]);
                     $profile->update(['certifications' => array_values($certifications)]);
 
@@ -429,7 +471,10 @@ class ProfileService
             case 'portfolio_image':
                 if ($profile->portfolio_images && isset($profile->portfolio_images[$index])) {
                     $portfolioImages = $profile->portfolio_images;
-                    Storage::disk('public')->delete($portfolioImages[$index]);
+                    $oldPath = public_path($portfolioImages[$index]);
+                    if (file_exists($oldPath)) {
+                        unlink($oldPath);
+                    }
                     unset($portfolioImages[$index]);
                     $profile->update(['portfolio_images' => array_values($portfolioImages)]);
 

@@ -39,7 +39,7 @@ const CreateCategory = () => {
         "#dc3545",
         "#ffc107",
         "#17a2b8",
-        "#6f42c1",
+        "#8b5cf6",
         "#e83e8c",
         "#fd7e14",
         "#20c997",

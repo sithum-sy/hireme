@@ -461,7 +461,7 @@ const ServicesBrowse = () => {
                                 </button>
 
                                 <button
-                                    className="btn btn-outline-purple"
+                                    className="btn btn-outline-primary"
                                     onClick={() =>
                                         setShowLocationSelector(
                                             !showLocationSelector
@@ -474,7 +474,7 @@ const ServicesBrowse = () => {
                                         : "Custom Location"}
                                 </button>
                                 <button
-                                    className="btn btn-outline-purple d-lg-none"
+                                    className="btn btn-outline-primary d-lg-none"
                                     onClick={() => setShowFilters(!showFilters)}
                                 >
                                     <i className="fas fa-filter me-2"></i>
@@ -568,7 +568,7 @@ const ServicesBrowse = () => {
 
                                     {/* Search Filter Badge */}
                                     {filters.search && (
-                                        <span className="badge bg-purple bg-opacity-10 text-purple">
+                                        <span className="badge bg-primary bg-opacity-10 text-primary">
                                             Search: "{filters.search}"
                                             <button
                                                 className="btn-close btn-close-sm ms-2"
@@ -583,7 +583,7 @@ const ServicesBrowse = () => {
 
                                     {/* Existing filter badges remain the same */}
                                     {filters.category_id && (
-                                        <span className="badge bg-purple bg-opacity-10 text-purple">
+                                        <span className="badge bg-primary bg-opacity-10 text-primary">
                                             {categories.find(
                                                 (c) =>
                                                     c.id == filters.category_id
@@ -602,7 +602,7 @@ const ServicesBrowse = () => {
                                     {/* Price Range Badge */}
                                     {(filters.min_price ||
                                         filters.max_price) && (
-                                        <span className="badge bg-purple bg-opacity-10 text-purple">
+                                        <span className="badge bg-primary bg-opacity-10 text-primary">
                                             Rs. {filters.min_price || 0} -{" "}
                                             {filters.max_price || "∞"}
                                             <button
@@ -619,7 +619,7 @@ const ServicesBrowse = () => {
 
                                     {/* Rating Badge */}
                                     {filters.min_rating && (
-                                        <span className="badge bg-purple bg-opacity-10 text-purple">
+                                        <span className="badge bg-primary bg-opacity-10 text-primary">
                                             {filters.min_rating}+ Stars
                                             <button
                                                 className="btn-close btn-close-sm ms-2"
@@ -634,7 +634,7 @@ const ServicesBrowse = () => {
 
                                     {/* Pricing Type Badge */}
                                     {filters.pricing_type && (
-                                        <span className="badge bg-purple bg-opacity-10 text-purple">
+                                        <span className="badge bg-primary bg-opacity-10 text-primary">
                                             {filters.pricing_type
                                                 .charAt(0)
                                                 .toUpperCase() +
@@ -745,7 +745,7 @@ const ServicesBrowse = () => {
                                         Use My Current Location
                                     </button>
                                     <button
-                                        className="btn btn-outline-purple"
+                                        className="btn btn-outline-primary"
                                         onClick={() =>
                                             setShowLocationSelector(true)
                                         }
@@ -887,14 +887,14 @@ const ServicesBrowse = () => {
                                         </p>
                                         <div className="d-flex gap-2 justify-content-center">
                                             <button
-                                                className="btn btn-outline-purple"
+                                                className="btn btn-outline-primary"
                                                 onClick={clearFilters}
                                             >
                                                 Clear Filters
                                             </button>
                                             <Link
                                                 to="/client/services/search"
-                                                className="btn btn-purple"
+                                                className="btn btn-primary"
                                             >
                                                 Advanced Search
                                             </Link>
@@ -909,27 +909,7 @@ const ServicesBrowse = () => {
 
             {/* Styles remain the same */}
             <style>{`
-                .text-purple { color: #6f42c1 !important; }
-                .bg-purple { background-color: #6f42c1 !important; }
-                .btn-purple {
-                    background-color: #6f42c1;
-                    border-color: #6f42c1;
-                    color: white;
-                }
-                .btn-purple:hover {
-                    background-color: #5a2d91;
-                    border-color: #5a2d91;
-                    color: white;
-                }
-                .btn-outline-purple {
-                    color: #6f42c1;
-                    border-color: #6f42c1;
-                }
-                .btn-outline-purple:hover {
-                    background-color: #6f42c1;
-                    border-color: #6f42c1;
-                    color: white;
-                }
+                /* Using CSS variables for consistent theming */
                 .filters-sidebar {
                     position: sticky;
                     top: 2rem;

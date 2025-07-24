@@ -537,7 +537,7 @@ const AcceptQuoteModal = ({ show, onHide, quote, onAcceptSuccess }) => {
                                     <div className="summary-sidebar">
                                         {/* Provider Info */}
                                         <div className="card border-0 shadow-sm mb-3">
-                                            <div className="card-header bg-purple text-white">
+                                            <div className="card-header bg-primary text-white">
                                                 <h6 className="fw-bold mb-0">
                                                     <i className="fas fa-user me-2"></i>
                                                     Provider
@@ -564,7 +564,7 @@ const AcceptQuoteModal = ({ show, onHide, quote, onAcceptSuccess }) => {
                                                             />
                                                         ) : (
                                                             <div
-                                                                className="bg-purple bg-opacity-10 text-purple rounded-circle d-flex align-items-center justify-content-center"
+                                                                className="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center"
                                                                 style={{
                                                                     width: "40px",
                                                                     height: "40px",
@@ -684,7 +684,7 @@ const AcceptQuoteModal = ({ show, onHide, quote, onAcceptSuccess }) => {
                                                         </li>
                                                     )}
                                                     <li>
-                                                        <i className="fas fa-phone text-purple me-2"></i>
+                                                        <i className="fas fa-phone text-primary me-2"></i>
                                                         Contact support for any
                                                         issues
                                                     </li>
@@ -730,13 +730,7 @@ const AcceptQuoteModal = ({ show, onHide, quote, onAcceptSuccess }) => {
             </div>
 
             <style>{`
-                .text-purple { color: #6f42c1 !important; }
-                .bg-purple { background-color: #6f42c1 !important; }
-                .btn-purple {
-                    background-color: #6f42c1;
-                    border-color: #6f42c1;
-                    color: white;
-                }
+                /* Using CSS variables for consistent theming */
                 .modal-xl {
                     max-width: 1200px;
                 }

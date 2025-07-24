@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useAdmin } from "../../../context/AdminContext";
 import AdminLayout from "../../../components/layouts/AdminLayout";
+import { constructProfileImageUrl } from "../../../hooks/useServiceImages";
 
 const EditStaff = () => {
     const { id } = useParams();
@@ -672,18 +673,40 @@ const EditStaff = () => {
                         </div>
                         <div className="card-body">
                             <div className="text-center mb-3">
-                                {staffMember.profile_picture ? (
-                                    <img
-                                        src={staffMember.profile_picture}
-                                        alt={staffMember.full_name}
-                                        className="rounded-circle"
-                                        style={{
-                                            width: "80px",
-                                            height: "80px",
-                                            objectFit: "cover",
-                                        }}
-                                    />
-                                ) : (
+                                {(() => {
+                                    const profileImageUrl = constructProfileImageUrl(staffMember.profile_picture);
+                                    return profileImageUrl ? (
+                                        <img
+                                            src={profileImageUrl}
+                                            alt={staffMember.full_name}
+                                            className="rounded-circle"
+                                            style={{
+                                                width: "80px",
+                                                height: "80px",
+                                                objectFit: "cover",
+                                            }}
+                                            onError={(e) => {
+                                                e.target.style.display = "none";
+                                                const fallback = e.target.nextSibling;
+                                                if (fallback) {
+                                                    fallback.style.display = "flex";
+                                                }
+                                            }}
+                                        />
+                                    ) : null;
+                                })()}
+                                {/* Fallback avatar */}
+                                <div
+                                    className="bg-secondary bg-opacity-10 text-secondary rounded-circle d-flex align-items-center justify-content-center"
+                                    style={{
+                                        width: "80px",
+                                        height: "80px",
+                                        display: staffMember.profile_picture ? "none" : "flex",
+                                    }}
+                                >
+                                    <i className="fas fa-user fa-2x"></i>
+                                </div>
+                                {staffMember.profile_picture && (
                                     <div
                                         className="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center mx-auto"
                                         style={{

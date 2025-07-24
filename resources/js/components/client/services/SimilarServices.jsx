@@ -87,7 +87,7 @@ const SimilarServices = ({ serviceId, categoryId, location }) => {
                 <h4 className="fw-bold mb-0">Similar Services</h4>
                 <Link
                     to={`/client/services?category_id=${categoryId}`}
-                    className="btn btn-outline-purple btn-sm"
+                    className="btn btn-outline-primary btn-sm"
                 >
                     View All in Category
                 </Link>
@@ -105,15 +105,7 @@ const SimilarServices = ({ serviceId, categoryId, location }) => {
             </div>
 
             <style>{`
-                .btn-outline-purple {
-                    color: #6f42c1;
-                    border-color: #6f42c1;
-                }
-                .btn-outline-purple:hover {
-                    background-color: #6f42c1;
-                    border-color: #6f42c1;
-                    color: white;
-                }
+                /* Using CSS variables for consistent theming */
             `}</style>
         </div>
     );

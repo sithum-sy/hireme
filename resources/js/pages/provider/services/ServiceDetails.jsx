@@ -1394,43 +1394,43 @@ const ServiceDetails = () => {
                 }
 
                 .btn-primary {
-                    background-color: #fd7e14;
-                    border-color: #fd7e14;
+                    background-color: var(--current-role-primary);
+                    border-color: var(--current-role-primary);
                 }
 
                 .btn-primary:hover {
-                    background-color: #e55100;
-                    border-color: #e55100;
+                    background-color: var(--current-role-hover);
+                    border-color: var(--current-role-hover);
                 }
 
                 /* Performance indicator colors */
                 .text-success {
-                    color: #198754 !important;
+                    color: var(--success-color) !important;
                 }
                 .text-warning {
-                    color: #ffc107 !important;
+                    color: var(--warning-color) !important;
                 }
                 .text-info {
-                    color: #0dcaf0 !important;
+                    color: var(--info-color) !important;
                 }
                 .text-danger {
-                    color: #dc3545 !important;
+                    color: var(--danger-color) !important;
                 }
                 .text-secondary {
-                    color: #6c757d !important;
+                    color: var(--secondary-color) !important;
                 }
 
                 .bg-success {
-                    background-color: #198754 !important;
+                    background-color: var(--success-color) !important;
                 }
                 .bg-warning {
-                    background-color: #ffc107 !important;
+                    background-color: var(--warning-color) !important;
                 }
                 .bg-info {
-                    background-color: #0dcaf0 !important;
+                    background-color: var(--info-color) !important;
                 }
                 .bg-danger {
-                    background-color: #dc3545 !important;
+                    background-color: var(--danger-color) !important;
                 }
                 .bg-secondary {
                     background-color: #6c757d !important;

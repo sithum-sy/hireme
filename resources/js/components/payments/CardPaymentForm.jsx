@@ -181,8 +181,8 @@ const CardPaymentForm = ({
                 }
 
                 .stripe-element:focus-within {
-                    border-color: #6f42c1;
-                    box-shadow: 0 0 0 0.2rem rgba(111, 66, 193, 0.25);
+                    border-color: var(--current-role-primary);
+                    box-shadow: 0 0 0 0.2rem var(--current-role-light);
                 }
             `}</style>
         </form>

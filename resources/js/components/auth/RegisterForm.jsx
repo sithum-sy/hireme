@@ -486,7 +486,7 @@ const RegisterForm = () => {
                         /* width: 50px;
                     height: 50px; */
                     }
-                    background: #4a90e2;
+                    background: var(--primary-color);
                     border-radius: 12px;
                     display: flex;
                     align-items: center;
@@ -508,21 +508,20 @@ const RegisterForm = () => {
                 .form-title {
                     font-size: 1.5rem;
                     font-weight: 700;
-                    color: #1a202c;
+                    color: var(--text-primary);
                     margin-bottom: 0.25rem;
                 }
 
                 .form-subtitle {
-                    color: #6b7280;
+                    color: var(--text-secondary);
                     font-size: 0.95rem;
                     margin: 0;
                 }
 
                 .form-card {
-                    background: white;
+                    background: var(--bg-white);
                     border-radius: 16px;
-                    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
-                        0 10px 10px -5px rgba(0, 0, 0, 0.04);
+                    box-shadow: var(--shadow-xl);
                     padding: 1.5rem;
                     margin-bottom: 1rem;
                 }
@@ -532,9 +531,9 @@ const RegisterForm = () => {
                 }
 
                 .general-error {
-                    background: #fef2f2;
-                    border: 1px solid #fecaca;
-                    color: #b91c1c;
+                    background: rgba(220, 38, 38, 0.1);
+                    border: 1px solid rgba(220, 38, 38, 0.2);
+                    color: var(--danger-color);
                     padding: 0.875rem;
                     border-radius: 8px;
                     margin-bottom: 1.25rem;
@@ -549,18 +548,18 @@ const RegisterForm = () => {
 
                 .form-footer {
                     text-align: center;
-                    color: #6b7280;
+                    color: var(--text-secondary);
                     font-size: 0.85rem;
                 }
 
                 .login-link {
-                    color: #4a90e2;
+                    color: var(--primary-color);
                     text-decoration: none;
                     font-weight: 500;
                 }
 
                 .login-link:hover {
-                    color: #357abd;
+                    color: var(--primary-hover);
                     text-decoration: underline;
                 }
 
