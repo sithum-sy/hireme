@@ -2,7 +2,12 @@ import React from "react";
 import { useProfile } from "../../../context/ProfileContext";
 import { useAuth } from "../../../context/AuthContext";
 
-const ProfileLayout = ({ children, title, subtitle, showProfileHeader = false }) => {
+const ProfileLayout = ({
+    children,
+    title,
+    subtitle,
+    showProfileHeader = false,
+}) => {
     const { profile, loading } = useProfile();
     const { user } = useAuth();
 
@@ -47,7 +52,8 @@ const ProfileLayout = ({ children, title, subtitle, showProfileHeader = false })
                                     alt="Profile"
                                     className="profile-image"
                                     onError={(e) => {
-                                        e.target.src = "/images/default-avatar.png";
+                                        e.target.src =
+                                            "/images/default-avatar.png";
                                     }}
                                 />
                                 <div className="profile-status">
@@ -70,7 +76,9 @@ const ProfileLayout = ({ children, title, subtitle, showProfileHeader = false })
                         </div>
 
                         <div className="profile-info">
-                            <h1 className="profile-name">{userData.full_name}</h1>
+                            <h1 className="profile-name">
+                                {userData.full_name}
+                            </h1>
                             <p className="profile-role">
                                 <i className="fas fa-user-tag"></i>
                                 {user?.role?.replace("_", " ")?.toUpperCase()}
@@ -82,13 +90,15 @@ const ProfileLayout = ({ children, title, subtitle, showProfileHeader = false })
                                         <div className="stat-item">
                                             <i className="fas fa-star"></i>
                                             <span className="rating">
-                                                {providerProfile.average_rating > 0
+                                                {providerProfile.average_rating >
+                                                0
                                                     ? `${providerProfile.average_rating}/5`
                                                     : "No ratings"}
                                             </span>
                                             <span className="reviews">
                                                 (
-                                                {providerProfile.total_reviews || 0}{" "}
+                                                {providerProfile.total_reviews ||
+                                                    0}{" "}
                                                 reviews)
                                             </span>
                                         </div>
@@ -109,7 +119,8 @@ const ProfileLayout = ({ children, title, subtitle, showProfileHeader = false })
                                 <div className="staff-info">
                                     <p className="created-by">
                                         <i className="fas fa-user-plus"></i>
-                                        Created by: {profile.staff_info.created_by}
+                                        Created by:{" "}
+                                        {profile.staff_info.created_by}
                                     </p>
                                 </div>
                             )}
@@ -148,7 +159,7 @@ const ProfileLayout = ({ children, title, subtitle, showProfileHeader = false })
             {/* Page Title */}
             {(title || subtitle) && (
                 <div className="profile-page-header">
-                    {title && <h2 className="page-title">{title}</h2>}
+                    {title && <h1 className="page-title">{title}</h1>}
                     {subtitle && <p className="page-subtitle">{subtitle}</p>}
                 </div>
             )}
@@ -158,10 +169,11 @@ const ProfileLayout = ({ children, title, subtitle, showProfileHeader = false })
 
             <style jsx>{`
                 .profile-container {
-                    padding: var(--dashboard-content-padding);
-                    max-width: 1200px;
-                    margin: 0 auto;
-                    min-height: 100vh;
+                    width: 100%;
+                    flex: 1;
+                    display: flex;
+                    flex-direction: column;
+                    padding: 0 !important;
                 }
 
                 .profile-loading,
@@ -345,13 +357,6 @@ const ProfileLayout = ({ children, title, subtitle, showProfileHeader = false })
                     margin-bottom: var(--space-6);
                 }
 
-                .page-title {
-                    margin: 0 0 var(--space-2) 0;
-                    color: var(--text-primary);
-                    font-size: var(--text-2xl);
-                    font-weight: var(--font-bold);
-                }
-
                 .page-subtitle {
                     margin: 0;
                     color: var(--text-secondary);
@@ -360,14 +365,11 @@ const ProfileLayout = ({ children, title, subtitle, showProfileHeader = false })
 
                 .profile-content {
                     position: relative;
+                    flex: 1;
                 }
 
                 /* Responsive Design */
                 @media (max-width: 768px) {
-                    .profile-container {
-                        padding: var(--space-4);
-                    }
-
                     .profile-header {
                         padding: var(--space-4);
                     }

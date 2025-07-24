@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useProfile } from "../../../context/ProfileContext";
 import ProfileSection from "../shared/ProfileSection";
 import ContactInfoForm from "../forms/ContactInfoForm";
@@ -12,6 +12,9 @@ const ContactSection = ({ onSuccess, onError }) => {
     const canEditContact = config?.permissions?.canEdit?.some((field) =>
         ["contact_number", "address"].includes(field)
     );
+    
+    // Memoize empty initialData to prevent re-renders
+    const emptyInitialData = useMemo(() => ({}), []);
 
     const handleFormSuccess = (result) => {
         setEditMode(false);
@@ -201,6 +204,7 @@ const ContactSection = ({ onSuccess, onError }) => {
             <ContactInfoForm
                 onSubmit={handleFormSuccess}
                 onError={handleFormError}
+                initialData={emptyInitialData}
             />
         </div>
     );

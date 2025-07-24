@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import { useProfile } from "../../../context/ProfileContext";
 import { useAuth } from "../../../context/AuthContext";
 import ProfileSection from "../shared/ProfileSection";
@@ -12,20 +12,20 @@ const SecuritySection = ({ onSuccess, onError }) => {
 
     const userData = profile?.user;
 
-    const handleFormSuccess = (result) => {
+    const handleFormSuccess = useCallback((result) => {
         setChangePasswordMode(false);
         if (onSuccess) {
             onSuccess(
                 result.message || "Security settings updated successfully!"
             );
         }
-    };
+    }, [onSuccess]);
 
-    const handleFormError = (error) => {
+    const handleFormError = useCallback((error) => {
         if (onError) {
             onError(error.message || "Failed to update security settings");
         }
-    };
+    }, [onError]);
 
     const getSecurityScore = () => {
         let score = 0;
@@ -70,7 +70,7 @@ const SecuritySection = ({ onSuccess, onError }) => {
         };
     };
 
-    const securityScore = getSecurityScore();
+    const securityScore = useMemo(() => getSecurityScore(), [userData?.email_verified_at, userData?.first_name, userData?.last_name, userData?.last_login_at, userData?.created_at, userData?.role, profile?.provider_profile?.verification_status]);
 
     const renderViewMode = () => (
         <div className="security-view-mode">

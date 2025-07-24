@@ -162,8 +162,8 @@ const ProviderReportsPage = () => {
             <div className="page-content">
                 <div className="page-header d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-6">
                     <div className="mb-3 mb-md-0">
-                        <h1 className="h2 mb-2 text-primary">Business Reports & Analytics</h1>
-                        <p className="text-muted mb-0">Track your business performance and generate professional reports</p>
+                        <h1 className="page-title">Business Reports & Analytics</h1>
+                        <p className="page-subtitle">Track your business performance and generate professional reports</p>
                     </div>
                 </div>
 

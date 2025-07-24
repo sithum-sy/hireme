@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { useProfile } from "../../../context/ProfileContext";
 import ProfileSection from "../shared/ProfileSection";
 import BusinessInfoForm from "../forms/BusinessInfoForm";
@@ -19,22 +19,22 @@ const BusinessSection = ({ onSuccess, onError }) => {
         ].includes(field)
     );
 
-    const handleFormSuccess = (result) => {
+    const handleFormSuccess = useCallback((result) => {
         setEditMode(false);
         if (onSuccess) {
             onSuccess(
                 result.message || "Business information updated successfully!"
             );
         }
-    };
+    }, [onSuccess]);
 
-    const handleFormError = (error) => {
+    const handleFormError = useCallback((error) => {
         if (onError) {
             onError(error.message || "Failed to update business information");
         }
-    };
+    }, [onError]);
 
-    const handleToggleAvailability = async () => {
+    const handleToggleAvailability = useCallback(async () => {
         setToggling(true);
         try {
             const result = await toggleAvailability();
@@ -48,7 +48,7 @@ const BusinessSection = ({ onSuccess, onError }) => {
         } finally {
             setToggling(false);
         }
-    };
+    }, [toggleAvailability, onSuccess, onError]);
 
     const renderViewMode = () => (
         <div className="business-view-mode">

@@ -13,13 +13,18 @@
 .main-content {
     flex: 1;
     transition: margin-left 0.3s ease;
-    min-height: calc(100vh - 60px);
+    min-height: 100vh;
     background: var(--bg-light);
+    display: flex;
+    flex-direction: column;
 }
 
 .content-container {
+    flex: 1;
     max-width: 100%;
     padding: var(--dashboard-content-padding);
+    display: flex;
+    flex-direction: column;
 }
 
 /* Page Headers - Matching your landing page style */
@@ -29,15 +34,11 @@
 }
 
 .page-title {
-    font-size: 2rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    margin-bottom: 0.5rem;
-    background: var(--current-role-gradient);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    line-height: 1.2;
+    font-size: 2rem !important;
+    font-weight: 700 !important;
+    color: var(--current-role-primary) !important;
+    margin-bottom: 0.5rem !important;
+    line-height: 1.2 !important;
 }
 
 .page-subtitle {
@@ -123,6 +124,11 @@
     background: var(--bg-white);
     color: var(--text-secondary);
     border-left: 4px solid var(--current-role-primary);
+}
+
+/* Page content should flex to fill space */
+.page-content {
+    flex: 1;
 }
 
 /* Footer - Consistent styling */

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useProfile } from "../../../context/ProfileContext";
 import { getSectionFields } from "../../../../config/profileConfig";
 import { validateForm, hasFormErrors } from "../../../utils/validationUtils";
@@ -6,7 +6,7 @@ import { saveDraft, loadDraft, clearDraft } from "../../../utils/storageUtils";
 import ProfileFormField from "../shared/ProfileFormField";
 import Button from "../../ui/Button";
 
-const BasicInfoForm = ({ onSubmit, initialData = {} }) => {
+const BasicInfoForm = ({ onSubmit, initialData }) => {
     const { profile, config, updateProfile, saving, clearFieldError } =
         useProfile();
     const [formData, setFormData] = useState({});
@@ -18,17 +18,24 @@ const BasicInfoForm = ({ onSubmit, initialData = {} }) => {
     const fields = getSectionFields(userRole, "personal");
     const userId = profile?.user?.id;
 
+    // Memoize initial data to prevent unnecessary re-renders
+    const memoizedInitialData = useMemo(() => {
+        if (!profile?.user) return {};
+        
+        const userData = profile.user;
+        return {
+            first_name: userData.first_name || "",
+            last_name: userData.last_name || "",
+            email: userData.email || "",
+            date_of_birth: userData.date_of_birth || "",
+            ...(initialData || {}),
+        };
+    }, [profile?.user?.first_name, profile?.user?.last_name, profile?.user?.email, profile?.user?.date_of_birth, initialData]);
+
     // Initialize form data
     useEffect(() => {
         if (profile?.user) {
-            const userData = profile.user;
-            const initialFormData = {
-                first_name: userData.first_name || "",
-                last_name: userData.last_name || "",
-                email: userData.email || "",
-                date_of_birth: userData.date_of_birth || "",
-                ...initialData,
-            };
+            const initialFormData = memoizedInitialData;
 
             // Check for saved draft
             const draft = loadDraft(userId, "personal");
@@ -40,7 +47,7 @@ const BasicInfoForm = ({ onSubmit, initialData = {} }) => {
                 setFormData(initialFormData);
             }
         }
-    }, [profile?.user?.id, userId]); // Remove individual field dependencies
+    }, [profile?.user?.id, userId, memoizedInitialData]);
 
     // Auto-save draft
     useEffect(() => {
@@ -109,15 +116,7 @@ const BasicInfoForm = ({ onSubmit, initialData = {} }) => {
 
     const handleDiscardDraft = () => {
         if (profile?.user) {
-            const userData = profile.user;
-            const originalData = {
-                first_name: userData.first_name || "",
-                last_name: userData.last_name || "",
-                email: userData.email || "",
-                date_of_birth: userData.date_of_birth || "",
-            };
-
-            setFormData(originalData);
+            setFormData(memoizedInitialData);
             setIsDirty(false);
             setShowDraftNotice(false);
             clearDraft(userId, "personal");

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useProfile } from "../../../context/ProfileContext";
 import { getSectionFields } from "../../../../config/profileConfig";
 import { validateForm, hasFormErrors } from "../../../utils/validationUtils";
@@ -6,7 +6,7 @@ import { saveDraft, loadDraft, clearDraft } from "../../../utils/storageUtils";
 import ProfileFormField from "../shared/ProfileFormField";
 import Button from "../../ui/Button";
 
-const BusinessInfoForm = ({ onSubmit, initialData = {} }) => {
+const BusinessInfoForm = ({ onSubmit, initialData }) => {
     const {
         profile,
         config,
@@ -25,17 +25,24 @@ const BusinessInfoForm = ({ onSubmit, initialData = {} }) => {
     const userId = profile?.user?.id;
     const providerProfile = profile?.provider_profile;
 
+    // Memoize initial data to prevent unnecessary re-renders
+    const memoizedInitialData = useMemo(() => {
+        if (!providerProfile) return {};
+        
+        return {
+            business_name: providerProfile.business_name || "",
+            bio: providerProfile.bio || "",
+            years_of_experience: providerProfile.years_of_experience || 0,
+            service_area_radius: providerProfile.service_area_radius || 10,
+            is_available: providerProfile.is_available || false,
+            ...(initialData || {}),
+        };
+    }, [providerProfile?.business_name, providerProfile?.bio, providerProfile?.years_of_experience, providerProfile?.service_area_radius, providerProfile?.is_available, initialData]);
+
     // Initialize form data
     useEffect(() => {
         if (providerProfile) {
-            const initialFormData = {
-                business_name: providerProfile.business_name || "",
-                bio: providerProfile.bio || "",
-                years_of_experience: providerProfile.years_of_experience || 0,
-                service_area_radius: providerProfile.service_area_radius || 10,
-                is_available: providerProfile.is_available || false,
-                ...initialData,
-            };
+            const initialFormData = memoizedInitialData;
 
             // Check for saved draft
             const draft = loadDraft(userId, "business");
@@ -46,7 +53,7 @@ const BusinessInfoForm = ({ onSubmit, initialData = {} }) => {
                 setFormData(initialFormData);
             }
         }
-    }, [providerProfile, initialData, userId]);
+    }, [providerProfile, userId, memoizedInitialData]);
 
     // Auto-save draft
     useEffect(() => {
@@ -133,17 +140,7 @@ const BusinessInfoForm = ({ onSubmit, initialData = {} }) => {
     const handleReset = () => {
         if (window.confirm("Are you sure you want to reset all changes?")) {
             if (providerProfile) {
-                const originalData = {
-                    business_name: providerProfile.business_name || "",
-                    bio: providerProfile.bio || "",
-                    years_of_experience:
-                        providerProfile.years_of_experience || 0,
-                    service_area_radius:
-                        providerProfile.service_area_radius || 10,
-                    is_available: providerProfile.is_available || false,
-                };
-
-                setFormData(originalData);
+                setFormData(memoizedInitialData);
                 setIsDirty(false);
                 clearDraft(userId, "business");
             }

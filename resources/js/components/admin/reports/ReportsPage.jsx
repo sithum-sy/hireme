@@ -145,8 +145,8 @@ const AdminReportsPage = () => {
             <div className="page-content">
                 <div className="page-header d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-6">
                     <div className="mb-3 mb-md-0">
-                        <h1 className="h2 mb-2 text-primary">Reports & Analytics</h1>
-                        <p className="text-muted mb-0">Generate comprehensive platform reports and analytics</p>
+                        <h1 className="page-title">Reports & Analytics</h1>
+                        <p className="page-subtitle">Generate comprehensive platform reports and analytics</p>
                     </div>
                 </div>
 

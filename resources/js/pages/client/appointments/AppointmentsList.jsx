@@ -403,8 +403,8 @@ const AppointmentsList = () => {
                 {/* Page Header */}
                 <div className="page-header d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-6">
                     <div className="mb-3 mb-md-0">
-                        <h1 className="h2 mb-2 text-primary">My Appointments</h1>
-                        <p className="text-muted mb-0">
+                        <h1 className="page-title">My Appointments</h1>
+                        <p className="page-subtitle">
                             Manage and track your service appointments
                         </p>
                     </div>

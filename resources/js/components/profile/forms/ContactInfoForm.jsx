@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useProfile } from "../../../context/ProfileContext";
 import { getSectionFields } from "../../../../config/profileConfig";
 import { validateForm, hasFormErrors } from "../../../utils/validationUtils";
@@ -6,7 +6,7 @@ import { saveDraft, loadDraft, clearDraft } from "../../../utils/storageUtils";
 import ProfileFormField from "../shared/ProfileFormField";
 import Button from "../../ui/Button";
 
-const ContactInfoForm = ({ onSubmit, initialData = {} }) => {
+const ContactInfoForm = ({ onSubmit, initialData }) => {
     const { profile, config, updateProfile, saving, clearFieldError } =
         useProfile();
     const [formData, setFormData] = useState({});
@@ -16,31 +16,37 @@ const ContactInfoForm = ({ onSubmit, initialData = {} }) => {
     const userRole = profile?.user?.role;
     const fields = getSectionFields(userRole, "contact");
     const userId = profile?.user?.id;
+    
+    // Memoize initial data to prevent unnecessary re-renders
+    const memoizedInitialData = useMemo(() => {
+        if (!profile?.user) return {};
+        
+        const userData = profile.user;
+        return {
+            contact_number: userData.contact_number || "",
+            address: userData.address || "",
+            ...(initialData || {}),
+        };
+    }, [profile?.user?.contact_number, profile?.user?.address, initialData]);
 
     // Initialize form data
     useEffect(() => {
-        if (profile?.user) {
-            const userData = profile.user;
-            const initialFormData = {
-                contact_number: userData.contact_number || "",
-                address: userData.address || "",
-                ...initialData,
-            };
-
+        if (profile?.user && Object.keys(memoizedInitialData).length > 0) {
             // Check for saved draft
             const draft = loadDraft(userId, "contact");
             if (draft && Object.keys(draft).length > 0) {
-                setFormData({ ...initialFormData, ...draft });
+                setFormData({ ...memoizedInitialData, ...draft });
                 setIsDirty(true);
             } else {
-                setFormData(initialFormData);
+                setFormData(memoizedInitialData);
+                setIsDirty(false);
             }
         }
-    }, [profile, initialData, userId]);
+    }, [memoizedInitialData, userId]);
 
     // Auto-save draft
     useEffect(() => {
-        if (isDirty && userId) {
+        if (isDirty && userId && Object.keys(formData).length > 0) {
             const timeoutId = setTimeout(() => {
                 saveDraft(userId, "contact", formData);
             }, 2000);

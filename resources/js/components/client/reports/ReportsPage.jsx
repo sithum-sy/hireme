@@ -176,8 +176,8 @@ const ClientReportsPage = () => {
             <div className="page-content">
                 <div className="page-header d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-6">
                     <div className="mb-3 mb-md-0">
-                        <h1 className="h2 mb-2 text-primary">My Activity Reports</h1>
-                        <p className="text-muted mb-0">Track your service bookings, spending, and platform activity</p>
+                        <h1 className="page-title">My Activity Reports</h1>
+                        <p className="page-subtitle">Track your service bookings, spending, and platform activity</p>
                     </div>
                 </div>
 

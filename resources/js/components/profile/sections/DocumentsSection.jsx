@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import { useProfile } from "../../../context/ProfileContext";
 import ProfileSection from "../shared/ProfileSection";
 import DocumentsForm from "../forms/DocumentsForm";
@@ -15,18 +15,18 @@ const DocumentsSection = ({ onSuccess, onError }) => {
         )
     );
 
-    const handleFormSuccess = (result) => {
+    const handleFormSuccess = useCallback((result) => {
         setUploadMode(false);
         if (onSuccess) {
             onSuccess(result.message || "Documents uploaded successfully!");
         }
-    };
+    }, [onSuccess]);
 
-    const handleFormError = (error) => {
+    const handleFormError = useCallback((error) => {
         if (onError) {
             onError(error.message || "Failed to upload documents");
         }
-    };
+    }, [onError]);
 
     const getDocumentStatus = () => {
         const hasLicense = !!providerProfile?.business_license_url;
@@ -51,7 +51,7 @@ const DocumentsSection = ({ onSuccess, onError }) => {
         };
     };
 
-    const status = getDocumentStatus();
+    const status = useMemo(() => getDocumentStatus(), [providerProfile?.business_license_url, providerProfile?.certification_urls?.length, providerProfile?.portfolio_image_urls?.length]);
 
     const renderViewMode = () => (
         <div className="documents-view-mode">

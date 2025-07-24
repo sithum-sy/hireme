@@ -185,7 +185,7 @@ const StaffDetails = () => {
                         )}
                     </div>
                     <div>
-                        <h1 className="h2 mb-2 text-primary">{staffMember.full_name}</h1>
+                        <h1 className="page-title">{staffMember.full_name}</h1>
                         <div className="d-flex flex-column flex-sm-row align-items-start align-items-sm-center gap-3">
                             <span
                                 className={`badge ${
