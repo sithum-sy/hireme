@@ -34,7 +34,7 @@ import ClientDashboard from "./pages/client/Dashboard";
 import ServicesBrowse from "./pages/client/services/ServicesBrowse";
 import ServiceSearch from "./pages/client/services/ServiceSearch";
 import ServiceDetail from "./pages/client/services/ServiceDetail";
-import QuotesList from "./pages/client/quotes/QuotesList";
+import QuotesList from "./pages/client/quotes/QuotesListEnhanced";
 import AppointmentsList from "./pages/client/appointments/AppointmentsList";
 import AppointmentDetail from "./pages/client/appointments/AppointmentDetail";
 import ClientQuoteDetail from "./pages/client/quotes/QuoteDetail";
@@ -53,7 +53,7 @@ import BlockedTimes from "./pages/provider/availability/BlockedTimes";
 import ProviderAppointmentsList from "./pages/provider/appointments/AppointmentsList";
 import TodaysSchedule from "./pages/provider/appointments/TodaysSchedule";
 import ProviderAppointmentDetail from "./pages/provider/appointments/AppointmentDetail";
-import ProviderQuotesList from "./pages/provider/quotes/QuotesList";
+import ProviderQuotesList from "./pages/provider/quotes/ProviderQuotesListEnhanced";
 import CreateQuote from "./pages/provider/quotes/CreateQuote";
 import QuoteDetail from "./pages/provider/quotes/QuoteDetail";
 import EditQuote from "./pages/provider/quotes/EditQuote";
@@ -695,7 +695,9 @@ function App() {
                                                 {/* Provider Reports Routes */}
                                                 <Route
                                                     path="reports/*"
-                                                    element={<ProviderReportsPage />}
+                                                    element={
+                                                        <ProviderReportsPage />
+                                                    }
                                                 />
 
                                                 {/* Provider Reviews */}

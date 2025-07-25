@@ -989,11 +989,9 @@ class ClientService {
                 location_type: quoteData.location_type || "client_address",
                 address: quoteData.address || "",
                 city: quoteData.city || "",
-                // contact_preference: quoteData.contact_preference || "phone",
                 phone: quoteData.phone || "",
                 email: quoteData.email || "",
                 special_requirements: quoteData.special_requirements || "",
-                // urgency: quoteData.urgency || "normal",
                 quote_type: quoteData.quote_type || "standard",
             };
 

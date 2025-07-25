@@ -99,20 +99,22 @@ const ServiceDetail = () => {
                     } catch (error) {
                         console.error("Geocoding failed:", error);
                         // Fallback to basic location
-                        setClientLocation({
+                        const fallbackLocation = {
                             lat: latitude,
                             lng: longitude,
                             city: "Current Location",
+                            address: "Your Current Location",
                             province: "Sri Lanka",
                             radius: 15,
-                            address: "Your Current Location",
                             accuracy: "gps_fallback",
-                        });
+                        };
+                        setClientLocation(fallbackLocation);
                         setLocationLoading(false);
                     }
                 },
                 (error) => {
-                    console.log("Geolocation error:", error);
+                    console.error("Geolocation error:", error);
+                    setClientLocation(null);
                     setLocationLoading(false);
                 }
             );
@@ -1543,6 +1545,7 @@ const ServiceDetail = () => {
                             formatted_time: "9:00 AM",
                         }
                     }
+                    clientLocation={clientLocation}
                 />
             </div>
 

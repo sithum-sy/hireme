@@ -13,6 +13,7 @@ const QuoteRequestModal = ({
 }) => {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
+    const [errors, setErrors] = useState({});
 
     const { user, isAuthenticated } = useAuth();
 
@@ -22,14 +23,11 @@ const QuoteRequestModal = ({
     const [formData, setFormData] = useState({
         message: "",
         contact_preference: "",
-        // phone: "",
-        // email: "",
         client_phone: userPhone,
         client_email: userEmail,
         location_type: "client_address",
-        client_address: clientLocation ? `Near ${clientLocation.city}` : "",
-        client_city: clientLocation?.city || "",
-        // city: "",
+        client_address: "", // Will be auto-filled from clientLocation
+        client_city: "", // Will be auto-filled from clientLocation  
         special_requirements: "",
         urgency: "normal",
         service_id: service.id,
@@ -43,32 +41,28 @@ const QuoteRequestModal = ({
             const userPhone = user.contact_number || user.phone || "";
             const userEmail = user.email || "";
 
-            // console.log("User data available for auto-fill:", {
-            //     userPhone,
-            //     userEmail,
-            //     currentFormPhone: formData.client_phone,
-            //     currentFormEmail: formData.client_email,
-            // });
-
-            // Only auto-fill if the form fields are empty
-            if (
-                !formData.client_phone &&
-                !formData.client_email &&
-                (userPhone || userEmail)
-            ) {
-                console.log("Auto-filling contact info from user data");
-
-                setFormData((prev) => ({
-                    ...prev,
-                    client_phone: prev.client_phone || userPhone,
-                    client_email: prev.client_email || userEmail,
-                    contact_preference:
-                        prev.contact_preference ||
-                        (userPhone ? "phone" : userEmail ? "message" : "phone"),
-                }));
-            }
+            // Auto-fill contact info
+            setFormData((prev) => ({
+                ...prev,
+                client_phone: prev.client_phone || userPhone,
+                client_email: prev.client_email || userEmail,
+                contact_preference:
+                    prev.contact_preference ||
+                    (userPhone ? "phone" : userEmail ? "email" : "phone"),
+            }));
         }
     }, [user, isAuthenticated]);
+    
+    // Separate useEffect for location auto-filling
+    useEffect(() => {
+        if (clientLocation && clientLocation.address && clientLocation.city) {
+            setFormData((prev) => ({
+                ...prev,
+                client_address: prev.client_address || clientLocation.address || "",
+                client_city: prev.client_city || clientLocation.city || "",
+            }));
+        }
+    }, [clientLocation]);
 
     // Enhanced validation function
     const validateForm = () => {
@@ -117,6 +111,12 @@ const QuoteRequestModal = ({
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        
+        // Basic validation
+        if (!validateForm()) {
+            return;
+        }
+        
         setLoading(true);
 
         try {
@@ -125,7 +125,13 @@ const QuoteRequestModal = ({
                 provider_id: provider.id,
                 requested_date: selectedSlot.date,
                 requested_time: selectedSlot.time,
-                ...formData,
+                message: formData.message,
+                location_type: formData.location_type,
+                address: formData.client_address,
+                city: formData.client_city,
+                phone: formData.client_phone,
+                email: formData.client_email,
+                special_requirements: formData.special_requirements,
                 quote_type: "standard",
             };
 
@@ -156,22 +162,24 @@ const QuoteRequestModal = ({
     const handleInputChange = (field, value) => {
         setFormData((prev) => ({ ...prev, [field]: value }));
 
-        // if (errors[field]) {
-        //     setErrors((prev) => ({ ...prev, [field]: null }));
-        // }
+        if (errors[field]) {
+            setErrors((prev) => ({ ...prev, [field]: null }));
+        }
     };
 
     const isAutoFilled = (field) => {
-        if (!user) return false;
-
         switch (field) {
             case "phone":
-                return (
+                return user && (
                     formData.client_phone ===
                     (user.contact_number || user.phone)
                 );
             case "email":
-                return formData.client_email === user.email;
+                return user && formData.client_email === user.email;
+            case "address":
+                return clientLocation && formData.client_address === clientLocation.address;
+            case "city":
+                return clientLocation && formData.client_city === clientLocation.city;
             default:
                 return false;
         }
@@ -273,6 +281,13 @@ const QuoteRequestModal = ({
                                             <h6 className="fw-bold mb-3">
                                                 Service Details
                                             </h6>
+                                            
+                                            {clientLocation && (isAutoFilled("address") || isAutoFilled("city")) && (
+                                                <div className="alert alert-success alert-sm py-2 mb-3">
+                                                    <i className="fas fa-map-marker-alt me-2"></i>
+                                                    <small>Your current location has been automatically detected and filled in the address fields below.</small>
+                                                </div>
+                                            )}
 
                                             <div className="mb-3">
                                                 <label className="form-label">
@@ -332,7 +347,13 @@ const QuoteRequestModal = ({
                                                         </label>
                                                         <input
                                                             type="text"
-                                                            className="form-control"
+                                                            className={`form-control ${
+                                                                errors.client_address ? 'is-invalid' : ''
+                                                            } ${
+                                                                isAutoFilled("address")
+                                                                    ? "border-success"
+                                                                    : ""
+                                                            }`}
                                                             placeholder="Enter full address (e.g., 123 Main Street, Apartment 4B)"
                                                             value={
                                                                 formData.client_address
@@ -346,6 +367,11 @@ const QuoteRequestModal = ({
                                                             }
                                                             data-field="client_address"
                                                         />
+                                                        {errors.client_address && (
+                                                            <div className="invalid-feedback">
+                                                                {errors.client_address}
+                                                            </div>
+                                                        )}
                                                     </div>
 
                                                     <div className="mb-3">
@@ -354,7 +380,13 @@ const QuoteRequestModal = ({
                                                         </label>
                                                         <input
                                                             type="text"
-                                                            className="form-control"
+                                                            className={`form-control ${
+                                                                errors.client_city ? 'is-invalid' : ''
+                                                            } ${
+                                                                isAutoFilled("city")
+                                                                    ? "border-success"
+                                                                    : ""
+                                                            }`}
                                                             placeholder="City"
                                                             value={
                                                                 formData.client_city
@@ -368,6 +400,11 @@ const QuoteRequestModal = ({
                                                             }
                                                             data-field="client_city"
                                                         />
+                                                        {errors.client_city && (
+                                                            <div className="invalid-feedback">
+                                                                {errors.client_city}
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </>
                                             )}
@@ -381,6 +418,11 @@ const QuoteRequestModal = ({
                                             <h6 className="fw-bold mb-3">
                                                 Contact Information
                                             </h6>
+                                            {errors.contact && (
+                                                <div className="alert alert-warning small">
+                                                    {errors.contact}
+                                                </div>
+                                            )}
 
                                             <div className="mb-3">
                                                 <label className="form-label">
