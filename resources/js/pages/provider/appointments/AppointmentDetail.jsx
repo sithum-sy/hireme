@@ -5,10 +5,14 @@ import LoadingSpinner from "../../../components/LoadingSpinner";
 import CompleteServiceModal from "../../../components/provider/appointments/CompleteServiceModal";
 import providerAppointmentService from "../../../services/providerAppointmentService";
 import ReviewButton from "../../../components/reviews/ReviewButton";
+import { useAppointmentPDF } from "../../../components/shared/hooks/useAppointmentPDF";
 
 const AppointmentDetail = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+
+    // PDF functionality
+    const { downloadAppointmentPDF } = useAppointmentPDF("provider");
 
     const [appointment, setAppointment] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -61,7 +65,8 @@ const AppointmentDetail = () => {
             if (isNaN(appointmentDateTime.getTime())) return false;
 
             // Allow starting 15 minutes before scheduled time
-            const graceMinutes = 15;
+            // const graceMinutes = 15;
+            const graceMinutes = 60 * 24;
             const allowedStartTime = new Date(
                 appointmentDateTime.getTime() - graceMinutes * 60 * 1000
             );
@@ -100,7 +105,8 @@ const AppointmentDetail = () => {
 
             if (isNaN(appointmentDateTime.getTime())) return null;
 
-            const graceMinutes = 15;
+            // const graceMinutes = 15;
+            const graceMinutes = 60 * 24;
             const allowedStartTime = new Date(
                 appointmentDateTime.getTime() - graceMinutes * 60 * 1000
             );
@@ -478,23 +484,6 @@ const AppointmentDetail = () => {
     return (
         <ProviderLayout>
             <div className="appointment-detail-page">
-                {/* Breadcrumb */}
-                <nav aria-label="breadcrumb" className="mb-4">
-                    <ol className="breadcrumb">
-                        <li className="breadcrumb-item">
-                            <Link
-                                to="/provider/appointments"
-                                className="text-orange text-decoration-none"
-                            >
-                                My Appointments
-                            </Link>
-                        </li>
-                        <li className="breadcrumb-item active">
-                            Appointment #{appointment.id}
-                        </li>
-                    </ol>
-                </nav>
-
                 {/* Header */}
                 <div className="page-header d-flex justify-content-between align-items-start mb-4">
                     <div>
@@ -614,6 +603,17 @@ const AppointmentDetail = () => {
                                 </button> */}
                             </div>
                         )}
+
+                        {/* PDF Download Button - Available for all statuses */}
+                        <button
+                            className="btn btn-outline-secondary ms-2"
+                            onClick={() => downloadAppointmentPDF(appointment)}
+                            disabled={actionLoading}
+                            title="Download appointment details as PDF"
+                        >
+                            <i className="fas fa-download me-2"></i>
+                            Download PDF
+                        </button>
                     </div>
                 </div>
 
@@ -682,7 +682,7 @@ const AppointmentDetail = () => {
                                         )}
                                     </div>
 
-                                    <div className="col-md-4 text-end">
+                                    {/* <div className="col-md-4 text-end">
                                         <div className="client-actions">
                                             {appointment.client_phone && (
                                                 <a
@@ -698,7 +698,7 @@ const AppointmentDetail = () => {
                                                 Send Message
                                             </button>
                                         </div>
-                                    </div>
+                                    </div> */}
                                 </div>
                             </div>
                         </div>
@@ -730,7 +730,7 @@ const AppointmentDetail = () => {
                                             <i className="fas fa-map-marker-alt text-muted me-2"></i>
                                             {appointment.client_address}
                                         </p>
-                                        <div className="d-flex gap-2">
+                                        {/* <div className="d-flex gap-2">
                                             <a
                                                 href={`https://maps.google.com/?q=${encodeURIComponent(
                                                     appointment.client_address
@@ -753,7 +753,7 @@ const AppointmentDetail = () => {
                                                 <i className="fas fa-route me-2"></i>
                                                 Get Directions
                                             </a>
-                                        </div>
+                                        </div> */}
                                     </div>
                                 )}
                             </div>
@@ -781,7 +781,7 @@ const AppointmentDetail = () => {
                     <div className="col-lg-4">
                         {/* Appointment Summary */}
                         <div className="card border-0 shadow-sm mb-4">
-                            <div className="card-header bg-orange text-white">
+                            <div className="card-header">
                                 <h6 className="fw-bold mb-0">
                                     <i className="fas fa-calendar-check me-2"></i>
                                     Appointment Summary

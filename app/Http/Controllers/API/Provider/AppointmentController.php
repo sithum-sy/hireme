@@ -279,7 +279,8 @@ class AppointmentController extends Controller
             }
 
             // Allow starting 15 minutes before scheduled time
-            $allowedStartTime = $appointmentDateTime->copy()->subMinutes(15);
+            // $allowedStartTime = $appointmentDateTime->copy()->subMinutes(15);
+            $allowedStartTime = $appointmentDateTime->copy()->subHours(24);
 
             Log::info('Time check details', [
                 'now' => $now->format('Y-m-d H:i:s'),
@@ -811,11 +812,11 @@ class AppointmentController extends Controller
             'created_at' => $appointment->created_at,
             'can_confirm' => $appointment->canBeConfirmed(),
             'can_cancel' => $appointment->canBeCancelled(),
-            'has_pending_reschedule' => $appointment->relationLoaded('pendingRescheduleRequest') ? 
-                ($appointment->pendingRescheduleRequest !== null) : 
+            'has_pending_reschedule' => $appointment->relationLoaded('pendingRescheduleRequest') ?
+                ($appointment->pendingRescheduleRequest !== null) :
                 $appointment->hasPendingRescheduleRequest(),
-            'pending_reschedule_request' => $appointment->relationLoaded('pendingRescheduleRequest') ? 
-                $appointment->pendingRescheduleRequest : 
+            'pending_reschedule_request' => $appointment->relationLoaded('pendingRescheduleRequest') ?
+                $appointment->pendingRescheduleRequest :
                 null,
             // Add earnings calculation
             'earnings' => $appointment->status === 'completed' ?

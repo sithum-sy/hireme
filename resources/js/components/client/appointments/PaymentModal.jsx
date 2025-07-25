@@ -709,7 +709,12 @@ const PaymentModal = ({ show, onHide, appointment, onPaymentSuccess }) => {
                                                 Date:
                                             </small>
                                             <div className="fw-semibold">
-                                                {appointment.appointment_date}
+                                                {appointment.appointment_date
+                                                    ? appointment.appointment_date.slice(
+                                                          0,
+                                                          10
+                                                      )
+                                                    : ""}
                                             </div>
                                         </div>
                                         <div className="mb-2">

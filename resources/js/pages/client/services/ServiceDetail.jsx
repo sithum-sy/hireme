@@ -1169,7 +1169,7 @@ const ServiceDetail = () => {
                                             )}
 
                                         {/* Availability Status */}
-                                        <div className="availability-status mt-3">
+                                        {/* <div className="availability-status mt-3">
                                             <div
                                                 className={`status-indicator d-flex align-items-center ${
                                                     service.availability_status ===
@@ -1215,7 +1215,7 @@ const ServiceDetail = () => {
                                                     {service.next_available}
                                                 </small>
                                             )}
-                                        </div>
+                                        </div> */}
                                     </div>
 
                                     {/* Booking Tabs */}

@@ -164,7 +164,7 @@ const InvoiceSection = ({ appointment, onPaymentClick, canBePaid }) => {
                         {/* Payment Completed */}
                         {invoice.payment_status === "completed" && (
                             <div className="payment-completed">
-                                <div className="text-center p-3 bg-success bg-opacity-10 rounded">
+                                <div className="text-center p-3 bg-light bg-opacity-10 rounded">
                                     <i className="fas fa-check-circle fa-2x text-success mb-2"></i>
                                     <h6 className="fw-bold text-success mb-1">
                                         Payment Received

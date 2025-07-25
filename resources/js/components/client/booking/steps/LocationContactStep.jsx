@@ -199,7 +199,7 @@ const LocationContactStep = ({
 
         return (
             <div className="client-search-location mb-4 p-3 bg-info bg-opacity-10 rounded border-start border-info border-3">
-                <h6 className="fw-bold mb-2 text-info">
+                <h6 className="fw-bold mb-2 text-light">
                     <i className="fas fa-search me-2" />
                     Your Search Location
                 </h6>
@@ -226,7 +226,7 @@ const LocationContactStep = ({
                         </div>
                     )}
 
-                    <div className="text-muted small">
+                    <div className="text-dark small">
                         <i className="fas fa-info-circle me-2" />
                         This is where you searched for services. You can change
                         the service location below.

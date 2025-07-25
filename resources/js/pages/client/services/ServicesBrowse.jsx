@@ -44,7 +44,7 @@ const ServicesBrowse = () => {
     useEffect(() => {
         // Try to get user's current location on component mount
         if (!currentLocation && !showLocationSelector) {
-            console.log("🌐 Attempting to get user's location on mount");
+            // console.log("🌐 Attempting to get user's location on mount");
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
                     (position) => {
@@ -61,10 +61,10 @@ const ServicesBrowse = () => {
                             )}, ${longitude.toFixed(4)}`,
                         };
 
-                        console.log("✅ Initial GPS location set:", {
-                            coordinates: `${latitude}, ${longitude}`,
-                            radius: currentRadius,
-                        });
+                        // console.log("✅ Initial GPS location set:", {
+                        //     coordinates: `${latitude}, ${longitude}`,
+                        //     radius: currentRadius,
+                        // });
 
                         setCurrentLocation(initialLocation);
                     },
@@ -89,10 +89,10 @@ const ServicesBrowse = () => {
                 async (position) => {
                     const { latitude, longitude, accuracy } = position.coords;
 
-                    console.log("📍 GPS location captured:", {
-                        coordinates: `${latitude}, ${longitude}`,
-                        accuracy: `±${accuracy} meters`,
-                    });
+                    // console.log("📍 GPS location captured:", {
+                    //     coordinates: `${latitude}, ${longitude}`,
+                    //     accuracy: `±${accuracy} meters`,
+                    // });
 
                     try {
                         // ENHANCED: Reverse geocode to get proper address
@@ -159,10 +159,10 @@ const ServicesBrowse = () => {
                             setCurrentLocation(locationData);
                             setShowLocationSelector(false);
 
-                            console.log(
-                                "✅ Location updated:",
-                                locationData.address
-                            );
+                            // console.log(
+                            //     "✅ Location updated:",
+                            //     locationData.address
+                            // );
                         } else {
                             throw new Error("Geocoding failed");
                         }
@@ -232,13 +232,13 @@ const ServicesBrowse = () => {
     };
 
     const loadServices = async (page = 1) => {
-        console.log("🔍 Loading services with:", {
-            currentLocation: currentLocation
-                ? `${currentLocation.lat}, ${currentLocation.lng}`
-                : "null",
-            filters: filters,
-            radius: filters.radius,
-        });
+        // console.log("🔍 Loading services with:", {
+        //     currentLocation: currentLocation
+        //         ? `${currentLocation.lat}, ${currentLocation.lng}`
+        //         : "null",
+        //     filters: filters,
+        //     radius: filters.radius,
+        // });
 
         setLoading(true);
 
@@ -263,11 +263,11 @@ const ServicesBrowse = () => {
                 params.longitude = currentLocation.lng;
                 params.radius = filters.radius || 5;
 
-                console.log("📍 API call with location:", {
-                    latitude: params.latitude,
-                    longitude: params.longitude,
-                    radius: params.radius,
-                });
+                // console.log("📍 API call with location:", {
+                //     latitude: params.latitude,
+                //     longitude: params.longitude,
+                //     radius: params.radius,
+                // });
             } else {
                 console.log(
                     "❌ No location available - cannot search for services"
@@ -285,30 +285,30 @@ const ServicesBrowse = () => {
             }
 
             const response = await clientService.getServices(params);
-            console.log("🎯 API response full:", response);
-            console.log("🎯 Services data:", response.data?.data);
+            // console.log("🎯 API response full:", response);
+            // console.log("🎯 Services data:", response.data?.data);
 
             // Let's also check individual service distances
-            if (response.data?.data && Array.isArray(response.data.data)) {
-                response.data.data.forEach((service, index) => {
-                    console.log(`Service ${index + 1} (${service.title}):`),
-                        {
-                            id: service.id,
-                            distance: service.distance,
-                            provider_location:
-                                service.provider_location || "N/A",
-                            service_location: service.service_location || "N/A",
-                        };
-                });
-            }
+            // if (response.data?.data && Array.isArray(response.data.data)) {
+            //     response.data.data.forEach((service, index) => {
+            //         console.log(`Service ${index + 1} (${service.title}):`),
+            //             {
+            //                 id: service.id,
+            //                 distance: service.distance,
+            //                 provider_location:
+            //                     service.provider_location || "N/A",
+            //                 service_location: service.service_location || "N/A",
+            //             };
+            //     });
+            // }
 
-            console.log("🎯 API response:", {
-                success: response.success,
-                total: response.data?.total || 0,
-                services_count: response.data?.data?.length || 0,
-                radius_used: params.radius,
-                coordinates_used: `${params.latitude}, ${params.longitude}`,
-            });
+            // console.log("🎯 API response:", {
+            //     success: response.success,
+            //     total: response.data?.total || 0,
+            //     services_count: response.data?.data?.length || 0,
+            //     radius_used: params.radius,
+            //     coordinates_used: `${params.latitude}, ${params.longitude}`,
+            // });
 
             if (response.success) {
                 // Handle the new nested data structure
@@ -363,12 +363,12 @@ const ServicesBrowse = () => {
     };
 
     const handleLocationChange = (newLocation) => {
-        console.log("📍 Location changed to:", {
-            lat: newLocation.lat,
-            lng: newLocation.lng,
-            address: newLocation.address,
-            city: newLocation.city,
-        });
+        // console.log("📍 Location changed to:", {
+        //     lat: newLocation.lat,
+        //     lng: newLocation.lng,
+        //     address: newLocation.address,
+        //     city: newLocation.city,
+        // });
 
         // Ensure the location has the current filter radius
         const locationWithRadius = {
@@ -380,7 +380,7 @@ const ServicesBrowse = () => {
         setShowLocationSelector(false);
 
         // Force a reload of services for the new location
-        console.log("🔄 Triggering service reload for new location");
+        // console.log("🔄 Triggering service reload for new location");
     };
 
     const handlePageChange = (page) => {
