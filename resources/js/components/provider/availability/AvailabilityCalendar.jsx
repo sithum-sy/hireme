@@ -147,7 +147,7 @@ const AvailabilityCalendar = ({ className = "" }) => {
                 <div className="card border-0 shadow-sm">
                     <div className="card-body text-center p-4">
                         <div
-                            className="spinner-border text-orange mb-3"
+                            className="spinner-border text-primary mb-3"
                             role="status"
                         >
                             <span className="visually-hidden">Loading...</span>
@@ -165,12 +165,12 @@ const AvailabilityCalendar = ({ className = "" }) => {
                 <div className="card-header bg-white border-bottom">
                     <div className="d-flex justify-content-between align-items-center">
                         <h5 className="fw-bold mb-0">
-                            <i className="fas fa-calendar text-orange me-2"></i>
+                            <i className="fas fa-calendar text-primary me-2"></i>
                             Availability Calendar
                         </h5>
                         <div className="d-flex align-items-center gap-2">
                             <button
-                                className="btn btn-outline-orange btn-sm"
+                                className="btn btn-outline-primary btn-sm"
                                 onClick={() => navigateMonth(-1)}
                             >
                                 <i className="fas fa-chevron-left"></i>
@@ -180,7 +180,7 @@ const AvailabilityCalendar = ({ className = "" }) => {
                                 {currentDate.getFullYear()}
                             </span>
                             <button
-                                className="btn btn-outline-orange btn-sm"
+                                className="btn btn-outline-primary btn-sm"
                                 onClick={() => navigateMonth(1)}
                             >
                                 <i className="fas fa-chevron-right"></i>
@@ -242,7 +242,7 @@ const AvailabilityCalendar = ({ className = "" }) => {
                                                                 <div className="day-number">
                                                                     {date.getDate()}
                                                                     {isToday && (
-                                                                        <i className="fas fa-circle fa-xs text-orange ms-1"></i>
+                                                                        <i className="fas fa-circle fa-xs text-primary ms-1"></i>
                                                                     )}
                                                                 </div>
                                                                 {dayStatus && (
@@ -318,12 +318,12 @@ const AvailabilityCalendar = ({ className = "" }) => {
 
                 .calendar-day.has-date:hover {
                     border-color: var(--current-role-primary);
-                    box-shadow: 0 2px 4px rgba(253, 126, 20, 0.1);
+                    box-shadow: 0 2px 4px var(--current-role-shadow);
                 }
 
                 .calendar-day.today {
                     border-color: var(--current-role-primary);
-                    box-shadow: 0 0 0 2px rgba(253, 126, 20, 0.2);
+                    box-shadow: 0 0 0 2px var(--current-role-shadow);
                 }
 
                 .calendar-day.empty {
@@ -349,20 +349,7 @@ const AvailabilityCalendar = ({ className = "" }) => {
                     border-radius: 0.25rem;
                 }
 
-                .text-orange {
-                    color: var(--current-role-primary) !important;
-                }
-
-                .btn-outline-orange {
-                    color: var(--current-role-primary);
-                    border-color: var(--current-role-primary);
-                }
-
-                .btn-outline-orange:hover {
-                    background-color: var(--current-role-primary);
-                    border-color: var(--current-role-primary);
-                    color: white;
-                }
+                /* Using design system classes instead of custom orange styles */
             `}</style>
         </div>
     );

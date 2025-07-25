@@ -176,7 +176,7 @@ const BlockedTimesList = ({ className = "", onUpdate = null }) => {
                         </div>
                         <div className="col-md-6 text-md-end">
                             <button
-                                className="btn btn-orange btn-sm"
+                                className="btn btn-primary btn-sm"
                                 onClick={handleAddNewTime}
                                 disabled={loading}
                             >
@@ -238,7 +238,7 @@ const BlockedTimesList = ({ className = "", onUpdate = null }) => {
                     {loading && (
                         <div className="text-center py-4">
                             <div
-                                className="spinner-border text-orange mb-3"
+                                className="spinner-border text-primary mb-3"
                                 role="status"
                             >
                                 <span className="visually-hidden">
@@ -269,7 +269,7 @@ const BlockedTimesList = ({ className = "", onUpdate = null }) => {
                             </div>
                             {blockedTimes.length === 0 && (
                                 <button
-                                    className="btn btn-orange"
+                                    className="btn btn-primary"
                                     onClick={handleAddNewTime}
                                 >
                                     <i className="fas fa-plus me-2"></i>
@@ -339,7 +339,7 @@ const BlockedTimesList = ({ className = "", onUpdate = null }) => {
                                                 role="group"
                                             >
                                                 <button
-                                                    className="btn btn-outline-orange"
+                                                    className="btn btn-outline-primary"
                                                     onClick={() =>
                                                         handleEditTime(
                                                             blockedTime
@@ -388,7 +388,7 @@ const BlockedTimesList = ({ className = "", onUpdate = null }) => {
                         <div className="blocked-times-summary mt-4 p-3 bg-light rounded">
                             <div className="row text-center">
                                 <div className="col-md-3 col-6 mb-2">
-                                    <div className="fw-bold text-orange">
+                                    <div className="fw-bold text-primary">
                                         {
                                             blockedTimes.filter(
                                                 (t) => t.is_active
@@ -453,8 +453,8 @@ const BlockedTimesList = ({ className = "", onUpdate = null }) => {
                 }
 
                 .blocked-time-card:hover {
-                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-                    border-color: #fd7e14 !important;
+                    box-shadow: var(--shadow-lg);
+                    border-color: var(--current-role-primary) !important;
                     transform: translateY(-2px);
                 }
 
@@ -471,44 +471,7 @@ const BlockedTimesList = ({ className = "", onUpdate = null }) => {
                     border: 1px solid #dee2e6;
                 }
 
-                .text-orange {
-                    color: #fd7e14 !important;
-                }
-
-                .btn-orange {
-                    background-color: #fd7e14;
-                    border-color: #fd7e14;
-                    color: white;
-                }
-
-                .btn-orange:hover {
-                    background-color: #e55100;
-                    border-color: #e55100;
-                    color: white;
-                }
-
-                .btn-outline-orange {
-                    color: #fd7e14;
-                    border-color: #fd7e14;
-                }
-
-                .btn-outline-orange:hover {
-                    background-color: #fd7e14;
-                    border-color: #fd7e14;
-                    color: white;
-                }
-
-                .bg-gradient-orange {
-                    background: linear-gradient(
-                        135deg,
-                        #fd7e14 0%,
-                        #e55100 100%
-                    );
-                }
-
-                .border-orange {
-                    border-color: #fd7e14 !important;
-                }
+                /* Removed orange-specific styles - using design system colors */
 
                 @media (max-width: 768px) {
                     .blocked-time-card .row {

@@ -223,7 +223,7 @@ const BlockTimeModal = ({
                     <div className="modal-content border-0 shadow">
                         <form onSubmit={handleSubmit}>
                             {/* Modal Header */}
-                            <div className="modal-header bg-gradient-orange text-white">
+                            <div className="modal-header bg-primary text-white">
                                 <h5
                                     className="modal-title fw-bold"
                                     id="blockTimeModalLabel"
@@ -247,7 +247,7 @@ const BlockTimeModal = ({
                                     {/* Date Range */}
                                     <div className="col-md-6">
                                         <label className="form-label fw-bold">
-                                            <i className="fas fa-calendar me-2 text-orange"></i>
+                                            <i className="fas fa-calendar me-2 text-primary"></i>
                                             Start Date
                                         </label>
                                         <input
@@ -281,7 +281,7 @@ const BlockTimeModal = ({
 
                                     <div className="col-md-6">
                                         <label className="form-label fw-bold">
-                                            <i className="fas fa-calendar me-2 text-orange"></i>
+                                            <i className="fas fa-calendar me-2 text-primary"></i>
                                             End Date
                                         </label>
                                         <input
@@ -349,7 +349,7 @@ const BlockTimeModal = ({
                                         <>
                                             <div className="col-md-6">
                                                 <label className="form-label fw-bold">
-                                                    <i className="fas fa-clock me-2 text-orange"></i>
+                                                    <i className="fas fa-clock me-2 text-primary"></i>
                                                     Start Time
                                                 </label>
                                                 <input
@@ -384,7 +384,7 @@ const BlockTimeModal = ({
 
                                             <div className="col-md-6">
                                                 <label className="form-label fw-bold">
-                                                    <i className="fas fa-clock me-2 text-orange"></i>
+                                                    <i className="fas fa-clock me-2 text-primary"></i>
                                                     End Time
                                                 </label>
                                                 <input
@@ -420,7 +420,7 @@ const BlockTimeModal = ({
                                     {/* Reason */}
                                     <div className="col-12">
                                         <label className="form-label fw-bold">
-                                            <i className="fas fa-comment me-2 text-orange"></i>
+                                            <i className="fas fa-comment me-2 text-primary"></i>
                                             Reason (Optional)
                                         </label>
                                         <input
@@ -455,8 +455,8 @@ const BlockTimeModal = ({
                                     {/* Preview */}
                                     {formData.start_date && (
                                         <div className="col-12">
-                                            <div className="alert alert-light border-orange">
-                                                <h6 className="fw-bold text-orange mb-2">
+                                            <div className="alert alert-light border-primary">
+                                                <h6 className="fw-bold text-primary mb-2">
                                                     <i className="fas fa-eye me-2"></i>
                                                     Preview
                                                 </h6>
@@ -497,7 +497,7 @@ const BlockTimeModal = ({
                                 </button>
                                 <button
                                     type="submit"
-                                    className="btn btn-orange"
+                                    className="btn btn-primary"
                                     disabled={loading}
                                 >
                                     {loading ? (

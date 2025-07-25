@@ -211,15 +211,9 @@ const ProviderServices = () => {
     if (loading && services.length === 0) {
         return (
             <ProviderLayout>
-                <div
-                    className="d-flex justify-content-center align-items-center"
-                    style={{ height: "400px" }}
-                >
+                <div className="d-flex justify-content-center align-items-center h-400">
                     <div className="text-center">
-                        <div
-                            className="spinner-border text-orange mb-3"
-                            role="status"
-                        >
+                        <div className="spinner-border text-primary mb-3" role="status">
                             <span className="visually-hidden">Loading...</span>
                         </div>
                         <p className="text-muted">Loading your services...</p>
@@ -237,7 +231,7 @@ const ProviderServices = () => {
                     <div className="row align-items-center">
                         <div className="col-md-6">
                             <h4 className="fw-bold mb-1">
-                                <i className="fas fa-concierge-bell text-orange me-2"></i>
+                                <i className="fas fa-concierge-bell text-primary me-2"></i>
                                 My Services
                             </h4>
                             <p className="text-muted mb-0">
@@ -248,7 +242,7 @@ const ProviderServices = () => {
                         <div className="col-md-6 text-md-end">
                             <Link
                                 to="/provider/services/create"
-                                className="btn btn-orange"
+                                className="btn btn-primary"
                             >
                                 <i className="fas fa-plus me-2"></i>
                                 Add New Service
@@ -431,8 +425,7 @@ const ProviderServices = () => {
                                 <div className="col-md-3 text-end">
                                     <div className="d-flex justify-content-end gap-2">
                                         <select
-                                            className="form-select form-select-sm"
-                                            style={{ width: "auto" }}
+                                            className="form-select form-select-sm w-auto"
                                             value={`${sortBy}-${sortOrder}`}
                                             onChange={(e) => {
                                                 const [field, order] =
@@ -565,19 +558,10 @@ const ProviderServices = () => {
                                                             service.first_image_url
                                                         }
                                                         alt={service.title}
-                                                        className="card-img-top"
-                                                        style={{
-                                                            height: "200px",
-                                                            objectFit: "cover",
-                                                        }}
+                                                        className="card-img-top service-card-image"
                                                     />
                                                 ) : (
-                                                    <div
-                                                        className="no-image bg-light d-flex align-items-center justify-content-center"
-                                                        style={{
-                                                            height: "200px",
-                                                        }}
-                                                    >
+                                                    <div className="no-image bg-light d-flex align-items-center justify-content-center service-placeholder">
                                                         <i className="fas fa-image fa-3x text-muted"></i>
                                                     </div>
                                                 )}
@@ -717,10 +701,8 @@ const ProviderServices = () => {
 
                                                 {/* Stats Row */}
                                                 <div className="stats-row d-flex justify-content-between align-items-center mb-3">
-                                                    <div className="price fw-bold text-orange">
-                                                        {getPricingDisplay(
-                                                            service
-                                                        )}
+                                                    <div className="price fw-bold text-primary">
+                                                        {getPricingDisplay(service)}
                                                     </div>
                                                     <div className="stats d-flex gap-3 small text-muted">
                                                         <span title="Rating">
@@ -847,28 +829,12 @@ const ProviderServices = () => {
                                                             <div className="service-image me-3">
                                                                 {service.first_image_url ? (
                                                                     <img
-                                                                        src={
-                                                                            service.first_image_url
-                                                                        }
-                                                                        alt={
-                                                                            service.title
-                                                                        }
-                                                                        className="rounded"
-                                                                        style={{
-                                                                            width: "60px",
-                                                                            height: "60px",
-                                                                            objectFit:
-                                                                                "cover",
-                                                                        }}
+                                                                        src={service.first_image_url}
+                                                                        alt={service.title}
+                                                                        className="rounded service-list-image"
                                                                     />
                                                                 ) : (
-                                                                    <div
-                                                                        className="bg-light rounded d-flex align-items-center justify-content-center"
-                                                                        style={{
-                                                                            width: "60px",
-                                                                            height: "60px",
-                                                                        }}
-                                                                    >
+                                                                    <div className="bg-light rounded d-flex align-items-center justify-content-center service-list-placeholder">
                                                                         <i className="fas fa-image text-muted"></i>
                                                                     </div>
                                                                 )}
@@ -958,10 +924,8 @@ const ProviderServices = () => {
                                                     </div>
                                                     <div className="col-md-4 text-end">
                                                         <div className="mb-2">
-                                                            <div className="fw-bold text-orange mb-1">
-                                                                {getPricingDisplay(
-                                                                    service
-                                                                )}
+                                                            <div className="fw-bold text-primary mb-1">
+                                                                {getPricingDisplay(service)}
                                                             </div>
                                                             <div className="d-flex align-items-center justify-content-end">
                                                                 <span
@@ -1063,7 +1027,7 @@ const ProviderServices = () => {
                                         </button>
                                         <Link
                                             to="/provider/services/create"
-                                            className="btn btn-orange"
+                                            className="btn btn-primary"
                                         >
                                             <i className="fas fa-plus me-2"></i>
                                             Add New Service
@@ -1072,7 +1036,7 @@ const ProviderServices = () => {
                                 ) : (
                                     <Link
                                         to="/provider/services/create"
-                                        className="btn btn-orange"
+                                        className="btn btn-primary"
                                     >
                                         <i className="fas fa-plus me-2"></i>
                                         Create Your First Service
@@ -1195,7 +1159,7 @@ const ProviderServices = () => {
                 )}
             </div>
 
-            {/* Custom Styles */}
+            {/* Design System Compatible Styles */}
             <style>{`
                 .provider-services {
                     animation: fadeIn 0.3s ease-in;
@@ -1214,40 +1178,40 @@ const ProviderServices = () => {
 
                 .service-card,
                 .service-list-item {
-                    transition: all 0.3s ease;
+                    transition: var(--transition);
                     border: 1px solid transparent !important;
                 }
 
                 .service-card:hover,
                 .service-list-item:hover {
                     transform: translateY(-2px);
-                    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1) !important;
-                    border-color: #fd7e14 !important;
+                    box-shadow: var(--shadow-lg) !important;
+                    border-color: var(--current-role-primary) !important;
                 }
 
                 .nav-pills .nav-link {
-                    color: #6c757d;
-                    border-radius: 20px;
-                    padding: 0.5rem 1rem;
-                    margin-right: 0.5rem;
+                    color: var(--text-secondary);
+                    border-radius: var(--border-radius-xl);
+                    padding: var(--space-2) var(--space-4);
+                    margin-right: var(--space-2);
                 }
 
                 .nav-pills .nav-link.active {
-                    background-color: #fd7e14;
+                    background-color: var(--current-role-primary);
                     color: white;
                 }
 
                 .nav-pills .nav-link:hover:not(.active) {
-                    background-color: #fff3e0;
-                    color: #fd7e14;
+                    background-color: var(--current-role-light);
+                    color: var(--current-role-primary);
                 }
 
                 .location-info {
-                    border-left: 3px solid #fd7e14;
+                    border-left: 3px solid var(--current-role-primary);
                 }
 
                 .service-image img {
-                    transition: transform 0.3s ease;
+                    transition: var(--transition);
                 }
 
                 .service-card:hover .service-image img {
@@ -1255,11 +1219,11 @@ const ProviderServices = () => {
                 }
 
                 .stats-row .stats span {
-                    transition: color 0.2s ease;
+                    transition: var(--transition-fast);
                 }
 
                 .stats-row .stats span:hover {
-                    color: #fd7e14 !important;
+                    color: var(--current-role-primary) !important;
                 }
 
                 .modal-backdrop {
@@ -1268,7 +1232,7 @@ const ProviderServices = () => {
                     left: 0;
                     right: 0;
                     bottom: 0;
-                    background-color: rgba(0, 0, 0, 0.5);
+                    background: var(--bg-overlay);
                     display: flex;
                     align-items: center;
                     justify-content: center;
@@ -1277,11 +1241,11 @@ const ProviderServices = () => {
                 }
 
                 .modal-dialog {
-                    background: white;
-                    border-radius: 0.5rem;
+                    background: var(--bg-white);
+                    border-radius: var(--border-radius-lg);
                     max-width: 500px;
                     width: 90%;
-                    margin: 1.75rem auto;
+                    margin: var(--space-8) auto;
                     animation: slideIn 0.3s ease-out;
                 }
 
@@ -1298,8 +1262,8 @@ const ProviderServices = () => {
 
                 .modal-content {
                     border: none;
-                    border-radius: 0.5rem;
-                    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+                    border-radius: var(--border-radius-lg);
+                    box-shadow: var(--shadow-xl);
                 }
 
                 .bulk-actions-bar {
@@ -1309,11 +1273,11 @@ const ProviderServices = () => {
                 }
 
                 .controls-section .card {
-                    border: 1px solid #e9ecef;
+                    border: 1px solid var(--border-color);
                 }
 
                 .empty-state {
-                    padding: 3rem 1rem;
+                    padding: var(--space-16) var(--space-4);
                 }
 
                 .empty-icon {
@@ -1321,72 +1285,16 @@ const ProviderServices = () => {
                 }
 
                 .service-preview {
-                    border: 1px solid #dee2e6;
+                    border: 1px solid var(--border-color);
                 }
 
-                .text-orange {
-                    color: #fd7e14 !important;
-                }
-
-                .btn-orange {
-                    background-color: #fd7e14;
-                    border-color: #fd7e14;
+                .btn-group .btn.active {
+                    background-color: var(--current-role-primary);
+                    border-color: var(--current-role-primary);
                     color: white;
                 }
 
-                .btn-orange:hover {
-                    background-color: #e55100;
-                    border-color: #e55100;
-                    color: white;
-                }
-
-                .btn-outline-orange {
-                    color: #fd7e14;
-                    border-color: #fd7e14;
-                }
-
-                .btn-outline-orange:hover {
-                    background-color: #fd7e14;
-                    border-color: #fd7e14;
-                    color: white;
-                }
-
-                .bg-orange {
-                    background-color: #fd7e14 !important;
-                }
-
-                .border-orange {
-                    border-color: #fd7e14 !important;
-                }
-
-                /* Performance indicator colors */
-                .text-success {
-                    color: var(--success-color) !important;
-                }
-                .text-warning {
-                    color: var(--warning-color) !important;
-                }
-                .text-info {
-                    color: var(--info-color) !important;
-                }
-                .text-secondary {
-                    color: var(--secondary-color) !important;
-                }
-
-                .bg-success {
-                    background-color: var(--success-color) !important;
-                }
-                .bg-warning {
-                    background-color: var(--warning-color) !important;
-                }
-                .bg-info {
-                    background-color: var(--info-color) !important;
-                }
-                .bg-secondary {
-                    background-color: #6c757d !important;
-                }
-
-                /* Responsive adjustments */
+                /* Responsive adjustments using design system breakpoints */
                 @media (max-width: 768px) {
                     .controls-section .row {
                         flex-direction: column;
@@ -1395,11 +1303,11 @@ const ProviderServices = () => {
                     .controls-section .col-md-4,
                     .controls-section .col-md-5,
                     .controls-section .col-md-3 {
-                        margin-bottom: 1rem;
+                        margin-bottom: var(--space-4);
                     }
 
                     .service-card .card-body {
-                        padding: 1rem;
+                        padding: var(--space-4);
                     }
 
                     .service-list-item .row {
@@ -1408,77 +1316,50 @@ const ProviderServices = () => {
 
                     .service-list-item .col-md-4 {
                         text-align: left !important;
-                        margin-top: 1rem;
+                        margin-top: var(--space-4);
                     }
                 }
 
                 @media (max-width: 576px) {
                     .analytics .col-6 {
-                        margin-bottom: 1rem;
+                        margin-bottom: var(--space-4);
                     }
 
                     .analytics .card-body {
-                        padding: 1rem;
+                        padding: var(--space-4);
                     }
 
                     .analytics h4 {
-                        font-size: 1.2rem;
+                        font-size: var(--text-xl);
                     }
                 }
 
-                /* Enhanced card animations */
-                .card {
-                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                }
-
-                .card:hover {
-                    transform: translateY(-4px);
-                }
-
-                /* Button group styling */
-                .btn-group .btn {
-                    transition: all 0.2s ease;
-                }
-
-                .btn-group .btn.active {
-                    background-color: #fd7e14;
-                    border-color: #fd7e14;
-                    color: white;
-                }
-
-                /* Badge styling */
-                .badge {
-                    font-size: 0.75rem;
-                    padding: 0.35em 0.65em;
-                }
-
-                /* Form control enhancements */
-                .form-control:focus,
-                .form-select:focus {
-                    border-color: #fd7e14;
-                    box-shadow: 0 0 0 0.2rem rgba(253, 126, 20, 0.25);
-                }
-
-                /* Loading states */
-                .spinner-border-sm {
-                    width: 1rem;
-                    height: 1rem;
-                }
-
-                /* Status indicators */
                 .service-card .position-absolute {
                     z-index: 10;
                 }
 
-                /* Checkbox styling */
-                .form-check-input:checked {
-                    background-color: #fd7e14;
-                    border-color: #fd7e14;
+                .h-400 {
+                    height: 400px;
                 }
 
-                .form-check-input:focus {
-                    border-color: #fd7e14;
-                    box-shadow: 0 0 0 0.25rem rgba(253, 126, 20, 0.25);
+                .service-card-image {
+                    height: 200px;
+                    object-fit: cover;
+                }
+
+                .service-placeholder {
+                    height: 200px;
+                }
+
+                .service-list-image {
+                    width: 60px;
+                    height: 60px;
+                    object-fit: cover;
+                }
+
+                .service-list-placeholder {
+                    width: 60px;
+                    height: 60px;
                 }
             `}</style>
         </ProviderLayout>

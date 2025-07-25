@@ -429,8 +429,12 @@ const DashboardSidebar = ({
                     path: "/provider/availability",
                     children: [
                         {
-                            label: "Overview",
+                            label: "Calendar View",
                             path: "/provider/availability",
+                        },
+                        {
+                            label: "Overview",
+                            path: "/provider/availability?tab=overview",
                         },
                         {
                             label: "Weekly Schedule",
@@ -453,12 +457,12 @@ const DashboardSidebar = ({
                     icon: "fas fa-dollar-sign",
                     label: "Earnings",
                     path: "/provider/earnings",
-                    children: [
-                        {
-                            label: "Overview",
-                            path: "/provider/earnings/overview",
-                        },
-                    ],
+                    // children: [
+                    //     {
+                    //         label: "Overview",
+                    //         path: "/provider/earnings/overview",
+                    //     },
+                    // ],
                 },
                 {
                     id: "reviews",
@@ -471,56 +475,34 @@ const DashboardSidebar = ({
                     icon: "fas fa-user",
                     label: "My Profile",
                     path: "/provider/provider-profile",
-                    children: [
-                        {
-                            label: "Profile Overview",
-                            path: "/provider/provider-profile",
-                        },
-                        {
-                            label: "Personal Information",
-                            path: "/provider/profile/personal",
-                        },
-                        {
-                            label: "Business Information",
-                            path: "/provider/profile/business",
-                        },
-                        {
-                            label: "Documents & Verification",
-                            path: "/provider/profile/documents",
-                        },
-                        {
-                            label: "Security Settings",
-                            path: "/provider/profile/security",
-                        },
-                    ],
                 },
                 {
                     id: "reports",
                     icon: "fas fa-chart-bar",
                     label: "Reports & Analytics",
                     path: "/provider/reports",
-                    children: [
-                        {
-                            label: "Business Performance",
-                            path: "/provider/reports",
-                        },
-                        {
-                            label: "Financial & Earnings",
-                            path: "/provider/reports/financial-earnings",
-                        },
-                        {
-                            label: "Customer Relationship",
-                            path: "/provider/reports/customer-relationship",
-                        },
-                        {
-                            label: "Service Performance",
-                            path: "/provider/reports/service-performance",
-                        },
-                        {
-                            label: "Marketing Analytics",
-                            path: "/provider/reports/marketing-analytics",
-                        },
-                    ],
+                    // children: [
+                    //     {
+                    //         label: "Business Performance",
+                    //         path: "/provider/reports",
+                    //     },
+                    //     {
+                    //         label: "Financial & Earnings",
+                    //         path: "/provider/reports/financial-earnings",
+                    //     },
+                    //     {
+                    //         label: "Customer Relationship",
+                    //         path: "/provider/reports/customer-relationship",
+                    //     },
+                    //     {
+                    //         label: "Service Performance",
+                    //         path: "/provider/reports/service-performance",
+                    //     },
+                    //     {
+                    //         label: "Marketing Analytics",
+                    //         path: "/provider/reports/marketing-analytics",
+                    //     },
+                    // ],
                 },
             ],
         };

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import ProviderLayout from "../../../components/layouts/ProviderLayout";
 import WeeklyScheduleEditor from "../../../components/provider/availability/WeeklyScheduleEditor";
 import BlockedTimesList from "../../../components/provider/availability/BlockedTimesList";
@@ -9,7 +9,11 @@ import AvailabilityCalendar from "../../../components/provider/availability/Avai
 import { toast } from "react-toastify";
 
 const AvailabilityDashboard = () => {
-    const [activeTab, setActiveTab] = useState("overview");
+    const [searchParams, setSearchParams] = useSearchParams();
+    const [activeTab, setActiveTab] = useState(() => {
+        // Get tab from URL params, default to "calendar"
+        return searchParams.get("tab") || "calendar";
+    });
     const [availabilitySummary, setAvailabilitySummary] = useState(null);
     const [loading, setLoading] = useState(true);
     const [refreshKey, setRefreshKey] = useState(0);
@@ -17,6 +21,11 @@ const AvailabilityDashboard = () => {
     useEffect(() => {
         fetchAvailabilitySummary();
     }, [refreshKey]);
+
+    // Update URL when tab changes
+    useEffect(() => {
+        setSearchParams({ tab: activeTab });
+    }, [activeTab, setSearchParams]);
 
     const fetchAvailabilitySummary = async () => {
         try {
@@ -43,20 +52,12 @@ const AvailabilityDashboard = () => {
     if (loading) {
         return (
             <ProviderLayout>
-                <div
-                    className="d-flex justify-content-center align-items-center"
-                    style={{ height: "400px" }}
-                >
+                <div className="d-flex justify-content-center align-items-center h-400">
                     <div className="text-center">
-                        <div
-                            className="spinner-border text-orange mb-3"
-                            role="status"
-                        >
+                        <div className="spinner-border text-primary mb-3" role="status">
                             <span className="visually-hidden">Loading...</span>
                         </div>
-                        <p className="text-muted">
-                            Loading availability dashboard...
-                        </p>
+                        <p className="text-muted">Loading availability dashboard...</p>
                     </div>
                 </div>
             </ProviderLayout>
@@ -69,7 +70,7 @@ const AvailabilityDashboard = () => {
                 {/* Header Section */}
                 <div className="row mb-4">
                     <div className="col-12">
-                        <div className="card border-0 shadow-sm bg-gradient-orange text-white">
+                        <div className="card border-0 shadow-sm bg-primary text-white">
                             <div className="card-body p-4">
                                 <div className="row align-items-center">
                                     <div className="col-md-8">
@@ -155,7 +156,7 @@ const AvailabilityDashboard = () => {
                                     <div className="text-success mb-2">
                                         <i className="fas fa-calendar-day fa-2x"></i>
                                     </div>
-                                    <h4 className="fw-bold mb-1 text-orange">
+                                    <h4 className="fw-bold mb-1 text-primary">
                                         {availabilitySummary.total_working_days}
                                     </h4>
                                     <small className="text-muted">
@@ -170,9 +171,8 @@ const AvailabilityDashboard = () => {
                                     <div className="text-info mb-2">
                                         <i className="fas fa-clock fa-2x"></i>
                                     </div>
-                                    <h4 className="fw-bold mb-1 text-orange">
-                                        {availabilitySummary.total_weekly_hours}
-                                        h
+                                    <h4 className="fw-bold mb-1 text-primary">
+                                        {availabilitySummary.total_weekly_hours}h
                                     </h4>
                                     <small className="text-muted">
                                         Total Hours/Week
@@ -186,11 +186,8 @@ const AvailabilityDashboard = () => {
                                     <div className="text-warning mb-2">
                                         <i className="fas fa-chart-line fa-2x"></i>
                                     </div>
-                                    <h4 className="fw-bold mb-1 text-orange">
-                                        {
-                                            availabilitySummary.average_daily_hours
-                                        }
-                                        h
+                                    <h4 className="fw-bold mb-1 text-primary">
+                                        {availabilitySummary.average_daily_hours}h
                                     </h4>
                                     <small className="text-muted">
                                         Average/Day
@@ -204,10 +201,8 @@ const AvailabilityDashboard = () => {
                                     <div className="text-danger mb-2">
                                         <i className="fas fa-ban fa-2x"></i>
                                     </div>
-                                    <h4 className="fw-bold mb-1 text-orange">
-                                        {
-                                            availabilitySummary.blocked_times_count
-                                        }
+                                    <h4 className="fw-bold mb-1 text-primary">
+                                        {availabilitySummary.blocked_times_count}
                                     </h4>
                                     <small className="text-muted">
                                         Blocked Periods
@@ -258,14 +253,14 @@ const AvailabilityDashboard = () => {
                     <div className="col-lg-9">
                         {/* Tab Content */}
                         {activeTab === "overview" && (
-                            <div className="row">
-                                <div className="col-md-6 mb-4">
+                            <div className="overview-content">
+                                <div className="mb-4">
                                     <WeeklyScheduleEditor
                                         onSave={handleDataUpdate}
                                         className="mb-4"
                                     />
                                 </div>
-                                <div className="col-md-6 mb-4">
+                                <div className="mb-4">
                                     <BlockedTimesList
                                         onUpdate={handleDataUpdate}
                                         className="mb-4"
@@ -325,7 +320,7 @@ const AvailabilityDashboard = () => {
                                     </small>
                                 </div>
                                 <div className="tip-item mb-3">
-                                    <i className="fas fa-calendar-plus text-orange me-2"></i>
+                                    <i className="fas fa-calendar-plus text-primary me-2"></i>
                                     <small>
                                         Consistent schedule helps clients plan
                                         ahead
@@ -344,7 +339,7 @@ const AvailabilityDashboard = () => {
                         <div className="card border-0 shadow-sm">
                             <div className="card-header bg-white border-bottom">
                                 <h6 className="fw-bold mb-0">
-                                    <i className="fas fa-link text-orange me-2"></i>
+                                    <i className="fas fa-link text-primary me-2"></i>
                                     Quick Links
                                 </h6>
                             </div>
@@ -352,21 +347,21 @@ const AvailabilityDashboard = () => {
                                 <div className="d-grid gap-2">
                                     <Link
                                         to="/provider/services"
-                                        className="btn btn-outline-orange btn-sm"
+                                        className="btn btn-outline-primary btn-sm"
                                     >
                                         <i className="fas fa-concierge-bell me-2"></i>
                                         Manage Services
                                     </Link>
                                     <Link
                                         to="/provider/appointments"
-                                        className="btn btn-outline-orange btn-sm"
+                                        className="btn btn-outline-primary btn-sm"
                                     >
                                         <i className="fas fa-calendar-check me-2"></i>
                                         View Appointments
                                     </Link>
                                     <Link
                                         to="/provider/profile"
-                                        className="btn btn-outline-orange btn-sm"
+                                        className="btn btn-outline-primary btn-sm"
                                     >
                                         <i className="fas fa-user-edit me-2"></i>
                                         Edit Profile
@@ -378,7 +373,7 @@ const AvailabilityDashboard = () => {
                 </div>
             </div>
 
-            {/* Custom Styles */}
+            {/* Additional CSS - using design system variables */}
             <style>{`
                 .availability-dashboard {
                     animation: fadeIn 0.3s ease-in;
@@ -396,45 +391,26 @@ const AvailabilityDashboard = () => {
                 }
 
                 .tip-item {
-                    padding: 0.25rem 0;
+                    padding: var(--space-1) 0;
                     border-left: 3px solid transparent;
-                    padding-left: 0.5rem;
-                    margin-left: -0.5rem;
-                    transition: all 0.2s ease;
+                    padding-left: var(--space-2);
+                    margin-left: calc(-1 * var(--space-2));
+                    transition: var(--transition);
                 }
 
                 .tip-item:hover {
-                    border-left-color: #fd7e14;
-                    background-color: #fff3e0;
-                    border-radius: 0 0.25rem 0.25rem 0;
+                    border-left-color: var(--current-role-primary);
+                    background-color: var(--current-role-light);
+                    border-radius: 0 var(--border-radius-sm) var(--border-radius-sm) 0;
                 }
 
-                .bg-gradient-orange {
-                    background: linear-gradient(
-                        135deg,
-                        #fd7e14 0%,
-                        #e55100 100%
-                    );
-                }
-
-                .text-orange {
-                    color: #fd7e14 !important;
-                }
-
-                .btn-outline-orange {
-                    color: #fd7e14;
-                    border-color: #fd7e14;
-                }
-
-                .btn-outline-orange:hover {
-                    background-color: #fd7e14;
-                    border-color: #fd7e14;
-                    color: white;
+                .h-400 {
+                    height: 400px;
                 }
 
                 @media (max-width: 768px) {
                     .col-lg-3 {
-                        margin-top: 1rem;
+                        margin-top: var(--space-4);
                     }
                 }
             `}</style>

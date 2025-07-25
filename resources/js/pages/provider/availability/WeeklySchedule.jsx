@@ -18,7 +18,7 @@ const WeeklySchedule = () => {
                         <div className="d-flex justify-content-between align-items-center">
                             <div>
                                 <h2 className="fw-bold mb-2">
-                                    <i className="fas fa-calendar-week text-orange me-3"></i>
+                                    <i className="fas fa-calendar-week text-primary me-3"></i>
                                     Weekly Schedule
                                 </h2>
                                 <p className="text-muted mb-0">
@@ -29,7 +29,7 @@ const WeeklySchedule = () => {
                             <div>
                                 <Link
                                     to="/provider/availability"
-                                    className="btn btn-outline-orange"
+                                    className="btn btn-outline-primary"
                                 >
                                     <i className="fas fa-arrow-left me-2"></i>
                                     Back to Availability
@@ -106,7 +106,7 @@ const WeeklySchedule = () => {
                                 </div>
                                 <div className="schedule-tip">
                                     <div className="d-flex align-items-start">
-                                        <div className="bg-orange bg-opacity-10 text-orange rounded-circle p-2 me-3 flex-shrink-0">
+                                        <div className="bg-primary bg-opacity-10 text-primary rounded-circle p-2 me-3 flex-shrink-0">
                                             <i className="fas fa-mobile-alt"></i>
                                         </div>
                                         <div>
@@ -128,7 +128,7 @@ const WeeklySchedule = () => {
                         <div className="card border-0 shadow-sm">
                             <div className="card-header bg-white border-bottom">
                                 <h6 className="fw-bold mb-0">
-                                    <i className="fas fa-bolt text-orange me-2"></i>
+                                    <i className="fas fa-bolt text-primary me-2"></i>
                                     Quick Actions
                                 </h6>
                             </div>
@@ -143,7 +143,7 @@ const WeeklySchedule = () => {
                                     </Link>
                                     <Link
                                         to="/provider/services"
-                                        className="btn btn-outline-orange btn-sm"
+                                        className="btn btn-outline-primary btn-sm"
                                     >
                                         <i className="fas fa-plus me-2"></i>
                                         Add New Service
@@ -191,24 +191,7 @@ const WeeklySchedule = () => {
                     margin: -0.25rem;
                 }
 
-                .text-orange {
-                    color: var(--current-role-primary) !important;
-                }
-
-                .bg-orange {
-                    background-color: var(--current-role-primary) !important;
-                }
-
-                .btn-outline-orange {
-                    color: var(--current-role-primary);
-                    border-color: var(--current-role-primary);
-                }
-
-                .btn-outline-orange:hover {
-                    background-color: var(--current-role-primary);
-                    border-color: var(--current-role-primary);
-                    color: white;
-                }
+                /* Using design system classes instead of custom orange styles */
             `}</style>
         </ProviderLayout>
     );

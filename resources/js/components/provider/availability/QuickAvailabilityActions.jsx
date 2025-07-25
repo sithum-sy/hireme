@@ -78,7 +78,7 @@ const QuickAvailabilityActions = ({ onUpdate = null, className = "" }) => {
             <div className="card border-0 shadow-sm">
                 <div className="card-header bg-white border-bottom">
                     <h6 className="fw-bold mb-0">
-                        <i className="fas fa-zap text-orange me-2"></i>
+                        <i className="fas fa-zap text-primary me-2"></i>
                         Quick Actions
                     </h6>
                 </div>
@@ -129,7 +129,7 @@ const QuickAvailabilityActions = ({ onUpdate = null, className = "" }) => {
                     {loading && (
                         <div className="text-center mt-3">
                             <div
-                                className="spinner-border spinner-border-sm text-orange"
+                                className="spinner-border spinner-border-sm text-primary"
                                 role="status"
                             >
                                 <span className="visually-hidden">

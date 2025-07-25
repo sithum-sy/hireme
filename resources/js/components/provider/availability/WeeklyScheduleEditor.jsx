@@ -267,7 +267,7 @@ const WeeklyScheduleEditor = ({ onSave = null, className = "" }) => {
                 <div className="card border-0 shadow-sm">
                     <div className="card-body text-center p-5">
                         <div
-                            className="spinner-border text-orange mb-3"
+                            className="spinner-border text-primary mb-3"
                             role="status"
                         >
                             <span className="visually-hidden">Loading...</span>
@@ -286,7 +286,7 @@ const WeeklyScheduleEditor = ({ onSave = null, className = "" }) => {
                     <div className="row align-items-center">
                         <div className="col-md-6">
                             <h5 className="fw-bold mb-0">
-                                <i className="fas fa-calendar-week text-orange me-2"></i>
+                                <i className="fas fa-calendar-week text-primary me-2"></i>
                                 Weekly Schedule
                             </h5>
                             <small className="text-muted">
@@ -308,13 +308,13 @@ const WeeklyScheduleEditor = ({ onSave = null, className = "" }) => {
                     {/* Quick Setup Options */}
                     <div className="quick-setup-section mb-4">
                         <h6 className="fw-bold mb-2">
-                            <i className="fas fa-magic text-orange me-2"></i>
+                            <i className="fas fa-magic text-primary me-2"></i>
                             Quick Setup
                         </h6>
                         <div className="row g-2">
                             <div className="col-md-3 col-6">
                                 <button
-                                    className="btn btn-outline-orange btn-sm w-100"
+                                    className="btn btn-outline-primary btn-sm w-100"
                                     onClick={() => handleQuickSetup("business")}
                                     disabled={saving}
                                     type="button"
@@ -328,7 +328,7 @@ const WeeklyScheduleEditor = ({ onSave = null, className = "" }) => {
                             </div>
                             <div className="col-md-3 col-6">
                                 <button
-                                    className="btn btn-outline-orange btn-sm w-100"
+                                    className="btn btn-outline-primary btn-sm w-100"
                                     onClick={() => handleQuickSetup("extended")}
                                     disabled={saving}
                                     type="button"
@@ -342,7 +342,7 @@ const WeeklyScheduleEditor = ({ onSave = null, className = "" }) => {
                             </div>
                             <div className="col-md-3 col-6">
                                 <button
-                                    className="btn btn-outline-orange btn-sm w-100"
+                                    className="btn btn-outline-primary btn-sm w-100"
                                     onClick={() => handleQuickSetup("weekend")}
                                     disabled={saving}
                                     type="button"
@@ -356,7 +356,7 @@ const WeeklyScheduleEditor = ({ onSave = null, className = "" }) => {
                             </div>
                             <div className="col-md-3 col-6">
                                 <button
-                                    className="btn btn-outline-orange btn-sm w-100"
+                                    className="btn btn-outline-primary btn-sm w-100"
                                     onClick={() => handleQuickSetup("all_week")}
                                     disabled={saving}
                                     type="button"
@@ -443,7 +443,7 @@ const WeeklyScheduleEditor = ({ onSave = null, className = "" }) => {
                             </button>
                             <button
                                 type="button"
-                                className="btn btn-orange"
+                                className="btn btn-primary"
                                 onClick={handleSave}
                                 disabled={saving}
                                 // disabled={saving || !hasChanges}
@@ -470,31 +470,9 @@ const WeeklyScheduleEditor = ({ onSave = null, className = "" }) => {
 
             {/* Custom Styles */}
             <style>{`
-                .text-orange {
-                    color: #fd7e14 !important;
-                }
-
-                .btn-orange {
-                    background-color: #fd7e14;
-                    border-color: #fd7e14;
-                    color: white;
-                }
-
-                .btn-orange:hover {
-                    background-color: #e55100;
-                    border-color: #e55100;
-                    color: white;
-                }
-
-                .btn-outline-orange {
-                    color: #fd7e14;
-                    border-color: #fd7e14;
-                }
-
-                .btn-outline-orange:hover {
-                    background-color: #fd7e14;
-                    border-color: #fd7e14;
-                    color: white;
+                /* Using design system colors */
+                .schedule-card:hover {
+                    border-color: var(--current-role-primary);
                 }
             `}</style>
         </div>

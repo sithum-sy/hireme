@@ -30,7 +30,7 @@ const BlockedTimes = () => {
                             <div>
                                 <Link
                                     to="/provider/availability"
-                                    className="btn btn-outline-orange"
+                                    className="btn btn-outline-primary"
                                 >
                                     <i className="fas fa-arrow-left me-2"></i>
                                     Back to Availability
@@ -72,7 +72,7 @@ const BlockedTimes = () => {
                         <div className="card border-0 shadow-sm mb-4">
                             <div className="card-header bg-white border-bottom">
                                 <h6 className="fw-bold mb-0">
-                                    <i className="fas fa-list text-orange me-2"></i>
+                                    <i className="fas fa-list text-primary me-2"></i>
                                     Common Reasons
                                 </h6>
                             </div>
@@ -128,7 +128,7 @@ const BlockedTimes = () => {
                                     </small>
                                 </div>
                                 <div className="tip-item mb-3">
-                                    <i className="fas fa-clock text-orange me-2"></i>
+                                    <i className="fas fa-clock text-primary me-2"></i>
                                     <small>
                                         Use specific times for partial day
                                         blocks
@@ -176,25 +176,12 @@ const BlockedTimes = () => {
 
                 .reason-item:hover,
                 .tip-item:hover {
-                    border-left-color: #fd7e14;
-                    background-color: #fff3e0;
+                    border-left-color: var(--current-role-primary);
+                    background-color: var(--current-role-light);
                     border-radius: 0 0.25rem 0.25rem 0;
                 }
 
-                .text-orange {
-                    color: #fd7e14 !important;
-                }
-
-                .btn-outline-orange {
-                    color: #fd7e14;
-                    border-color: #fd7e14;
-                }
-
-                .btn-outline-orange:hover {
-                    background-color: #fd7e14;
-                    border-color: #fd7e14;
-                    color: white;
-                }
+                /* Using design system classes instead of custom orange styles */
             `}</style>
         </ProviderLayout>
     );
