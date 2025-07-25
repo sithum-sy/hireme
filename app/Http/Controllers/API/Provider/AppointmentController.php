@@ -812,12 +812,10 @@ class AppointmentController extends Controller
             'created_at' => $appointment->created_at,
             'can_confirm' => $appointment->canBeConfirmed(),
             'can_cancel' => $appointment->canBeCancelled(),
-            'has_pending_reschedule' => $appointment->relationLoaded('pendingRescheduleRequest') ?
-                ($appointment->pendingRescheduleRequest !== null) :
-                $appointment->hasPendingRescheduleRequest(),
-            'pending_reschedule_request' => $appointment->relationLoaded('pendingRescheduleRequest') ?
-                $appointment->pendingRescheduleRequest :
-                null,
+            'has_pending_reschedule' => $appointment->hasPendingRescheduleRequest(),
+            'pending_reschedule_request' => $appointment->relationLoaded('pendingRescheduleRequest') 
+                ? $appointment->getRelation('pendingRescheduleRequest') 
+                : null,
             // Add earnings calculation
             'earnings' => $appointment->status === 'completed' ?
                 $appointment->total_price : ($appointment->status === 'confirmed' ? $appointment->total_price : 0)

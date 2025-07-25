@@ -1,17 +1,25 @@
 import React, { useState, useEffect } from "react";
-import ProviderLayout from "../../../components/layouts/ProviderLayout"; // Add this import
+import { useNavigate } from "react-router-dom";
+import ProviderLayout from "../../../components/layouts/ProviderLayout";
+import InvoicesTable from "../../../components/provider/invoices/InvoicesTable";
 import invoiceService from "../../../services/invoiceService";
 import InvoiceCard from "../../../components/provider/invoices/InvoiceCard";
 
 const InvoicesList = () => {
+    const navigate = useNavigate();
     const [invoices, setInvoices] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [viewMode, setViewMode] = useState("table"); // 'table' or 'cards'
+    const [sortField, setSortField] = useState("created_at");
+    const [sortDirection, setSortDirection] = useState("desc");
     const [filters, setFilters] = useState({
         status: "",
         payment_status: "",
         search: "",
         date_from: "",
         date_to: "",
+        price_min: "",
+        price_max: "",
     });
     const [pagination, setPagination] = useState({});
 
@@ -49,7 +57,91 @@ const InvoicesList = () => {
             search: "",
             date_from: "",
             date_to: "",
+            price_min: "",
+            price_max: "",
         });
+    };
+
+    // Handle table sorting
+    const handleSort = (field) => {
+        const newDirection =
+            sortField === field && sortDirection === "asc" ? "desc" : "asc";
+        setSortField(field);
+        setSortDirection(newDirection);
+        // Apply sorting to current invoices
+        const sortedInvoices = [...invoices].sort((a, b) => {
+            let aValue = a[field];
+            let bValue = b[field];
+            
+            // Handle nested properties
+            if (field === 'client_name') {
+                aValue = a.client?.name || `${a.client?.first_name || ''} ${a.client?.last_name || ''}`.trim();
+                bValue = b.client?.name || `${b.client?.first_name || ''} ${b.client?.last_name || ''}`.trim();
+            }
+            
+            if (field === 'total_amount') {
+                aValue = parseFloat(aValue || 0);
+                bValue = parseFloat(bValue || 0);
+            }
+            
+            if (newDirection === "asc") {
+                return aValue > bValue ? 1 : -1;
+            } else {
+                return aValue < bValue ? 1 : -1;
+            }
+        });
+        setInvoices(sortedInvoices);
+    };
+
+    // Handle invoice actions
+    const handleInvoiceAction = async (action, invoice) => {
+        try {
+            switch (action) {
+                case "view":
+                    navigate(`/provider/invoices/${invoice.id}`);
+                    break;
+                case "edit":
+                    navigate(`/provider/invoices/${invoice.id}/edit`);
+                    break;
+                case "send":
+                    // Implement send invoice logic
+                    const sendResult = await invoiceService.sendInvoice(invoice.id);
+                    if (sendResult.success) {
+                        loadInvoices(); // Reload to get updated status
+                    }
+                    break;
+                case "resend":
+                    // Implement resend invoice logic
+                    const resendResult = await invoiceService.sendInvoice(invoice.id);
+                    if (resendResult.success) {
+                        loadInvoices();
+                    }
+                    break;
+                case "mark_paid":
+                    // Implement mark as paid logic
+                    const markPaidResult = await invoiceService.markAsPaid(invoice.id);
+                    if (markPaidResult.success) {
+                        loadInvoices();
+                    }
+                    break;
+                case "download":
+                    // Implement download PDF logic
+                    const downloadResult = await invoiceService.downloadPDF(invoice.id);
+                    if (downloadResult.success) {
+                        // Handle PDF download
+                        const link = document.createElement('a');
+                        link.href = downloadResult.pdfUrl;
+                        link.download = `invoice-${invoice.invoice_number}.pdf`;
+                        link.click();
+                    }
+                    break;
+                default:
+                    break;
+            }
+        } catch (error) {
+            console.error("Failed to handle invoice action:", error);
+            // Could add a toast notification here
+        }
     };
 
     return (
@@ -66,11 +158,21 @@ const InvoicesList = () => {
                         </p>
                     </div>
                     <div className="d-flex gap-2">
+                        <button
+                            className="btn btn-outline-orange"
+                            onClick={() => setViewMode(viewMode === "table" ? "cards" : "table")}
+                        >
+                            <i className={`fas ${viewMode === "table" ? "fa-th-large" : "fa-table"} me-2`}></i>
+                            {viewMode === "table" ? "Card View" : "Table View"}
+                        </button>
                         <button className="btn btn-outline-orange">
                             <i className="fas fa-download me-2"></i>
                             Export
                         </button>
-                        <button className="btn btn-orange">
+                        <button 
+                            className="btn btn-orange"
+                            onClick={() => navigate('/provider/invoices/create')}
+                        >
                             <i className="fas fa-plus me-2"></i>
                             Create Invoice
                         </button>
@@ -82,7 +184,7 @@ const InvoicesList = () => {
                     <div className="card-body">
                         <div className="row g-3">
                             {/* Search */}
-                            <div className="col-lg-3 col-md-4">
+                            <div className="col-xl-3 col-lg-4 col-md-6">
                                 <div className="input-group">
                                     <span className="input-group-text">
                                         <i className="fas fa-search text-muted"></i>
@@ -103,7 +205,7 @@ const InvoicesList = () => {
                             </div>
 
                             {/* Status Filter */}
-                            <div className="col-lg-2 col-md-4">
+                            <div className="col-xl-2 col-lg-3 col-md-6">
                                 <select
                                     className="form-select"
                                     value={filters.status}
@@ -124,7 +226,7 @@ const InvoicesList = () => {
                             </div>
 
                             {/* Payment Status Filter */}
-                            <div className="col-lg-2 col-md-4">
+                            <div className="col-xl-2 col-lg-3 col-md-6">
                                 <select
                                     className="form-select"
                                     value={filters.payment_status}
@@ -147,7 +249,7 @@ const InvoicesList = () => {
                             </div>
 
                             {/* Date From */}
-                            <div className="col-lg-2 col-md-6">
+                            <div className="col-xl-1 col-lg-2 col-md-6">
                                 <input
                                     type="date"
                                     className="form-control"
@@ -163,7 +265,7 @@ const InvoicesList = () => {
                             </div>
 
                             {/* Date To */}
-                            <div className="col-lg-2 col-md-6">
+                            <div className="col-xl-1 col-lg-2 col-md-6">
                                 <input
                                     type="date"
                                     className="form-control"
@@ -176,6 +278,43 @@ const InvoicesList = () => {
                                         )
                                     }
                                 />
+                            </div>
+
+                            {/* Price Range */}
+                            <div className="col-xl-1 col-lg-2 col-md-6">
+                                <div className="input-group">
+                                    <span className="input-group-text">Rs.</span>
+                                    <input
+                                        type="number"
+                                        className="form-control"
+                                        placeholder="Min Price"
+                                        value={filters.price_min}
+                                        onChange={(e) =>
+                                            handleFilterChange(
+                                                "price_min",
+                                                e.target.value
+                                            )
+                                        }
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="col-xl-1 col-lg-2 col-md-6">
+                                <div className="input-group">
+                                    <span className="input-group-text">Rs.</span>
+                                    <input
+                                        type="number"
+                                        className="form-control"
+                                        placeholder="Max Price"
+                                        value={filters.price_max}
+                                        onChange={(e) =>
+                                            handleFilterChange(
+                                                "price_max",
+                                                e.target.value
+                                            )
+                                        }
+                                    />
+                                </div>
                             </div>
 
                             {/* Reset Button */}
@@ -192,52 +331,69 @@ const InvoicesList = () => {
                     </div>
                 </div>
 
-                {/* Loading State */}
-                {loading && (
-                    <div className="text-center py-5">
-                        <div
-                            className="spinner-border text-orange"
-                            role="status"
-                        >
-                            <span className="visually-hidden">Loading...</span>
-                        </div>
-                        <p className="mt-2 text-muted">Loading invoices...</p>
-                    </div>
-                )}
-
-                {/* Invoices Grid */}
-                {!loading && (
-                    <div className="row g-4">
-                        {invoices.map((invoice) => (
-                            <div
-                                key={invoice.id}
-                                className="col-xl-4 col-lg-6 col-md-6"
-                            >
-                                <InvoiceCard
-                                    invoice={invoice}
-                                    onUpdate={loadInvoices}
-                                />
+                {/* Invoices Display */}
+                {viewMode === "table" ? (
+                    <InvoicesTable
+                        invoices={invoices}
+                        loading={loading}
+                        onSort={handleSort}
+                        sortField={sortField}
+                        sortDirection={sortDirection}
+                        onInvoiceAction={handleInvoiceAction}
+                    />
+                ) : (
+                    <>
+                        {/* Loading State */}
+                        {loading && (
+                            <div className="text-center py-5">
+                                <div
+                                    className="spinner-border text-orange"
+                                    role="status"
+                                >
+                                    <span className="visually-hidden">Loading...</span>
+                                </div>
+                                <p className="mt-2 text-muted">Loading invoices...</p>
                             </div>
-                        ))}
-                    </div>
-                )}
+                        )}
 
-                {/* Empty State */}
-                {!loading && invoices.length === 0 && (
-                    <div className="text-center py-5">
-                        <div className="mb-4">
-                            <i className="fas fa-file-invoice fa-3x text-muted"></i>
-                        </div>
-                        <h4 className="text-muted mb-3">No invoices found</h4>
-                        <p className="text-muted mb-4">
-                            Start creating invoices from your completed
-                            appointments
-                        </p>
-                        <button className="btn btn-orange">
-                            <i className="fas fa-plus me-2"></i>
-                            Create Your First Invoice
-                        </button>
-                    </div>
+                        {/* Invoices Grid */}
+                        {!loading && invoices.length > 0 && (
+                            <div className="row g-4">
+                                {invoices.map((invoice) => (
+                                    <div
+                                        key={invoice.id}
+                                        className="col-xl-4 col-lg-6 col-md-6"
+                                    >
+                                        <InvoiceCard
+                                            invoice={invoice}
+                                            onUpdate={loadInvoices}
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* Empty State */}
+                        {!loading && invoices.length === 0 && (
+                            <div className="text-center py-5">
+                                <div className="mb-4">
+                                    <i className="fas fa-file-invoice fa-3x text-muted"></i>
+                                </div>
+                                <h4 className="text-muted mb-3">No invoices found</h4>
+                                <p className="text-muted mb-4">
+                                    Start creating invoices from your completed
+                                    appointments
+                                </p>
+                                <button 
+                                    className="btn btn-orange"
+                                    onClick={() => navigate('/provider/invoices/create')}
+                                >
+                                    <i className="fas fa-plus me-2"></i>
+                                    Create Your First Invoice
+                                </button>
+                            </div>
+                        )}
+                    </>
                 )}
 
                 {/* Pagination */}

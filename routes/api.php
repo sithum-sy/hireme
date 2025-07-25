@@ -47,8 +47,8 @@ Route::get('/services', [ServiceController::class, 'index']);
 Route::get('/services/{service}', [ServiceController::class, 'show']);
 
 // Public provider routes
-Route::get('/providers/{providerId}/availability/check', [AvailabilityController::class, 'checkAvailability']);
-Route::get('/providers/{providerId}/availability/slots', [AvailabilityController::class, 'getAvailableSlots']);
+// Route::get('/providers/{providerId}/availability/check', [AvailabilityController::class, 'checkAvailability']);
+// Route::get('/providers/{providerId}/availability/slots', [AvailabilityController::class, 'getAvailableSlots']);
 Route::get('/providers/{providerId}/public-profile', [ProfileController::class, 'getPublicProviderProfile']);
 
 

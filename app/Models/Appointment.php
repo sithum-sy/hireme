@@ -45,7 +45,6 @@ class Appointment extends Model
 
     protected $casts = [
         'appointment_date' => 'date',
-        'appointment_time' => 'datetime:H:i',
         'duration_hours' => 'integer',
         'total_price' => 'decimal:2',
         'base_price' => 'decimal:2',
@@ -190,17 +189,18 @@ class Appointment extends Model
     // Accessors
     public function getFullAppointmentDateTimeAttribute()
     {
-        return Carbon::parse($this->appointment_date->format('Y-m-d') . ' ' . $this->appointment_time->format('H:i:s'));
+        return Carbon::parse($this->appointment_date->format('Y-m-d') . ' ' . $this->appointment_time);
     }
 
     public function getFormattedDateTimeAttribute()
     {
-        return $this->appointment_date->format('M j, Y') . ' at ' . $this->appointment_time->format('g:i A');
+        $time = Carbon::createFromFormat('H:i:s', $this->appointment_time);
+        return $this->appointment_date->format('M j, Y') . ' at ' . $time->format('g:i A');
     }
 
     public function getFormattedTimeRangeAttribute()
     {
-        $start = Carbon::parse($this->appointment_time);
+        $start = Carbon::createFromFormat('H:i:s', $this->appointment_time);
         $end = $start->copy()->addHours($this->duration_hours);
 
         return $start->format('g:i A') . ' - ' . $end->format('g:i A');
