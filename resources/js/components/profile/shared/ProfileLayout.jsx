@@ -217,8 +217,6 @@ const ProfileLayout = ({
                 }
 
                 .profile-image {
-                    width: 100px;
-                    height: 100px;
                     border-radius: 50%;
                     object-fit: cover;
                     border: 4px solid var(--current-role-light);
@@ -254,26 +252,6 @@ const ProfileLayout = ({
                 .profile-info {
                     flex: 1;
                     min-width: 0;
-                }
-
-                .profile-name {
-                    margin: 0 0 var(--space-2) 0;
-                    color: var(--text-primary);
-                    font-size: var(--text-3xl);
-                    font-weight: var(--font-bold);
-                    line-height: 1.2;
-                }
-
-                .profile-role {
-                    margin: 0 0 var(--space-3) 0;
-                    color: var(--current-role-primary);
-                    font-size: var(--text-sm);
-                    font-weight: var(--font-semibold);
-                    text-transform: uppercase;
-                    letter-spacing: 0.5px;
-                    display: flex;
-                    align-items: center;
-                    gap: var(--space-2);
                 }
 
                 .provider-stats,

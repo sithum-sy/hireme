@@ -131,10 +131,13 @@ const ProviderDetailsCard = ({ appointment }) => {
                                     Call Provider
                                 </a>
                             )}
-                            <button className="btn btn-outline-primary btn-sm w-100">
-                                <i className="fas fa-comments me-2"></i>
-                                Send Message
-                            </button>
+                            <a
+                                href={`mailto:${appointment.provider.email}`}
+                                className="btn btn-outline-primary btn-sm w-100"
+                            >
+                                <i className="fas fa-envelope me-2"></i>
+                                Send Email
+                            </a>
                         </div>
                     </div>
                 </div>
