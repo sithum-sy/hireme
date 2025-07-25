@@ -14,18 +14,20 @@ const TodaysSchedule = ({ onAppointmentAction }) => {
         try {
             setLoading(true);
             setError(null);
-            
-            const today = new Date().toISOString().split('T')[0];
+
+            const today = new Date().toISOString().split("T")[0];
             const response = await clientAppointmentService.getAppointments({
                 date_from: today,
                 date_to: today,
-                per_page: 10
+                per_page: 10,
             });
 
             if (response.success) {
                 setTodaysAppointments(response.data.data || []);
             } else {
-                setError(response.message || "Failed to load today's appointments");
+                setError(
+                    response.message || "Failed to load today's appointments"
+                );
             }
         } catch (err) {
             console.error("Error loading today's appointments:", err);
@@ -39,43 +41,71 @@ const TodaysSchedule = ({ onAppointmentAction }) => {
         // If we have a separate time string, use it
         if (timeString) {
             try {
-                const timeParts = timeString.toString().split(':');
+                const timeParts = timeString.toString().split(":");
                 if (timeParts.length >= 2) {
                     const hours = parseInt(timeParts[0]);
                     const minutes = timeParts[1];
-                    const ampm = hours >= 12 ? 'PM' : 'AM';
+                    const ampm = hours >= 12 ? "PM" : "AM";
                     const displayHour = hours % 12 || 12;
                     return `${displayHour}:${minutes} ${ampm}`;
                 }
             } catch (error) {
-                console.warn('Error formatting time:', error);
+                console.warn("Error formatting time:", error);
                 return timeString.toString();
             }
         }
-        
+
         // Fallback to extracting time from date string
         try {
-            return new Date(dateTimeString).toLocaleTimeString('en-US', {
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: true
+            return new Date(dateTimeString).toLocaleTimeString("en-US", {
+                hour: "2-digit",
+                minute: "2-digit",
+                hour12: true,
             });
         } catch (error) {
-            return 'Time not set';
+            return "Time not set";
         }
     };
 
     const getStatusBadge = (status) => {
         const statusMap = {
-            'pending': { class: 'status-pending', text: 'Pending', icon: 'fa-clock' },
-            'confirmed': { class: 'status-confirmed', text: 'Confirmed', icon: 'fa-check-circle' },
-            'in_progress': { class: 'status-progress', text: 'In Progress', icon: 'fa-spinner' },
-            'completed': { class: 'status-completed', text: 'Completed', icon: 'fa-check' },
-            'cancelled_by_client': { class: 'status-cancelled', text: 'Cancelled', icon: 'fa-times-circle' },
-            'cancelled_by_provider': { class: 'status-cancelled', text: 'Cancelled', icon: 'fa-times-circle' },
+            pending: {
+                class: "status-pending",
+                text: "Pending",
+                icon: "fa-clock",
+            },
+            confirmed: {
+                class: "status-confirmed",
+                text: "Confirmed",
+                icon: "fa-check-circle",
+            },
+            in_progress: {
+                class: "status-progress",
+                text: "In Progress",
+                icon: "fa-spinner",
+            },
+            completed: {
+                class: "status-completed",
+                text: "Completed",
+                icon: "fa-check",
+            },
+            cancelled_by_client: {
+                class: "status-cancelled",
+                text: "Cancelled",
+                icon: "fa-times-circle",
+            },
+            cancelled_by_provider: {
+                class: "status-cancelled",
+                text: "Cancelled",
+                icon: "fa-times-circle",
+            },
         };
 
-        const statusInfo = statusMap[status] || { class: 'status-unknown', text: status, icon: 'fa-question' };
+        const statusInfo = statusMap[status] || {
+            class: "status-unknown",
+            text: status,
+            icon: "fa-question",
+        };
 
         return (
             <span className={`status-badge ${statusInfo.class}`}>
@@ -94,11 +124,11 @@ const TodaysSchedule = ({ onAppointmentAction }) => {
                         Today's Schedule
                     </h3>
                     <p className="schedule-date">
-                        {new Date().toLocaleDateString('en-US', { 
-                            weekday: 'long', 
-                            year: 'numeric', 
-                            month: 'long', 
-                            day: 'numeric' 
+                        {new Date().toLocaleDateString("en-US", {
+                            weekday: "long",
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
                         })}
                     </p>
                 </div>
@@ -119,18 +149,21 @@ const TodaysSchedule = ({ onAppointmentAction }) => {
                         Today's Schedule
                     </h3>
                     <p className="schedule-date">
-                        {new Date().toLocaleDateString('en-US', { 
-                            weekday: 'long', 
-                            year: 'numeric', 
-                            month: 'long', 
-                            day: 'numeric' 
+                        {new Date().toLocaleDateString("en-US", {
+                            weekday: "long",
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
                         })}
                     </p>
                 </div>
                 <div className="schedule-error">
                     <i className="fas fa-exclamation-triangle"></i>
                     <span>{error}</span>
-                    <button onClick={loadTodaysAppointments} className="btn btn-sm btn-outline-primary">
+                    <button
+                        onClick={loadTodaysAppointments}
+                        className="btn btn-sm btn-outline-primary"
+                    >
                         <i className="fas fa-redo"></i>
                         Retry
                     </button>
@@ -147,11 +180,11 @@ const TodaysSchedule = ({ onAppointmentAction }) => {
                     Today's Schedule
                 </h3>
                 <p className="schedule-date">
-                    {new Date().toLocaleDateString('en-US', { 
-                        weekday: 'long', 
-                        year: 'numeric', 
-                        month: 'long', 
-                        day: 'numeric' 
+                    {new Date().toLocaleDateString("en-US", {
+                        weekday: "long",
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
                     })}
                 </p>
             </div>
@@ -162,58 +195,97 @@ const TodaysSchedule = ({ onAppointmentAction }) => {
                         <i className="fas fa-calendar-check"></i>
                     </div>
                     <h4>No appointments today</h4>
-                    <p>You have a free day! Consider booking a service or enjoy your time off.</p>
+                    <p>
+                        You have a free day! Consider booking a service or enjoy
+                        your time off.
+                    </p>
                 </div>
             ) : (
                 <div className="schedule-list">
                     {todaysAppointments.map((appointment) => (
                         <div key={appointment.id} className="schedule-item">
                             <div className="schedule-time">
-                                <span className="time">{formatTime(appointment.appointment_date, appointment.appointment_time)}</span>
-                                <span className="duration">{appointment.duration || '60'} min</span>
+                                <span className="time">
+                                    {formatTime(
+                                        appointment.appointment_date,
+                                        appointment.appointment_time
+                                    )}
+                                </span>
+                                <span className="duration">
+                                    {appointment.duration || "60"} min
+                                </span>
                             </div>
-                            
+
                             <div className="schedule-details">
-                                <h4 className="service-name">{appointment.service?.name || appointment.service?.title || 'Service'}</h4>
+                                <h4 className="service-name">
+                                    {appointment.service?.name ||
+                                        appointment.service?.title ||
+                                        "Service"}
+                                </h4>
                                 <p className="provider-name">
                                     <i className="fas fa-user"></i>
-                                    {appointment.provider?.full_name || 
-                                     `${appointment.provider?.first_name || ''} ${appointment.provider?.last_name || ''}`.trim() ||
-                                     appointment.provider?.name ||
-                                     'Provider'}
+                                    {appointment.provider?.full_name ||
+                                        `${
+                                            appointment.provider?.first_name ||
+                                            ""
+                                        } ${
+                                            appointment.provider?.last_name ||
+                                            ""
+                                        }`.trim() ||
+                                        appointment.provider?.name ||
+                                        "Provider"}
                                 </p>
                                 <div className="appointment-meta">
                                     {getStatusBadge(appointment.status)}
                                     <span className="price">
-                                        <i className="fas fa-dollar-sign"></i>
-                                        {appointment.total_price || appointment.service?.price || 0}
+                                        Rs.{" "}
+                                        {/* <i className="fas fa-dollar-sign"></i> */}
+                                        {appointment.total_price ||
+                                            appointment.service?.price ||
+                                            0}
                                     </span>
                                 </div>
                             </div>
 
                             <div className="schedule-actions">
-                                <button 
+                                <button
                                     className="btn btn-sm btn-outline-primary"
-                                    onClick={() => onAppointmentAction && onAppointmentAction('view', appointment)}
+                                    onClick={() =>
+                                        onAppointmentAction &&
+                                        onAppointmentAction("view", appointment)
+                                    }
                                     title="View Details"
                                 >
                                     <i className="fas fa-eye me-1"></i>
                                     View
                                 </button>
-                                
-                                {(appointment.status === 'pending' || appointment.status === 'confirmed') && (
+
+                                {(appointment.status === "pending" ||
+                                    appointment.status === "confirmed") && (
                                     <>
-                                        <button 
+                                        <button
                                             className="btn btn-sm btn-outline-warning"
-                                            onClick={() => onAppointmentAction && onAppointmentAction('reschedule', appointment)}
+                                            onClick={() =>
+                                                onAppointmentAction &&
+                                                onAppointmentAction(
+                                                    "reschedule",
+                                                    appointment
+                                                )
+                                            }
                                             title="Reschedule"
                                         >
                                             <i className="fas fa-calendar-alt me-1"></i>
                                             Reschedule
                                         </button>
-                                        <button 
+                                        <button
                                             className="btn btn-sm btn-outline-danger"
-                                            onClick={() => onAppointmentAction && onAppointmentAction('cancel', appointment)}
+                                            onClick={() =>
+                                                onAppointmentAction &&
+                                                onAppointmentAction(
+                                                    "cancel",
+                                                    appointment
+                                                )
+                                            }
                                             title="Cancel"
                                         >
                                             <i className="fas fa-times me-1"></i>
@@ -222,16 +294,23 @@ const TodaysSchedule = ({ onAppointmentAction }) => {
                                     </>
                                 )}
 
-                                {appointment.status === 'completed' && !appointment.review && (
-                                    <button 
-                                        className="btn btn-sm btn-outline-success"
-                                        onClick={() => onAppointmentAction && onAppointmentAction('review', appointment)}
-                                        title="Leave Review"
-                                    >
-                                        <i className="fas fa-star me-1"></i>
-                                        Review
-                                    </button>
-                                )}
+                                {appointment.status === "completed" &&
+                                    !appointment.review && (
+                                        <button
+                                            className="btn btn-sm btn-outline-success"
+                                            onClick={() =>
+                                                onAppointmentAction &&
+                                                onAppointmentAction(
+                                                    "review",
+                                                    appointment
+                                                )
+                                            }
+                                            title="Leave Review"
+                                        >
+                                            <i className="fas fa-star me-1"></i>
+                                            Review
+                                        </button>
+                                    )}
                             </div>
                         </div>
                     ))}
