@@ -36,23 +36,6 @@ const AppointmentHeader = ({
 
     return (
         <div className="appointment-header-section">
-            {/* Breadcrumb Navigation */}
-            {/* <nav aria-label="breadcrumb" className="mb-4">
-                <ol className="breadcrumb">
-                    <li className="breadcrumb-item">
-                        <Link
-                            to="/client/appointments"
-                            className="text-primary text-decoration-none"
-                        >
-                            My Appointments
-                        </Link>
-                    </li>
-                    <li className="breadcrumb-item active" aria-current="page">
-                        Appointment #{appointment.id}
-                    </li>
-                </ol>
-            </nav> */}
-
             {/* Page Header */}
             <div className="page-header d-flex justify-content-between align-items-start mb-4">
                 <div>

@@ -244,35 +244,6 @@ const AppointmentDetail = () => {
         }
     };
 
-    // const handleStatusUpdate = async (status, requiresNotes = false) => {
-    //     if (requiresNotes && !notes.trim()) {
-    //         setPendingAction(status);
-    //         setShowNotesModal(true);
-    //         return;
-    //     }
-
-    //     setActionLoading(true);
-    //     try {
-    //         const result =
-    //             await providerAppointmentService.updateAppointmentStatus(
-    //                 appointment.id,
-    //                 status,
-    //                 notes
-    //             );
-
-    //         if (result.success) {
-    //             setAppointment(result.data);
-    //             setNotes("");
-    //             setShowNotesModal(false);
-    //             setPendingAction(null);
-    //         }
-    //     } catch (error) {
-    //         console.error("Status update failed:", error);
-    //     } finally {
-    //         setActionLoading(false);
-    //     }
-    // };
-
     const handleCompleteService = async (options) => {
         setActionLoading(true);
         try {
@@ -730,30 +701,6 @@ const AppointmentDetail = () => {
                                             <i className="fas fa-map-marker-alt text-muted me-2"></i>
                                             {appointment.client_address}
                                         </p>
-                                        {/* <div className="d-flex gap-2">
-                                            <a
-                                                href={`https://maps.google.com/?q=${encodeURIComponent(
-                                                    appointment.client_address
-                                                )}`}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="btn btn-outline-primary btn-sm"
-                                            >
-                                                <i className="fas fa-external-link-alt me-2"></i>
-                                                Open in Maps
-                                            </a>
-                                            <a
-                                                href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
-                                                    appointment.client_address
-                                                )}`}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="btn btn-outline-success btn-sm"
-                                            >
-                                                <i className="fas fa-route me-2"></i>
-                                                Get Directions
-                                            </a>
-                                        </div> */}
                                     </div>
                                 )}
                             </div>
@@ -945,32 +892,15 @@ const AppointmentDetail = () => {
                                         </a>
                                     )}
 
-                                    <button className="btn btn-outline-info btn-sm">
-                                        <i className="fas fa-comments me-2"></i>
-                                        Send Message
-                                    </button>
-
-                                    {appointment.client_address && (
+                                    {appointment.client_email && (
                                         <a
-                                            href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
-                                                appointment.client_address
-                                            )}`}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="btn btn-outline-primary btn-sm"
+                                            href={`mailto:${appointment.client_email}`}
+                                            className="btn btn-outline-info btn-sm"
                                         >
-                                            <i className="fas fa-route me-2"></i>
-                                            Get Directions
+                                            <i className="fas fa-envelope text-info me-2"></i>
+                                            Send Email
                                         </a>
                                     )}
-
-                                    <button
-                                        className="btn btn-outline-secondary btn-sm"
-                                        onClick={() => window.print()}
-                                    >
-                                        <i className="fas fa-print me-2"></i>
-                                        Print Details
-                                    </button>
                                 </div>
                             </div>
                         </div>

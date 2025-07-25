@@ -37,9 +37,10 @@ class ProviderController extends Controller
                 if ($request->verified_only) {
                     $profileQuery->where('verification_status', 'verified');
                 }
-                if ($request->min_rating) {
-                    $profileQuery->where('average_rating', '>=', $request->min_rating);
-                }
+                // Rating filter temporarily disabled - ratings now calculated from reviews
+                // if ($request->min_rating) {
+                //     $profileQuery->where('average_rating', '>=', $request->min_rating);
+                // }
             });
 
         // Category filter through services
@@ -67,7 +68,7 @@ class ProviderController extends Controller
         switch ($request->sort_by) {
             case 'rating':
                 $query->join('provider_profiles', 'users.id', '=', 'provider_profiles.user_id')
-                    ->orderByDesc('provider_profiles.average_rating');
+                    ->orderByDesc('provider_profiles.years_of_experience');
                 break;
             case 'experience':
                 $query->join('provider_profiles', 'users.id', '=', 'provider_profiles.user_id')

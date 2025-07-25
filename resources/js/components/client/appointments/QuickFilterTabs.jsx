@@ -1,42 +1,53 @@
 import React from "react";
 
-const QuickFilterTabs = ({ activeFilter, onFilterChange, appointmentCounts = {} }) => {
+const QuickFilterTabs = ({
+    activeFilter,
+    onFilterChange,
+    appointmentCounts = {},
+}) => {
     const filterOptions = [
         {
-            key: 'today',
-            label: 'Today',
-            icon: 'fas fa-calendar-day',
-            description: 'Today\'s appointments',
-            count: appointmentCounts.today || 0
+            key: "today",
+            label: "Today",
+            icon: "fas fa-calendar-day",
+            description: "Today's appointments",
+            count: appointmentCounts.today || 0,
         },
         {
-            key: 'upcoming',
-            label: 'Upcoming',
-            icon: 'fas fa-calendar-plus',
-            description: 'Future appointments',
-            count: appointmentCounts.upcoming || 0
+            key: "upcoming",
+            label: "Pending Confirmation",
+            icon: "fas fa-clock",
+            description: "Awaiting confirmation",
+            count: appointmentCounts.upcoming || 0,
         },
         {
-            key: 'completed',
-            label: 'Completed',
-            icon: 'fas fa-check-circle',
-            description: 'Finished appointments',
-            count: appointmentCounts.completed || 0
+            key: "confirmed",
+            label: "Confirmed",
+            icon: "fas fa-calendar-plus",
+            description: "Confirmed appointments",
+            count: appointmentCounts.confirmed || 0,
         },
         {
-            key: 'cancelled',
-            label: 'Cancelled',
-            icon: 'fas fa-times-circle',
-            description: 'Cancelled appointments',
-            count: appointmentCounts.cancelled || 0
+            key: "completed",
+            label: "Completed",
+            icon: "fas fa-check-circle",
+            description: "Finished appointments",
+            count: appointmentCounts.completed || 0,
         },
         {
-            key: 'all',
-            label: 'All',
-            icon: 'fas fa-list',
-            description: 'All appointments',
-            count: appointmentCounts.total || 0
-        }
+            key: "cancelled",
+            label: "Cancelled",
+            icon: "fas fa-times-circle",
+            description: "Cancelled appointments",
+            count: appointmentCounts.cancelled || 0,
+        },
+        {
+            key: "all",
+            label: "All",
+            icon: "fas fa-list",
+            description: "All appointments",
+            count: appointmentCounts.total || 0,
+        },
     ];
 
     return (
@@ -45,12 +56,14 @@ const QuickFilterTabs = ({ activeFilter, onFilterChange, appointmentCounts = {} 
                 <h4>Filter Appointments</h4>
                 <p>Quick access to different appointment views</p>
             </div>
-            
+
             <div className="tabs-container">
                 {filterOptions.map((option) => (
                     <button
                         key={option.key}
-                        className={`filter-tab ${activeFilter === option.key ? 'active' : ''}`}
+                        className={`filter-tab ${
+                            activeFilter === option.key ? "active" : ""
+                        }`}
                         onClick={() => onFilterChange(option.key)}
                         title={option.description}
                     >
@@ -60,7 +73,9 @@ const QuickFilterTabs = ({ activeFilter, onFilterChange, appointmentCounts = {} 
                         <div className="tab-content">
                             <span className="tab-label">{option.label}</span>
                             {option.count > 0 && (
-                                <span className="tab-count">{option.count}</span>
+                                <span className="tab-count">
+                                    {option.count}
+                                </span>
                             )}
                         </div>
                     </button>

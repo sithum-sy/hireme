@@ -85,10 +85,8 @@ class ServiceController extends Controller
             $query->where('base_price', '<=', $request->max_price);
         }
 
-        // Rating filter
-        if ($request->min_rating) {
-            $query->where('average_rating', '>=', $request->min_rating);
-        }
+        // Rating filter - now handled post-query since ratings are calculated
+        // Removed database-level filtering as ratings are now calculated from reviews table
 
         // Pricing type filter
         if ($request->pricing_type) {
@@ -132,7 +130,8 @@ class ServiceController extends Controller
                 $query->orderBy('base_price');
                 break;
             case 'rating':
-                $query->orderByDesc('average_rating')->orderByDesc('views_count');
+                // Rating is now calculated from reviews, sort by views_count as proxy
+                $query->orderByDesc('views_count')->orderByDesc('bookings_count');
                 break;
             case 'popularity':
                 $query->orderByDesc('views_count')->orderByDesc('bookings_count');
@@ -147,10 +146,18 @@ class ServiceController extends Controller
         $perPage = $request->get('per_page', 12);
         $services = $query->paginate($perPage);
 
+        // Apply rating filter post-query since ratings are calculated dynamically
+        $filteredServices = collect($services->items());
+        if ($request->min_rating) {
+            $filteredServices = $filteredServices->filter(function ($service) use ($request) {
+                return $service->average_rating >= $request->min_rating;
+            });
+        }
+
         return response()->json([
             'success' => true,
             'data' => [
-                'data' => collect($services->items())->map(function ($service) {
+                'data' => $filteredServices->map(function ($service) {
                     return $this->formatServiceForClient($service);
                 }),
                 'current_page' => $services->currentPage(),
@@ -512,7 +519,7 @@ class ServiceController extends Controller
             $radius = $request->radius ?? 5;
             $query->nearLocation($request->latitude, $request->longitude, $radius);
         } else {
-            $query->orderByDesc('average_rating')->orderByDesc('views_count');
+            $query->orderByDesc('views_count');
         }
 
         $similarServices = $query->get();
@@ -635,7 +642,8 @@ class ServiceController extends Controller
                 $query->orderBy('base_price');
                 break;
             case 'rating':
-                $query->orderByDesc('average_rating');
+                // Rating is now calculated from reviews, sort by views_count as proxy
+                $query->orderByDesc('views_count')->orderByDesc('bookings_count');
                 break;
             case 'popularity':
                 $query->orderByDesc('views_count')->orderByDesc('bookings_count');

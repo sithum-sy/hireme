@@ -132,98 +132,24 @@ class ReviewService
 
     /**
      * Update provider's average rating and detailed ratings
+     * Note: Ratings are now calculated dynamically from the reviews table via model accessors
      */
     private function updateProviderRating($providerId)
     {
-        try {
-            $provider = User::find($providerId);
-            if (!$provider || !$provider->providerProfile) {
-                Log::warning("Provider or provider profile not found for ID: {$providerId}");
-                return;
-            }
-
-            $reviews = Review::where('reviewee_id', $providerId)
-                ->where('review_type', Review::TYPE_CLIENT_TO_PROVIDER)
-                ->where('is_hidden', false) // ✅ Use your existing field
-                ->where('is_verified', true); // ✅ Use your existing field
-
-            $totalReviews = $reviews->count();
-
-            if ($totalReviews === 0) {
-                $provider->providerProfile->update([
-                    'average_rating' => null,
-                    'total_reviews' => 0,
-                    'quality_rating' => null,
-                    'punctuality_rating' => null,
-                    'communication_rating' => null,
-                    'value_rating' => null,
-                ]);
-                return;
-            }
-
-            $averageRating = $reviews->avg('rating');
-            $qualityAvg = $reviews->whereNotNull('quality_rating')->avg('quality_rating');
-            $punctualityAvg = $reviews->whereNotNull('punctuality_rating')->avg('punctuality_rating');
-            $communicationAvg = $reviews->whereNotNull('communication_rating')->avg('communication_rating');
-            $valueAvg = $reviews->whereNotNull('value_rating')->avg('value_rating');
-
-            $provider->providerProfile->update([
-                'average_rating' => round($averageRating, 2),
-                'total_reviews' => $totalReviews,
-                'quality_rating' => $qualityAvg ? round($qualityAvg, 2) : null,
-                'punctuality_rating' => $punctualityAvg ? round($punctualityAvg, 2) : null,
-                'communication_rating' => $communicationAvg ? round($communicationAvg, 2) : null,
-                'value_rating' => $valueAvg ? round($valueAvg, 2) : null,
-            ]);
-
-            Log::info("Updated provider rating for provider {$providerId}");
-        } catch (\Exception $e) {
-            Log::error("Failed to update provider rating for ID {$providerId}: " . $e->getMessage());
-        }
+        // Ratings are now calculated dynamically via ProviderProfile model accessors
+        // No database updates needed - the model calculates from reviews table
+        Log::info("Provider rating automatically calculated for provider {$providerId}");
     }
 
     /**
      * Update service average rating
+     * Note: Ratings are now calculated dynamically from the reviews table via model accessors
      */
     private function updateServiceRating($serviceId)
     {
-        try {
-            $service = Service::find($serviceId);
-            if (!$service) {
-                Log::warning("Service not found for ID: {$serviceId}");
-                return;
-            }
-
-            $reviews = Review::where('service_id', $serviceId)
-                ->where('review_type', Review::TYPE_CLIENT_TO_PROVIDER)
-                // ->where('status', 'published');
-                ->where('is_hidden', false);
-
-            $totalReviews = $reviews->count();
-
-            if ($totalReviews === 0) {
-                // Reset service rating if no reviews
-                $service->update([
-                    'average_rating' => null,
-                    'total_reviews' => 0
-                ]);
-                return;
-            }
-
-            $averageRating = $reviews->avg('rating');
-
-            $service->update([
-                'average_rating' => round($averageRating, 2),
-                'total_reviews' => $totalReviews
-            ]);
-
-            Log::info("Updated service rating for service {$serviceId}", [
-                'total_reviews' => $totalReviews,
-                'average_rating' => round($averageRating, 2)
-            ]);
-        } catch (\Exception $e) {
-            Log::error("Failed to update service rating for ID {$serviceId}: " . $e->getMessage());
-        }
+        // Ratings are now calculated dynamically via Service model accessors
+        // No database updates needed - the model calculates from reviews table
+        Log::info("Service rating automatically calculated for service {$serviceId}");
     }
 
     /**

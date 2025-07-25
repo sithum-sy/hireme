@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
+use App\Models\Review;
 
 class Service extends Model
 {
@@ -31,8 +32,7 @@ class Service extends Model
         'service_radius',
         'is_active',
         'views_count',
-        'bookings_count',
-        'average_rating'
+        'bookings_count'
     ];
 
     protected $casts = [
@@ -40,7 +40,6 @@ class Service extends Model
         'service_areas' => 'array',
         'base_price' => 'decimal:2',
         'duration_hours' => 'decimal:2',
-        'average_rating' => 'decimal:2',
         'latitude' => 'decimal:8',
         'longitude' => 'decimal:8',
         'service_radius' => 'integer',
@@ -303,6 +302,24 @@ class Service extends Model
         }
     }
 
+    public function getAverageRatingAttribute()
+    {
+        return $this->reviews()
+            ->where('review_type', Review::TYPE_CLIENT_TO_PROVIDER)
+            ->where('is_hidden', false)
+            ->where('is_verified', true)
+            ->avg('rating') ?: 0.00;
+    }
+
+    public function getTotalReviewsAttribute()
+    {
+        return $this->reviews()
+            ->where('review_type', Review::TYPE_CLIENT_TO_PROVIDER)
+            ->where('is_hidden', false)
+            ->where('is_verified', true)
+            ->count();
+    }
+
     public function getRatingStarsAttribute()
     {
         return str_repeat('★', floor($this->average_rating)) .
@@ -366,13 +383,8 @@ class Service extends Model
 
     public function updateRating($newRating)
     {
-        // Use reviews instead of appointments for rating calculation
-        $averageRating = $this->clientReviews()->avg('rating');
-
-        if ($averageRating !== null) {
-            $this->average_rating = round($averageRating, 2);
-            $this->save();
-        }
+        // Ratings are now calculated dynamically via accessor methods
+        // No database updates needed - the model calculates from reviews table
     }
 
     /**

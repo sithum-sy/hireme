@@ -7,73 +7,73 @@ const ImportantInfoCard = ({ appointment, canCancel }) => {
             pending: [
                 {
                     icon: "fas fa-hourglass-half text-warning",
-                    text: "Awaiting provider confirmation - you'll be notified within 24 hours"
+                    text: "Awaiting provider confirmation - you'll be notified within 24 hours",
                 },
                 {
                     icon: "fas fa-edit text-info",
-                    text: "You can still modify or cancel this appointment"
-                }
+                    text: "You can still modify or cancel this appointment",
+                },
             ],
             confirmed: [
                 {
                     icon: "fas fa-check-circle text-success",
-                    text: "Your appointment is confirmed and the provider has been notified"
+                    text: "Your appointment is confirmed and the provider has been notified",
                 },
                 {
                     icon: "fas fa-phone text-info",
-                    text: "Provider will contact you 30 minutes before the scheduled time"
-                }
+                    text: "Provider will contact you 30 minutes before the scheduled time",
+                },
             ],
             in_progress: [
                 {
                     icon: "fas fa-play-circle text-primary",
-                    text: "Service is currently being provided"
+                    text: "Service is currently being provided",
                 },
                 {
                     icon: "fas fa-clock text-warning",
-                    text: "Please be available for the duration of the service"
-                }
+                    text: "Please be available for the duration of the service",
+                },
             ],
             completed: [
                 {
                     icon: "fas fa-check-circle text-success",
-                    text: "Service has been completed successfully"
+                    text: "Service has been completed successfully",
                 },
                 {
                     icon: "fas fa-star text-warning",
-                    text: "Please rate your experience to help other clients"
-                }
+                    text: "Please rate your experience to help other clients",
+                },
             ],
             invoice_sent: [
                 {
                     icon: "fas fa-file-invoice text-info",
-                    text: "Invoice has been sent - please review and make payment"
+                    text: "Invoice has been sent - please review and make payment",
                 },
                 {
                     icon: "fas fa-calendar-alt text-warning",
-                    text: "Payment is due within the specified timeframe"
-                }
+                    text: "Payment is due within the specified timeframe",
+                },
             ],
             payment_pending: [
                 {
                     icon: "fas fa-credit-card text-warning",
-                    text: "Payment is being processed - this may take a few minutes"
+                    text: "Payment is being processed - this may take a few minutes",
                 },
                 {
                     icon: "fas fa-check-circle text-success",
-                    text: "You'll receive confirmation once payment is completed"
-                }
+                    text: "You'll receive confirmation once payment is completed",
+                },
             ],
             paid: [
                 {
                     icon: "fas fa-check-circle text-success",
-                    text: "Payment has been completed successfully"
+                    text: "Payment has been completed successfully",
                 },
                 {
                     icon: "fas fa-heart text-danger",
-                    text: "Thank you for using our service!"
-                }
-            ]
+                    text: "Thank you for using our service!",
+                },
+            ],
         };
 
         return statusInfo[status] || [];
@@ -94,7 +94,9 @@ const ImportantInfoCard = ({ appointment, canCancel }) => {
                 {statusSpecificInfo.length > 0 && (
                     <div className="status-specific-info mb-4">
                         <h6 className="small fw-bold text-muted mb-2 text-uppercase">
-                            Current Status: {appointment.status_text || appointment.status.replace("_", " ")}
+                            Current Status:{" "}
+                            {appointment.status_text ||
+                                appointment.status.replace("_", " ")}
                         </h6>
                         <ul className="list-unstyled mb-0">
                             {statusSpecificInfo.map((info, index) => (
@@ -155,15 +157,11 @@ const ImportantInfoCard = ({ appointment, canCancel }) => {
                     <div className="small">
                         <div className="mb-1">
                             <i className="fas fa-phone text-success me-2"></i>
-                            Emergency Support: <strong>+1-234-567-8900</strong>
+                            Emergency Support: <strong>+94 11 123 4567</strong>
                         </div>
                         <div className="mb-1">
                             <i className="fas fa-envelope text-info me-2"></i>
                             Email: <strong>support@hireme.com</strong>
-                        </div>
-                        <div>
-                            <i className="fas fa-comment-dots text-primary me-2"></i>
-                            Live Chat: Available on our website
                         </div>
                     </div>
                 </div>

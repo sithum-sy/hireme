@@ -37,6 +37,8 @@ const AppointmentsList = () => {
         date_to: searchParams.get("date_to") || "",
         service_type: searchParams.get("service_type") || "",
         category: searchParams.get("category") || "all",
+        price_min: searchParams.get("price_min") || "",
+        price_max: searchParams.get("price_max") || "",
     });
     const [pendingFilters, setPendingFilters] = useState({ ...filters });
     const [categories, setCategories] = useState([]);
@@ -58,6 +60,11 @@ const AppointmentsList = () => {
     useEffect(() => {
         loadAppointments();
     }, [filters, pagination.current_page]);
+    
+    // Load total count on mount for "All" button
+    useEffect(() => {
+        loadTotalCount();
+    }, []);
 
     // Load categories for filter dropdown
     useEffect(() => {
@@ -114,6 +121,52 @@ const AppointmentsList = () => {
     };
 
     // Fallback: Extract unique categories from current appointments
+    // Sort appointments by date: closest future dates first, then past dates at bottom
+    const sortAppointmentsByDate = (appointments) => {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Set to start of day for comparison
+        
+        return appointments.sort((a, b) => {
+            const dateA = new Date(a.appointment_date);
+            const dateB = new Date(b.appointment_date);
+            
+            // Separate future and past appointments
+            const aIsFuture = dateA >= today;
+            const bIsFuture = dateB >= today;
+            
+            if (aIsFuture && bIsFuture) {
+                // Both are future dates - sort by closest first (ascending)
+                return dateA - dateB;
+            } else if (!aIsFuture && !bIsFuture) {
+                // Both are past dates - sort by most recent first (descending)
+                return dateB - dateA;
+            } else if (aIsFuture && !bIsFuture) {
+                // A is future, B is past - A comes first
+                return -1;
+            } else {
+                // A is past, B is future - B comes first
+                return 1;
+            }
+        });
+    };
+    
+    // Load total appointments count for "All" filter
+    const loadTotalCount = async () => {
+        try {
+            const result = await clientAppointmentService.getAppointments({
+                per_page: 1, // We only need the count, not the data
+                page: 1,
+            });
+            
+            if (result.success) {
+                const responseData = result.data;
+                setTotalAppointmentsCount(responseData.total || 0);
+            }
+        } catch (error) {
+            console.error("Failed to load total count:", error);
+        }
+    };
+    
     const extractCategoriesFromAppointments = () => {
         const uniqueCategories = [];
         const seenCategories = new Set();
@@ -165,15 +218,22 @@ const AppointmentsList = () => {
         try {
             // Use enhanced appointment service with payment data
             const params = {
-                status: filters.status !== "all" ? filters.status : undefined,
+                status: filters.status !== "all" && filters.status !== "cancelled" ? filters.status : undefined,
                 date_from: filters.date_from || undefined,
                 date_to: filters.date_to || undefined,
                 service_type: filters.service_type || undefined,
                 category:
                     filters.category !== "all" ? filters.category : undefined,
+                price_min: filters.price_min || undefined,
+                price_max: filters.price_max || undefined,
                 per_page: pagination.per_page,
                 page: pagination.current_page,
             };
+            
+            // If filtering by cancelled, we need to fetch all and filter client-side
+            if (filters.status === "cancelled") {
+                delete params.status;
+            }
 
             const result = await clientAppointmentService.getAppointments(
                 params
@@ -181,7 +241,18 @@ const AppointmentsList = () => {
 
             if (result.success) {
                 const responseData = result.data;
-                setAppointments(responseData.data || responseData);
+                let appointmentsData = responseData.data || responseData;
+                
+                // Apply client-side filtering for cancelled appointments
+                if (filters.status === "cancelled") {
+                    appointmentsData = appointmentsData.filter(apt => 
+                        ["cancelled_by_client", "cancelled_by_provider"].includes(apt.status)
+                    );
+                }
+                
+                // Apply custom date sorting: closest future dates first, then past dates
+                const sortedAppointments = sortAppointmentsByDate(appointmentsData);
+                setAppointments(sortedAppointments);
 
                 // Update pagination info
                 if (responseData.data) {
@@ -191,6 +262,11 @@ const AppointmentsList = () => {
                         last_page: responseData.last_page,
                         total: responseData.total,
                     }));
+                }
+                
+                // Store total count for "All" filter (fetch once when no status filter is applied)
+                if (!filters.status || filters.status === "all") {
+                    setTotalAppointmentsCount(responseData.total || (responseData.data ? responseData.data.length : responseData.length));
                 }
             }
         } catch (error) {
@@ -207,7 +283,7 @@ const AppointmentsList = () => {
         try {
             // Build query parameters
             const params = new URLSearchParams();
-            if (filters.status !== "all")
+            if (filters.status !== "all" && filters.status !== "cancelled")
                 params.append("status", filters.status);
             if (filters.date_from)
                 params.append("date_from", filters.date_from);
@@ -216,6 +292,10 @@ const AppointmentsList = () => {
                 params.append("service_type", filters.service_type);
             if (filters.category !== "all")
                 params.append("category", filters.category);
+            if (filters.price_min)
+                params.append("price_min", filters.price_min);
+            if (filters.price_max)
+                params.append("price_max", filters.price_max);
             params.append("page", pagination.current_page);
 
             const response = await fetch(`/api/client/bookings?${params}`, {
@@ -227,7 +307,18 @@ const AppointmentsList = () => {
 
             if (response.ok) {
                 const data = await response.json();
-                setAppointments(data.data?.data || data.data || []);
+                let appointmentsData = data.data?.data || data.data || [];
+                
+                // Apply client-side filtering for cancelled appointments
+                if (filters.status === "cancelled") {
+                    appointmentsData = appointmentsData.filter(apt => 
+                        ["cancelled_by_client", "cancelled_by_provider"].includes(apt.status)
+                    );
+                }
+                
+                // Apply custom date sorting: closest future dates first, then past dates
+                const sortedAppointments = sortAppointmentsByDate(appointmentsData);
+                setAppointments(sortedAppointments);
 
                 if (data.data?.meta) {
                     setPagination((prev) => ({
@@ -270,6 +361,14 @@ const AppointmentsList = () => {
                     ...filters,
                     date_from: today,
                     date_to: "",
+                    status: "pending",
+                };
+                break;
+            case "confirmed":
+                newFilters = {
+                    ...filters,
+                    date_from: today,
+                    date_to: "",
                     status: "confirmed",
                 };
                 break;
@@ -284,7 +383,7 @@ const AppointmentsList = () => {
             case "cancelled":
                 newFilters = {
                     ...filters,
-                    status: "cancelled_by_client",
+                    status: "cancelled",
                     date_from: "",
                     date_to: "",
                 };
@@ -297,6 +396,8 @@ const AppointmentsList = () => {
                     date_to: "",
                     service_type: "",
                     category: "all",
+                    price_min: "",
+                    price_max: "",
                 };
                 break;
         }
@@ -356,6 +457,9 @@ const AppointmentsList = () => {
         setSortDirection(newDirection);
     };
 
+    // State to store total count from API (all appointments)
+    const [totalAppointmentsCount, setTotalAppointmentsCount] = useState(0);
+    
     // Calculate appointment counts for quick filter tabs
     const calculateAppointmentCounts = () => {
         const today = new Date().toISOString().split("T")[0];
@@ -365,7 +469,12 @@ const AppointmentsList = () => {
             upcoming: appointments.filter(
                 (apt) =>
                     apt.appointment_date >= today &&
-                    ["pending", "confirmed"].includes(apt.status)
+                    apt.status === "pending"
+            ).length,
+            confirmed: appointments.filter(
+                (apt) =>
+                    apt.appointment_date >= today &&
+                    apt.status === "confirmed"
             ).length,
             completed: appointments.filter((apt) => apt.status === "completed")
                 .length,
@@ -374,7 +483,7 @@ const AppointmentsList = () => {
                     apt.status
                 )
             ).length,
-            total: appointments.length,
+            total: totalAppointmentsCount || appointments.length,
         };
         setAppointmentCounts(counts);
         return counts;
@@ -960,16 +1069,7 @@ const AppointmentsList = () => {
 
                     <div className="collapse" id="advancedFilters">
                         <div className="row g-3 align-items-end">
-                            <div className="col-12">
-                                <div className="alert alert-info small">
-                                    <i className="fas fa-info-circle me-2"></i>
-                                    <strong>Multi-Filter Support:</strong> You
-                                    can combine multiple filters (status, dates,
-                                    and service type) to narrow down your
-                                    search. Make changes and click "Apply
-                                    Filters" to update the results.
-                                </div>
-                            </div>
+                            <div className="col-12"></div>
                             <div className="col-md-3 col-sm-6">
                                 <label className="form-label font-medium">
                                     Status
@@ -1040,24 +1140,6 @@ const AppointmentsList = () => {
 
                             <div className="col-md-3 col-sm-6">
                                 <label className="form-label font-medium">
-                                    Service Type
-                                </label>
-                                <input
-                                    type="text"
-                                    className="form-control"
-                                    placeholder="Search by service name..."
-                                    value={pendingFilters.service_type}
-                                    onChange={(e) =>
-                                        handlePendingFilterChange(
-                                            "service_type",
-                                            e.target.value
-                                        )
-                                    }
-                                />
-                            </div>
-
-                            <div className="col-md-3 col-sm-6">
-                                <label className="form-label font-medium">
                                     Category
                                 </label>
                                 <select
@@ -1082,6 +1164,44 @@ const AppointmentsList = () => {
                                 </select>
                             </div>
 
+                            <div className="col-md-3 col-sm-6">
+                                <label className="form-label font-medium">
+                                    Min Price (Rs.)
+                                </label>
+                                <input
+                                    type="number"
+                                    className="form-control"
+                                    placeholder="0"
+                                    min="0"
+                                    value={pendingFilters.price_min}
+                                    onChange={(e) =>
+                                        handlePendingFilterChange(
+                                            "price_min",
+                                            e.target.value
+                                        )
+                                    }
+                                />
+                            </div>
+
+                            <div className="col-md-3 col-sm-6">
+                                <label className="form-label font-medium">
+                                    Max Price (Rs.)
+                                </label>
+                                <input
+                                    type="number"
+                                    className="form-control"
+                                    placeholder="10000"
+                                    min="0"
+                                    value={pendingFilters.price_max}
+                                    onChange={(e) =>
+                                        handlePendingFilterChange(
+                                            "price_max",
+                                            e.target.value
+                                        )
+                                    }
+                                />
+                            </div>
+
                             <div className="col-12 mt-3">
                                 <div className="d-flex gap-2 justify-content-center">
                                     <button
@@ -1104,6 +1224,8 @@ const AppointmentsList = () => {
                                                 date_to: "",
                                                 service_type: "",
                                                 category: "all",
+                                                price_min: "",
+                                                price_max: "",
                                             };
                                             setFilters(clearedFilters);
                                             setPendingFilters(clearedFilters);

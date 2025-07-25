@@ -222,10 +222,10 @@ const ServiceCard = ({ service, showDistance = true }) => {
                             <button
                                 className="btn btn-primary btn-sm flex-grow-1"
                                 onClick={(e) => {
+                                    e.preventDefault();
                                     e.stopPropagation();
-                                    e.stopPropagation(); // Prevent event bubbling
-                                    // Navigate to service detail page
-                                    navigate(`/client/services/${service.id}`);
+                                    // Navigate to service detail page with booking hash
+                                    navigate(`/client/services/${service.id}#book`);
                                 }}
                             >
                                 <i className="fas fa-calendar-plus me-1"></i>

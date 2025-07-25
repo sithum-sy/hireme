@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import ClientLayout from "../../../components/layouts/ClientLayout";
 import { useClient } from "../../../context/ClientContext";
@@ -18,7 +18,7 @@ const ServiceDetail = () => {
     const { location } = useClient();
 
     // Add debugging
-    // console.log("ServiceDetail mounted with ID:", id);
+    // console.log("ServiceDetail render:", { id, clientLocation, locationLoading, loading });
     // console.log("Current URL:", window.location.href);
 
     const [service, setService] = useState(null);
@@ -32,6 +32,7 @@ const ServiceDetail = () => {
     const [showQuoteModal, setShowQuoteModal] = useState(false);
     const [activeBookingTab, setActiveBookingTab] = useState("availability");
     const [clientLocation, setClientLocation] = useState(null);
+    const [locationLoading, setLocationLoading] = useState(true);
 
     useEffect(() => {
         if (navigator.geolocation && !clientLocation) {
@@ -87,6 +88,7 @@ const ServiceDetail = () => {
                             };
 
                             setClientLocation(locationData);
+                            setLocationLoading(false);
                             // console.log(
                             //     "📍 Client location detected:",
                             //     locationData.address
@@ -106,12 +108,17 @@ const ServiceDetail = () => {
                             address: "Your Current Location",
                             accuracy: "gps_fallback",
                         });
+                        setLocationLoading(false);
                     }
                 },
                 (error) => {
                     console.log("Geolocation error:", error);
+                    setLocationLoading(false);
                 }
             );
+        } else {
+            // Set location loading to false if geolocation is not available
+            setLocationLoading(false);
         }
     }, []);
 
@@ -295,6 +302,7 @@ const ServiceDetail = () => {
     //     }
     // };
     const loadServiceDetail = async () => {
+        // console.log("loadServiceDetail called with:", { id, clientLocation });
         setLoading(true);
 
         try {
@@ -336,10 +344,10 @@ const ServiceDetail = () => {
     };
 
     useEffect(() => {
-        if (id) {
+        if (id && !locationLoading) {
             loadServiceDetail();
         }
-    }, [id, clientLocation]);
+    }, [id, locationLoading]);
 
     useEffect(() => {
         if (window.location.hash === "#book") {

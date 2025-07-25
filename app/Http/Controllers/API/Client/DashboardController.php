@@ -268,8 +268,8 @@ class DashboardController extends Controller
         $query = Service::with(['category', 'provider.providerProfile'])
             ->whereIn('category_id', $categories)
             ->where('is_active', true)
-            ->orderByDesc('average_rating')
-            ->orderByDesc('bookings_count');
+            ->orderByDesc('bookings_count')
+            ->orderByDesc('views_count');
 
         if ($request->latitude && $request->longitude) {
             $query->servingLocation($request->latitude, $request->longitude);
@@ -298,7 +298,8 @@ class DashboardController extends Controller
             $query->servingLocation($request->latitude, $request->longitude);
         }
 
-        return $query->orderByDesc('average_rating')
+        return $query->orderByDesc('bookings_count')
+            ->orderByDesc('views_count')
             ->limit($limit)
             ->get()
             ->map(function ($service) {

@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import clientService from "../../../services/clientService";
+import { useAuth } from "../../../context/AuthContext";
 
 const QuoteRequestModal = ({
     show,
@@ -8,17 +9,27 @@ const QuoteRequestModal = ({
     service,
     provider,
     selectedSlot,
+    clientLocation,
 }) => {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
+
+    const { user, isAuthenticated } = useAuth();
+
+    const userPhone = user?.contact_number || user?.phone || "";
+    const userEmail = user?.email || "";
+
     const [formData, setFormData] = useState({
         message: "",
-        contact_preference: "phone",
-        phone: "",
-        email: "",
+        contact_preference: "",
+        // phone: "",
+        // email: "",
+        client_phone: userPhone,
+        client_email: userEmail,
         location_type: "client_address",
-        address: "",
-        city: "",
+        client_address: clientLocation ? `Near ${clientLocation.city}` : "",
+        client_city: clientLocation?.city || "",
+        // city: "",
         special_requirements: "",
         urgency: "normal",
         service_id: service.id,
@@ -26,6 +37,83 @@ const QuoteRequestModal = ({
         preferred_date: selectedSlot?.date || "",
         preferred_time: selectedSlot?.time || "",
     });
+
+    useEffect(() => {
+        if (user && isAuthenticated) {
+            const userPhone = user.contact_number || user.phone || "";
+            const userEmail = user.email || "";
+
+            // console.log("User data available for auto-fill:", {
+            //     userPhone,
+            //     userEmail,
+            //     currentFormPhone: formData.client_phone,
+            //     currentFormEmail: formData.client_email,
+            // });
+
+            // Only auto-fill if the form fields are empty
+            if (
+                !formData.client_phone &&
+                !formData.client_email &&
+                (userPhone || userEmail)
+            ) {
+                console.log("Auto-filling contact info from user data");
+
+                setFormData((prev) => ({
+                    ...prev,
+                    client_phone: prev.client_phone || userPhone,
+                    client_email: prev.client_email || userEmail,
+                    contact_preference:
+                        prev.contact_preference ||
+                        (userPhone ? "phone" : userEmail ? "message" : "phone"),
+                }));
+            }
+        }
+    }, [user, isAuthenticated]);
+
+    // Enhanced validation function
+    const validateForm = () => {
+        const newErrors = {};
+
+        // Location validation
+        if (
+            formData.location_type === "client_address" ||
+            formData.location_type === "custom_location"
+        ) {
+            if (!formData.client_address.trim()) {
+                newErrors.client_address = "Address is required";
+            }
+            if (!formData.client_city.trim()) {
+                newErrors.client_city = "City is required";
+            }
+        }
+
+        // Enhanced contact validation
+        const hasPhone = formData.client_phone && formData.client_phone.trim();
+        const hasEmail = formData.client_email && formData.client_email.trim();
+
+        if (!hasPhone && !hasEmail) {
+            newErrors.contact = "Either phone number or email is required";
+        }
+
+        // Phone validation (if provided)
+        if (
+            hasPhone &&
+            !/^[\d\s\-\+\(\)]{7,}$/.test(formData.client_phone.trim())
+        ) {
+            newErrors.client_phone = "Please enter a valid phone number";
+        }
+
+        // Email validation (if provided)
+        if (
+            hasEmail &&
+            !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.client_email.trim())
+        ) {
+            newErrors.client_email = "Please enter a valid email address";
+        }
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -67,6 +155,26 @@ const QuoteRequestModal = ({
 
     const handleInputChange = (field, value) => {
         setFormData((prev) => ({ ...prev, [field]: value }));
+
+        // if (errors[field]) {
+        //     setErrors((prev) => ({ ...prev, [field]: null }));
+        // }
+    };
+
+    const isAutoFilled = (field) => {
+        if (!user) return false;
+
+        switch (field) {
+            case "phone":
+                return (
+                    formData.client_phone ===
+                    (user.contact_number || user.phone)
+                );
+            case "email":
+                return formData.client_email === user.email;
+            default:
+                return false;
+        }
     };
 
     if (!show) return null;
@@ -105,14 +213,14 @@ const QuoteRequestModal = ({
                         </div>
 
                         <div className="modal-body">
-                            {selectedSlot && (
+                            {/* {selectedSlot && (
                                 <div className="alert alert-info">
                                     <i className="fas fa-info-circle me-2"></i>
                                     <strong>Quote request for:</strong>{" "}
                                     {selectedSlot.formatted_date} at{" "}
                                     {selectedSlot.formatted_time}
                                 </div>
-                            )}
+                            )} */}
                             <form onSubmit={handleSubmit}>
                                 {/* Service Summary */}
                                 <div className="service-summary mb-4 p-3 bg-light rounded">
@@ -190,7 +298,7 @@ const QuoteRequestModal = ({
                                                 </small>
                                             </div>
 
-                                            <div className="mb-3">
+                                            {/* <div className="mb-3">
                                                 <label className="form-label">
                                                     Service Location
                                                 </label>
@@ -209,14 +317,11 @@ const QuoteRequestModal = ({
                                                     <option value="client_address">
                                                         At my location
                                                     </option>
-                                                    <option value="provider_location">
-                                                        At provider location
-                                                    </option>
                                                     <option value="custom_location">
                                                         Custom location
                                                     </option>
                                                 </select>
-                                            </div>
+                                            </div> */}
 
                                             {formData.location_type !==
                                                 "provider_location" && (
@@ -228,18 +333,18 @@ const QuoteRequestModal = ({
                                                         <input
                                                             type="text"
                                                             className="form-control"
-                                                            placeholder="Enter service address"
+                                                            placeholder="Enter full address (e.g., 123 Main Street, Apartment 4B)"
                                                             value={
-                                                                formData.address
+                                                                formData.client_address
                                                             }
                                                             onChange={(e) =>
                                                                 handleInputChange(
-                                                                    "address",
+                                                                    "client_address",
                                                                     e.target
                                                                         .value
                                                                 )
                                                             }
-                                                            required
+                                                            data-field="client_address"
                                                         />
                                                     </div>
 
@@ -252,46 +357,20 @@ const QuoteRequestModal = ({
                                                             className="form-control"
                                                             placeholder="City"
                                                             value={
-                                                                formData.city
+                                                                formData.client_city
                                                             }
                                                             onChange={(e) =>
                                                                 handleInputChange(
-                                                                    "city",
+                                                                    "client_city",
                                                                     e.target
                                                                         .value
                                                                 )
                                                             }
-                                                            required
+                                                            data-field="client_city"
                                                         />
                                                     </div>
                                                 </>
                                             )}
-
-                                            <div className="mb-3">
-                                                <label className="form-label">
-                                                    Urgency
-                                                </label>
-                                                <select
-                                                    className="form-select"
-                                                    value={formData.urgency}
-                                                    onChange={(e) =>
-                                                        handleInputChange(
-                                                            "urgency",
-                                                            e.target.value
-                                                        )
-                                                    }
-                                                >
-                                                    <option value="normal">
-                                                        Normal (within a week)
-                                                    </option>
-                                                    <option value="urgent">
-                                                        Urgent (within 2-3 days)
-                                                    </option>
-                                                    <option value="emergency">
-                                                        Emergency (ASAP)
-                                                    </option>
-                                                </select>
-                                            </div>
                                         </div>
                                     </div>
 
@@ -309,15 +388,22 @@ const QuoteRequestModal = ({
                                                 </label>
                                                 <input
                                                     type="tel"
-                                                    className="form-control"
+                                                    className={`form-control ${
+                                                        isAutoFilled("phone")
+                                                            ? "border-success"
+                                                            : ""
+                                                    }`}
                                                     placeholder="+94 77 123 4567"
-                                                    value={formData.phone}
+                                                    value={
+                                                        formData.client_phone
+                                                    }
                                                     onChange={(e) =>
                                                         handleInputChange(
-                                                            "phone",
+                                                            "client_phone",
                                                             e.target.value
                                                         )
                                                     }
+                                                    data-field="client_phone"
                                                 />
                                             </div>
 
@@ -327,81 +413,28 @@ const QuoteRequestModal = ({
                                                 </label>
                                                 <input
                                                     type="email"
-                                                    className="form-control"
+                                                    className={`form-control ${
+                                                        isAutoFilled("email")
+                                                            ? "border-success"
+                                                            : ""
+                                                    }`}
                                                     placeholder="your@email.com"
-                                                    value={formData.email}
+                                                    value={
+                                                        formData.client_email
+                                                    }
                                                     onChange={(e) =>
                                                         handleInputChange(
-                                                            "email",
+                                                            "client_email",
                                                             e.target.value
                                                         )
                                                     }
+                                                    data-field="client_email"
                                                 />
-                                            </div>
-
-                                            <div className="mb-3">
-                                                <label className="form-label">
-                                                    Preferred Contact Method
-                                                </label>
-                                                <div className="form-check">
-                                                    <input
-                                                        className="form-check-input"
-                                                        type="radio"
-                                                        name="contact_preference"
-                                                        id="contact_phone"
-                                                        value="phone"
-                                                        checked={
-                                                            formData.contact_preference ===
-                                                            "phone"
-                                                        }
-                                                        onChange={(e) =>
-                                                            handleInputChange(
-                                                                "contact_preference",
-                                                                e.target.value
-                                                            )
-                                                        }
-                                                    />
-                                                    <label
-                                                        className="form-check-label"
-                                                        htmlFor="contact_phone"
-                                                    >
-                                                        Phone Call
-                                                    </label>
-                                                </div>
-                                                <div className="form-check">
-                                                    <input
-                                                        className="form-check-input"
-                                                        type="radio"
-                                                        name="contact_preference"
-                                                        id="contact_message"
-                                                        value="message"
-                                                        checked={
-                                                            formData.contact_preference ===
-                                                            "message"
-                                                        }
-                                                        onChange={(e) =>
-                                                            handleInputChange(
-                                                                "contact_preference",
-                                                                e.target.value
-                                                            )
-                                                        }
-                                                    />
-                                                    <label
-                                                        className="form-check-label"
-                                                        htmlFor="contact_message"
-                                                    >
-                                                        Text/WhatsApp
-                                                    </label>
-                                                </div>
                                             </div>
                                         </div>
 
                                         {/* Special Requirements */}
                                         <div className="form-section">
-                                            <h6 className="fw-bold mb-3">
-                                                Additional Information
-                                            </h6>
-
                                             <div className="mb-3">
                                                 <label className="form-label">
                                                     Special Requirements
@@ -488,26 +521,6 @@ const QuoteRequestModal = ({
                     </div>
                 </div>
             </div>
-
-            <style>{`
-                .text-primary {
-                    color: var(--current-role-primary) !important;
-                }
-                .btn-primary {
-                    background-color: var(--current-role-primary);
-                    border-color: var(--current-role-primary);
-                    color: white;
-                }
-                .btn-primary:hover {
-                    background-color: #5a2d91;
-                    border-color: #5a2d91;
-                    color: white;
-                }
-                .form-check-input:checked {
-                    background-color: var(--current-role-primary);
-                    border-color: var(--current-role-primary);
-                }
-            `}</style>
         </>
     );
 };

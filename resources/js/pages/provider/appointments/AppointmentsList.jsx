@@ -178,27 +178,39 @@ const AppointmentsList = () => {
     const loadStats = async () => {
         try {
             // Use the dashboard stats endpoint for accurate counts
-            const result = await providerAppointmentService.getAppointmentStats();
-            
+            const result =
+                await providerAppointmentService.getAppointmentStats();
+
             if (result.success) {
                 const statsData = result.data;
-                
+
                 // We need to calculate total pending, confirmed, completed for all time
                 // Since dashboard stats only has today's counts, let's load with small pages
-                const allAppointmentsResult = await providerAppointmentService.getAppointments({
-                    per_page: 50, // Maximum allowed
-                });
-                
+                const allAppointmentsResult =
+                    await providerAppointmentService.getAppointments({
+                        per_page: 50, // Maximum allowed
+                    });
+
                 if (allAppointmentsResult.success) {
                     const appointments = allAppointmentsResult.data.data || [];
-                    
+
                     setStats({
                         today: statsData.today_total || 0,
-                        pending: appointments.filter(apt => apt.status === "pending").length,
-                        confirmed: appointments.filter(apt => apt.status === "confirmed").length,
-                        completed: appointments.filter(apt => apt.status === "completed").length,
-                        reschedule_requests: appointments.filter(apt => apt.has_pending_reschedule === true).length,
-                        total: allAppointmentsResult.data.meta?.total || appointments.length,
+                        pending: appointments.filter(
+                            (apt) => apt.status === "pending"
+                        ).length,
+                        confirmed: appointments.filter(
+                            (apt) => apt.status === "confirmed"
+                        ).length,
+                        completed: appointments.filter(
+                            (apt) => apt.status === "completed"
+                        ).length,
+                        reschedule_requests: appointments.filter(
+                            (apt) => apt.has_pending_reschedule === true
+                        ).length,
+                        total:
+                            allAppointmentsResult.data.meta?.total ||
+                            appointments.length,
                     });
                 } else {
                     // Fallback to dashboard stats only
@@ -211,14 +223,13 @@ const AppointmentsList = () => {
                         total: statsData.today_total || 0,
                     });
                 }
-                
+
                 console.log("Loaded stats from dashboard:", statsData);
             }
         } catch (error) {
             console.error("Error loading stats:", error);
         }
     };
-
 
     const handleFilterChange = (key, value) => {
         const newFilters = { ...filters, [key]: value };
@@ -297,7 +308,6 @@ const AppointmentsList = () => {
                 };
                 break;
             case "reschedule_requests":
-                // This will need custom handling in the backend
                 newFilters = {
                     ...filters,
                     status: "reschedule_pending",
@@ -511,14 +521,14 @@ const AppointmentsList = () => {
                     <div className="collapse" id="advancedFilters">
                         <div className="row g-3 align-items-end">
                             <div className="col-12">
-                                <div className="alert alert-info small">
+                                {/* <div className="alert alert-info small">
                                     <i className="fas fa-info-circle me-2"></i>
                                     <strong>Multi-Filter Support:</strong> You
                                     can combine multiple filters (status, dates,
                                     client name, and service type) to narrow
                                     down your search. Make changes and click
                                     "Apply Filters" to update the results.
-                                </div>
+                                </div> */}
                             </div>
                             <div className="col-md-3 col-sm-6">
                                 <label className="form-label font-medium">
@@ -584,7 +594,7 @@ const AppointmentsList = () => {
                                 />
                             </div>
 
-                            <div className="col-md-3 col-sm-6">
+                            {/* <div className="col-md-3 col-sm-6">
                                 <label className="form-label font-medium">
                                     Service Type
                                 </label>
@@ -600,7 +610,7 @@ const AppointmentsList = () => {
                                         )
                                     }
                                 />
-                            </div>
+                            </div> */}
 
                             <div className="col-md-3 col-sm-6">
                                 <label className="form-label font-medium">

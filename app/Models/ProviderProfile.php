@@ -21,8 +21,6 @@ class ProviderProfile extends Model
         'portfolio_images',
         'verification_status',
         'verification_notes',
-        'average_rating',
-        'total_reviews',
         'total_earnings',
         'is_available',
         'verified_at',
@@ -32,7 +30,6 @@ class ProviderProfile extends Model
     protected $casts = [
         'certifications' => 'array',
         'portfolio_images' => 'array',
-        'average_rating' => 'decimal:2',
         'total_earnings' => 'decimal:2',
         'is_available' => 'boolean',
         'verified_at' => 'datetime',
@@ -62,6 +59,20 @@ class ProviderProfile extends Model
     public function appointments()
     {
         return $this->hasMany(Appointment::class, 'provider_id', 'user_id');
+    }
+
+    public function reviews()
+    {
+        return $this->hasMany(Review::class, 'reviewee_id', 'user_id')
+            ->where('review_type', Review::TYPE_CLIENT_TO_PROVIDER);
+    }
+
+    public function receivedReviews()
+    {
+        return $this->hasMany(Review::class, 'reviewee_id', 'user_id')
+            ->where('review_type', Review::TYPE_CLIENT_TO_PROVIDER)
+            ->visible()
+            ->verified();
     }
 
     // Scopes
@@ -99,6 +110,22 @@ class ProviderProfile extends Model
         }, $this->portfolio_images);
     }
 
+    public function getAverageRatingAttribute()
+    {
+        return $this->receivedReviews()
+            ->avg('rating') ?: 0.00;
+    }
+
+    public function getTotalReviewsAttribute()
+    {
+        return $this->receivedReviews()->count();
+    }
+
+    public function getReviewsCountAttribute()
+    {
+        return $this->total_reviews;
+    }
+
     public function getRatingStarsAttribute()
     {
         return str_repeat('★', floor($this->average_rating)) .
@@ -121,10 +148,44 @@ class ProviderProfile extends Model
         return $this->verification_status === 'rejected';
     }
 
-    public function updateRating($newRating)
+    // Rating calculation methods for additional breakdowns
+    public function getQualityRatingAttribute()
     {
-        $this->total_reviews++;
-        $this->average_rating = (($this->average_rating * ($this->total_reviews - 1)) + $newRating) / $this->total_reviews;
-        $this->save();
+        return $this->receivedReviews()
+            ->whereNotNull('quality_rating')
+            ->avg('quality_rating') ?: 0.00;
+    }
+
+    public function getPunctualityRatingAttribute()
+    {
+        return $this->receivedReviews()
+            ->whereNotNull('punctuality_rating')
+            ->avg('punctuality_rating') ?: 0.00;
+    }
+
+    public function getCommunicationRatingAttribute()
+    {
+        return $this->receivedReviews()
+            ->whereNotNull('communication_rating')
+            ->avg('communication_rating') ?: 0.00;
+    }
+
+    public function getValueRatingAttribute()
+    {
+        return $this->receivedReviews()
+            ->whereNotNull('value_rating')
+            ->avg('value_rating') ?: 0.00;
+    }
+
+    public function getRecommendationPercentageAttribute()
+    {
+        $totalReviews = $this->receivedReviews()->whereNotNull('would_recommend')->count();
+        if ($totalReviews === 0) return 0;
+        
+        $recommendations = $this->receivedReviews()
+            ->where('would_recommend', true)
+            ->count();
+            
+        return round(($recommendations / $totalReviews) * 100, 1);
     }
 }

@@ -346,19 +346,6 @@ class ClientService {
                 quoteData.service?.first_image_url || quoteData.service_image,
             service_category: quoteData.service_category,
 
-            // Provider information
-            // provider_name: quoteData.provider?.name || quoteData.provider_name,
-            // provider_image:
-            //     quoteData.provider?.profile_image_url ||
-            //     quoteData.provider_image,
-            // provider_rating:
-            //     quoteData.provider?.average_rating ||
-            //     quoteData.provider_rating ||
-            //     0,
-            // provider_reviews:
-            //     quoteData.provider?.reviews_count ||
-            //     quoteData.provider_reviews ||
-            //     0,
             provider_name: quoteData.provider?.name || quoteData.provider_name,
             provider_business_name: quoteData.provider_business_name, // Real business name
             provider_image:
@@ -375,7 +362,7 @@ class ClientService {
             location_summary:
                 quoteData.location_summary ||
                 `${quoteData.city || "Not specified"}`,
-            urgency: quoteData.urgency,
+            // urgency: quoteData.urgency,
             requested_date: quoteData.requested_date,
             requested_time: quoteData.requested_time,
 
@@ -988,42 +975,6 @@ class ClientService {
         ).padStart(2, "0")}`;
     }
 
-    // async requestQuote(quoteData) {
-    //     try {
-    //         const response = await axios.post(
-    //             `${API_BASE}/quotes/request`,
-    //             quoteData
-    //         );
-    //         return {
-    //             success: true,
-    //             data: response.data.data || response.data,
-    //             message:
-    //                 response.data.message || "Quote request sent successfully",
-    //         };
-    //     } catch (error) {
-    //         console.warn(
-    //             "Quote request endpoint not available, using fallback"
-    //         );
-
-    //         // Return fallback quote request for development
-    //         const mockQuote = {
-    //             id: Date.now(),
-    //             ...quoteData,
-    //             status: "pending",
-    //             quote_number: "Q" + Date.now().toString().slice(-6),
-    //             created_at: new Date().toISOString(),
-    //             estimated_response_time: "24 hours",
-    //         };
-
-    //         return {
-    //             success: true,
-    //             data: mockQuote,
-    //             message: "Quote request sent successfully (fallback mode)",
-    //             fallback: true,
-    //         };
-    //     }
-    // }
-
     // Enhanced quote request method
     async requestQuote(quoteData) {
         try {
@@ -1038,11 +989,11 @@ class ClientService {
                 location_type: quoteData.location_type || "client_address",
                 address: quoteData.address || "",
                 city: quoteData.city || "",
-                contact_preference: quoteData.contact_preference || "phone",
+                // contact_preference: quoteData.contact_preference || "phone",
                 phone: quoteData.phone || "",
                 email: quoteData.email || "",
                 special_requirements: quoteData.special_requirements || "",
-                urgency: quoteData.urgency || "normal",
+                // urgency: quoteData.urgency || "normal",
                 quote_type: quoteData.quote_type || "standard",
             };
 

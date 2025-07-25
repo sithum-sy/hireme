@@ -325,57 +325,6 @@ const CancelAppointmentModal = ({
                                 </div>
                             </div>
 
-                            {/* Refund Information */}
-                            {canCancelFree && (
-                                <div className="refund-info bg-success bg-opacity-10 border border-success rounded p-3 mb-3">
-                                    <h6 className="text-success fw-bold mb-2">
-                                        <i className="fas fa-check-circle me-2"></i>
-                                        Refund Information
-                                    </h6>
-                                    <ul className="mb-0 small text-success">
-                                        <li>
-                                            Full refund will be processed within
-                                            3-5 business days
-                                        </li>
-                                        <li>
-                                            Refund will be credited to your
-                                            original payment method
-                                        </li>
-                                        <li>
-                                            No cancellation fees will be charged
-                                        </li>
-                                    </ul>
-                                </div>
-                            )}
-
-                            {/* Cancellation Fee Warning */}
-                            {!canCancelFree && (
-                                <div className="fee-warning bg-warning bg-opacity-10 border border-warning rounded p-3 mb-3">
-                                    <h6 className="text-warning fw-bold mb-2">
-                                        <i className="fas fa-exclamation-triangle me-2"></i>
-                                        Cancellation Fee Notice
-                                    </h6>
-                                    <ul className="mb-0 small text-warning">
-                                        <li>
-                                            50% cancellation fee may be applied
-                                            (Rs.{" "}
-                                            {Math.round(
-                                                appointment.total_price * 0.5
-                                            )}
-                                            )
-                                        </li>
-                                        <li>
-                                            Remaining amount will be refunded
-                                            within 5-7 business days
-                                        </li>
-                                        <li>
-                                            Provider will be notified of the
-                                            cancellation
-                                        </li>
-                                    </ul>
-                                </div>
-                            )}
-
                             {/* Confirmation Checkbox */}
                             <div className="form-check">
                                 <input
