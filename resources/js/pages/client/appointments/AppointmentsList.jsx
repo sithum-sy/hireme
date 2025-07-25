@@ -68,26 +68,34 @@ const AppointmentsList = () => {
         try {
             // Try multiple endpoints to find categories
             const endpoints = [
-                '/api/service-categories',
-                '/api/client/service-categories', 
-                '/api/categories'
+                "/api/service-categories",
+                "/api/client/service-categories",
+                "/api/categories",
             ];
-            
+
             for (const endpoint of endpoints) {
                 try {
                     const response = await fetch(endpoint, {
                         headers: {
-                            Authorization: `Bearer ${localStorage.getItem('token')}`,
-                            'Content-Type': 'application/json',
+                            Authorization: `Bearer ${localStorage.getItem(
+                                "token"
+                            )}`,
+                            "Content-Type": "application/json",
                         },
                     });
-                    
+
                     if (response.ok) {
                         const data = await response.json();
-                        const categoryData = data.success ? data.data : (data.data || data);
-                        if (categoryData && Array.isArray(categoryData) && categoryData.length > 0) {
+                        const categoryData = data.success
+                            ? data.data
+                            : data.data || data;
+                        if (
+                            categoryData &&
+                            Array.isArray(categoryData) &&
+                            categoryData.length > 0
+                        ) {
                             setCategories(categoryData);
-                            console.log('Categories loaded from:', endpoint);
+                            console.log("Categories loaded from:", endpoint);
                             return; // Success, exit the loop
                         }
                     }
@@ -96,37 +104,39 @@ const AppointmentsList = () => {
                     continue; // Try next endpoint
                 }
             }
-            
+
             // If all endpoints fail, extract categories from existing appointments
             extractCategoriesFromAppointments();
-            
         } catch (error) {
-            console.error('Failed to load categories:', error);
+            console.error("Failed to load categories:", error);
             extractCategoriesFromAppointments();
         }
     };
-    
+
     // Fallback: Extract unique categories from current appointments
     const extractCategoriesFromAppointments = () => {
         const uniqueCategories = [];
         const seenCategories = new Set();
-        
-        appointments.forEach(appointment => {
+
+        appointments.forEach((appointment) => {
             const category = appointment.service?.category;
             if (category && category.id && !seenCategories.has(category.id)) {
                 seenCategories.add(category.id);
                 uniqueCategories.push({
                     id: category.id,
-                    name: category.name || 'Unknown Category'
+                    name: category.name || "Unknown Category",
                 });
             }
         });
-        
+
         if (uniqueCategories.length > 0) {
             setCategories(uniqueCategories);
-            console.log('Categories extracted from appointments:', uniqueCategories.length);
+            console.log(
+                "Categories extracted from appointments:",
+                uniqueCategories.length
+            );
         } else {
-            console.log('No categories found in appointments');
+            console.log("No categories found in appointments");
         }
     };
 
@@ -159,7 +169,8 @@ const AppointmentsList = () => {
                 date_from: filters.date_from || undefined,
                 date_to: filters.date_to || undefined,
                 service_type: filters.service_type || undefined,
-                category: filters.category !== "all" ? filters.category : undefined,
+                category:
+                    filters.category !== "all" ? filters.category : undefined,
                 per_page: pagination.per_page,
                 page: pagination.current_page,
             };
@@ -297,13 +308,13 @@ const AppointmentsList = () => {
 
     // Handle pending filter changes (don't apply immediately)
     const handlePendingFilterChange = (key, value) => {
-        setPendingFilters(prev => ({ ...prev, [key]: value }));
+        setPendingFilters((prev) => ({ ...prev, [key]: value }));
     };
 
     // Apply filters when Apply button is clicked
     const applyFilters = () => {
         setFilters(pendingFilters);
-        
+
         // Update URL parameters
         const newParams = new URLSearchParams();
         Object.entries(pendingFilters).forEach(([k, v]) => {
@@ -409,83 +420,127 @@ const AppointmentsList = () => {
         const doc = {
             content: [
                 {
-                    text: 'My Appointments',
-                    style: 'header',
-                    margin: [0, 0, 0, 20]
+                    text: "My Appointments",
+                    style: "header",
+                    margin: [0, 0, 0, 20],
                 },
                 {
-                    text: `Generated on: ${new Date().toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                    })}`,
-                    style: 'subheader',
-                    margin: [0, 0, 0, 20]
+                    text: `Generated on: ${new Date().toLocaleDateString(
+                        "en-US",
+                        {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                        }
+                    )}`,
+                    style: "subheader",
+                    margin: [0, 0, 0, 20],
                 },
                 {
                     table: {
                         headerRows: 1,
-                        widths: ['15%', '20%', '20%', '15%', '15%', '15%'],
+                        widths: ["15%", "20%", "20%", "15%", "15%", "15%"],
                         body: [
-                            ['Date', 'Service', 'Provider', 'Status', 'Price', 'Location'],
-                            ...appointments.map(appointment => [
-                                new Date(appointment.appointment_date).toLocaleDateString(),
-                                appointment.service?.name || appointment.service?.title || 'Service',
-                                appointment.provider?.full_name || 
-                                `${appointment.provider?.first_name || ''} ${appointment.provider?.last_name || ''}`.trim() ||
-                                appointment.provider?.name || 'Provider',
-                                appointment.status.replace(/_/g, ' ').toUpperCase(),
+                            [
+                                "Date",
+                                "Service",
+                                "Provider",
+                                "Status",
+                                "Price",
+                                "Location",
+                            ],
+                            ...appointments.map((appointment) => [
+                                new Date(
+                                    appointment.appointment_date
+                                ).toLocaleDateString(),
+                                appointment.service?.name ||
+                                    appointment.service?.title ||
+                                    "Service",
+                                appointment.provider?.full_name ||
+                                    `${
+                                        appointment.provider?.first_name || ""
+                                    } ${
+                                        appointment.provider?.last_name || ""
+                                    }`.trim() ||
+                                    appointment.provider?.name ||
+                                    "Provider",
+                                appointment.status
+                                    .replace(/_/g, " ")
+                                    .toUpperCase(),
                                 `Rs. ${appointment.total_price || 0}`,
                                 (() => {
                                     const getLocationDisplay = () => {
                                         // For all location types, try to show the actual address if available
-                                        const address = appointment.custom_address || appointment.client_address || '';
-                                        const city = appointment.custom_city || appointment.client_city || '';
-                                        const fullAddress = address + (city ? ', ' + city : '');
-                                        
-                                        if (appointment.location_type === 'client_address') {
-                                            return fullAddress || 'Your Location';
-                                        } else if (appointment.location_type === 'provider_location') {
-                                            return 'Provider Location';
-                                        } else if (appointment.location_type === 'custom_location') {
-                                            return fullAddress || 'Custom Location';
+                                        const address =
+                                            appointment.custom_address ||
+                                            appointment.client_address ||
+                                            "";
+                                        const city =
+                                            appointment.custom_city ||
+                                            appointment.client_city ||
+                                            "";
+                                        const fullAddress =
+                                            address + (city ? ", " + city : "");
+
+                                        if (
+                                            appointment.location_type ===
+                                            "client_address"
+                                        ) {
+                                            return (
+                                                fullAddress || "Your Location"
+                                            );
+                                        } else if (
+                                            appointment.location_type ===
+                                            "provider_location"
+                                        ) {
+                                            return "Provider Location";
+                                        } else if (
+                                            appointment.location_type ===
+                                            "custom_location"
+                                        ) {
+                                            return (
+                                                fullAddress || "Custom Location"
+                                            );
                                         } else {
-                                            return fullAddress || 'Location not set';
+                                            return (
+                                                fullAddress ||
+                                                "Location not set"
+                                            );
                                         }
                                     };
                                     return getLocationDisplay();
-                                })()
-                            ])
-                        ]
+                                })(),
+                            ]),
+                        ],
                     },
                     layout: {
                         fillColor: function (rowIndex, node, columnIndex) {
-                            return (rowIndex === 0) ? '#f2f2f2' : null;
-                        }
-                    }
-                }
+                            return rowIndex === 0 ? "#f2f2f2" : null;
+                        },
+                    },
+                },
             ],
             styles: {
                 header: {
                     fontSize: 18,
                     bold: true,
-                    alignment: 'center'
+                    alignment: "center",
                 },
                 subheader: {
                     fontSize: 12,
-                    alignment: 'center',
-                    color: '#666'
-                }
+                    alignment: "center",
+                    color: "#666",
+                },
             },
             defaultStyle: {
-                fontSize: 10
-            }
+                fontSize: 10,
+            },
         };
 
         // Simple PDF generation using browser's print functionality
-        const printWindow = window.open('', '_blank');
+        const printWindow = window.open("", "_blank");
         const htmlContent = `
             <!DOCTYPE html>
             <html>
@@ -509,12 +564,12 @@ const AppointmentsList = () => {
             <body>
                 <h1>My Appointments</h1>
                 <div class="meta">
-                    Generated on: ${new Date().toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
+                    Generated on: ${new Date().toLocaleDateString("en-US", {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
                     })}
                     <br/>Total Appointments: ${appointments.length}
                 </div>
@@ -530,32 +585,74 @@ const AppointmentsList = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        ${appointments.map(appointment => `
+                        ${appointments
+                            .map(
+                                (appointment) => `
                             <tr>
-                                <td>${new Date(appointment.appointment_date).toLocaleDateString()} ${appointment.appointment_time || ''}</td>
-                                <td>${appointment.service?.name || appointment.service?.title || 'Service'}</td>
-                                <td>${appointment.provider?.full_name || 
-                                      `${appointment.provider?.first_name || ''} ${appointment.provider?.last_name || ''}`.trim() ||
-                                      appointment.provider?.name || 'Provider'}</td>
-                                <td class="status">${appointment.status.replace(/_/g, ' ')}</td>
-                                <td class="price">Rs. ${appointment.total_price || 0}</td>
+                                <td>${new Date(
+                                    appointment.appointment_date
+                                ).toLocaleDateString()} ${
+                                    appointment.appointment_time || ""
+                                }</td>
+                                <td>${
+                                    appointment.service?.name ||
+                                    appointment.service?.title ||
+                                    "Service"
+                                }</td>
+                                <td>${
+                                    appointment.provider?.full_name ||
+                                    `${
+                                        appointment.provider?.first_name || ""
+                                    } ${
+                                        appointment.provider?.last_name || ""
+                                    }`.trim() ||
+                                    appointment.provider?.name ||
+                                    "Provider"
+                                }</td>
+                                <td class="status">${appointment.status.replace(
+                                    /_/g,
+                                    " "
+                                )}</td>
+                                <td class="price">Rs. ${
+                                    appointment.total_price || 0
+                                }</td>
                                 <td>${(() => {
-                                    const address = appointment.custom_address || appointment.client_address || '';
-                                    const city = appointment.custom_city || appointment.client_city || '';
-                                    const fullAddress = address + (city ? ', ' + city : '');
-                                    
-                                    if (appointment.location_type === 'client_address') {
-                                        return fullAddress || 'Your Location';
-                                    } else if (appointment.location_type === 'provider_location') {
-                                        return 'Provider Location';
-                                    } else if (appointment.location_type === 'custom_location') {
-                                        return fullAddress || 'Custom Location';
+                                    const address =
+                                        appointment.custom_address ||
+                                        appointment.client_address ||
+                                        "";
+                                    const city =
+                                        appointment.custom_city ||
+                                        appointment.client_city ||
+                                        "";
+                                    const fullAddress =
+                                        address + (city ? ", " + city : "");
+
+                                    if (
+                                        appointment.location_type ===
+                                        "client_address"
+                                    ) {
+                                        return fullAddress || "Your Location";
+                                    } else if (
+                                        appointment.location_type ===
+                                        "provider_location"
+                                    ) {
+                                        return "Provider Location";
+                                    } else if (
+                                        appointment.location_type ===
+                                        "custom_location"
+                                    ) {
+                                        return fullAddress || "Custom Location";
                                     } else {
-                                        return fullAddress || 'Location not set';
+                                        return (
+                                            fullAddress || "Location not set"
+                                        );
                                     }
                                 })()}</td>
                             </tr>
-                        `).join('')}
+                        `
+                            )
+                            .join("")}
                     </tbody>
                 </table>
                 <div class="no-print" style="margin-top: 30px; text-align: center;">
@@ -565,7 +662,7 @@ const AppointmentsList = () => {
             </body>
             </html>
         `;
-        
+
         printWindow.document.write(htmlContent);
         printWindow.document.close();
         printWindow.focus();
@@ -866,7 +963,11 @@ const AppointmentsList = () => {
                             <div className="col-12">
                                 <div className="alert alert-info small">
                                     <i className="fas fa-info-circle me-2"></i>
-                                    <strong>Multi-Filter Support:</strong> You can combine multiple filters (status, dates, and service type) to narrow down your search. Make changes and click "Apply Filters" to update the results.
+                                    <strong>Multi-Filter Support:</strong> You
+                                    can combine multiple filters (status, dates,
+                                    and service type) to narrow down your
+                                    search. Make changes and click "Apply
+                                    Filters" to update the results.
                                 </div>
                             </div>
                             <div className="col-md-3 col-sm-6">
@@ -936,7 +1037,7 @@ const AppointmentsList = () => {
                                     }
                                 />
                             </div>
-                            
+
                             <div className="col-md-3 col-sm-6">
                                 <label className="form-label font-medium">
                                     Service Type
@@ -954,7 +1055,7 @@ const AppointmentsList = () => {
                                     }
                                 />
                             </div>
-                            
+
                             <div className="col-md-3 col-sm-6">
                                 <label className="form-label font-medium">
                                     Category
@@ -971,7 +1072,10 @@ const AppointmentsList = () => {
                                 >
                                     <option value="all">All Categories</option>
                                     {categories.map((category) => (
-                                        <option key={category.id} value={category.id}>
+                                        <option
+                                            key={category.id}
+                                            value={category.id}
+                                        >
                                             {category.name}
                                         </option>
                                     ))}
@@ -983,7 +1087,10 @@ const AppointmentsList = () => {
                                     <button
                                         className="btn btn-primary btn-responsive"
                                         onClick={applyFilters}
-                                        disabled={JSON.stringify(filters) === JSON.stringify(pendingFilters)}
+                                        disabled={
+                                            JSON.stringify(filters) ===
+                                            JSON.stringify(pendingFilters)
+                                        }
                                     >
                                         <i className="fas fa-check me-2"></i>
                                         Apply Filters
@@ -1010,7 +1117,10 @@ const AppointmentsList = () => {
                                     <button
                                         className="btn btn-outline-info btn-responsive"
                                         onClick={resetPendingFilters}
-                                        disabled={JSON.stringify(filters) === JSON.stringify(pendingFilters)}
+                                        disabled={
+                                            JSON.stringify(filters) ===
+                                            JSON.stringify(pendingFilters)
+                                        }
                                     >
                                         <i className="fas fa-undo me-2"></i>
                                         Reset
