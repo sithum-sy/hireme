@@ -32,10 +32,11 @@ const DurationDetailsStep = ({
     const calculateMaxDuration = async () => {
         setLoading(true);
         try {
-            const response = await clientAvailabilityService.getProviderWorkingHours(
-                provider.id,
-                selectedSlot.date
-            );
+            const response =
+                await clientAvailabilityService.getProviderWorkingHours(
+                    provider.id,
+                    selectedSlot.date
+                );
 
             if (response.success && response.data.is_available) {
                 const maxHours = calculateHoursBetween(
@@ -43,10 +44,7 @@ const DurationDetailsStep = ({
                     response.data.end_time
                 );
                 setMaxDuration(Math.min(maxHours, 12)); // Cap at 12 hours
-                console.log(
-                    "Calculated max duration:",
-                    Math.min(maxHours, 12)
-                );
+                console.log("Calculated max duration:", Math.min(maxHours, 12));
             } else {
                 // Provider not available, set a default duration
                 setMaxDuration(8);
@@ -166,30 +164,6 @@ const DurationDetailsStep = ({
                                             <p className="text-muted mb-2">
                                                 {service?.description}
                                             </p>
-
-                                            {/* Selected Time Display */}
-                                            {/* <div className="selected-time-info">
-                                                <div className="d-flex align-items-center mb-2">
-                                                    <i className="fas fa-calendar text-success me-2" />
-                                                    <span className="fw-semibold">
-                                                        {selectedSlot?.formatted_date ||
-                                                            bookingData.appointment_date}
-                                                    </span>
-                                                </div>
-                                                <div className="d-flex align-items-center">
-                                                    <i className="fas fa-clock text-info me-2" />
-                                                    <span className="fw-semibold">
-                                                        {selectedSlot?.formatted_time ||
-                                                            bookingData.appointment_time}
-                                                    </span>
-                                                    <button
-                                                        className="btn btn-sm btn-link text-primary"
-                                                        onClick={onPrevious}
-                                                    >
-                                                        Change Time
-                                                    </button>
-                                                </div>
-                                            </div> */}
                                         </div>
 
                                         <div className="col-md-4 text-end">

@@ -541,42 +541,6 @@ const LocationContactStep = ({
                                             </div>
                                         </div>
                                     )}
-
-                                    {/* Provider Location Info */}
-                                    {/* {formData.location_type ===
-                                        "provider_location" && (
-                                        <div className="provider-location-info mt-4">
-                                            <div className="border-top pt-4">
-                                                <h6 className="fw-bold mb-3">
-                                                    <i className="fas fa-building me-2" />
-                                                    Provider Location
-                                                </h6>
-                                                <div className="provider-location-card p-3 bg-light rounded">
-                                                    <div className="d-flex align-items-start">
-                                                        <i className="fas fa-map-marker-alt text-success me-3 mt-1" />
-                                                        <div className="flex-grow-1">
-                                                            <div className="fw-semibold">
-                                                                {provider?.business_name ||
-                                                                    provider?.name}
-                                                            </div>
-                                                            <div className="text-muted">
-                                                                {
-                                                                    service
-                                                                        ?.location
-                                                                        .service_address
-                                                                }{" "}
-                                                                {
-                                                                    service
-                                                                        ?.location
-                                                                        .location_city
-                                                                }
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )} */}
                                 </div>
                             </div>
                         </div>

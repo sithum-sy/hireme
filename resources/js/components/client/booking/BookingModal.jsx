@@ -32,47 +32,6 @@ const BookingModal = ({
         }
     }, [selectedSlot]);
 
-    // Enhanced booking data state
-    // const [bookingData, setBookingData] = useState(() => ({
-    //     // Service & Provider IDs
-    //     service_id: service?.id,
-    //     provider_id: provider?.id,
-
-    //     // Time & Duration (from selected slot or empty)
-    //     appointment_date: selectedSlot?.date || "",
-    //     appointment_time: selectedSlot?.time || "",
-    //     duration_hours: service?.duration_hours || 1,
-
-    //     // Pricing
-    //     base_price: service?.base_price || service?.price || 0,
-    //     total_price:
-    //         (service?.base_price || service?.price || 0) *
-    //         (service?.duration_hours || 1),
-    //     travel_fee: 0,
-
-    //     // Location defaults
-    //     location_type: "client_address",
-    //     client_location: clientLocation,
-    //     client_address: "",
-    //     client_city: clientLocation?.city || "",
-    //     client_postal_code: "",
-    //     location_instructions: "",
-
-    //     // Contact defaults
-    //     client_phone: "",
-    //     client_email: "",
-    //     contact_preference: "phone",
-    //     emergency_contact: "",
-
-    //     // Service details
-    //     special_requirements: "",
-    //     client_notes: "",
-
-    //     // Booking metadata
-    //     payment_method: "cash",
-    //     agreed_to_terms: false,
-    //     booking_source: "web_app_multi_step",
-    // }));
     const [bookingData, setBookingData] = useState(() => ({
         // Service & Provider IDs
         service_id: service?.id,
@@ -123,30 +82,6 @@ const BookingModal = ({
         { id: 3, title: "Payment & Confirm", icon: "fas fa-check-circle" },
     ];
 
-    // const updateBookingData = (updates) => {
-    //     setBookingData((prev) => {
-    //         const newData = { ...prev, ...updates };
-
-    //         // Auto-calculate total price when relevant fields change
-    //         if (
-    //             updates.duration_hours !== undefined ||
-    //             updates.base_price !== undefined
-    //         ) {
-    //             const basePrice =
-    //                 newData.base_price ||
-    //                 service?.base_price ||
-    //                 service?.price ||
-    //                 0;
-    //             const duration = newData.duration_hours || 1;
-    //             const travelFee = newData.travel_fee || 0;
-
-    //             newData.total_price = basePrice * duration + travelFee;
-    //         }
-
-    //         return newData;
-    //     });
-    // };
-
     const updateBookingData = (newData) => {
         // console.log("BookingModal: Updating booking data with:", newData);
         setBookingData((prev) => {
@@ -155,32 +90,6 @@ const BookingModal = ({
             return updated;
         });
     };
-
-    // const handleStepComplete = (stepData) => {
-    //     console.log("BookingModal: Step completed with data:", stepData);
-
-    //     updateBookingData(stepData);
-
-    //     // Preserve slot data when updating
-    //     if (stepData.appointment_date || stepData.appointment_time) {
-    //         const updatedSlot = {
-    //             date: stepData.appointment_date || bookingData.appointment_date,
-    //             time: stepData.appointment_time || bookingData.appointment_time,
-    //             formatted_date: formatDate(
-    //                 stepData.appointment_date || bookingData.appointment_date
-    //             ),
-    //             formatted_time: formatTime(
-    //                 stepData.appointment_time || bookingData.appointment_time
-    //             ),
-    //         };
-    //         setCurrentSelectedSlot(updatedSlot);
-    //         console.log("BookingModal: Updated selected slot:", updatedSlot);
-    //     }
-
-    //     // Auto-advance to next step
-    //     const nextStep = Math.min(currentStep + 1, steps.length - 1);
-    //     setCurrentStep(nextStep);
-    // };
 
     // Scroll to top of modal when step changes
     const scrollModalToTop = () => {
@@ -353,21 +262,6 @@ const BookingModal = ({
         }
     };
 
-    // const handleBookingComplete = (completedBookingData) => {
-    //     console.log("Booking completed:", completedBookingData);
-    //     onHide();
-
-    //     // Navigate based on booking result
-    //     if (completedBookingData.success) {
-    //         navigate("/client/appointments", {
-    //             state: {
-    //                 message: "Booking request sent successfully!",
-    //                 appointment: completedBookingData.data,
-    //             },
-    //         });
-    //     }
-    // };
-
     const handleBookingComplete = async (result) => {
         // console.log(
         //     "   BookingModal: Booking completion started with result:",
@@ -419,29 +313,6 @@ const BookingModal = ({
         }
     };
 
-    // Update booking data when selected slot changes
-    // useEffect(() => {
-    //     if (selectedSlot && selectedSlot.date && selectedSlot.time) {
-    //         console.log(
-    //             "BookingModal: Updating booking data with selected slot:",
-    //             selectedSlot
-    //         );
-
-    //         setCurrentSelectedSlot(selectedSlot);
-    //         setBookingData((prev) => ({
-    //             ...prev,
-    //             appointment_date: selectedSlot.date,
-    //             appointment_time: selectedSlot.time,
-    //         }));
-
-    //         // Start with duration step since time is already selected
-    //         setCurrentStep(1);
-    //     } else {
-    //         // Start with time selection if no slot is pre-selected
-    //         setCurrentStep(0);
-    //     }
-    // }, [selectedSlot]);
-
     useEffect(() => {
         if (selectedSlot && selectedSlot.date && selectedSlot.time) {
             // console.log(
@@ -489,33 +360,33 @@ const BookingModal = ({
 
     if (!show) return null;
 
-    const canNavigateToStep = (stepId) => {
-        // Can always go back to previous steps
-        if (stepId < currentStep) return true;
+    // const canNavigateToStep = (stepId) => {
+    //     // Can always go back to previous steps
+    //     if (stepId < currentStep) return true;
 
-        // Can go forward only if current step is valid
-        switch (currentStep) {
-            case 0: // Time selection
-                return (
-                    stepId <= 1 &&
-                    bookingData.appointment_date &&
-                    bookingData.appointment_time
-                );
-            case 1: // Duration
-                return stepId <= 2 && bookingData.duration_hours >= 1;
-            case 2: // Location & Contact
-                return (
-                    stepId <= 3 &&
-                    (bookingData.client_phone || bookingData.client_email) &&
-                    (bookingData.location_type !== "client_address" ||
-                        bookingData.client_address)
-                );
-            case 3: // Final step
-                return false;
-            default:
-                return false;
-        }
-    };
+    //     // Can go forward only if current step is valid
+    //     switch (currentStep) {
+    //         case 0: // Time selection
+    //             return (
+    //                 stepId <= 1 &&
+    //                 bookingData.appointment_date &&
+    //                 bookingData.appointment_time
+    //             );
+    //         case 1: // Duration
+    //             return stepId <= 2 && bookingData.duration_hours >= 1;
+    //         case 2: // Location & Contact
+    //             return (
+    //                 stepId <= 3 &&
+    //                 (bookingData.client_phone || bookingData.client_email) &&
+    //                 (bookingData.location_type !== "client_address" ||
+    //                     bookingData.client_address)
+    //             );
+    //         case 3: // Final step
+    //             return false;
+    //         default:
+    //             return false;
+    //     }
+    // };
 
     if (!show) return null;
 
@@ -579,17 +450,6 @@ const BookingModal = ({
                                                     )}
                                             </span>
                                         </div>
-                                        {/* {currentStep > 1 && (
-                                            <button
-                                                className="btn btn-sm btn-outline-secondary"
-                                                onClick={() =>
-                                                    setCurrentStep(1)
-                                                }
-                                            >
-                                                <i className="fas fa-edit me-1" />
-                                                Change Time
-                                            </button>
-                                        )} */}
                                     </div>
                                 </div>
                             </div>
@@ -604,8 +464,7 @@ const BookingModal = ({
                                     bookingData={bookingData}
                                     onStepComplete={handleStepComplete}
                                     onPrevious={() => {
-                                        setCurrentStep(selectedSlot ? 1 : 0);
-                                        // Scroll will be handled by useEffect
+                                        setCurrentStep(onHide);
                                     }}
                                     selectedSlot={currentSelectedSlot}
                                     clientLocation={clientLocation}

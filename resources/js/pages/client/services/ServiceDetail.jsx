@@ -1079,7 +1079,7 @@ const ServiceDetail = () => {
                                                 )}
 
                                             {/* Contact Actions */}
-                                            <div className="provider-actions mt-4 pt-3 border-top">
+                                            {/* <div className="provider-actions mt-4 pt-3 border-top">
                                                 <div className="row g-2">
                                                     <div className="col-md-6">
                                                         <button
@@ -1102,7 +1102,7 @@ const ServiceDetail = () => {
                                                         </Link>
                                                     </div>
                                                 </div>
-                                            </div>
+                                            </div> */}
                                         </div>
                                     </div>
                                 </div>

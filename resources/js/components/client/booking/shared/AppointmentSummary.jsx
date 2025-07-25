@@ -69,18 +69,18 @@ const AppointmentSummary = ({
         }
     };
 
-    const getContactPreferenceText = () => {
-        switch (bookingData.contact_preference) {
-            case "phone":
-                return "Phone call";
-            case "message":
-                return "Text/WhatsApp";
-            case "email":
-                return "Email";
-            default:
-                return "Not specified";
-        }
-    };
+    // const getContactPreferenceText = () => {
+    //     switch (bookingData.contact_preference) {
+    //         case "phone":
+    //             return "Phone call";
+    //         case "message":
+    //             return "Text/WhatsApp";
+    //         case "email":
+    //             return "Email";
+    //         default:
+    //             return "Not specified";
+    //     }
+    // };
 
     // Determine what sections to show based on current step
     const showSchedule =

@@ -222,7 +222,7 @@ const ProviderLayout = ({ children }) => {
                 >
                     <div className="content-container">
                         {/* Enhanced Breadcrumb Navigation */}
-                        <nav aria-label="breadcrumb" className="mb-4">
+                        <nav aria-label="breadcrumb">
                             <ol className="breadcrumb">
                                 {generateBreadcrumbs().map((crumb, index) => (
                                     <li
