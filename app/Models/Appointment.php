@@ -221,7 +221,8 @@ class Appointment extends Model
             self::STATUS_CANCELLED_BY_CLIENT => 'badge bg-danger',
             self::STATUS_CANCELLED_BY_PROVIDER => 'badge bg-danger',
             self::STATUS_NO_SHOW => 'badge bg-dark',
-            self::STATUS_DISPUTED => 'badge bg-warning'
+            self::STATUS_DISPUTED => 'badge bg-warning',
+            self::STATUS_EXPIRED => 'badge bg-dark'
         ];
 
         return $badges[$this->status] ?? 'badge bg-secondary';
@@ -242,7 +243,8 @@ class Appointment extends Model
             self::STATUS_CANCELLED_BY_CLIENT => 'Cancelled by Client',
             self::STATUS_CANCELLED_BY_PROVIDER => 'Cancelled by Provider',
             self::STATUS_NO_SHOW => 'No Show',
-            self::STATUS_DISPUTED => 'Disputed'
+            self::STATUS_DISPUTED => 'Disputed',
+            self::STATUS_EXPIRED => 'Expired'
         ];
 
         return $statusTexts[$this->status] ?? ucfirst(str_replace('_', ' ', $this->status));
@@ -509,5 +511,72 @@ class Appointment extends Model
     public function canBeInvoiced()
     {
         return $this->status === self::STATUS_COMPLETED && !$this->hasInvoice();
+    }
+
+    /**
+     * Check if appointment is expired (past 24 hours without response)
+     */
+    public function isExpired()
+    {
+        return $this->status === self::STATUS_PENDING
+            && $this->created_at->lt(now()->subHours(24));
+    }
+
+    /**
+     * Mark appointment as expired
+     */
+    public function markAsExpired($reason = 'Auto-expired due to provider non-response after 24 hours')
+    {
+        $this->update([
+            'status' => self::STATUS_EXPIRED,
+            'auto_expired' => true,
+            'cancelled_at' => now(),
+            'cancellation_reason' => $reason
+        ]);
+    }
+
+    /**
+     * Check if appointment was auto-expired
+     */
+    public function wasAutoExpired()
+    {
+        return $this->auto_expired === true;
+    }
+
+    /**
+     * Get hours since appointment was created
+     */
+    public function getHoursSinceCreatedAttribute()
+    {
+        return $this->created_at->diffInHours(now());
+    }
+
+    /**
+     * Scope for expired appointments
+     */
+    public function scopeExpired($query)
+    {
+        return $query->where('status', self::STATUS_EXPIRED);
+    }
+
+    /**
+     * Scope for auto-expired appointments
+     */
+    public function scopeAutoExpired($query)
+    {
+        return $query->where('auto_expired', true);
+    }
+
+    /**
+     * Scope for pending appointments that should be expired
+     */
+    public function scopeShouldBeExpired($query)
+    {
+        return $query->where('status', self::STATUS_PENDING)
+            ->where('created_at', '<=', now()->subHours(24))
+            ->where(function ($q) {
+                $q->whereNull('auto_expired')
+                    ->orWhere('auto_expired', false);
+            });
     }
 }

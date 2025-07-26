@@ -17,6 +17,12 @@ class Kernel extends ConsoleKernel
         
         // Process expired appointments every hour
         $schedule->job(new \App\Jobs\ProcessExpiredAppointments)->hourly();
+        
+        // Process expired appointments every 30 minutes for faster response
+        $schedule->command('appointments:process-expired')
+            ->everyThirtyMinutes()
+            ->withoutOverlapping()
+            ->runInBackground();
     }
 
     /**

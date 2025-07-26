@@ -244,12 +244,12 @@ class AppointmentController extends Controller
 
                 // Append reschedule reason to notes
                 if ($request->notes) {
-                    $updateData['client_notes'] = ($appointment->client_notes ? $appointment->client_notes . "\n\n" : '') 
+                    $updateData['client_notes'] = ($appointment->client_notes ? $appointment->client_notes . "\n\n" : '')
                         . "Reschedule reason: " . $request->notes;
                 }
 
                 $appointment->update($updateData);
-                
+
                 $message = 'Appointment rescheduled successfully';
             } else {
                 // For confirmed appointments, create a proper reschedule request
@@ -336,15 +336,17 @@ class AppointmentController extends Controller
                 ->where('appointment_date', $appointmentDate)
                 ->where('id', '!=', $excludeAppointmentId)
                 ->whereIn('status', ['pending', 'confirmed', 'in_progress'])
-                ->where(function($query) use ($startDateTime, $endDateTime) {
+                ->where(function ($query) use ($startDateTime, $endDateTime) {
                     $query->whereBetween('appointment_time', [
                         $startDateTime->format('H:i:s'),
                         $endDateTime->format('H:i:s')
-                    ])->orWhere(function($q) use ($startDateTime, $endDateTime) {
+                    ])->orWhere(function ($q) use ($startDateTime, $endDateTime) {
                         // Check for overlapping appointments
                         $q->where('appointment_time', '<', $endDateTime->format('H:i:s'))
-                          ->whereRaw('ADDTIME(appointment_time, SEC_TO_TIME(duration_hours * 3600)) > ?', 
-                                    [$startDateTime->format('H:i:s')]);
+                            ->whereRaw(
+                                'ADDTIME(appointment_time, SEC_TO_TIME(duration_hours * 3600)) > ?',
+                                [$startDateTime->format('H:i:s')]
+                            );
                     });
                 })
                 ->exists();
@@ -542,7 +544,7 @@ class AppointmentController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Booking request submitted successfully! The provider will confirm within 2 hours.',
+                'message' => 'Booking request submitted successfully! The provider will confirm within 24 hours.',
                 'data' => [
                     'id' => $appointment->id,
                     'confirmation_code' => $appointment->confirmation_code,
@@ -1169,7 +1171,6 @@ class AppointmentController extends Controller
                     'provider_email' => $appointment->provider->email
                 ]);
             }
-
         } catch (\Exception $e) {
             Log::error('Failed to send appointment notifications', [
                 'appointment_id' => $appointment->id,
