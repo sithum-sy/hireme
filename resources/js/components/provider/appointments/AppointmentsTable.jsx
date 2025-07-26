@@ -1,21 +1,20 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 
-const AppointmentsTable = ({ 
-    appointments = [], 
-    loading = false, 
-    onSort, 
-    sortField, 
-    sortDirection, 
-    onAppointmentAction 
+const AppointmentsTable = ({
+    appointments = [],
+    loading = false,
+    onSort,
+    sortField,
+    sortDirection,
+    onAppointmentAction,
 }) => {
-
     const formatDate = (dateString) => {
         const date = new Date(dateString);
-        return date.toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric'
+        return date.toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
         });
     };
 
@@ -23,45 +22,77 @@ const AppointmentsTable = ({
         // If we have a separate time string, use it
         if (timeString) {
             try {
-                const timeParts = timeString.toString().split(':');
+                const timeParts = timeString.toString().split(":");
                 if (timeParts.length >= 2) {
                     const hours = parseInt(timeParts[0]);
                     const minutes = timeParts[1];
-                    const ampm = hours >= 12 ? 'PM' : 'AM';
+                    const ampm = hours >= 12 ? "PM" : "AM";
                     const displayHour = hours % 12 || 12;
                     return `${displayHour}:${minutes} ${ampm}`;
                 }
             } catch (error) {
-                console.warn('Error formatting time:', error);
+                console.warn("Error formatting time:", error);
                 return timeString.toString();
             }
         }
-        
+
         // Fallback to extracting time from date string
         try {
             const date = new Date(dateString);
-            return date.toLocaleTimeString('en-US', {
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: true
+            return date.toLocaleTimeString("en-US", {
+                hour: "2-digit",
+                minute: "2-digit",
+                hour12: true,
             });
         } catch (error) {
-            return 'Time not set';
+            return "Time not set";
         }
     };
 
     const getStatusBadge = (status) => {
         const statusMap = {
-            'pending': { class: 'status-pending', text: 'Pending', icon: 'fa-clock' },
-            'confirmed': { class: 'status-confirmed', text: 'Confirmed', icon: 'fa-check-circle' },
-            'in_progress': { class: 'status-progress', text: 'In Progress', icon: 'fa-spinner' },
-            'completed': { class: 'status-completed', text: 'Completed', icon: 'fa-check' },
-            'cancelled_by_client': { class: 'status-cancelled', text: 'Cancelled by Client', icon: 'fa-times-circle' },
-            'cancelled_by_provider': { class: 'status-cancelled', text: 'Cancelled by You', icon: 'fa-times-circle' },
-            'no_show': { class: 'status-cancelled', text: 'No Show', icon: 'fa-user-times' },
+            pending: {
+                class: "status-pending",
+                text: "Pending",
+                icon: "fa-clock",
+            },
+            confirmed: {
+                class: "status-confirmed",
+                text: "Confirmed",
+                icon: "fa-check-circle",
+            },
+            in_progress: {
+                class: "status-progress",
+                text: "In Progress",
+                icon: "fa-spinner",
+            },
+            completed: {
+                class: "status-completed",
+                text: "Completed",
+                icon: "fa-check",
+            },
+            cancelled_by_client: {
+                class: "status-cancelled",
+                text: "Cancelled by Client",
+                icon: "fa-times-circle",
+            },
+            cancelled_by_provider: {
+                class: "status-cancelled",
+                text: "Cancelled by You",
+                icon: "fa-times-circle",
+            },
+            no_show: {
+                class: "status-cancelled",
+                text: "No Show",
+                icon: "fa-user-times",
+            },
         };
 
-        const statusInfo = statusMap[status] || { class: 'status-unknown', text: status, icon: 'fa-question' };
+        const statusInfo = statusMap[status] || {
+            class: "status-unknown",
+            text: status,
+            icon: "fa-question",
+        };
 
         return (
             <span className={`status-badge ${statusInfo.class}`}>
@@ -78,8 +109,8 @@ const AppointmentsTable = ({
     };
 
     const getSortIcon = (field) => {
-        if (sortField !== field) return 'fas fa-sort';
-        return sortDirection === 'asc' ? 'fas fa-sort-up' : 'fas fa-sort-down';
+        if (sortField !== field) return "fas fa-sort";
+        return sortDirection === "asc" ? "fas fa-sort-up" : "fas fa-sort-down";
     };
 
     if (loading) {
@@ -117,72 +148,58 @@ const AppointmentsTable = ({
                 <table className="appointments-table">
                     <thead>
                         <tr>
-                            <th 
-                                className="sortable-header"
-                                onClick={() => handleSort('appointment_date')}
-                            >
-                                Date & Time
-                                <i className={getSortIcon('appointment_date')}></i>
-                            </th>
-                            <th 
-                                className="sortable-header"
-                                onClick={() => handleSort('service_title')}
-                            >
-                                Service
-                                <i className={getSortIcon('service_title')}></i>
-                            </th>
-                            <th 
-                                className="sortable-header"
-                                onClick={() => handleSort('client_name')}
-                            >
-                                Client
-                                <i className={getSortIcon('client_name')}></i>
-                            </th>
-                            <th 
-                                className="sortable-header"
-                                onClick={() => handleSort('status')}
-                            >
-                                Status
-                                <i className={getSortIcon('status')}></i>
-                            </th>
-                            <th 
-                                className="sortable-header"
-                                onClick={() => handleSort('total_price')}
-                            >
-                                Price
-                                <i className={getSortIcon('total_price')}></i>
-                            </th>
+                            <th className="sortable-header">Date & Time</th>
+                            <th className="sortable-header">Service</th>
+                            <th className="sortable-header">Client</th>
+                            <th className="sortable-header">Status</th>
+                            <th className="sortable-header">Price</th>
                             <th>Location</th>
                             <th className="actions-column">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {appointments.map((appointment) => (
-                            <tr 
-                                key={appointment.id} 
+                            <tr
+                                key={appointment.id}
                                 className="appointment-row"
                             >
                                 <td className="date-cell">
                                     <div className="date-info">
-                                        <span className="date">{formatDate(appointment.appointment_date)}</span>
-                                        <span className="time">{formatTime(appointment.appointment_date, appointment.appointment_time)}</span>
+                                        <span className="date">
+                                            {formatDate(
+                                                appointment.appointment_date
+                                            )}
+                                        </span>
+                                        <span className="time">
+                                            {formatTime(
+                                                appointment.appointment_date,
+                                                appointment.appointment_time
+                                            )}
+                                        </span>
                                     </div>
                                 </td>
                                 <td className="service-cell">
                                     <div className="service-info">
-                                        <span className="service-name">{appointment.service_title || 'Service'}</span>
+                                        <span className="service-name">
+                                            {appointment.service_title ||
+                                                "Service"}
+                                        </span>
                                         <span className="service-duration">
-                                            {appointment.duration_hours ? `${appointment.duration_hours}h` : ''}
+                                            {appointment.duration_hours
+                                                ? `${appointment.duration_hours}h`
+                                                : ""}
                                         </span>
                                     </div>
                                 </td>
                                 <td className="client-cell">
                                     <div className="client-info">
                                         <span className="client-name">
-                                            {appointment.client_name || 'Client'}
+                                            {appointment.client_name ||
+                                                "Client"}
                                         </span>
                                         <span className="client-contact">
-                                            {appointment.client_phone || appointment.client_email}
+                                            {appointment.client_phone ||
+                                                appointment.client_email}
                                         </span>
                                     </div>
                                 </td>
@@ -198,9 +215,18 @@ const AppointmentsTable = ({
                                 <td className="price-cell">
                                     <div className="price-info">
                                         <span className="price">
-                                            Rs. {appointment.total_price?.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0}) || 0}
+                                            Rs.{" "}
+                                            {appointment.total_price?.toLocaleString(
+                                                "en-US",
+                                                {
+                                                    minimumFractionDigits: 0,
+                                                    maximumFractionDigits: 0,
+                                                }
+                                            ) || 0}
                                         </span>
-                                        {appointment.booking_source === "quote_acceptance" || appointment.quote_id ? (
+                                        {appointment.booking_source ===
+                                            "quote_acceptance" ||
+                                        appointment.quote_id ? (
                                             <small className="d-block text-muted">
                                                 <i className="fas fa-quote-left text-success me-1"></i>
                                                 Quote Price
@@ -208,7 +234,18 @@ const AppointmentsTable = ({
                                         ) : (
                                             appointment.duration_hours && (
                                                 <small className="d-block text-muted">
-                                                    {appointment.duration_hours} {appointment.duration_hours > 1 ? "hrs" : "hr"} × Rs. {Math.round((appointment.total_price || 0) / (appointment.duration_hours || 1))}
+                                                    {appointment.duration_hours}{" "}
+                                                    {appointment.duration_hours >
+                                                    1
+                                                        ? "hrs"
+                                                        : "hr"}{" "}
+                                                    × Rs.{" "}
+                                                    {Math.round(
+                                                        (appointment.total_price ||
+                                                            0) /
+                                                            (appointment.duration_hours ||
+                                                                1)
+                                                    )}
                                                 </small>
                                             )
                                         )}
@@ -217,15 +254,25 @@ const AppointmentsTable = ({
                                 <td className="location-cell">
                                     <div className="location-info">
                                         <span className="location-type">
-                                            {appointment.location_type === 'client_address' ? 'Client Location' :
-                                             appointment.location_type === 'provider_location' ? 'Your Location' :
-                                             appointment.location_type === 'custom_location' ? 'Custom Location' :
-                                             'Location TBD'}
+                                            {appointment.location_type ===
+                                            "client_address"
+                                                ? "Client Location"
+                                                : appointment.location_type ===
+                                                  "provider_location"
+                                                ? "Your Location"
+                                                : appointment.location_type ===
+                                                  "custom_location"
+                                                ? "Custom Location"
+                                                : "Location TBD"}
                                         </span>
                                         {appointment.client_address && (
                                             <small className="location-address">
-                                                {appointment.client_address.length > 30 
-                                                    ? `${appointment.client_address.substring(0, 30)}...`
+                                                {appointment.client_address
+                                                    .length > 30
+                                                    ? `${appointment.client_address.substring(
+                                                          0,
+                                                          30
+                                                      )}...`
                                                     : appointment.client_address}
                                             </small>
                                         )}
@@ -233,28 +280,46 @@ const AppointmentsTable = ({
                                 </td>
                                 <td className="actions-cell">
                                     <div className="action-buttons">
-                                        <button 
+                                        <button
                                             className="btn btn-sm btn-outline-primary"
-                                            onClick={() => onAppointmentAction && onAppointmentAction('view', appointment)}
+                                            onClick={() =>
+                                                onAppointmentAction &&
+                                                onAppointmentAction(
+                                                    "view",
+                                                    appointment
+                                                )
+                                            }
                                             title="View Details"
                                         >
                                             <i className="fas fa-eye me-1"></i>
                                             View
                                         </button>
-                                        
-                                        {appointment.status === 'pending' && (
+
+                                        {appointment.status === "pending" && (
                                             <>
-                                                <button 
+                                                <button
                                                     className="btn btn-sm btn-outline-success"
-                                                    onClick={() => onAppointmentAction && onAppointmentAction('confirm', appointment)}
+                                                    onClick={() =>
+                                                        onAppointmentAction &&
+                                                        onAppointmentAction(
+                                                            "confirm",
+                                                            appointment
+                                                        )
+                                                    }
                                                     title="Confirm Appointment"
                                                 >
                                                     <i className="fas fa-check me-1"></i>
                                                     Confirm
                                                 </button>
-                                                <button 
+                                                <button
                                                     className="btn btn-sm btn-outline-danger"
-                                                    onClick={() => onAppointmentAction && onAppointmentAction('cancel', appointment)}
+                                                    onClick={() =>
+                                                        onAppointmentAction &&
+                                                        onAppointmentAction(
+                                                            "cancel",
+                                                            appointment
+                                                        )
+                                                    }
                                                     title="Cancel"
                                                 >
                                                     <i className="fas fa-times me-1"></i>
@@ -263,19 +328,31 @@ const AppointmentsTable = ({
                                             </>
                                         )}
 
-                                        {appointment.status === 'confirmed' && (
+                                        {appointment.status === "confirmed" && (
                                             <>
-                                                <button 
+                                                <button
                                                     className="btn btn-sm btn-outline-warning"
-                                                    onClick={() => onAppointmentAction && onAppointmentAction('start', appointment)}
+                                                    onClick={() =>
+                                                        onAppointmentAction &&
+                                                        onAppointmentAction(
+                                                            "start",
+                                                            appointment
+                                                        )
+                                                    }
                                                     title="Start Service"
                                                 >
                                                     <i className="fas fa-play me-1"></i>
                                                     Start
                                                 </button>
-                                                <button 
+                                                <button
                                                     className="btn btn-sm btn-outline-danger"
-                                                    onClick={() => onAppointmentAction && onAppointmentAction('cancel', appointment)}
+                                                    onClick={() =>
+                                                        onAppointmentAction &&
+                                                        onAppointmentAction(
+                                                            "cancel",
+                                                            appointment
+                                                        )
+                                                    }
                                                     title="Cancel"
                                                 >
                                                     <i className="fas fa-times me-1"></i>
@@ -284,10 +361,17 @@ const AppointmentsTable = ({
                                             </>
                                         )}
 
-                                        {appointment.status === 'in_progress' && (
-                                            <button 
+                                        {appointment.status ===
+                                            "in_progress" && (
+                                            <button
                                                 className="btn btn-sm btn-outline-success"
-                                                onClick={() => onAppointmentAction && onAppointmentAction('complete', appointment)}
+                                                onClick={() =>
+                                                    onAppointmentAction &&
+                                                    onAppointmentAction(
+                                                        "complete",
+                                                        appointment
+                                                    )
+                                                }
                                                 title="Complete Service"
                                             >
                                                 <i className="fas fa-check me-1"></i>
@@ -297,17 +381,29 @@ const AppointmentsTable = ({
 
                                         {appointment.has_pending_reschedule && (
                                             <>
-                                                <button 
+                                                <button
                                                     className="btn btn-sm btn-outline-info"
-                                                    onClick={() => onAppointmentAction && onAppointmentAction('approve_reschedule', appointment)}
+                                                    onClick={() =>
+                                                        onAppointmentAction &&
+                                                        onAppointmentAction(
+                                                            "approve_reschedule",
+                                                            appointment
+                                                        )
+                                                    }
                                                     title="Approve Reschedule"
                                                 >
                                                     <i className="fas fa-check me-1"></i>
                                                     Approve
                                                 </button>
-                                                <button 
+                                                <button
                                                     className="btn btn-sm btn-outline-warning"
-                                                    onClick={() => onAppointmentAction && onAppointmentAction('decline_reschedule', appointment)}
+                                                    onClick={() =>
+                                                        onAppointmentAction &&
+                                                        onAppointmentAction(
+                                                            "decline_reschedule",
+                                                            appointment
+                                                        )
+                                                    }
                                                     title="Decline Reschedule"
                                                 >
                                                     <i className="fas fa-times me-1"></i>
@@ -576,7 +672,7 @@ const AppointmentsTable = ({
                         gap: var(--space-1);
                         align-items: stretch;
                     }
-                    
+
                     .action-buttons .btn {
                         justify-content: center;
                     }

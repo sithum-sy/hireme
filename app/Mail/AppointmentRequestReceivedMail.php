@@ -10,39 +10,41 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class AppointmentCancelledMail extends Mailable implements ShouldQueue
+class AppointmentRequestReceivedMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
     public $appointment;
+    public $recipientType; // 'client' or 'provider'
 
-    /**
-     * Create a new message instance.
-     */
-    public function __construct(array $data)
+    public function __construct(Appointment $appointment, string $recipientType)
     {
-        $this->appointment = $data['appointment'];
+        $this->appointment = $appointment;
+        $this->recipientType = $recipientType;
     }
 
-    /**
-     * Get the message envelope.
-     */
     public function envelope(): Envelope
     {
+        $subject = $this->recipientType === 'client'
+            ? 'Appointment Request Submitted Successfully'
+            : 'New Appointment Request Received';
+
         return new Envelope(
-            subject: 'Appointment Cancelled',
+            subject: $subject,
         );
     }
 
-    /**
-     * Get the message content definition.
-     */
     public function content(): Content
     {
+        $view = $this->recipientType === 'client'
+            ? 'emails.appointments.request-received-client'
+            : 'emails.appointments.request-received-provider';
+
         $baseUrl = config('app.frontend_url', config('app.url'));
-        
+        $role = $this->recipientType === 'client' ? '/client' : '/provider';
+
         return new Content(
-            view: 'emails.appointments.cancelled',
+            view: $view,
             with: [
                 'appointment' => $this->appointment,
                 'clientName' => $this->appointment->client->first_name,
@@ -52,17 +54,12 @@ class AppointmentCancelledMail extends Mailable implements ShouldQueue
                 'appointmentTime' => $this->appointment->appointment_time,
                 'totalPrice' => $this->appointment->total_price,
                 'businessName' => $this->appointment->provider->provider_profile->business_name ?? null,
-                'searchUrl' => $baseUrl . '/client/services',
-                'dashboardUrl' => $baseUrl . '/client/dashboard',
+                'appointmentUrl' => $baseUrl . $role . '/appointments/' . $this->appointment->id,
+                'dashboardUrl' => $baseUrl . $role . '/dashboard',
             ]
         );
     }
 
-    /**
-     * Get the attachments for the message.
-     *
-     * @return array<int, \Illuminate\Mail\Mailables\Attachment>
-     */
     public function attachments(): array
     {
         return [];

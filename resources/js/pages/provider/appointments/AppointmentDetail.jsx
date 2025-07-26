@@ -166,6 +166,20 @@ const AppointmentDetail = () => {
                 setNotes("");
                 setShowNotesModal(false);
                 setPendingAction(null);
+
+                // Redirect to appointments list after cancellation
+                if (status === "cancelled_by_provider") {
+                    // Show success message and redirect
+                    setTimeout(() => {
+                        navigate('/provider/appointments', { 
+                            replace: true,
+                            state: { 
+                                message: 'Appointment cancelled successfully',
+                                type: 'success'
+                            }
+                        });
+                    }, 1000); // Small delay to show the updated status first
+                }
             }
         } catch (error) {
             console.error("Status update failed:", error);

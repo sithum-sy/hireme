@@ -81,7 +81,13 @@ class NotificationService
                 return false;
             }
 
-            Mail::to($recipient->email)->send(new $mailClass($data));
+            // Special handling for AppointmentRequestReceivedMail which needs recipient type
+            if ($mailClass === \App\Mail\AppointmentRequestReceivedMail::class) {
+                $recipientType = $recipient->role === 'service_provider' ? 'provider' : 'client';
+                Mail::to($recipient->email)->send(new $mailClass($data['appointment'], $recipientType));
+            } else {
+                Mail::to($recipient->email)->send(new $mailClass($data));
+            }
 
             Log::info("Email notification sent", [
                 'type' => $type,
@@ -233,6 +239,7 @@ class NotificationService
         $quoteId = $data['quote_id'] ?? null;
 
         switch ($type) {
+            case 'appointment_request_received':
             case 'appointment_created':
             case 'appointment_confirmed':
             case 'appointment_declined':
@@ -290,6 +297,10 @@ class NotificationService
     private function getEmailTemplates(): array
     {
         return [
+            'appointment_request_received' => [
+                'client' => \App\Mail\AppointmentRequestReceivedMail::class,
+                'service_provider' => \App\Mail\AppointmentRequestReceivedMail::class,
+            ],
             'appointment_created' => [
                 'client' => \App\Mail\AppointmentBookingConfirmation::class,
                 'service_provider' => \App\Mail\AppointmentProviderNotification::class,
@@ -323,6 +334,20 @@ class NotificationService
     private function getInAppTemplates(): array
     {
         return [
+            'appointment_request_received' => [
+                'client' => [
+                    'title' => 'Booking Request Submitted',
+                    'message' => 'Your booking request for {service_name} has been submitted. The provider will respond within 24 hours.',
+                    'type' => 'info',
+                    'category' => 'appointment',
+                ],
+                'service_provider' => [
+                    'title' => 'New Booking Request',
+                    'message' => 'You have a new booking request for {service_name} from {client_name}.',
+                    'type' => 'info', 
+                    'category' => 'appointment',
+                ],
+            ],
             'appointment_created' => [
                 'client' => [
                     'title' => 'Booking Request Submitted',

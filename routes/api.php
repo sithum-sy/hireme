@@ -145,10 +145,10 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
 
 
 
-    // Route::prefix('location')->group(function () {
-    //     Route::get('/service-areas', [LocationController::class, 'getAllServiceAreas']);
-    //     Route::post('/nearby-areas', [LocationController::class, 'getNearbyServiceAreas']);
-    // });
+    Route::prefix('location')->group(function () {
+        Route::get('/service-areas', [LocationController::class, 'getAllServiceAreas']);
+        Route::post('/nearby-areas', [LocationController::class, 'getNearbyServiceAreas']);
+    });
 
     Route::post('/create-payment-intent', [PaymentController::class, 'createPaymentIntent']);
 

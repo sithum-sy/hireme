@@ -816,6 +816,14 @@ class AppointmentController extends Controller
                 ->orderBy('appointment_time', 'desc')
                 ->paginate($perPage);
 
+            // Transform appointments to ensure correct date format
+            $appointments->getCollection()->transform(function ($appointment) {
+                // Create a new array representation to avoid Eloquent's automatic date casting
+                $appointmentArray = $appointment->toArray();
+                $appointmentArray['appointment_date'] = $appointment->appointment_date->format('Y-m-d');
+                return $appointmentArray;
+            });
+
             return response()->json([
                 'success' => true,
                 'data' => $appointments,
@@ -1155,27 +1163,13 @@ class AppointmentController extends Controller
     private function sendAppointmentNotifications(Appointment $appointment)
     {
         try {
-            // Send booking confirmation to client
-            if ($appointment->client && $appointment->client->email) {
-                Mail::to($appointment->client->email)->send(
-                    new AppointmentBookingConfirmation($appointment)
-                );
-                Log::info('Booking confirmation email sent to client', [
-                    'appointment_id' => $appointment->id,
-                    'client_email' => $appointment->client->email
-                ]);
-            }
+            // Dispatch event for new appointment request (client created -> pending status)
+            AppointmentStatusChanged::dispatch($appointment, null, 'pending');
 
-            // Send notification to provider
-            if ($appointment->provider && $appointment->provider->email) {
-                Mail::to($appointment->provider->email)->send(
-                    new AppointmentProviderNotification($appointment)
-                );
-                Log::info('New appointment notification sent to provider', [
-                    'appointment_id' => $appointment->id,
-                    'provider_email' => $appointment->provider->email
-                ]);
-            }
+            Log::info('Appointment request notifications dispatched', [
+                'appointment_id' => $appointment->id,
+                'status' => 'pending'
+            ]);
         } catch (\Exception $e) {
             Log::error('Failed to send appointment notifications', [
                 'appointment_id' => $appointment->id,

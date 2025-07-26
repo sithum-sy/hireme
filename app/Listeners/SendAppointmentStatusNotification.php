@@ -60,11 +60,27 @@ class SendAppointmentStatusNotification implements ShouldQueue
         }
     }
 
-    private function getNotificationsForStatusChange($appointment, string $oldStatus, string $newStatus): array
+    private function getNotificationsForStatusChange($appointment, ?string $oldStatus, string $newStatus): array
     {
         $notifications = [];
 
         switch ($newStatus) {
+            case 'pending':
+                // New appointment request created
+                if ($oldStatus === null) {
+                    // Send booking confirmation to client
+                    $notifications[] = [
+                        'type' => 'appointment_request_received',
+                        'recipient' => $appointment->client
+                    ];
+                    // Send new appointment notification to provider
+                    $notifications[] = [
+                        'type' => 'appointment_request_received',
+                        'recipient' => $appointment->provider
+                    ];
+                }
+                break;
+
             case 'confirmed':
                 if ($oldStatus === 'pending') {
                     $notifications[] = [
@@ -75,10 +91,19 @@ class SendAppointmentStatusNotification implements ShouldQueue
                 break;
 
             case 'cancelled_by_provider':
-                $notifications[] = [
-                    'type' => 'appointment_cancelled',
-                    'recipient' => $appointment->client
-                ];
+                if ($oldStatus === 'pending') {
+                    // Provider declined the initial request
+                    $notifications[] = [
+                        'type' => 'appointment_declined',
+                        'recipient' => $appointment->client
+                    ];
+                } else {
+                    // Provider cancelled an already confirmed appointment
+                    $notifications[] = [
+                        'type' => 'appointment_cancelled',
+                        'recipient' => $appointment->client
+                    ];
+                }
                 break;
 
             case 'cancelled_by_client':
@@ -121,20 +146,6 @@ class SendAppointmentStatusNotification implements ShouldQueue
                 ];
                 break;
 
-            // Add special case for provider declining
-            case 'cancelled_by_provider':
-                if ($oldStatus === 'pending') {
-                    $notifications[] = [
-                        'type' => 'appointment_declined',
-                        'recipient' => $appointment->client
-                    ];
-                } else {
-                    $notifications[] = [
-                        'type' => 'appointment_cancelled',
-                        'recipient' => $appointment->client
-                    ];
-                }
-                break;
         }
 
         return $notifications;

@@ -10,15 +10,45 @@ const TodaysSchedule = ({ onAppointmentAction }) => {
         loadTodaysAppointments();
     }, []);
 
+    // Add a refresh function that can be called from parent components
+    useEffect(() => {
+        const handleStorageChange = (e) => {
+            if (e.key === 'appointment_created' || e.key === 'appointment_updated') {
+                console.log('🔄 TodaysSchedule - Refreshing due to appointment change');
+                loadTodaysAppointments();
+            }
+        };
+
+        window.addEventListener('storage', handleStorageChange);
+        
+        // Also listen for custom events
+        const handleCustomRefresh = () => {
+            console.log('🔄 TodaysSchedule - Manual refresh triggered');
+            loadTodaysAppointments();
+        };
+        
+        window.addEventListener('refreshTodaysSchedule', handleCustomRefresh);
+
+        return () => {
+            window.removeEventListener('storage', handleStorageChange);
+            window.removeEventListener('refreshTodaysSchedule', handleCustomRefresh);
+        };
+    }, []);
+
     const loadTodaysAppointments = async () => {
         try {
             setLoading(true);
             setError(null);
 
-            const today = new Date().toISOString().split("T")[0];
+            // Fix timezone issue - use local date in YYYY-MM-DD format
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            const todayStr = `${year}-${month}-${day}`;
             const response = await clientAppointmentService.getAppointments({
-                date_from: today,
-                date_to: today,
+                date_from: todayStr,
+                date_to: todayStr,
                 per_page: 10,
             });
 

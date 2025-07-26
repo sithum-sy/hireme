@@ -150,25 +150,25 @@ export const AuthProvider = ({ children }) => {
 
             if (response.data.success) {
                 const { user, token } = response.data.data;
-                
+
                 // Check if user requires email verification (no token provided)
                 if (user && user.requires_verification) {
                     // Don't set auth state for unverified users
-                    return { 
-                        success: true, 
+                    return {
+                        success: true,
                         user,
                         requires_verification: true,
-                        message: response.data.message 
+                        message: response.data.message,
                     };
                 }
-                
+
                 // Normal registration with immediate login
                 if (token) {
                     setUser(user);
                     setToken(token);
                     localStorage.setItem("auth_token", token);
                 }
-                
+
                 return { success: true, user };
             }
         } catch (error) {
@@ -196,33 +196,36 @@ export const AuthProvider = ({ children }) => {
             const response = await axios.post("/api/login", credentials);
 
             if (response.data.success) {
-                const { 
-                    user: userData, 
-                    token: userToken, 
+                const {
+                    user: userData,
+                    token: userToken,
                     token_name: tokenName,
                     expires_at: expiresAt,
-                    remembered 
+                    remembered,
                 } = response.data.data;
 
                 setUser(userData);
                 setToken(userToken);
                 localStorage.setItem("auth_token", userToken);
-                
-                // Store token metadata for user information
-                localStorage.setItem("token_metadata", JSON.stringify({
-                    token_name: tokenName,
-                    expires_at: expiresAt,
-                    remembered: remembered
-                }));
 
-                return { 
-                    success: true, 
+                // Store token metadata for user information
+                localStorage.setItem(
+                    "token_metadata",
+                    JSON.stringify({
+                        token_name: tokenName,
+                        expires_at: expiresAt,
+                        remembered: remembered,
+                    })
+                );
+
+                return {
+                    success: true,
                     user: userData,
                     tokenInfo: {
                         token_name: tokenName,
                         expires_at: expiresAt,
-                        remembered: remembered
-                    }
+                        remembered: remembered,
+                    },
                 };
             } else {
                 return {
@@ -251,30 +254,50 @@ export const AuthProvider = ({ children }) => {
                         // CSRF token mismatch - try to refresh and retry once
                         if (window.refreshCSRFToken) {
                             try {
-                                const refreshed = await window.refreshCSRFToken();
+                                const refreshed =
+                                    await window.refreshCSRFToken();
                                 if (refreshed) {
                                     // Retry the login with the fresh token
-                                    const retryResponse = await axios.post("/api/login", credentials);
+                                    const retryResponse = await axios.post(
+                                        "/api/login",
+                                        credentials
+                                    );
                                     if (retryResponse.data.success) {
-                                        const { user: userData, token: userToken } = retryResponse.data.data;
+                                        const {
+                                            user: userData,
+                                            token: userToken,
+                                        } = retryResponse.data.data;
                                         setUser(userData);
                                         setToken(userToken);
-                                        localStorage.setItem("auth_token", userToken);
-                                        return { success: true, user: userData };
+                                        localStorage.setItem(
+                                            "auth_token",
+                                            userToken
+                                        );
+                                        return {
+                                            success: true,
+                                            user: userData,
+                                        };
                                     } else {
                                         return {
                                             success: false,
-                                            message: retryResponse.data.message || "Login failed after token refresh",
+                                            message:
+                                                retryResponse.data.message ||
+                                                "Login failed after token refresh",
                                         };
                                     }
                                 }
                             } catch (retryError) {
-                                console.error('Retry login failed:', retryError);
+                                console.error(
+                                    "Retry login failed:",
+                                    retryError
+                                );
                             }
                         }
                         return {
                             success: false,
-                            message: data.message || "Session expired. Please try again.",
+                            message:
+                                data.message ||
+                                "Session expired. Please try again.",
                         };
                     case 403:
                         return {
@@ -378,9 +401,9 @@ export const AuthProvider = ({ children }) => {
     };
 
     const updateUserData = (updatedUserData) => {
-        setUser(prevUser => ({
+        setUser((prevUser) => ({
             ...prevUser,
-            ...updatedUserData
+            ...updatedUserData,
         }));
     };
 

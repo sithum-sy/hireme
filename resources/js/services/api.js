@@ -116,4 +116,31 @@ export const providerProfileAPI = {
         }),
 };
 
+// Notification API endpoints
+export const notificationAPI = {
+    // Get all notifications with pagination
+    getNotifications: (params = {}) => api.get("/notifications", { params }),
+
+    // Get recent notifications
+    getRecent: () => api.get("/notifications/recent"),
+
+    // Get unread count
+    getUnreadCount: () => api.get("/notifications/unread-count"),
+
+    // Mark notification as read
+    markAsRead: (id) => api.post(`/notifications/${id}/mark-read`),
+
+    // Mark all notifications as read
+    markAllAsRead: () => api.post("/notifications/mark-all-read"),
+
+    // Delete notification
+    deleteNotification: (id) => api.delete(`/notifications/${id}`),
+
+    // Get notification preferences
+    getPreferences: () => api.get("/notifications/preferences"),
+
+    // Update notification preferences
+    updatePreferences: (data) => api.put("/notifications/preferences", data),
+};
+
 export default api;

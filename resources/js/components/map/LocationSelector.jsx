@@ -7,6 +7,7 @@ const LocationSelector = ({ value, onChange, error, radius = 5 }) => {
         radius: radius,
         hasValue: !!value,
         valueRadius: value?.radius,
+        valueCity: value?.city || "none",
     });
     // console.log("LocationSelector: Component rendering", {
     //     hasValue: !!value,

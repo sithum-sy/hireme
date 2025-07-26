@@ -72,9 +72,7 @@ return [
     |
     */
 
-    'timezone' => 'UTC',
-    // 'Asia/Colombo', // Set to your preferred timezone, e.g., 'UTC', 'America/New_York', etc.
-    // 'timezone' => 'UTC',
+    'timezone' => 'Asia/Colombo',
 
 
     /*

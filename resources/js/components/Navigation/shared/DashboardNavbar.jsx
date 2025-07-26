@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback, memo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
 import ProfileImage from "../../ui/ProfileImage";
+import api, { notificationAPI } from "../../../services/api";
 
 const DashboardNavbar = memo(
     ({
@@ -165,6 +166,9 @@ const DashboardNavbar = memo(
         // Load notifications based on role
         useEffect(() => {
             loadNotifications();
+            // Set up polling for real-time updates every 30 seconds
+            const interval = setInterval(loadNotifications, 30000);
+            return () => clearInterval(interval);
         }, [role]);
 
         // Click outside handlers
@@ -195,118 +199,68 @@ const DashboardNavbar = memo(
                 document.removeEventListener("mousedown", handleClickOutside);
         }, []);
 
-        const loadNotifications = () => {
-            // Mock notifications - replace with actual API call
-            const mockNotifications = {
-                admin: [
-                    {
-                        id: 1,
-                        type: "alert",
-                        title: "System Alert",
-                        message: "Server maintenance scheduled",
-                        time: "5 min ago",
-                        read: false,
-                    },
-                    {
-                        id: 2,
-                        type: "user",
-                        title: "New User Report",
-                        message: "3 new user registrations",
-                        time: "1 hour ago",
-                        read: false,
-                    },
-                    {
-                        id: 3,
-                        type: "payment",
-                        title: "Payment Issue",
-                        message: "Payment gateway timeout",
-                        time: "2 hours ago",
-                        read: true,
-                    },
-                ],
-                staff: [
-                    {
-                        id: 1,
-                        type: "approval",
-                        title: "Pending Approval",
-                        message: "2 categories need review",
-                        time: "10 min ago",
-                        read: false,
-                    },
-                    {
-                        id: 2,
-                        type: "inquiry",
-                        title: "User Inquiry",
-                        message: "Support ticket #1234",
-                        time: "30 min ago",
-                        read: false,
-                    },
-                    {
-                        id: 3,
-                        type: "update",
-                        title: "Category Updated",
-                        message: "PC Repair category modified",
-                        time: "1 hour ago",
-                        read: true,
-                    },
-                ],
-                client: [
-                    {
-                        id: 1,
-                        type: "booking",
-                        title: "Booking Confirmed",
-                        message: "House cleaning scheduled",
-                        time: "15 min ago",
-                        read: false,
-                    },
-                    {
-                        id: 2,
-                        type: "message",
-                        title: "New Message",
-                        message: "Provider sent a message",
-                        time: "1 hour ago",
-                        read: false,
-                    },
-                    {
-                        id: 3,
-                        type: "reminder",
-                        title: "Service Reminder",
-                        message: "Appointment tomorrow at 10 AM",
-                        time: "2 hours ago",
-                        read: true,
-                    },
-                ],
-                provider: [
-                    {
-                        id: 1,
-                        type: "request",
-                        title: "New Service Request",
-                        message: "Client requested plumbing service",
-                        time: "5 min ago",
-                        read: false,
-                    },
-                    {
-                        id: 2,
-                        type: "payment",
-                        title: "Payment Received",
-                        message: "Rs. 150 payment received",
-                        time: "1 hour ago",
-                        read: false,
-                    },
-                    {
-                        id: 3,
-                        type: "review",
-                        title: "New Review",
-                        message: "5-star review from Sarah P.",
-                        time: "3 hours ago",
-                        read: true,
-                    },
-                ],
-            };
+        const loadNotifications = async () => {
+            try {
+                // Fetch recent notifications from API
+                const [notificationsResponse, unreadCountResponse] = await Promise.all([
+                    notificationAPI.getRecent(),
+                    notificationAPI.getUnreadCount()
+                ]);
 
-            const roleNotifications = mockNotifications[role] || [];
-            setNotifications(roleNotifications);
-            setUnreadCount(roleNotifications.filter((n) => !n.read).length);
+                if (notificationsResponse.data.success) {
+                    const apiNotifications = notificationsResponse.data.data;
+                    
+                    // Transform API notifications to match UI format
+                    const transformedNotifications = apiNotifications.map(notification => ({
+                        id: notification.id,
+                        type: notification.category,
+                        title: notification.title,
+                        message: notification.message,
+                        time: formatTimeAgo(notification.created_at),
+                        read: notification.is_read,
+                        actionUrl: notification.action_url
+                    }));
+
+                    setNotifications(transformedNotifications);
+                }
+
+                if (unreadCountResponse.data.success) {
+                    setUnreadCount(unreadCountResponse.data.data.count);
+                }
+            } catch (error) {
+                console.error('Failed to load notifications:', error);
+                // Fallback to showing empty state
+                setNotifications([]);
+                setUnreadCount(0);
+            }
+        };
+
+        // Helper function to format time ago
+        const formatTimeAgo = (dateString) => {
+            const now = new Date();
+            const date = new Date(dateString);
+            const diffInSeconds = Math.floor((now - date) / 1000);
+
+            if (diffInSeconds < 60) {
+                return 'Just now';
+            }
+            
+            const diffInMinutes = Math.floor(diffInSeconds / 60);
+            if (diffInMinutes < 60) {
+                return `${diffInMinutes} min ago`;
+            }
+            
+            const diffInHours = Math.floor(diffInMinutes / 60);
+            if (diffInHours < 24) {
+                return `${diffInHours} hour${diffInHours > 1 ? 's' : ''} ago`;
+            }
+            
+            const diffInDays = Math.floor(diffInHours / 24);
+            if (diffInDays < 7) {
+                return `${diffInDays} day${diffInDays > 1 ? 's' : ''} ago`;
+            }
+            
+            return date.toLocaleDateString();
         };
 
         const handleSearch = useCallback(
@@ -343,12 +297,47 @@ const DashboardNavbar = memo(
                 inquiry: "fas fa-question-circle text-info",
                 update: "fas fa-edit text-secondary",
                 booking: "fas fa-calendar-check text-success",
+                appointment: "fas fa-calendar-check text-success",
                 message: "fas fa-envelope text-primary",
                 reminder: "fas fa-bell text-warning",
                 request: "fas fa-hand-paper text-primary",
                 review: "fas fa-star text-warning",
             };
             return icons[type] || "fas fa-bell text-info";
+        };
+
+        const handleNotificationClick = async (notification) => {
+            try {
+                // Mark notification as read if it's unread
+                if (!notification.read) {
+                    await notificationAPI.markAsRead(notification.id);
+                    
+                    // Update local state
+                    setNotifications(prev => 
+                        prev.map(n => 
+                            n.id === notification.id 
+                                ? { ...n, read: true }
+                                : n
+                        )
+                    );
+                    setUnreadCount(prev => Math.max(0, prev - 1));
+                }
+
+                // Navigate to action URL if available
+                if (notification.actionUrl) {
+                    navigate(notification.actionUrl);
+                }
+
+                // Close notifications dropdown
+                setShowNotifications(false);
+            } catch (error) {
+                console.error('Failed to mark notification as read:', error);
+                // Still navigate even if marking as read fails
+                if (notification.actionUrl) {
+                    navigate(notification.actionUrl);
+                }
+                setShowNotifications(false);
+            }
         };
 
         const getRoleSpecificQuickActions = () => {
@@ -624,7 +613,13 @@ const DashboardNavbar = memo(
                                                                 !notification.read
                                                                     ? "unread"
                                                                     : ""
+                                                            } ${
+                                                                notification.actionUrl
+                                                                    ? "clickable"
+                                                                    : ""
                                                             }`}
+                                                            onClick={() => handleNotificationClick(notification)}
+                                                            style={{ cursor: notification.actionUrl ? 'pointer' : 'default' }}
                                                         >
                                                             <div className="notification-icon">
                                                                 <i

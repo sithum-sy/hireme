@@ -129,13 +129,15 @@ const ServiceForm = () => {
     // Watch for location changes to update service areas
     useEffect(() => {
         if (formData.latitude && formData.longitude && currentStep === 3) {
+            console.log("Location changed, reloading nearby areas");
             loadNearbyAreas();
         }
     }, [formData.latitude, formData.longitude, currentStep]);
 
-    // Initialize dynamic areas when component mounts
+    // Initialize dynamic areas when component mounts or when reaching step 3
     useEffect(() => {
         if (currentStep === 3 && dynamicAreas.length === 0) {
+            console.log("Initializing areas for step 3");
             loadInitialAreas();
         }
     }, [currentStep]);
@@ -284,18 +286,32 @@ const ServiceForm = () => {
                 formData.latitude,
                 formData.longitude
             );
-            const areas = await getNearbyServiceAreas(
+            const result = await getNearbyServiceAreas(
                 formData.latitude,
                 formData.longitude,
                 formData.service_radius || 50
             );
 
-            if (areas && areas.nearby_areas) {
-                // console.log("Nearby areas loaded:", areas.nearby_areas);
-                setDynamicAreas(areas.nearby_areas);
+            if (
+                result &&
+                result.nearby_areas &&
+                result.nearby_areas.length > 0
+            ) {
+                console.log("Nearby areas loaded:", result.nearby_areas);
+                setDynamicAreas(result.nearby_areas);
+            } else if (
+                result &&
+                result.all_province_areas &&
+                result.all_province_areas.length > 0
+            ) {
+                // Use province areas if no nearby areas found
+                console.log("Using province areas:", result.all_province_areas);
+                setDynamicAreas(
+                    result.all_province_areas.map((area) => ({ name: area }))
+                );
             } else {
                 // Fallback to hardcoded areas if API fails
-                console.log("No nearby areas found, using fallback");
+                console.log("No areas found from API, using fallback");
                 setDynamicAreas(sriLankanAreas.map((area) => ({ name: area })));
             }
         } catch (error) {
@@ -310,10 +326,18 @@ const ServiceForm = () => {
             await loadNearbyAreas();
         } else {
             // Load all areas if no location is set
-            const allAreas = await getAllServiceAreas();
-            if (allAreas) {
-                setDynamicAreas(allAreas.map((area) => ({ name: area })));
-            } else {
+            try {
+                const allAreas = await getAllServiceAreas();
+                if (allAreas && allAreas.length > 0) {
+                    setDynamicAreas(allAreas.map((area) => ({ name: area })));
+                } else {
+                    // Final fallback to hardcoded areas
+                    setDynamicAreas(
+                        sriLankanAreas.map((area) => ({ name: area }))
+                    );
+                }
+            } catch (error) {
+                console.error("Error loading all areas:", error);
                 // Final fallback to hardcoded areas
                 setDynamicAreas(sriLankanAreas.map((area) => ({ name: area })));
             }
@@ -325,7 +349,7 @@ const ServiceForm = () => {
             if (!showAllAreas) {
                 console.log("Loading all service areas...");
                 const allAreas = await getAllServiceAreas();
-                if (allAreas) {
+                if (allAreas && allAreas.length > 0) {
                     setDynamicAreas(allAreas.map((area) => ({ name: area })));
                 } else {
                     setDynamicAreas(
@@ -334,7 +358,17 @@ const ServiceForm = () => {
                 }
             } else {
                 console.log("Loading nearby areas...");
-                await loadNearbyAreas();
+                if (formData.latitude && formData.longitude) {
+                    await loadNearbyAreas();
+                } else {
+                    // If no location is set, show all areas again
+                    const allAreas = await getAllServiceAreas();
+                    if (allAreas && allAreas.length > 0) {
+                        setDynamicAreas(
+                            allAreas.map((area) => ({ name: area }))
+                        );
+                    }
+                }
             }
             setShowAllAreas(!showAllAreas);
         } catch (error) {
@@ -731,7 +765,7 @@ const ServiceForm = () => {
                         </div>
                         <button
                             type="button"
-                            className="btn btn-outline-secondary"
+                            className="btn btn-outline-secondary btn-responsive"
                             onClick={() => navigate("/provider/services")}
                         >
                             <i className="fas fa-times me-2"></i>
@@ -1239,7 +1273,7 @@ const ServiceForm = () => {
                                                 {formData.location_city && (
                                                     <button
                                                         type="button"
-                                                        className="btn btn-outline-primary btn-sm"
+                                                        className="btn btn-outline-primary btn-sm btn-responsive"
                                                         onClick={
                                                             handleShowAllAreas
                                                         }
@@ -1396,7 +1430,7 @@ const ServiceForm = () => {
                                                                         key={
                                                                             area
                                                                         }
-                                                                        className="badge bg-orange bg-opacity-10 text-orange px-3 py-2 d-flex align-items-center"
+                                                                        className="badge bg-primary bg-opacity-10 text-primary px-3 py-2 d-flex align-items-center"
                                                                     >
                                                                         <span>
                                                                             {
@@ -1758,7 +1792,7 @@ const ServiceForm = () => {
                                             {currentStep > 1 && (
                                                 <button
                                                     type="button"
-                                                    className="btn btn-outline-secondary"
+                                                    className="btn btn-outline-secondary btn-responsive"
                                                     onClick={handlePrevious}
                                                     disabled={isSubmitting}
                                                 >
@@ -1771,7 +1805,7 @@ const ServiceForm = () => {
                                             {currentStep < steps.length ? (
                                                 <button
                                                     type="button"
-                                                    className="btn btn-orange"
+                                                    className="btn btn-orange btn-responsive"
                                                     onClick={handleNext}
                                                     disabled={loading}
                                                 >
@@ -1781,7 +1815,7 @@ const ServiceForm = () => {
                                             ) : (
                                                 <button
                                                     type="submit"
-                                                    className="btn btn-orange"
+                                                    className="btn btn-orange btn-responsive"
                                                     disabled={
                                                         isSubmitting || loading
                                                     }
@@ -2085,16 +2119,16 @@ const ServiceForm = () => {
                 </form>
             </div>
 
-            {/* Custom Styles */}
+            {/* Service Form Specific Styles */}
             <style>{`
                 .service-form-container {
-                    animation: fadeIn 0.3s ease-in;
+                    animation: fadeIn var(--transition);
                 }
 
                 @keyframes fadeIn {
                     from {
                         opacity: 0;
-                        transform: translateY(10px);
+                        transform: translateY(var(--space-2));
                     }
                     to {
                         opacity: 1;
@@ -2103,70 +2137,61 @@ const ServiceForm = () => {
                 }
 
                 .step-indicator {
-                    transition: all 0.3s ease;
+                    transition: var(--transition);
                 }
 
                 .step-icon {
-                    transition: all 0.3s ease;
+                    transition: var(--transition);
+                    width: calc(var(--space-8) + var(--space-2));
+                    height: calc(var(--space-8) + var(--space-2));
                 }
 
                 .bg-orange {
-                    background-color: #fd7e14 !important;
+                    background: var(--current-role-gradient) !important;
                 }
 
                 .text-orange {
-                    color: #fd7e14 !important;
+                    color: var(--current-role-primary) !important;
                 }
 
                 .btn-orange {
-                    background-color: #fd7e14;
-                    border-color: #fd7e14;
+                    background: var(--current-role-gradient);
+                    border-color: var(--current-role-primary);
                     color: white;
                 }
 
-                .btn-orange:hover {
-                    background-color: #e55100;
-                    border-color: #e55100;
+                .btn-orange:hover,
+                .btn-orange:focus {
+                    background: var(--current-role-secondary);
+                    border-color: var(--current-role-secondary);
                     color: white;
+                    transform: translateY(-1px);
+                    box-shadow: var(--shadow-md);
                 }
 
                 .btn-orange:disabled {
-                    background-color: #fd7e14;
-                    border-color: #fd7e14;
+                    background: var(--current-role-primary);
+                    border-color: var(--current-role-primary);
                     opacity: 0.65;
                 }
 
                 .progress-bar.bg-orange {
-                    background-color: #fd7e14 !important;
-                }
-
-                .form-control:focus,
-                .form-select:focus {
-                    border-color: #fd7e14;
-                    box-shadow: 0 0 0 0.2rem rgba(253, 126, 20, 0.25);
-                }
-
-                .form-check-input:checked {
-                    background-color: #fd7e14;
-                    border-color: #fd7e14;
-                }
-
-                .form-check-input:focus {
-                    border-color: #fd7e14;
-                    box-shadow: 0 0 0 0.25rem rgba(253, 126, 20, 0.25);
+                    background: var(--current-role-gradient) !important;
                 }
 
                 .image-upload-label:hover {
-                    border-color: #fd7e14 !important;
-                    background-color: #fff3e0;
+                    border-color: var(--current-role-primary) !important;
+                    background-color: var(--current-role-light);
                 }
 
                 .image-preview {
-                    transition: transform 0.2s ease;
+                    transition: var(--transition-fast);
+                    border-radius: var(--border-radius);
                 }
 
                 .image-preview:hover {
                     transform: scale(1.02);
+                    box-shadow: var(--shadow-md);
                 }
 
                 .service-preview {
@@ -2174,56 +2199,97 @@ const ServiceForm = () => {
                 }
 
                 .pricing-preview {
-                    padding: 0.75rem;
-                    background-color: #fff3e0;
-                    border-radius: 0.375rem;
-                    border-left: 4px solid #fd7e14;
+                    padding: var(--space-3);
+                    background-color: var(--current-role-light);
+                    border-radius: var(--border-radius);
+                    border-left: 4px solid var(--current-role-primary);
                 }
 
                 .areas-preview .badge {
-                    font-size: 0.7rem;
+                    font-size: var(--text-xs);
                 }
 
                 .tips-list .tip-item {
-                    transition: all 0.2s ease;
-                    padding: 0.25rem 0;
-                    border-radius: 0.25rem;
+                    transition: var(--transition-fast);
+                    padding: var(--space-1) 0;
+                    border-radius: var(--border-radius-sm);
                 }
 
                 .tips-list .tip-item:hover {
-                    background-color: #fff3e0;
-                    padding-left: 0.5rem;
-                    margin-left: -0.5rem;
+                    background-color: var(--current-role-light);
+                    padding-left: var(--space-2);
+                    margin-left: calc(var(--space-2) * -1);
                 }
 
                 .service-areas-grid .form-check {
-                    padding: 0.5rem;
-                    border-radius: 0.375rem;
-                    transition: background-color 0.2s ease;
+                    padding: var(--space-3);
+                    border-radius: var(--border-radius);
+                    transition: var(--transition-fast);
+                    border: 1px solid transparent;
                 }
 
                 .service-areas-grid .form-check:hover {
-                    background-color: #f8f9fa;
+                    background-color: var(--current-role-light);
+                    border-color: var(--current-role-primary);
+                    transform: translateY(-1px);
+                    box-shadow: var(--shadow-sm);
                 }
 
-                .service-areas-grid
-                    .form-check-input:checked
-                    + .form-check-label {
-                    color: #fd7e14;
-                    font-weight: 500;
+                .service-areas-grid .form-check-input:checked + .form-check-label {
+                    color: var(--current-role-primary);
+                    font-weight: var(--font-semibold);
+                }
+
+                .service-areas-grid .form-check-label {
+                    cursor: pointer;
+                    margin-bottom: 0;
+                    width: 100%;
+                    line-height: 1.3;
+                }
+
+                .service-areas-grid .badge {
+                    font-size: var(--text-xs);
+                    padding: var(--space-1) var(--space-2);
+                    border-radius: var(--border-radius-xl);
+                    white-space: nowrap;
+                }
+
+                .selected-areas {
+                    background-color: var(--bg-light);
+                    padding: var(--space-4);
+                    border-radius: var(--border-radius);
+                    border-left: 4px solid var(--current-role-primary);
                 }
 
                 .selected-areas .badge {
-                    font-size: 0.8rem;
-                    padding: 0.5rem 0.75rem;
+                    font-size: var(--text-sm);
+                    padding: var(--space-2) var(--space-3);
+                    border-radius: var(--border-radius-xl);
+                    border: 1px solid rgba(var(--current-role-primary), 0.3);
+                    transition: var(--transition-fast);
+                    background-color: var(--current-role-light);
+                    color: var(--current-role-primary);
+                }
+
+                .selected-areas .badge:hover {
+                    background-color: var(--current-role-primary);
+                    color: white;
+                    transform: scale(1.02);
+                }
+
+                .selected-areas .btn-close {
+                    background: none;
+                    opacity: 0.7;
+                    transition: var(--transition-fast);
+                }
+
+                .selected-areas .btn-close:hover {
+                    opacity: 1;
+                    transform: scale(1.1);
                 }
 
                 .step-content {
                     min-height: 400px;
-                }
-
-                .sticky-top {
-                    z-index: 1020;
                 }
 
                 .final-review {
@@ -2238,246 +2304,47 @@ const ServiceForm = () => {
                     border-left: 3px solid var(--warning-color);
                 }
 
-                @media (max-width: 992px) {
-                    .sticky-top {
-                        position: relative !important;
-                        top: auto !important;
-                    }
-                }
-
-                @media (max-width: 768px) {
-                    .service-areas-grid .col-6 {
-                        padding: 0.25rem;
-                    }
-
-                    .step-indicator .step-title {
-                        font-size: 0.8rem;
-                    }
-
-                    .step-indicator .step-description {
-                        display: none;
-                    }
-
-                    .step-icon {
-                        width: 30px !important;
-                        height: 30px !important;
-                        font-size: 0.8rem;
-                    }
-                }
-
-                .is-invalid {
-                    border-color: #dc3545;
-                }
-
-                .invalid-feedback {
-                    display: block;
-                }
-
-                .was-validated .form-control:valid,
-                .was-validated .form-select:valid {
-                    border-color: #198754;
-                }
-
-                .was-validated .form-control:valid:focus,
-                .was-validated .form-select:valid:focus {
-                    border-color: #198754;
-                    box-shadow: 0 0 0 0.2rem rgba(25, 135, 84, 0.25);
-                }
-
-                .spinner-border-sm {
-                    width: 1rem;
-                    height: 1rem;
-                }
-
-                .card {
-                    transition: box-shadow 0.15s ease-in-out;
-                }
-
-                .card:hover {
-                    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1) !important;
-                }
-
-                .btn {
-                    transition: all 0.15s ease-in-out;
-                }
-
-                .btn:hover {
-                    transform: translateY(-1px);
-                }
-
-                .btn:active {
-                    transform: translateY(0);
-                }
-
-                .service-areas-grid .form-check {
-                    padding: 0.75rem;
-                    border-radius: 0.5rem;
-                    transition: all 0.2s ease;
-                    border: 1px solid transparent;
-                }
-
-                .service-areas-grid .form-check:hover {
-                    background-color: #fff3e0;
-                    border-color: #fd7e14;
-                    transform: translateY(-1px);
-                }
-
-                .service-areas-grid
-                    .form-check-input:checked
-                    + .form-check-label {
-                    color: #fd7e14;
-                    font-weight: 600;
-                }
-
-                .service-areas-grid .form-check-label {
-                    cursor: pointer;
-                    margin-bottom: 0;
-                    width: 100%;
-                    line-height: 1.3;
-                }
-
-                /* Distance badges */
-                .service-areas-grid .badge {
-                    font-size: 0.65rem;
-                    padding: 0.25rem 0.5rem;
-                    border-radius: 1rem;
-                    white-space: nowrap;
-                }
-
-                /* Selected areas badges */
-                .selected-areas .badge {
-                    font-size: 0.8rem;
-                    padding: 0.6rem 0.8rem;
-                    border-radius: 1.5rem;
-                    border: 1px solid rgba(253, 126, 20, 0.3);
-                    transition: all 0.2s ease;
-                }
-
-                .selected-areas .badge:hover {
-                    background-color: rgba(253, 126, 20, 0.2) !important;
-                    transform: scale(1.02);
-                }
-
-                .selected-areas .btn-close {
-                    background: none;
-                    opacity: 0.7;
-                    transition: opacity 0.2s ease;
-                }
-
-                .selected-areas .btn-close:hover {
-                    opacity: 1;
-                    transform: scale(1.1);
-                }
-
-                /* Loading states */
-                .spinner-border.text-primary {
-                    color: #fd7e14 !important;
-                }
-
-                /* Info alert styling */
-                .alert-info {
-                    background-color: rgba(13, 110, 253, 0.1);
-                    border-color: rgba(13, 110, 253, 0.2);
-                    color: #084298;
-                }
-
-                /* Enhanced checkbox styling */
                 .service-areas-grid .form-check-input {
                     width: 1.2em;
                     height: 1.2em;
                     margin-top: 0.1em;
-                    border-radius: 0.25em;
-                    border: 2px solid #dee2e6;
-                    transition: all 0.15s ease-in-out;
+                    border-radius: var(--border-radius-sm);
+                    border: 2px solid var(--border-color);
+                    transition: var(--transition-fast);
                 }
 
                 .service-areas-grid .form-check-input:focus {
-                    border-color: #fd7e14;
-                    box-shadow: 0 0 0 0.25rem rgba(253, 126, 20, 0.25);
+                    border-color: var(--current-role-primary);
+                    box-shadow: 0 0 0 0.25rem rgba(var(--current-role-primary), 0.25);
                 }
 
                 .service-areas-grid .form-check-input:checked {
-                    background-color: #fd7e14;
-                    border-color: #fd7e14;
+                    background-color: var(--current-role-primary);
+                    border-color: var(--current-role-primary);
                 }
 
                 .service-areas-grid .form-check-input:checked:focus {
-                    box-shadow: 0 0 0 0.25rem rgba(253, 126, 20, 0.25);
-                }
-
-                /* Button enhancements */
-                .btn-outline-primary.btn-sm {
-                    padding: 0.375rem 0.75rem;
-                    font-size: 0.875rem;
-                    border-radius: 0.375rem;
-                    transition: all 0.15s ease;
-                }
-
-                .btn-outline-primary:hover {
-                    background-color: #fd7e14;
-                    border-color: #fd7e14;
-                    color: white;
-                    transform: translateY(-1px);
-                }
-
-                /* Empty state styling */
-                .text-center.py-4 {
-                    padding: 2rem 1rem !important;
-                }
-
-                .text-center.py-4 .fa-map-marker-alt {
-                    opacity: 0.5;
+                    box-shadow: 0 0 0 0.25rem rgba(var(--current-role-primary), 0.25);
                 }
 
                 .btn-link {
-                    color: #fd7e14;
+                    color: var(--current-role-primary);
                     text-decoration: none;
                 }
 
                 .btn-link:hover {
-                    color: #e55100;
+                    color: var(--current-role-secondary);
                     text-decoration: underline;
                 }
 
-                /* Responsive improvements */
-                @media (max-width: 768px) {
-                    .service-areas-grid .form-check {
-                        padding: 0.5rem;
-                        margin-bottom: 0.5rem;
-                    }
-
-                    .service-areas-grid .form-check-label {
-                        font-size: 0.9rem;
-                    }
-
-                    .service-areas-grid .badge {
-                        font-size: 0.6rem;
-                        padding: 0.2rem 0.4rem;
-                    }
-
-                    .selected-areas .badge {
-                        font-size: 0.75rem;
-                        padding: 0.4rem 0.6rem;
-                        margin-bottom: 0.5rem;
-                    }
-
-                    .d-flex.justify-content-between {
-                        flex-direction: column;
-                        align-items: flex-start !important;
-                        gap: 0.5rem;
-                    }
-
-                    .btn-outline-primary.btn-sm {
-                        width: 100%;
-                        margin-top: 0.5rem;
-                    }
+                .spinner-border.text-primary {
+                    color: var(--current-role-primary) !important;
                 }
 
-                /* Animation for loading areas */
                 @keyframes fadeInUp {
                     from {
                         opacity: 0;
-                        transform: translateY(10px);
+                        transform: translateY(var(--space-2));
                     }
                     to {
                         opacity: 1;
@@ -2489,72 +2356,114 @@ const ServiceForm = () => {
                     animation: fadeInUp 0.3s ease forwards;
                 }
 
-                .service-areas-grid .form-check:nth-child(1) {
-                    animation-delay: 0.05s;
-                }
-                .service-areas-grid .form-check:nth-child(2) {
-                    animation-delay: 0.1s;
-                }
-                .service-areas-grid .form-check:nth-child(3) {
-                    animation-delay: 0.15s;
-                }
-                .service-areas-grid .form-check:nth-child(4) {
-                    animation-delay: 0.2s;
-                }
-                .service-areas-grid .form-check:nth-child(5) {
-                    animation-delay: 0.25s;
-                }
-                .service-areas-grid .form-check:nth-child(6) {
-                    animation-delay: 0.3s;
+                .service-areas-grid .form-check:nth-child(1) { animation-delay: 0.05s; }
+                .service-areas-grid .form-check:nth-child(2) { animation-delay: 0.1s; }
+                .service-areas-grid .form-check:nth-child(3) { animation-delay: 0.15s; }
+                .service-areas-grid .form-check:nth-child(4) { animation-delay: 0.2s; }
+                .service-areas-grid .form-check:nth-child(5) { animation-delay: 0.25s; }
+                .service-areas-grid .form-check:nth-child(6) { animation-delay: 0.3s; }
+
+                /* Mobile Responsive Styles */
+                @media (max-width: 992px) {
+                    .sticky-top {
+                        position: relative !important;
+                        top: auto !important;
+                    }
                 }
 
-                /* Improved spacing */
-                .selected-areas {
-                    background-color: #f8f9fa;
-                    padding: 1rem;
-                    border-radius: 0.5rem;
-                    border-left: 4px solid #fd7e14;
+                @media (max-width: 768px) {
+                    .service-areas-grid .form-check {
+                        padding: var(--space-2);
+                        margin-bottom: var(--space-2);
+                    }
+
+                    .service-areas-grid .form-check-label {
+                        font-size: var(--text-sm);
+                    }
+
+                    .service-areas-grid .badge {
+                        font-size: var(--text-xs);
+                        padding: var(--space-1);
+                    }
+
+                    .selected-areas .badge {
+                        font-size: var(--text-xs);
+                        padding: var(--space-1) var(--space-2);
+                        margin-bottom: var(--space-2);
+                    }
+
+                    .step-indicator .step-title {
+                        font-size: var(--text-sm);
+                    }
+
+                    .step-indicator .step-description {
+                        display: none;
+                    }
+
+                    .step-icon {
+                        width: var(--space-8) !important;
+                        height: var(--space-8) !important;
+                        font-size: var(--text-sm);
+                    }
+
+                    .d-flex.justify-content-between {
+                        flex-direction: column;
+                        align-items: flex-start !important;
+                        gap: var(--space-2);
+                    }
+
+                    .btn-outline-primary.btn-sm {
+                        width: 100%;
+                        margin-top: var(--space-2);
+                    }
                 }
 
-                .alert-info {
-                    border-left: 4px solid #0d6efd;
+                @media (max-width: 576px) {
+                    .service-areas-grid .col-6 {
+                        padding: var(--space-1);
+                    }
+                    
+                    .btn-responsive {
+                        width: 100% !important;
+                        justify-content: center !important;
+                        margin-bottom: var(--space-2) !important;
+                    }
                 }
 
+                /* Enhanced Leaflet Integration */
+                .leaflet-container {
+                    border-radius: var(--border-radius);
+                    box-shadow: var(--shadow-sm);
+                }
+
+                .leaflet-popup-content-wrapper {
+                    border-radius: var(--border-radius);
+                }
+
+                .leaflet-popup-tip {
+                    background: var(--bg-white);
+                }
+
+                /* Enhanced Search Results */
                 .enhanced-location-selector .search-results {
                     max-height: 200px;
                     overflow-y: auto;
                     z-index: 1000;
-                    background: white;
+                    background: var(--bg-white);
+                    border: 1px solid var(--border-color);
+                    border-radius: var(--border-radius);
+                    box-shadow: var(--shadow-md);
                 }
 
-                .search-result-item:hover {
-                    background-color: #f8f9fa;
+                .search-result-item:hover,
+                .nearby-place-item:hover {
+                    background-color: var(--bg-light) !important;
+                    transform: translateY(-1px);
+                    transition: var(--transition-fast);
                 }
 
                 .search-result-item:last-child {
                     border-bottom: none !important;
-                }
-
-                .nearby-place-item {
-                    transition: all 0.2s ease;
-                }
-
-                .nearby-place-item:hover {
-                    background-color: #e9ecef !important;
-                    transform: translateY(-1px);
-                }
-
-                .leaflet-container {
-                    border-radius: 0.375rem;
-                }
-
-                /* Override Leaflet popup styles */
-                .leaflet-popup-content-wrapper {
-                    border-radius: 0.375rem;
-                }
-
-                .leaflet-popup-tip {
-                    background: white;
                 }
             `}</style>
         </ProviderLayout>

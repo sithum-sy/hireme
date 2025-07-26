@@ -228,6 +228,9 @@ class AppointmentController extends Controller
                 $newStatus . '_at' => now()
             ]);
 
+            // Load relationships needed for notifications
+            $appointment->load(['service', 'client', 'provider', 'provider.provider_profile']);
+
             // Trigger notification event for status change
             AppointmentStatusChanged::dispatch($appointment, $oldStatus, $newStatus);
 

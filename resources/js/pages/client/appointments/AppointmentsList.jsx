@@ -56,6 +56,19 @@ const AppointmentsList = () => {
     const [showPaymentModal, setShowPaymentModal] = useState(false);
     const [selectedAppointment, setSelectedAppointment] = useState(null);
 
+    // Initialize filters based on activeFilter on mount
+    useEffect(() => {
+        if (activeFilter === "today" && !filters.date_from) {
+            const today = new Date().toISOString().split("T")[0];
+            setFilters(prev => ({
+                ...prev,
+                date_from: today,
+                date_to: today,
+                status: "all"
+            }));
+        }
+    }, [activeFilter]);
+
     // Load appointments on component mount and filter changes
     useEffect(() => {
         loadAppointments();
@@ -121,32 +134,37 @@ const AppointmentsList = () => {
     };
 
     // Fallback: Extract unique categories from current appointments
-    // Sort appointments by date: closest future dates first, then past dates at bottom
+    // Sort appointments by time: closest time first, past non-in-progress at bottom
     const sortAppointmentsByDate = (appointments) => {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0); // Set to start of day for comparison
+        const now = new Date();
 
         return appointments.sort((a, b) => {
-            const dateA = new Date(a.appointment_date);
-            const dateB = new Date(b.appointment_date);
+            // Create full datetime objects for comparison
+            const dateTimeA = new Date(`${a.appointment_date} ${a.appointment_time}`);
+            const dateTimeB = new Date(`${b.appointment_date} ${b.appointment_time}`);
 
-            // Separate future and past appointments
-            const aIsFuture = dateA >= today;
-            const bIsFuture = dateB >= today;
+            // Check if appointments are in progress
+            const aInProgress = a.status === 'in_progress';
+            const bInProgress = b.status === 'in_progress';
 
-            if (aIsFuture && bIsFuture) {
-                // Both are future dates - sort by closest first (ascending)
-                return dateA - dateB;
-            } else if (!aIsFuture && !bIsFuture) {
-                // Both are past dates - sort by most recent first (descending)
-                return dateB - dateA;
-            } else if (aIsFuture && !bIsFuture) {
-                // A is future, B is past - A comes first
-                return -1;
-            } else {
-                // A is past, B is future - B comes first
-                return 1;
+            // In-progress appointments always go to top
+            if (aInProgress && !bInProgress) return -1;
+            if (!aInProgress && bInProgress) return 1;
+            if (aInProgress && bInProgress) {
+                // Both in progress - sort by closest time
+                return dateTimeA - dateTimeB;
             }
+
+            // Check if appointments are in the past
+            const aIsPast = dateTimeA < now;
+            const bIsPast = dateTimeB < now;
+
+            // Future appointments come before past appointments
+            if (!aIsPast && bIsPast) return -1;
+            if (aIsPast && !bIsPast) return 1;
+
+            // Both future or both past - sort by closest time (ascending)
+            return dateTimeA - dateTimeB;
         });
     };
 
