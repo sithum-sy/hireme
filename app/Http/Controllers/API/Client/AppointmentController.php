@@ -13,6 +13,7 @@ use App\Services\InvoiceService;
 use App\Services\ReviewService;
 use App\Mail\AppointmentBookingConfirmation;
 use App\Mail\AppointmentProviderNotification;
+use App\Events\AppointmentStatusChanged;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -911,7 +912,11 @@ class AppointmentController extends Controller
         }
 
         try {
+            $oldStatus = $appointment->status;
             $appointment->cancel('client', $request->cancellation_reason);
+            
+            // Trigger notification event for status change
+            AppointmentStatusChanged::dispatch($appointment, $oldStatus, 'cancelled_by_client');
 
             return response()->json([
                 'success' => true,

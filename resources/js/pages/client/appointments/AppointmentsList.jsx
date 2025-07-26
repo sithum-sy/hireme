@@ -60,7 +60,7 @@ const AppointmentsList = () => {
     useEffect(() => {
         loadAppointments();
     }, [filters, pagination.current_page]);
-    
+
     // Load total count on mount for "All" button
     useEffect(() => {
         loadTotalCount();
@@ -125,15 +125,15 @@ const AppointmentsList = () => {
     const sortAppointmentsByDate = (appointments) => {
         const today = new Date();
         today.setHours(0, 0, 0, 0); // Set to start of day for comparison
-        
+
         return appointments.sort((a, b) => {
             const dateA = new Date(a.appointment_date);
             const dateB = new Date(b.appointment_date);
-            
+
             // Separate future and past appointments
             const aIsFuture = dateA >= today;
             const bIsFuture = dateB >= today;
-            
+
             if (aIsFuture && bIsFuture) {
                 // Both are future dates - sort by closest first (ascending)
                 return dateA - dateB;
@@ -149,7 +149,7 @@ const AppointmentsList = () => {
             }
         });
     };
-    
+
     // Load total appointments count for "All" filter
     const loadTotalCount = async () => {
         try {
@@ -157,7 +157,7 @@ const AppointmentsList = () => {
                 per_page: 1, // We only need the count, not the data
                 page: 1,
             });
-            
+
             if (result.success) {
                 const responseData = result.data;
                 setTotalAppointmentsCount(responseData.total || 0);
@@ -166,7 +166,7 @@ const AppointmentsList = () => {
             console.error("Failed to load total count:", error);
         }
     };
-    
+
     const extractCategoriesFromAppointments = () => {
         const uniqueCategories = [];
         const seenCategories = new Set();
@@ -218,7 +218,10 @@ const AppointmentsList = () => {
         try {
             // Use enhanced appointment service with payment data
             const params = {
-                status: filters.status !== "all" && filters.status !== "cancelled" ? filters.status : undefined,
+                status:
+                    filters.status !== "all" && filters.status !== "cancelled"
+                        ? filters.status
+                        : undefined,
                 date_from: filters.date_from || undefined,
                 date_to: filters.date_to || undefined,
                 service_type: filters.service_type || undefined,
@@ -229,7 +232,7 @@ const AppointmentsList = () => {
                 per_page: pagination.per_page,
                 page: pagination.current_page,
             };
-            
+
             // If filtering by cancelled, we need to fetch all and filter client-side
             if (filters.status === "cancelled") {
                 delete params.status;
@@ -242,16 +245,20 @@ const AppointmentsList = () => {
             if (result.success) {
                 const responseData = result.data;
                 let appointmentsData = responseData.data || responseData;
-                
+
                 // Apply client-side filtering for cancelled appointments
                 if (filters.status === "cancelled") {
-                    appointmentsData = appointmentsData.filter(apt => 
-                        ["cancelled_by_client", "cancelled_by_provider"].includes(apt.status)
+                    appointmentsData = appointmentsData.filter((apt) =>
+                        [
+                            "cancelled_by_client",
+                            "cancelled_by_provider",
+                        ].includes(apt.status)
                     );
                 }
-                
+
                 // Apply custom date sorting: closest future dates first, then past dates
-                const sortedAppointments = sortAppointmentsByDate(appointmentsData);
+                const sortedAppointments =
+                    sortAppointmentsByDate(appointmentsData);
                 setAppointments(sortedAppointments);
 
                 // Update pagination info
@@ -263,10 +270,15 @@ const AppointmentsList = () => {
                         total: responseData.total,
                     }));
                 }
-                
+
                 // Store total count for "All" filter (fetch once when no status filter is applied)
                 if (!filters.status || filters.status === "all") {
-                    setTotalAppointmentsCount(responseData.total || (responseData.data ? responseData.data.length : responseData.length));
+                    setTotalAppointmentsCount(
+                        responseData.total ||
+                            (responseData.data
+                                ? responseData.data.length
+                                : responseData.length)
+                    );
                 }
             }
         } catch (error) {
@@ -308,16 +320,20 @@ const AppointmentsList = () => {
             if (response.ok) {
                 const data = await response.json();
                 let appointmentsData = data.data?.data || data.data || [];
-                
+
                 // Apply client-side filtering for cancelled appointments
                 if (filters.status === "cancelled") {
-                    appointmentsData = appointmentsData.filter(apt => 
-                        ["cancelled_by_client", "cancelled_by_provider"].includes(apt.status)
+                    appointmentsData = appointmentsData.filter((apt) =>
+                        [
+                            "cancelled_by_client",
+                            "cancelled_by_provider",
+                        ].includes(apt.status)
                     );
                 }
-                
+
                 // Apply custom date sorting: closest future dates first, then past dates
-                const sortedAppointments = sortAppointmentsByDate(appointmentsData);
+                const sortedAppointments =
+                    sortAppointmentsByDate(appointmentsData);
                 setAppointments(sortedAppointments);
 
                 if (data.data?.meta) {
@@ -459,7 +475,7 @@ const AppointmentsList = () => {
 
     // State to store total count from API (all appointments)
     const [totalAppointmentsCount, setTotalAppointmentsCount] = useState(0);
-    
+
     // Calculate appointment counts for quick filter tabs
     const calculateAppointmentCounts = () => {
         const today = new Date().toISOString().split("T")[0];
@@ -468,13 +484,11 @@ const AppointmentsList = () => {
                 .length,
             upcoming: appointments.filter(
                 (apt) =>
-                    apt.appointment_date >= today &&
-                    apt.status === "pending"
+                    apt.appointment_date >= today && apt.status === "pending"
             ).length,
             confirmed: appointments.filter(
                 (apt) =>
-                    apt.appointment_date >= today &&
-                    apt.status === "confirmed"
+                    apt.appointment_date >= today && apt.status === "confirmed"
             ).length,
             completed: appointments.filter((apt) => apt.status === "completed")
                 .length,
@@ -994,7 +1008,7 @@ const AppointmentsList = () => {
                                 {successMessage.appointment && (
                                     <small className="text-muted">
                                         Booking ID: #
-                                        {successMessage.appointment.id} |
+                                        {successMessage.appointment.id}
                                         {/* Confirmation Code: {successMessage.appointment.confirmation_code} */}
                                     </small>
                                 )}

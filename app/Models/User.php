@@ -291,6 +291,17 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(BlockedTime::class, 'provider_id');
     }
 
+    // Notification relationships
+    public function inAppNotifications()
+    {
+        return $this->hasMany(InAppNotification::class);
+    }
+
+    public function notificationPreference()
+    {
+        return $this->hasOne(NotificationPreference::class);
+    }
+
     /**
      * Update last login timestamp
      */

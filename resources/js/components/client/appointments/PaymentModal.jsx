@@ -378,7 +378,7 @@ const PaymentForm = ({ appointment, onSuccess, onCancel, onError }) => {
                     </small>
 
                     {/* Cash Payment Action */}
-                    <div className="mt-3">
+                    {/* <div className="mt-3">
                         <button
                             type="submit"
                             className="btn btn-success w-100"
@@ -396,7 +396,7 @@ const PaymentForm = ({ appointment, onSuccess, onCancel, onError }) => {
                                 </>
                             )}
                         </button>
-                    </div>
+                    </div> */}
                 </div>
             )}
 
@@ -543,7 +543,7 @@ const PaymentForm = ({ appointment, onSuccess, onCancel, onError }) => {
                 >
                     Cancel
                 </button>
-                {/* <button
+                <button
                     type="submit"
                     className={`btn ${
                         paymentMethod === "stripe"
@@ -576,7 +576,7 @@ const PaymentForm = ({ appointment, onSuccess, onCancel, onError }) => {
                                 : "Confirm Cash Payment"}
                         </>
                     )}
-                </button> */}
+                </button>
             </div>
         </form>
     );

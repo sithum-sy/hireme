@@ -12,6 +12,7 @@ use App\Http\Controllers\API\AppointmentController;
 use App\Http\Controllers\API\LocationController;
 use App\Http\Controllers\API\PaymentController;
 use App\Http\Controllers\API\ReviewController;
+use App\Http\Controllers\API\NotificationController;
 use App\Http\Controllers\GeocodingController;
 
 /*
@@ -106,6 +107,20 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
     Route::prefix('appointments/{appointment}')->group(function () {
         Route::post('review', [ReviewController::class, 'submitReview']);
         Route::get('reviews', [ReviewController::class, 'getAppointmentReviews']);
+    });
+
+    // Notification Management (all authenticated users)
+    Route::prefix('notifications')->group(function () {
+        Route::get('/', [NotificationController::class, 'index']);
+        Route::get('/unread-count', [NotificationController::class, 'unreadCount']);
+        Route::get('/recent', [NotificationController::class, 'recent']);
+        Route::post('/mark-all-read', [NotificationController::class, 'markAllAsRead']);
+        Route::post('/{notification}/mark-read', [NotificationController::class, 'markAsRead']);
+        Route::delete('/{notification}', [NotificationController::class, 'destroy']);
+        
+        // Notification preferences
+        Route::get('/preferences', [NotificationController::class, 'getPreferences']);
+        Route::put('/preferences', [NotificationController::class, 'updatePreferences']);
     });
 
     // Service Provider Routes

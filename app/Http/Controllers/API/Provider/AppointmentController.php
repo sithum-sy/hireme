@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Appointment;
 use App\Services\AppointmentService;
 use App\Services\InvoiceService;
+use App\Events\AppointmentStatusChanged;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -227,6 +228,9 @@ class AppointmentController extends Controller
                 $newStatus . '_at' => now()
             ]);
 
+            // Trigger notification event for status change
+            AppointmentStatusChanged::dispatch($appointment, $oldStatus, $newStatus);
+
             // Auto-create invoice when completed
             if ($newStatus === 'completed' && $oldStatus !== 'completed') {
                 $this->createInvoiceForCompletedAppointment($appointment);
@@ -394,12 +398,17 @@ class AppointmentController extends Controller
         }
 
         try {
+            $oldStatus = $appointment->status;
+            
             // Mark appointment as completed
             $appointment->update([
                 'status' => 'completed',
                 'completed_at' => now(),
                 'provider_notes' => $request->notes
             ]);
+
+            // Trigger notification event for status change
+            AppointmentStatusChanged::dispatch($appointment, $oldStatus, 'completed');
 
             $response = [
                 'success' => true,
