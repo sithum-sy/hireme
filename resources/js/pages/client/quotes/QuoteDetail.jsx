@@ -7,6 +7,7 @@ import QuoteTimeline from "../../../components/client/quotes/QuoteTimeline";
 import clientService from "../../../services/clientService";
 import AcceptQuoteModal from "../../../components/client/quotes/AcceptQuoteModal";
 import DeclineQuoteModal from "../../../components/client/quotes/DeclineQuoteModal";
+import { constructProfileImageUrl } from "../../../hooks/useServiceImages";
 
 const QuoteDetail = () => {
     const { id } = useParams();
@@ -117,20 +118,6 @@ const QuoteDetail = () => {
     return (
         <ClientLayout>
             <div className="quote-detail-page">
-                {/* Breadcrumb */}
-                <nav aria-label="breadcrumb" className="mb-4">
-                    <ol className="breadcrumb">
-                        <li className="breadcrumb-item">
-                            <Link to="/client/quotes" className="text-primary">
-                                My Quotes
-                            </Link>
-                        </li>
-                        <li className="breadcrumb-item active">
-                            Quote #{quote.quote_number}
-                        </li>
-                    </ol>
-                </nav>
-
                 {/* Header */}
                 <div className="page-header d-flex justify-content-between align-items-start mb-4">
                     <div>
@@ -324,33 +311,63 @@ const QuoteDetail = () => {
                             <div className="card-body">
                                 <div className="provider-info">
                                     <div className="d-flex align-items-center mb-3">
-                                        <div className="provider-avatar me-3">
-                                            {quote.provider_image ? (
-                                                <img
-                                                    src={quote.provider_image}
-                                                    alt={quote.provider_name}
-                                                    className="rounded-circle"
-                                                    style={{
-                                                        width: "50px",
-                                                        height: "50px",
-                                                        objectFit: "cover",
-                                                    }}
-                                                />
-                                            ) : (
-                                                <div
-                                                    className="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center"
-                                                    style={{
-                                                        width: "50px",
-                                                        height: "50px",
-                                                    }}
-                                                >
-                                                    <i className="fas fa-user"></i>
-                                                </div>
-                                            )}
+                                        <div className="me-3 flex-shrink-0">
+                                            {(() => {
+                                                const profileImageUrl =
+                                                    constructProfileImageUrl(
+                                                        quote.provider_image
+                                                    );
+                                                if (profileImageUrl) {
+                                                    return (
+                                                        <img
+                                                            src={
+                                                                profileImageUrl
+                                                            }
+                                                            alt={
+                                                                quote.provider_business_name ||
+                                                                quote.provider_name ||
+                                                                "Provider"
+                                                            }
+                                                            className="rounded-circle"
+                                                            style={{
+                                                                width: "50px",
+                                                                height: "50px",
+                                                                objectFit:
+                                                                    "cover",
+                                                            }}
+                                                            onError={(e) => {
+                                                                e.target.style.display =
+                                                                    "none";
+                                                                const fallback =
+                                                                    e.target.parentNode.querySelector(
+                                                                        ".fallback-avatar"
+                                                                    );
+                                                                if (fallback) {
+                                                                    fallback.style.display =
+                                                                        "flex";
+                                                                }
+                                                            }}
+                                                        />
+                                                    );
+                                                }
+                                                return null;
+                                            })()}
+                                            {/* <div
+                                                className="fallback-avatar bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center"
+                                                style={{
+                                                    width: "50px",
+                                                    height: "50px",
+                                                    display: constructProfileImageUrl(quote.provider_image) ? "none" : "flex",
+                                                }}
+                                            >
+                                                <i className="fas fa-user"></i>
+                                            </div> */}
                                         </div>
                                         <div>
                                             <h6 className="fw-bold mb-1">
-                                                {quote.provider_business_name}
+                                                {quote.provider_business_name ||
+                                                    quote.provider_name ||
+                                                    "Provider"}
                                             </h6>
                                             <div className="text-muted small">
                                                 <i className="fas fa-star text-warning me-1"></i>
@@ -361,7 +378,7 @@ const QuoteDetail = () => {
                                         </div>
                                     </div>
 
-                                    <div className="provider-contact">
+                                    {/* <div className="provider-contact">
                                         <Link
                                             to={`/client/providers/${quote.provider_id}`}
                                             className="btn btn-outline-primary btn-sm w-100"
@@ -369,7 +386,7 @@ const QuoteDetail = () => {
                                             <i className="fas fa-eye me-2"></i>
                                             View Provider Profile
                                         </Link>
-                                    </div>
+                                    </div> */}
                                 </div>
                             </div>
                         </div>

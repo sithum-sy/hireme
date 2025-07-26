@@ -37,7 +37,7 @@ class QuoteController extends Controller
                 'service_id' => $validatedData['service_id'],
                 'title' => "Quote Request: {$service->title}",
                 // 'description' => "Quote request for {$service->title} by " . trim($provider->first_name . ' ' . $provider->last_name),
-                'description' => "Quote request for {$service->title} by " . ($provider->name ?? 'Provider'),
+                'description' => "Quote request for {$service->title} by " . ($provider->full_name ?? 'Provider'),
 
                 // Store all request data as JSON
                 'quote_request_data' => $validatedData,
@@ -64,7 +64,7 @@ class QuoteController extends Controller
                     'status_text' => $quote->status_text,
                     'service_title' => $quote->service->title,
                     // 'provider_name' => trim($quote->provider->first_name . ' ' . $quote->provider->last_name),
-                    'provider_name' => $quote->provider->name ?? 'Unknown Provider',
+                    'provider_name' => $quote->provider->full_name ?? 'Unknown Provider',
                     'urgency' => $quote->urgency,
                     'location_summary' => $quote->location_summary,
                     'created_at' => $quote->created_at->toISOString(),
@@ -159,7 +159,7 @@ class QuoteController extends Controller
                     //     trim($quote->provider->first_name . ' ' . $quote->provider->last_name) :
                     //     'Unknown Provider',
                     'provider_name' => $quote->provider ?
-                        ($quote->provider->name ?? 'Unknown Provider') :
+                        ($quote->provider->full_name ?? 'Unknown Provider') :
                         'Unknown Provider',
                     'provider_image' => $quote->provider->profile_picture ?? null,
                     'provider_rating' => $providerProfile->average_rating ?? 0,
@@ -510,11 +510,11 @@ class QuoteController extends Controller
 
                 // Provider information with real data
                 'provider_id' => $quote->provider_id,
-                'provider_name' => $providerUser->name ?? 'Unknown Provider',
+                'provider_name' => $providerUser->full_name ?? 'Unknown Provider',
                 'provider_image' => $providerUser->profile_picture ?? null,
 
                 // Real provider profile data (safely accessed)
-                'provider_business_name' => $providerProfile->business_name ?? ($providerUser->name ?? 'Unknown Provider'),
+                'provider_business_name' => $providerProfile->business_name ?? ($providerUser->full_name ?? 'Unknown Provider'),
                 'provider_rating' => $providerProfile->average_rating ?? 0,
                 'provider_reviews' => $providerProfile->total_reviews ?? 0,
                 'provider_bio' => $providerProfile->bio ?? 'Professional service provider',
@@ -924,7 +924,7 @@ class QuoteController extends Controller
                             ],
                             'provider' => [
                                 'id' => $appointment->provider->id,
-                                'name' => $appointment->provider->name ?? 'Provider',
+                                'name' => $appointment->provider->full_name ?? 'Provider',
                             ],
                         ],
                         'quote' => $quote->fresh(),

@@ -257,31 +257,14 @@ const QuotesTable = ({
                                         <div className="d-flex align-items-center">
                                             <div>
                                                 <div className="fw-medium">
-                                                    {quote.provider?.name ||
-                                                        quote.provider
-                                                            ?.first_name +
-                                                            " " +
-                                                            (quote.provider
-                                                                ?.last_name ||
-                                                                "") ||
-                                                        "Provider"}
+                                                    {quote.provider_business_name || quote.provider_name || "Provider"}
                                                 </div>
-                                                {(quote.provider_profile
-                                                    ?.business_name ||
-                                                    quote.provider
-                                                        ?.provider_profile
-                                                        ?.business_name) && (
+                                                {quote.provider_business_name && quote.provider_name && quote.provider_business_name !== quote.provider_name && (
                                                     <div className="small text-muted">
-                                                        {quote.provider_profile
-                                                            ?.business_name ||
-                                                            quote.provider
-                                                                ?.provider_profile
-                                                                ?.business_name}
+                                                        {quote.provider_name}
                                                     </div>
                                                 )}
-                                                {(quote.provider_verified ||
-                                                    quote.provider
-                                                        ?.verified) && (
+                                                {quote.provider_verified && (
                                                     <div className="small text-success">
                                                         <i className="fas fa-check-circle me-1"></i>
                                                         Verified

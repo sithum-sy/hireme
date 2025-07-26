@@ -509,9 +509,11 @@ const QuotesPDFDownloader = ({
                                         }
                                     </td>
                                     <td>
-                                        ${quote.provider_name || "Provider"}
+                                        ${quote.provider?.name || (quote.provider?.first_name + ' ' + (quote.provider?.last_name || '')) || "Provider"}
+                                        ${(quote.provider_profile?.business_name || quote.provider?.provider_profile?.business_name) ? 
+                                            '<br><small style="color: #666;">' + (quote.provider_profile?.business_name || quote.provider?.provider_profile?.business_name) + '</small>' : ''}
                                         ${
-                                            quote.provider_verified
+                                            (quote.provider_verified || quote.provider?.verified)
                                                 ? '<br><small style="color: #28a745;">✓ Verified</small>'
                                                 : ""
                                         }
