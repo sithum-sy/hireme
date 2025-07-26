@@ -19,20 +19,27 @@ export const getPDFStyles = (config = {}) => {
         body { 
             font-family: Arial, sans-serif; 
             margin: 0;
-            padding: ${compact ? '20px' : '30px'};
+            padding: 20px;
             line-height: ${compact ? '1.3' : '1.4'}; 
             color: #333;
             font-size: ${compact ? '12px' : '14px'};
+            background: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
+        .pdf-container {
             max-width: 210mm;
+            width: 100%;
+            margin: 0 auto;
+            padding: ${compact ? '20px' : '30px'};
             border: 2px solid ${primaryColor};
             border-radius: 8px;
             box-sizing: border-box;
-            width: fit-content;
-            height: fit-content;
-            min-height: auto;
-        }
-        .pdf-container {
-            width: 100%;
+            background: white;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            position: relative;
             display: flex;
             flex-direction: column;
             min-height: auto;

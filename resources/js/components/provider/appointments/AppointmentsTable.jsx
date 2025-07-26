@@ -196,9 +196,23 @@ const AppointmentsTable = ({
                                     )}
                                 </td>
                                 <td className="price-cell">
-                                    <span className="price">
-                                        Rs. {appointment.total_price || 0}
-                                    </span>
+                                    <div className="price-info">
+                                        <span className="price">
+                                            Rs. {appointment.total_price?.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0}) || 0}
+                                        </span>
+                                        {appointment.booking_source === "quote_acceptance" || appointment.quote_id ? (
+                                            <small className="d-block text-muted">
+                                                <i className="fas fa-quote-left text-success me-1"></i>
+                                                Quote Price
+                                            </small>
+                                        ) : (
+                                            appointment.duration_hours && (
+                                                <small className="d-block text-muted">
+                                                    {appointment.duration_hours} {appointment.duration_hours > 1 ? "hrs" : "hr"} × Rs. {Math.round((appointment.total_price || 0) / (appointment.duration_hours || 1))}
+                                                </small>
+                                            )
+                                        )}
+                                    </div>
                                 </td>
                                 <td className="location-cell">
                                     <div className="location-info">

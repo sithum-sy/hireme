@@ -7,6 +7,8 @@ import QuoteTimeline from "../../../components/client/quotes/QuoteTimeline";
 import clientService from "../../../services/clientService";
 import AcceptQuoteModal from "../../../components/client/quotes/AcceptQuoteModal";
 import DeclineQuoteModal from "../../../components/client/quotes/DeclineQuoteModal";
+import BookingModal from "../../../components/client/booking/BookingModal";
+import QuotesPDFDownloader from "../../../components/client/quotes/QuotesPDFDownloader";
 import { constructProfileImageUrl } from "../../../hooks/useServiceImages";
 
 const QuoteDetail = () => {
@@ -18,6 +20,7 @@ const QuoteDetail = () => {
     const [error, setError] = useState(null);
     const [showAcceptModal, setShowAcceptModal] = useState(false);
     const [showDeclineModal, setShowDeclineModal] = useState(false);
+    const [showBookingModal, setShowBookingModal] = useState(false);
 
     useEffect(() => {
         loadQuoteDetail();
@@ -41,42 +44,56 @@ const QuoteDetail = () => {
         }
     };
 
-    // const handleAcceptQuote = () => {
-    //     setShowAcceptModal(true);
-    // };
-
     const handleAcceptQuote = () => {
-        // Instead of opening a modal, redirect to booking with quote data
-        navigate("/client/booking/from-quote", {
-            state: {
-                quote: quote,
-                service: {
-                    id: quote.service_id,
-                    title: quote.service_title,
-                    description: quote.service_description,
-                    price: quote.quoted_price,
-                    base_price: quote.quoted_price,
-                    duration_hours: quote.estimated_duration || 1,
-                    category: {
-                        name: "Service",
-                        color: "primary",
-                        icon: "fas fa-cog",
-                    },
-                    first_image_url: quote.service_images,
-                    pricing_type: "fixed",
-                },
-                provider: {
-                    id: quote.provider_id,
-                    name: quote.provider_name,
-                    profile_image_url: quote.provider_image,
-                    average_rating: quote.provider_rating || 0,
-                    reviews_count: quote.provider_reviews || 0,
-                    is_verified: true,
-                },
-                isFromQuote: true,
-            },
-        });
+        // Use BookingModal for better user experience
+        setShowBookingModal(true);
     };
+
+    // Create service and provider objects for BookingModal
+    const serviceForBooking = quote ? {
+        id: quote.service_id,
+        title: quote.service_title,
+        description: quote.service_description || quote.message,
+        base_price: quote.quoted_price,
+        price: quote.quoted_price,
+        duration_hours: quote.estimated_duration || 1,
+        category: quote.service_category || {
+            name: "Service",
+            color: "primary",
+            icon: "fas fa-cog",
+        },
+        first_image_url: quote.service_images,
+        pricing_type: "fixed",
+    } : null;
+
+    const providerForBooking = quote ? {
+        id: quote.provider_id,
+        name: quote.provider_business_name || quote.provider_name,
+        profile_image_url: quote.provider_image,
+        average_rating: quote.provider_rating || 0,
+        reviews_count: quote.provider_reviews || 0,
+        is_verified: true,
+        business_name: quote.provider_business_name,
+    } : null;
+
+    // Create pre-selected slot from quote data
+    const selectedSlot = quote ? {
+        date: quote.requested_date,
+        time: quote.requested_time,
+        formatted_date: quote.requested_date ? new Date(quote.requested_date).toLocaleDateString("en-US", {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+        }) : "",
+        formatted_time: quote.requested_time ? (() => {
+            const [hours, minutes] = quote.requested_time.split(":");
+            const hour = parseInt(hours);
+            const ampm = hour >= 12 ? "PM" : "AM";
+            const displayHour = hour % 12 || 12;
+            return `${displayHour}:${minutes} ${ampm}`;
+        })() : "",
+    } : null;
 
     const handleDeclineQuote = () => {
         setShowDeclineModal(true);
@@ -139,25 +156,35 @@ const QuoteDetail = () => {
                         </div>
                     </div>
 
-                    {/* Action Buttons - Only show for quoted status */}
-                    {quote.status === "quoted" && (
-                        <div className="quote-actions">
-                            <button
-                                className="btn btn-success me-2"
-                                onClick={handleAcceptQuote}
-                            >
-                                <i className="fas fa-check me-2"></i>
-                                Accept Quote
-                            </button>
-                            <button
-                                className="btn btn-outline-danger"
-                                onClick={handleDeclineQuote}
-                            >
-                                <i className="fas fa-times me-2"></i>
-                                Decline
-                            </button>
-                        </div>
-                    )}
+                    {/* Action Buttons */}
+                    <div className="quote-actions d-flex gap-2">
+                        {quote.status === "quoted" && (
+                            <>
+                                <button
+                                    className="btn btn-success"
+                                    onClick={handleAcceptQuote}
+                                >
+                                    <i className="fas fa-check me-2"></i>
+                                    Accept Quote
+                                </button>
+                                <button
+                                    className="btn btn-outline-danger"
+                                    onClick={handleDeclineQuote}
+                                >
+                                    <i className="fas fa-times me-2"></i>
+                                    Decline
+                                </button>
+                            </>
+                        )}
+                        
+                        {/* PDF Download Button - Always available */}
+                        <QuotesPDFDownloader
+                            quote={quote}
+                            role="client"
+                            className="btn btn-outline-secondary"
+                            buttonText="Download PDF"
+                        />
+                    </div>
                 </div>
 
                 <div className="row">
@@ -183,6 +210,14 @@ const QuoteDetail = () => {
                                                 <h6 className="fw-bold">
                                                     {quote.service_title}
                                                 </h6>
+                                                {quote.service_category && (
+                                                    <div className="mb-2">
+                                                        <span className={`badge bg-${quote.service_category.color || 'primary'} me-2`}>
+                                                            <i className={`${quote.service_category.icon || 'fas fa-cog'} me-1`}></i>
+                                                            {quote.service_category.name || quote.service_category}
+                                                        </span>
+                                                    </div>
+                                                )}
                                                 <p className="text-muted mb-2">
                                                     {quote.service_description}
                                                 </p>
@@ -278,6 +313,22 @@ const QuoteDetail = () => {
                                                         </p>
                                                     </div>
                                                 )}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                {/* Terms and Conditions - Show if quote has terms */}
+                                {(quote.status === "quoted" || quote.status === "accepted") &&
+                                    quote.terms_conditions && (
+                                        <div className="terms-conditions mb-4">
+                                            <h6 className="fw-bold mb-2">
+                                                <i className="fas fa-file-contract me-2 text-warning"></i>
+                                                Terms & Conditions
+                                            </h6>
+                                            <div className="bg-warning bg-opacity-10 border border-warning rounded p-3">
+                                                <p className="mb-0 small">
+                                                    {quote.terms_conditions}
+                                                </p>
                                             </div>
                                         </div>
                                     )}
@@ -391,13 +442,13 @@ const QuoteDetail = () => {
                             </div>
                         </div>
 
-                        {/* Pricing Summary - Only show if quoted */}
-                        {quote.status === "quoted" && quote.quoted_price && (
+                        {/* Pricing Summary - Show if quoted or accepted */}
+                        {(quote.status === "quoted" || quote.status === "accepted") && quote.quoted_price && (
                             <div className="card border-0 shadow-sm mb-4">
-                                <div className="card-header bg-success text-white">
+                                <div className={`card-header text-white ${quote.status === "accepted" ? "bg-info" : "bg-success"}`}>
                                     <h6 className="fw-bold mb-0">
-                                        <i className="fas fa-dollar-sign me-2"></i>
-                                        Quote Summary
+                                        <i className={`fas ${quote.status === "accepted" ? "fa-check-circle" : "fa-dollar-sign"} me-2`}></i>
+                                        {quote.status === "accepted" ? "Accepted Quote Summary" : "Quote Summary"}
                                     </h6>
                                 </div>
                                 <div className="card-body">
@@ -520,6 +571,23 @@ const QuoteDetail = () => {
                 quote={quote}
                 onDeclineSuccess={handleDeclineSuccess}
             />
+
+            {/* Booking Modal for Quote Acceptance */}
+            {quote && serviceForBooking && providerForBooking && (
+                <BookingModal
+                    show={showBookingModal}
+                    onHide={() => setShowBookingModal(false)}
+                    service={serviceForBooking}
+                    provider={providerForBooking}
+                    selectedSlot={selectedSlot}
+                    clientLocation={null} // Will be detected by BookingModal
+                    quoteId={quote.id} // Pass quote ID for acceptance tracking
+                    onQuoteAccepted={(updatedQuote) => {
+                        // Update the quote state when it's accepted
+                        setQuote(updatedQuote);
+                    }}
+                />
+            )}
 
             <style>{`
                 /* Using CSS variables for consistent theming */

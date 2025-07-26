@@ -67,61 +67,84 @@ const QuotesPDFDownloader = ({
                         `Q${String(quote.id).padStart(6, "0")}`
                     }</title>
                     <style>
+                        @page {
+                            size: A4;
+                            margin: 0.5in;
+                        }
                         body { 
                             font-family: Arial, sans-serif; 
-                            margin: 20px; 
-                            line-height: 1.6;
+                            margin: 0;
+                            padding: 20px;
+                            line-height: 1.3; 
                             color: #333;
+                            font-size: 12px;
+                            max-width: 210mm;
+                            border: 2px solid #007bff;
+                            border-radius: 8px;
+                            box-sizing: border-box;
+                            width: fit-content;
+                            height: fit-content;
+                            min-height: auto;
                         }
                         .header { 
                             text-align: center; 
-                            border-bottom: 3px solid #007bff; 
-                            padding-bottom: 20px; 
-                            margin-bottom: 30px;
+                            border-bottom: 2px solid #007bff; 
+                            padding-bottom: 8px; 
+                            margin-bottom: 12px;
                         }
                         .header h1 { 
                             color: #007bff; 
                             margin: 0;
-                            font-size: 28px;
+                            font-size: 20px;
                         }
                         .header p { 
                             color: #666; 
                             margin: 5px 0 0 0;
+                            font-size: 10px;
                         }
                         .section { 
-                            margin-bottom: 25px; 
-                            padding: 15px;
-                            border-left: 4px solid #007bff;
-                            background-color: #f8f9fa;
+                            margin-bottom: 8px; 
+                            padding: 8px;
+                            border: 1px solid #ddd; 
+                            border-radius: 4px;
+                            background: #fafafa;
+                            page-break-inside: avoid;
+                        }
+                        .section:last-child {
+                            margin-bottom: 0;
                         }
                         .section h3 { 
-                            margin-top: 0; 
-                            color: #007bff;
-                            font-size: 18px;
+                            color: #007bff; 
+                            margin: 0 0 6px 0; 
+                            border-bottom: 1px solid #ddd; 
+                            padding-bottom: 3px;
+                            font-size: 14px;
                         }
                         .info-grid { 
                             display: grid; 
                             grid-template-columns: 1fr 1fr; 
-                            gap: 20px; 
-                            margin: 15px 0;
+                            gap: 12px; 
+                            margin: 8px 0;
                         }
                         .info-item { 
-                            margin-bottom: 10px; 
+                            margin-bottom: 6px; 
                         }
                         .info-label { 
                             font-weight: bold; 
                             color: #555;
                             display: block;
                             margin-bottom: 2px;
+                            font-size: 11px;
                         }
                         .info-value { 
                             color: #333;
+                            font-size: 11px;
                         }
                         .status { 
                             display: inline-block;
-                            padding: 4px 12px; 
-                            border-radius: 20px; 
-                            font-size: 12px;
+                            padding: 2px 6px; 
+                            border-radius: 10px; 
+                            font-size: 9px;
                             font-weight: bold;
                             text-transform: uppercase;
                         }
@@ -131,34 +154,71 @@ const QuotesPDFDownloader = ({
                         .status.declined { background-color: #f8d7da; color: #721c24; }
                         .status.expired { background-color: #e2e3e5; color: #383d41; }
                         .price-highlight {
-                            font-size: 24px;
+                            font-size: 18px;
                             font-weight: bold;
                             color: #28a745;
                             text-align: center;
-                            padding: 15px;
+                            padding: 10px;
                             background-color: #f8f9fa;
                             border: 2px solid #28a745;
-                            border-radius: 8px;
-                            margin: 20px 0;
+                            border-radius: 6px;
+                            margin: 12px 0;
                         }
                         .message-box {
                             background-color: #f8f9fa;
                             border: 1px solid #dee2e6;
-                            border-radius: 8px;
-                            padding: 15px;
-                            margin: 15px 0;
+                            border-radius: 4px;
+                            padding: 8px;
+                            margin: 8px 0;
+                            font-size: 11px;
+                            line-height: 1.4;
                         }
                         .footer {
-                            margin-top: 40px;
-                            padding-top: 20px;
+                            margin-top: 15px;
+                            padding-top: 8px;
                             border-top: 1px solid #dee2e6;
                             text-align: center;
                             color: #666;
-                            font-size: 12px;
+                            font-size: 10px;
                         }
                         @media print {
-                            body { margin: 0; }
+                            body { 
+                                margin: 0; 
+                                padding: 15px;
+                                font-size: 10px;
+                                border-width: 1px;
+                                height: auto !important;
+                                min-height: auto !important;
+                            }
                             .no-print { display: none; }
+                            .section { 
+                                margin-bottom: 6px; 
+                                padding: 6px; 
+                            }
+                            .section:last-child { 
+                                margin-bottom: 0; 
+                            }
+                            .header { 
+                                margin-bottom: 6px; 
+                                padding-bottom: 6px; 
+                            }
+                            .info-grid { 
+                                gap: 8px; 
+                                margin: 6px 0; 
+                            }
+                            .price-highlight {
+                                font-size: 16px;
+                                padding: 8px;
+                                margin: 8px 0;
+                            }
+                            .message-box {
+                                padding: 6px;
+                                margin: 6px 0;
+                            }
+                            .footer {
+                                margin-top: 10px;
+                                padding-top: 6px;
+                            }
                         }
                     </style>
                 </head>
@@ -230,7 +290,19 @@ const QuotesPDFDownloader = ({
                                 ? `
                         <div class="info-item">
                             <span class="info-label">Category:</span>
-                            <span class="info-value">${quote.service_category}</span>
+                            <span class="info-value">${
+                                quote.service_category.name || quote.service_category
+                            }</span>
+                        </div>
+                        `
+                                : ""
+                        }
+                        ${
+                            quote.service_description
+                                ? `
+                        <div class="info-item">
+                            <span class="info-label">Description:</span>
+                            <span class="info-value">${quote.service_description}</span>
                         </div>
                         `
                                 : ""
@@ -242,31 +314,16 @@ const QuotesPDFDownloader = ({
                         <div class="info-item">
                             <span class="info-label">Provider:</span>
                             <span class="info-value">
-                                ${
-                                    quote.provider?.name ||
-                                    quote.provider?.first_name +
-                                        " " +
-                                        (quote.provider?.last_name || "") ||
-                                    "Provider"
-                                } 
-                                ${
-                                    quote.provider_verified ||
-                                    quote.provider?.verified
-                                        ? "✓ Verified"
-                                        : ""
-                                }
+                                ${quote.provider_name || "Provider"} 
+                                ${quote.provider_verified ? "✓ Verified" : ""}
                             </span>
                         </div>
                         ${
-                            quote.provider_profile?.business_name ||
-                            quote.provider?.provider_profile?.business_name
+                            quote.provider_business_name
                                 ? `
                         <div class="info-item">
                             <span class="info-label">Business:</span>
-                            <span class="info-value">${
-                                quote.provider_profile?.business_name ||
-                                quote.provider?.provider_profile?.business_name
-                            }</span>
+                            <span class="info-value">${quote.provider_business_name}</span>
                         </div>
                         `
                                 : ""
@@ -394,49 +451,67 @@ const QuotesPDFDownloader = ({
                 <head>
                     <title>My Quotes List</title>
                     <style>
+                        @page {
+                            size: A4;
+                            margin: 0.5in;
+                        }
                         body { 
                             font-family: Arial, sans-serif; 
-                            margin: 20px; 
-                            line-height: 1.4;
+                            margin: 0;
+                            padding: 20px;
+                            line-height: 1.3;
+                            color: #333;
+                            font-size: 12px;
+                            max-width: 210mm;
+                            border: 2px solid #007bff;
+                            border-radius: 8px;
+                            box-sizing: border-box;
+                            width: fit-content;
+                            height: fit-content;
+                            min-height: auto;
                         }
                         .header { 
                             text-align: center; 
                             border-bottom: 2px solid #007bff; 
-                            padding-bottom: 20px; 
-                            margin-bottom: 30px;
+                            padding-bottom: 8px; 
+                            margin-bottom: 12px;
                         }
                         .header h1 { 
                             color: #007bff; 
                             margin: 0;
+                            font-size: 20px;
                         }
                         .summary {
                             text-align: center; 
                             color: #666; 
-                            margin-bottom: 30px;
+                            margin-bottom: 12px;
                             background-color: #f8f9fa;
-                            padding: 15px;
-                            border-radius: 8px;
+                            padding: 8px;
+                            border-radius: 4px;
+                            font-size: 10px;
                         }
                         table { 
                             width: 100%; 
                             border-collapse: collapse; 
-                            margin-top: 20px; 
+                            margin-top: 8px; 
                         }
                         th, td { 
                             border: 1px solid #ddd; 
-                            padding: 10px; 
+                            padding: 6px; 
                             text-align: left; 
-                            font-size: 12px;
+                            font-size: 10px;
+                            vertical-align: top;
                         }
                         th { 
                             background-color: #007bff; 
                             color: white;
                             font-weight: bold; 
+                            font-size: 10px;
                         }
                         .status { 
-                            padding: 2px 8px; 
-                            border-radius: 12px; 
-                            font-size: 10px;
+                            padding: 2px 6px; 
+                            border-radius: 10px; 
+                            font-size: 8px;
                             font-weight: bold;
                             text-transform: uppercase;
                         }
@@ -447,16 +522,46 @@ const QuotesPDFDownloader = ({
                         .status.expired { background-color: #e2e3e5; color: #383d41; }
                         .price { text-align: right; font-weight: bold; color: #28a745; }
                         .footer {
-                            margin-top: 30px;
-                            padding-top: 20px;
+                            margin-top: 15px;
+                            padding-top: 8px;
                             border-top: 1px solid #dee2e6;
                             text-align: center;
                             color: #666;
-                            font-size: 11px;
+                            font-size: 9px;
                         }
                         @media print {
-                            body { margin: 0; }
+                            body { 
+                                margin: 0; 
+                                padding: 15px;
+                                font-size: 10px;
+                                border-width: 1px;
+                                height: auto !important;
+                                min-height: auto !important;
+                            }
                             .no-print { display: none; }
+                            .header { 
+                                margin-bottom: 6px; 
+                                padding-bottom: 6px; 
+                            }
+                            .summary { 
+                                margin-bottom: 8px; 
+                                padding: 6px; 
+                            }
+                            table { 
+                                margin-top: 6px; 
+                            }
+                            th, td { 
+                                padding: 4px; 
+                                font-size: 8px;
+                            }
+                            th { 
+                                font-size: 9px;
+                            }
+                            .footer {
+                                margin-top: 10px;
+                                padding-top: 6px;
+                                font-size: 8px;
+                            }
                         }
                     </style>
                 </head>
@@ -504,16 +609,18 @@ const QuotesPDFDownloader = ({
                                         ${quote.service_title || "Service"}
                                         ${
                                             quote.service_category
-                                                ? `<br><small style="color: #666;">${quote.service_category}</small>`
+                                                ? `<br><small style="color: #666; font-weight: bold;">${
+                                                    quote.service_category.name || quote.service_category
+                                                }</small>`
                                                 : ""
                                         }
                                     </td>
                                     <td>
-                                        ${quote.provider?.name || (quote.provider?.first_name + ' ' + (quote.provider?.last_name || '')) || "Provider"}
-                                        ${(quote.provider_profile?.business_name || quote.provider?.provider_profile?.business_name) ? 
-                                            '<br><small style="color: #666;">' + (quote.provider_profile?.business_name || quote.provider?.provider_profile?.business_name) + '</small>' : ''}
+                                        ${quote.provider_name || "Provider"}
+                                        ${quote.provider_business_name ? 
+                                            '<br><small style="color: #666;">' + quote.provider_business_name + '</small>' : ''}
                                         ${
-                                            (quote.provider_verified || quote.provider?.verified)
+                                            quote.provider_verified
                                                 ? '<br><small style="color: #28a745;">✓ Verified</small>'
                                                 : ""
                                         }

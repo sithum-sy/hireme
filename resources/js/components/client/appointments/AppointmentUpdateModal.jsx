@@ -42,6 +42,9 @@ const AppointmentUpdateModal = ({
         payment_method: appointment.payment_method,
         special_requirements: appointment.client_notes || "",
         base_price: appointment.base_price || appointment.total_price,
+        // Preserve quote information if this appointment came from a quote
+        booking_source: appointment.booking_source || (appointment.quote_id ? "quote_acceptance" : "web_app_multi_step"),
+        quote_id: appointment.quote_id,
     });
 
     const [originalData, setOriginalData] = useState(bookingData);
@@ -74,6 +77,9 @@ const AppointmentUpdateModal = ({
                 payment_method: appointment.payment_method,
                 special_requirements: appointment.client_notes || "",
                 base_price: appointment.base_price || appointment.total_price,
+                // Preserve quote information if this appointment came from a quote
+                booking_source: appointment.booking_source || (appointment.quote_id ? "quote_acceptance" : "web_app_multi_step"),
+                quote_id: appointment.quote_id,
             };
 
             setBookingData(initialData);

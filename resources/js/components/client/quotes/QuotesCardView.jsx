@@ -145,9 +145,10 @@ const QuotesCardView = ({ quotes = [], loading = false, onQuoteAction }) => {
                                     {quote.service_title || "Service"}
                                 </h6>
                                 {quote.service_category && (
-                                    <small className="text-muted">
-                                        {quote.service_category}
-                                    </small>
+                                    <span className={`badge bg-${quote.service_category.color || 'primary'} me-2`}>
+                                        <i className={`${quote.service_category.icon || 'fas fa-cog'} me-1`}></i>
+                                        {quote.service_category.name || quote.service_category}
+                                    </span>
                                 )}
                             </div>
 

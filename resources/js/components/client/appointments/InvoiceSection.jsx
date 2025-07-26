@@ -93,10 +93,23 @@ const InvoiceSection = ({ appointment, onPaymentClick, canBePaid }) => {
                                 ))
                             ) : (
                                 <div className="d-flex justify-content-between py-2">
-                                    <span>
-                                        {appointment.service?.title ||
-                                            "Service"}
-                                    </span>
+                                    <div>
+                                        <div className="fw-semibold">
+                                            {appointment.service?.title || "Service"}
+                                        </div>
+                                        {appointment.booking_source === "quote_acceptance" || appointment.quote_id ? (
+                                            <small className="text-muted">
+                                                <i className="fas fa-quote-left text-success me-1"></i>
+                                                Fixed quote price ({appointment.duration_hours} {appointment.duration_hours > 1 ? "hours" : "hour"})
+                                            </small>
+                                        ) : (
+                                            <small className="text-muted">
+                                                {appointment.duration_hours} {appointment.duration_hours > 1 ? "hours" : "hour"} × {formatCurrency(
+                                                    Math.round((appointment.total_price || 0) / (appointment.duration_hours || 1))
+                                                )} per hour
+                                            </small>
+                                        )}
+                                    </div>
                                     <span>
                                         {formatCurrency(
                                             appointment.total_price

@@ -78,6 +78,7 @@ Route::prefix('appointments')->group(function () {
 Route::prefix('quotes')->group(function () {
     Route::get('/', [App\Http\Controllers\API\Provider\QuoteController::class, 'index']);
     Route::get('/available', [App\Http\Controllers\API\Provider\QuoteController::class, 'getAvailableRequests']); // Changed from /requests/available
+    Route::get('/service-categories', [App\Http\Controllers\API\Provider\QuoteController::class, 'getServiceCategories']);
     Route::get('/{quote}', [App\Http\Controllers\API\Provider\QuoteController::class, 'show']);
     Route::patch('/{quote}', [App\Http\Controllers\API\Provider\QuoteController::class, 'update']);
     Route::delete('/{quote}', [App\Http\Controllers\API\Provider\QuoteController::class, 'withdraw']);

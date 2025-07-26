@@ -9,6 +9,7 @@ import QuotesCardView from "../../../components/client/quotes/QuotesCardView";
 import QuotesPDFDownloader from "../../../components/client/quotes/QuotesPDFDownloader";
 import AcceptQuoteModal from "../../../components/client/quotes/AcceptQuoteModal";
 import DeclineQuoteModal from "../../../components/client/quotes/DeclineQuoteModal";
+import BookingModal from "../../../components/client/booking/BookingModal";
 
 const QuotesList = () => {
     const location = useLocation();
@@ -54,6 +55,7 @@ const QuotesList = () => {
     // Modal states
     const [showAcceptModal, setShowAcceptModal] = useState(false);
     const [showDeclineModal, setShowDeclineModal] = useState(false);
+    const [showBookingModal, setShowBookingModal] = useState(false);
     const [selectedQuote, setSelectedQuote] = useState(null);
 
     // Load quotes on component mount and filter changes
@@ -225,7 +227,7 @@ const QuotesList = () => {
                 navigate(`/client/quotes/${quote.id}`);
                 break;
             case "accept":
-                setShowAcceptModal(true);
+                setShowBookingModal(true);
                 break;
             case "decline":
                 setShowDeclineModal(true);
@@ -252,6 +254,52 @@ const QuotesList = () => {
         setSelectedQuote(null);
         loadQuoteCounts(); // Refresh counts
     };
+
+    // Create service and provider objects for BookingModal
+    const serviceForBooking = selectedQuote ? {
+        id: selectedQuote.service_id,
+        title: selectedQuote.service_title,
+        description: selectedQuote.service_description || selectedQuote.message,
+        base_price: selectedQuote.quoted_price,
+        price: selectedQuote.quoted_price,
+        duration_hours: selectedQuote.estimated_duration || 1,
+        category: selectedQuote.service_category || {
+            name: "Service",
+            color: "primary",
+            icon: "fas fa-cog",
+        },
+        first_image_url: selectedQuote.service_images,
+        pricing_type: "fixed",
+    } : null;
+
+    const providerForBooking = selectedQuote ? {
+        id: selectedQuote.provider_id,
+        name: selectedQuote.provider_business_name || selectedQuote.provider_name,
+        profile_image_url: selectedQuote.provider_image,
+        average_rating: selectedQuote.provider_rating || 0,
+        reviews_count: selectedQuote.provider_reviews || 0,
+        is_verified: true,
+        business_name: selectedQuote.provider_business_name,
+    } : null;
+
+    // Create pre-selected slot from quote data
+    const selectedSlotForBooking = selectedQuote ? {
+        date: selectedQuote.requested_date,
+        time: selectedQuote.requested_time,
+        formatted_date: selectedQuote.requested_date ? new Date(selectedQuote.requested_date).toLocaleDateString("en-US", {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+        }) : "",
+        formatted_time: selectedQuote.requested_time ? (() => {
+            const [hours, minutes] = selectedQuote.requested_time.split(":");
+            const hour = parseInt(hours);
+            const ampm = hour >= 12 ? "PM" : "AM";
+            const displayHour = hour % 12 || 12;
+            return `${displayHour}:${minutes} ${ampm}`;
+        })() : "",
+    } : null;
 
     // Define tab configuration
     const tabConfig = [
@@ -581,6 +629,29 @@ const QuotesList = () => {
                         onDeclineSuccess={handleDeclineSuccess}
                     />
                 </>
+            )}
+
+            {/* Booking Modal for Quote Acceptance */}
+            {selectedQuote && serviceForBooking && providerForBooking && (
+                <BookingModal
+                    show={showBookingModal}
+                    onHide={() => {
+                        setShowBookingModal(false);
+                        setSelectedQuote(null);
+                    }}
+                    service={serviceForBooking}
+                    provider={providerForBooking}
+                    selectedSlot={selectedSlotForBooking}
+                    clientLocation={null} // Will be detected by BookingModal
+                    quoteId={selectedQuote.id} // Pass quote ID for acceptance tracking
+                    onQuoteAccepted={(updatedQuote) => {
+                        // Update the quote in the list when it's accepted
+                        setQuotes(prev => prev.map(q => q.id === updatedQuote.id ? updatedQuote : q));
+                        loadQuoteCounts(); // Refresh counts
+                        setShowBookingModal(false);
+                        setSelectedQuote(null);
+                    }}
+                />
             )}
 
             {/* Custom Styles */}

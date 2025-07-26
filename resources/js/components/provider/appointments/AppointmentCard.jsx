@@ -510,9 +510,22 @@ const AppointmentCard = ({ appointment, onStatusUpdate }) => {
                             </span>
                         </div>
 
-                        <div className="fw-bold text-primary mb-3">
-                            Rs.{" "}
-                            {appointment.total_price?.toLocaleString() || "0"}
+                        <div className="price-section mb-3">
+                            <div className="fw-bold text-primary">
+                                Rs. {appointment.total_price?.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0}) || "0"}
+                            </div>
+                            {appointment.booking_source === "quote_acceptance" || appointment.quote_id ? (
+                                <small className="text-muted d-block">
+                                    <i className="fas fa-quote-left text-success me-1"></i>
+                                    Quote Price ({appointment.duration_hours} {appointment.duration_hours > 1 ? "hrs" : "hr"})
+                                </small>
+                            ) : (
+                                appointment.duration_hours && (
+                                    <small className="text-muted d-block">
+                                        {appointment.duration_hours} {appointment.duration_hours > 1 ? "hrs" : "hr"} × Rs. {Math.round((appointment.total_price || 0) / (appointment.duration_hours || 1))} per hour
+                                    </small>
+                                )
+                            )}
                         </div>
 
                         {/* Action Buttons */}

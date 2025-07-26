@@ -52,6 +52,26 @@ class Quote extends Model
         'client_responded_at' => 'datetime',
     ];
 
+    // Append accessor fields to API responses
+    protected $appends = [
+        'quote_number',
+        'requested_date',
+        'requested_time',
+        'location_summary',
+        'urgency',
+        'status_text',
+        'formatted_quoted_price',
+        'time_remaining',
+        'client_name',
+        'client_verified',
+        'service_title',
+        'service_category',
+        'service_category_name',
+        'message',
+        'provider_response',
+        'expires_at'
+    ];
+
     // Status constants
     public const STATUS_PENDING = 'pending';
     public const STATUS_QUOTED = 'quoted';
@@ -180,6 +200,46 @@ class Quote extends Model
     public function getQuoteTypeAttribute()
     {
         return $this->quote_request_data['quote_type'] ?? 'standard';
+    }
+
+    public function getClientNameAttribute()
+    {
+        return $this->client ? $this->client->full_name : null;
+    }
+
+    public function getClientVerifiedAttribute()
+    {
+        return $this->client ? $this->client->email_verified_at !== null : false;
+    }
+
+    public function getServiceTitleAttribute()
+    {
+        return $this->service ? $this->service->title : null;
+    }
+
+    public function getServiceCategoryAttribute()
+    {
+        return $this->service && $this->service->category ? $this->service->category : null;
+    }
+
+    public function getServiceCategoryNameAttribute()
+    {
+        return $this->service && $this->service->category ? $this->service->category->name : null;
+    }
+
+    public function getMessageAttribute()
+    {
+        return $this->description;
+    }
+
+    public function getProviderResponseAttribute()
+    {
+        return $this->quote_details;
+    }
+
+    public function getExpiresAtAttribute()
+    {
+        return $this->valid_until;
     }
 
     // Helper methods

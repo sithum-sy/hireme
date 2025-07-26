@@ -106,7 +106,7 @@ class QuoteController extends Controller
 
             // Build query - load the correct relationships
             $query = Quote::where('client_id', $user->id)
-                ->with(['service', 'provider']) // Just load provider as User
+                ->with(['service.category', 'provider']) // Load service with category and provider as User
                 ->orderBy('created_at', 'desc');
 
             // Filter by status if provided
@@ -152,6 +152,16 @@ class QuoteController extends Controller
                     'service_title' => $quote->service->title ?? $quote->title ?? 'Unknown Service',
                     'service_description' => $quote->service->description ?? $quote->description ?? '',
                     'service_image' => $quote->service->first_image_url ?? null,
+                    'service_category' => $quote->service && $quote->service->category ? [
+                        'id' => $quote->service->category->id,
+                        'name' => $quote->service->category->name,
+                        'color' => $quote->service->category->color ?? 'primary',
+                        'icon' => $quote->service->category->icon ?? 'fas fa-cog',
+                    ] : [
+                        'name' => 'Service',
+                        'color' => 'primary',
+                        'icon' => 'fas fa-cog'
+                    ],
 
                     // Provider information - handle missing provider_profile
                     'provider_id' => $quote->provider_id,

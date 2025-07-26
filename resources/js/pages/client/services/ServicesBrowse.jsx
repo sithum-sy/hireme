@@ -770,6 +770,7 @@ const ServicesBrowse = () => {
                                                     >
                                                         <ServiceCard
                                                             service={service}
+                                                            customLocation={currentLocation}
                                                         />
                                                     </div>
                                                 ))}

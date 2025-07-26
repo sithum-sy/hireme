@@ -46,13 +46,13 @@ const EditQuote = () => {
                 // Pre-fill form with existing data
                 setQuoteData({
                     quoted_price: quoteDetail.quoted_price || "",
-                    estimated_duration: quoteDetail.estimated_duration || "",
-                    quote_description: quoteDetail.quote_description || "",
+                    estimated_duration: quoteDetail.duration_hours || quoteDetail.estimated_duration || "",
+                    quote_description: quoteDetail.quote_details || quoteDetail.quote_description || "",
                     validity_days: quoteDetail.validity_days || 7,
-                    terms_conditions: quoteDetail.terms_conditions || "",
-                    includes_materials: quoteDetail.includes_materials || false,
-                    travel_charges: quoteDetail.travel_charges || "",
-                    additional_notes: quoteDetail.additional_notes || "",
+                    terms_conditions: quoteDetail.terms_and_conditions || quoteDetail.terms_conditions || "",
+                    includes_materials: quoteDetail.pricing_breakdown?.includes_materials || quoteDetail.includes_materials || false,
+                    travel_charges: quoteDetail.travel_fee || quoteDetail.travel_charges || "",
+                    additional_notes: quoteDetail.pricing_breakdown?.additional_notes || quoteDetail.additional_notes || "",
                 });
             } else {
                 navigate("/provider/quotes");
@@ -174,7 +174,7 @@ const EditQuote = () => {
             <ProviderLayout>
                 <div className="text-center py-5">
                     <h4 className="text-danger">Quote not found</h4>
-                    <Link to="/provider/quotes" className="btn btn-orange">
+                    <Link to="/provider/quotes" className="btn btn-primary">
                         Back to Quotes
                     </Link>
                 </div>
@@ -183,18 +183,18 @@ const EditQuote = () => {
     }
 
     // Check if quote can be edited
-    if (quote.status !== "pending") {
+    if (!["pending", "quoted"].includes(quote.status)) {
         return (
             <ProviderLayout>
                 <div className="text-center py-5">
                     <h4 className="text-warning">Quote cannot be edited</h4>
                     <p className="text-muted">
-                        Only draft quotes can be edited.
+                        Only pending and quoted requests can be edited.
                     </p>
                     <div className="d-flex gap-2 justify-content-center">
                         <Link
                             to={`/provider/quotes/${quote.id}`}
-                            className="btn btn-orange"
+                            className="btn btn-primary"
                         >
                             View Quote
                         </Link>
@@ -230,10 +230,10 @@ const EditQuote = () => {
                         {/* Main Form */}
                         <div className="col-lg-8">
                             {/* Service Request Info (Read Only) */}
-                            <div className="card border-0 shadow-sm mb-4">
-                                <div className="card-header bg-white border-bottom">
+                            <div className="card-modern mb-4">
+                                <div className="card-header">
                                     <h5 className="fw-bold mb-0">
-                                        <i className="fas fa-info-circle me-2 text-orange"></i>
+                                        <i className="fas fa-info-circle me-2 text-primary"></i>
                                         Service Request Details
                                     </h5>
                                 </div>
@@ -248,8 +248,7 @@ const EditQuote = () => {
                                                 <div className="mb-2">
                                                     <i className="fas fa-user text-muted me-2"></i>
                                                     <strong>Client:</strong>{" "}
-                                                    {quote.client?.first_name}{" "}
-                                                    {quote.client?.last_name}
+                                                    {quote.client_name || quote.client?.full_name || "Client"}
                                                 </div>
                                                 <div className="mb-2">
                                                     <i className="fas fa-map-marker-alt text-muted me-2"></i>
@@ -324,10 +323,10 @@ const EditQuote = () => {
                             </div>
 
                             {/* Quote Details Form */}
-                            <div className="card border-0 shadow-sm mb-4">
-                                <div className="card-header bg-white border-bottom">
+                            <div className="card-modern mb-4">
+                                <div className="card-header">
                                     <h5 className="fw-bold mb-0">
-                                        <i className="fas fa-edit me-2 text-orange"></i>
+                                        <i className="fas fa-edit me-2 text-primary"></i>
                                         Quote Details
                                     </h5>
                                 </div>
@@ -548,10 +547,10 @@ const EditQuote = () => {
                             </div>
 
                             {/* Terms & Conditions */}
-                            <div className="card border-0 shadow-sm mb-4">
-                                <div className="card-header bg-white border-bottom">
+                            <div className="card-modern mb-4">
+                                <div className="card-header">
                                     <h5 className="fw-bold mb-0">
-                                        <i className="fas fa-file-contract me-2 text-orange"></i>
+                                        <i className="fas fa-file-contract me-2 text-primary"></i>
                                         Terms & Conditions
                                     </h5>
                                 </div>
@@ -582,8 +581,8 @@ const EditQuote = () => {
                         <div className="col-lg-4">
                             {/* Pricing Suggestions */}
                             {pricingSuggestions && (
-                                <div className="card border-0 shadow-sm mb-4">
-                                    <div className="card-header bg-white border-bottom">
+                                <div className="card-modern mb-4">
+                                    <div className="card-header">
                                         <h6 className="fw-bold mb-0">
                                             <i className="fas fa-lightbulb me-2 text-warning"></i>
                                             Pricing Suggestions
@@ -673,8 +672,8 @@ const EditQuote = () => {
                             )}
 
                             {/* Quote Summary */}
-                            <div className="card border-0 shadow-sm mb-4">
-                                <div className="card-header bg-orange text-white">
+                            <div className="card-modern mb-4">
+                                <div className="card-header bg-primary text-white">
                                     <h6 className="fw-bold mb-0">
                                         <i className="fas fa-calculator me-2"></i>
                                         Quote Summary
@@ -705,7 +704,7 @@ const EditQuote = () => {
                                     <hr />
                                     <div className="summary-total d-flex justify-content-between fw-bold">
                                         <span>Total Quote:</span>
-                                        <span className="text-orange">
+                                        <span className="text-success">
                                             Rs. {totalAmount.toLocaleString()}
                                         </span>
                                     </div>
@@ -732,8 +731,8 @@ const EditQuote = () => {
                             {/* Client Budget Comparison */}
                             {quote.client_budget_min &&
                                 quote.client_budget_max && (
-                                    <div className="card border-0 shadow-sm mb-4">
-                                        <div className="card-header bg-white border-bottom">
+                                    <div className="card-modern mb-4">
+                                        <div className="card-header">
                                             <h6 className="fw-bold mb-0">
                                                 <i className="fas fa-balance-scale me-2 text-info"></i>
                                                 Budget Comparison
@@ -781,8 +780,8 @@ const EditQuote = () => {
                                 )}
 
                             {/* Quote Tips */}
-                            <div className="card border-0 shadow-sm">
-                                <div className="card-header bg-white border-bottom">
+                            <div className="card-modern">
+                                <div className="card-header">
                                     <h6 className="fw-bold mb-0">
                                         <i className="fas fa-tips me-2 text-info"></i>
                                         Quote Tips
@@ -824,7 +823,7 @@ const EditQuote = () => {
                         </button>
                         <button
                             type="submit"
-                            className="btn btn-outline-orange"
+                            className="btn btn-outline-primary"
                             disabled={submitLoading}
                         >
                             {submitLoading ? (
@@ -841,7 +840,7 @@ const EditQuote = () => {
                         </button>
                         <button
                             type="button"
-                            className="btn btn-orange"
+                            className="btn btn-primary"
                             onClick={handleSendQuote}
                             disabled={submitLoading}
                         >
@@ -859,6 +858,85 @@ const EditQuote = () => {
                         </button>
                     </div>
                 </form>
+
+                {/* Custom Styles using app.css design system */}
+                <style>{`
+                    .card-modern {
+                        background: var(--bg-white);
+                        border-radius: var(--border-radius-lg);
+                        box-shadow: var(--shadow-sm);
+                        border: 1px solid var(--border-color);
+                        transition: var(--transition);
+                        overflow: hidden;
+                    }
+
+                    .card-modern:hover {
+                        transform: translateY(-2px);
+                        box-shadow: var(--shadow-md);
+                    }
+
+                    .card-header {
+                        background: var(--bg-light);
+                        border-bottom: 1px solid var(--border-color);
+                        padding: var(--space-4);
+                        font-weight: var(--font-semibold);
+                    }
+
+                    .card-body {
+                        padding: var(--space-4);
+                    }
+
+                    .page-header {
+                        margin-bottom: var(--space-6);
+                    }
+
+                    .pricing-option {
+                        cursor: pointer;
+                        transition: var(--transition);
+                    }
+
+                    .pricing-option:hover {
+                        background-color: var(--bg-light);
+                        border-color: var(--primary-color);
+                        transform: translateY(-1px);
+                    }
+
+                    .summary-item {
+                        font-size: var(--text-sm);
+                    }
+
+                    .summary-total {
+                        font-size: var(--text-lg);
+                    }
+
+                    .tip-item {
+                        display: flex;
+                        align-items: center;
+                    }
+
+                    .request-details {
+                        background: var(--bg-light);
+                        border-left: 4px solid var(--primary-color);
+                    }
+
+                    @media (max-width: 768px) {
+                        .card-body {
+                            padding: var(--space-3);
+                        }
+                        
+                        .submit-actions {
+                            flex-direction: column;
+                        }
+                        
+                        .submit-actions .btn {
+                            width: 100%;
+                        }
+
+                        .row .col-md-6 {
+                            margin-bottom: var(--space-3);
+                        }
+                    }
+                `}</style>
             </div>
         </ProviderLayout>
     );

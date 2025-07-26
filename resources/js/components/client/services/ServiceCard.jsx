@@ -4,7 +4,7 @@ import { useServicePrimaryImage } from "../../../hooks/useServiceImages";
 
 import { useState } from "react";
 
-const ServiceCard = ({ service, showDistance = true }) => {
+const ServiceCard = ({ service, showDistance = true, customLocation = null }) => {
     const navigate = useNavigate();
     const primaryImage = useServicePrimaryImage(service);
     const [imageError, setImageError] = useState(false);
@@ -13,6 +13,7 @@ const ServiceCard = ({ service, showDistance = true }) => {
         <div className="service-card">
             <Link
                 to={`/client/services/${service.id}`}
+                state={{ customLocation }}
                 className="text-decoration-none"
             >
                 <div className="card h-100 border-0 shadow-sm">
@@ -224,8 +225,10 @@ const ServiceCard = ({ service, showDistance = true }) => {
                                 onClick={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
-                                    // Navigate to service detail page with booking hash
-                                    navigate(`/client/services/${service.id}#book`);
+                                    // Navigate to service detail page with booking hash and custom location
+                                    navigate(`/client/services/${service.id}#book`, {
+                                        state: { customLocation }
+                                    });
                                 }}
                             >
                                 <i className="fas fa-calendar-plus me-1"></i>

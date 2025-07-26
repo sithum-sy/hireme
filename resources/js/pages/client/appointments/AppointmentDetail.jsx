@@ -329,13 +329,30 @@ const AppointmentDetail = () => {
                             />
                         )}
 
-                        {/* Important Information - Show on larger screens (lg and up) */}
-                        <div className="d-none d-lg-block">
-                            <ImportantInfoCard
-                                appointment={appointment}
-                                canCancel={canCancel}
-                            />
-                        </div>
+                        {/* Quote Origin - Your existing code */}
+                        {appointment.quote_id && (
+                            <div className="card border-0 shadow-sm mb-4 border-info">
+                                <div className="card-header bg-info bg-opacity-10 border-bottom border-info">
+                                    <h5 className="fw-bold mb-0 text-light">
+                                        <i className="fas fa-quote-left me-2"></i>
+                                        Quote Information
+                                    </h5>
+                                </div>
+                                <div className="card-body">
+                                    <p className="mb-2">
+                                        This appointment was created from Quote
+                                        #{appointment.quote_id}
+                                    </p>
+                                    <Link
+                                        to={`/client/quotes/${appointment.quote_id}`}
+                                        className="btn btn-outline-info btn-sm"
+                                    >
+                                        <i className="fas fa-external-link-alt me-2"></i>
+                                        View Original Quote
+                                    </Link>
+                                </div>
+                            </div>
+                        )}
 
                         {/* NEW: Review Section */}
                         {canBeReviewed() && (
@@ -408,30 +425,13 @@ const AppointmentDetail = () => {
                             </div>
                         )}
 
-                        {/* Quote Origin - Your existing code */}
-                        {appointment.quote_id && (
-                            <div className="card border-0 shadow-sm mb-4 border-info">
-                                <div className="card-header bg-info bg-opacity-10 border-bottom border-info">
-                                    <h5 className="fw-bold mb-0 text-info">
-                                        <i className="fas fa-quote-left me-2"></i>
-                                        Quote Information
-                                    </h5>
-                                </div>
-                                <div className="card-body">
-                                    <p className="mb-2">
-                                        This appointment was created from Quote
-                                        #{appointment.quote_id}
-                                    </p>
-                                    <Link
-                                        to={`/client/quotes/${appointment.quote_id}`}
-                                        className="btn btn-outline-info btn-sm"
-                                    >
-                                        <i className="fas fa-external-link-alt me-2"></i>
-                                        View Original Quote
-                                    </Link>
-                                </div>
-                            </div>
-                        )}
+                        {/* Important Information - Show on larger screens (lg and up) */}
+                        <div className="d-none d-lg-block">
+                            <ImportantInfoCard
+                                appointment={appointment}
+                                canCancel={canCancel}
+                            />
+                        </div>
                     </div>
 
                     {/* Sidebar */}

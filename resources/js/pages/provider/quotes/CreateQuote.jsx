@@ -12,6 +12,7 @@ const CreateQuote = () => {
 
     const [loading, setLoading] = useState(false);
     const [submitLoading, setSubmitLoading] = useState(false);
+    const [quoteLoading, setQuoteLoading] = useState(false);
     const [pendingQuotes, setPendingQuotes] = useState([]);
     const [selectedQuote, setSelectedQuote] = useState(null);
     const [pricingSuggestions, setPricingSuggestions] = useState(null);
@@ -34,10 +35,19 @@ const CreateQuote = () => {
     }, []);
 
     useEffect(() => {
+        // Set quote_id from URL parameter when component loads
+        console.log("CreateQuote: URL quoteId =", quoteId);
+        if (quoteId && !quoteData.quote_id) {
+            console.log("Setting quote_id in form data");
+            setQuoteData((prev) => ({ ...prev, quote_id: quoteId }));
+        }
+    }, [quoteId]);
+
+    useEffect(() => {
         if (quoteData.quote_id) {
             loadQuoteDetails();
         }
-    }, [quoteData.quote_id]);
+    }, [quoteData.quote_id, pendingQuotes]);
 
     useEffect(() => {
         if (selectedQuote && quoteData.estimated_duration) {
@@ -62,11 +72,39 @@ const CreateQuote = () => {
     const loadQuoteDetails = async () => {
         if (!quoteData.quote_id) return;
 
+        setQuoteLoading(true);
         try {
-            const quote = pendingQuotes.find((q) => q.id == quoteData.quote_id);
-            setSelectedQuote(quote);
+            // First try to find quote in pending quotes list
+            let quote = pendingQuotes.find((q) => q.id == quoteData.quote_id);
+
+            // If not found in pending quotes, fetch directly from API
+            if (!quote) {
+                console.log(
+                    "Quote not found in pending list, fetching from API..."
+                );
+                const result = await providerQuoteService.getQuoteDetail(
+                    quoteData.quote_id
+                );
+                if (result.success) {
+                    quote = result.data;
+                    console.log("Quote loaded from API:", quote);
+                }
+            } else {
+                console.log("Quote found in pending list:", quote);
+            }
+
+            if (quote) {
+                setSelectedQuote(quote);
+                // Clear any previous errors
+                setErrors((prev) => ({ ...prev, quote_id: null }));
+            } else {
+                setErrors({ quote_id: "Quote not found or not accessible" });
+            }
         } catch (error) {
             console.error("Failed to load quote details:", error);
+            setErrors({ quote_id: "Failed to load quote details" });
+        } finally {
+            setQuoteLoading(false);
         }
     };
 
@@ -88,6 +126,12 @@ const CreateQuote = () => {
 
     const handleSubmitQuote = async (e) => {
         e.preventDefault();
+
+        // Check if quote is selected
+        if (!quoteData.quote_id) {
+            setErrors({ quote_id: "Please select a quote request" });
+            return;
+        }
 
         const validation = providerQuoteService.validateQuoteData(quoteData);
         if (!validation.isValid) {
@@ -155,16 +199,23 @@ const CreateQuote = () => {
                         Respond to a client's quote request with your pricing
                         and details
                     </p>
+                    {/* Debug info - remove in production */}
+                    <div className="small text-muted mt-2">
+                        Debug: quoteId={quoteId}, quote_id={quoteData.quote_id},
+                        selectedQuote={selectedQuote ? "loaded" : "null"},
+                        loading={loading.toString()}, quoteLoading=
+                        {quoteLoading.toString()}
+                    </div>
                 </div>
 
                 <form onSubmit={handleSubmitQuote}>
                     <div className="row">
                         <div className="col-lg-8">
                             {/* Quote Request Selection */}
-                            <div className="card border-0 shadow-sm mb-4">
-                                <div className="card-header bg-white border-bottom">
+                            <div className="card-modern mb-4">
+                                <div className="card-header">
                                     <h5 className="fw-bold mb-0">
-                                        <i className="fas fa-search me-2 text-orange"></i>
+                                        <i className="fas fa-search me-2 text-primary"></i>
                                         Select Quote Request
                                     </h5>
                                 </div>
@@ -218,8 +269,25 @@ const CreateQuote = () => {
                                         )}
                                     </div>
 
+                                    {/* Loading Quote Details */}
+                                    {quoteLoading && quoteData.quote_id && (
+                                        <div className="text-center py-4">
+                                            <div
+                                                className="spinner-border text-primary me-2"
+                                                role="status"
+                                            >
+                                                <span className="visually-hidden">
+                                                    Loading...
+                                                </span>
+                                            </div>
+                                            <span>
+                                                Loading quote details...
+                                            </span>
+                                        </div>
+                                    )}
+
                                     {/* Selected Request Details */}
-                                    {selectedQuote && (
+                                    {selectedQuote && !quoteLoading && (
                                         <div className="selected-request bg-light rounded p-3">
                                             <div className="d-flex justify-content-between align-items-start mb-3">
                                                 <h6 className="fw-bold">
@@ -395,10 +463,450 @@ const CreateQuote = () => {
                                 </div>
                             </div>
 
-                            {/* Quote Response Form - Same as before */}
-                            {/* ... rest of your form code ... */}
+                            {/* Quote Response Form */}
+                            {selectedQuote && !quoteLoading && (
+                                <>
+                                    <div className="card-modern mb-4">
+                                        <div className="card-header">
+                                            <h5 className="mb-0">
+                                                <i className="fas fa-edit me-2 text-primary"></i>
+                                                Your Quote Response
+                                            </h5>
+                                        </div>
+                                        <div className="card-body">
+                                            <div className="row">
+                                                <div className="col-md-6 mb-3">
+                                                    <label className="form-label">
+                                                        Quoted Price (Rs.) *
+                                                    </label>
+                                                    <input
+                                                        type="number"
+                                                        className={`form-control ${
+                                                            errors.quoted_price
+                                                                ? "is-invalid"
+                                                                : ""
+                                                        }`}
+                                                        value={
+                                                            quoteData.quoted_price
+                                                        }
+                                                        onChange={(e) =>
+                                                            handleInputChange(
+                                                                "quoted_price",
+                                                                e.target.value
+                                                            )
+                                                        }
+                                                        placeholder="Enter your quoted price"
+                                                        min="1"
+                                                        max="1000000"
+                                                    />
+                                                    {errors.quoted_price && (
+                                                        <div className="invalid-feedback">
+                                                            {
+                                                                errors.quoted_price
+                                                            }
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div className="col-md-6 mb-3">
+                                                    <label className="form-label">
+                                                        Estimated Duration
+                                                        (hours) *
+                                                    </label>
+                                                    <input
+                                                        type="number"
+                                                        className={`form-control ${
+                                                            errors.estimated_duration
+                                                                ? "is-invalid"
+                                                                : ""
+                                                        }`}
+                                                        value={
+                                                            quoteData.estimated_duration
+                                                        }
+                                                        onChange={(e) =>
+                                                            handleInputChange(
+                                                                "estimated_duration",
+                                                                e.target.value
+                                                            )
+                                                        }
+                                                        placeholder="Hours needed"
+                                                        min="0.5"
+                                                        max="24"
+                                                        step="0.5"
+                                                    />
+                                                    {errors.estimated_duration && (
+                                                        <div className="invalid-feedback">
+                                                            {
+                                                                errors.estimated_duration
+                                                            }
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            <div className="mb-3">
+                                                <label className="form-label">
+                                                    Quote Description *
+                                                </label>
+                                                <textarea
+                                                    className={`form-control ${
+                                                        errors.quote_description
+                                                            ? "is-invalid"
+                                                            : ""
+                                                    }`}
+                                                    rows="4"
+                                                    value={
+                                                        quoteData.quote_description
+                                                    }
+                                                    onChange={(e) =>
+                                                        handleInputChange(
+                                                            "quote_description",
+                                                            e.target.value
+                                                        )
+                                                    }
+                                                    placeholder="Describe what's included in your service, your approach, experience, etc."
+                                                    maxLength="1000"
+                                                ></textarea>
+                                                <div className="d-flex justify-content-between mt-1">
+                                                    {errors.quote_description ? (
+                                                        <div className="text-danger small">
+                                                            {
+                                                                errors.quote_description
+                                                            }
+                                                        </div>
+                                                    ) : (
+                                                        <small className="text-muted">
+                                                            Minimum 20
+                                                            characters. Be
+                                                            specific and
+                                                            professional.
+                                                        </small>
+                                                    )}
+                                                    <small className="text-muted">
+                                                        {
+                                                            quoteData
+                                                                .quote_description
+                                                                .length
+                                                        }
+                                                        /1000
+                                                    </small>
+                                                </div>
+                                            </div>
+
+                                            <div className="row">
+                                                <div className="col-md-6 mb-3">
+                                                    <label className="form-label">
+                                                        Quote Validity (days)
+                                                    </label>
+                                                    <select
+                                                        className="form-select"
+                                                        value={
+                                                            quoteData.validity_days
+                                                        }
+                                                        onChange={(e) =>
+                                                            handleInputChange(
+                                                                "validity_days",
+                                                                e.target.value
+                                                            )
+                                                        }
+                                                    >
+                                                        <option value="3">
+                                                            3 days
+                                                        </option>
+                                                        <option value="7">
+                                                            7 days (recommended)
+                                                        </option>
+                                                        <option value="14">
+                                                            14 days
+                                                        </option>
+                                                        <option value="30">
+                                                            30 days
+                                                        </option>
+                                                    </select>
+                                                </div>
+                                                {/* <div className="col-md-6 mb-3">
+                                                    <label className="form-label">
+                                                        Travel Charges (Rs.)
+                                                    </label>
+                                                    <input
+                                                        type="number"
+                                                        className="form-control"
+                                                        value={
+                                                            quoteData.travel_charges
+                                                        }
+                                                        onChange={(e) =>
+                                                            handleInputChange(
+                                                                "travel_charges",
+                                                                e.target.value
+                                                            )
+                                                        }
+                                                        placeholder="0"
+                                                        min="0"
+                                                    />
+                                                    <small className="text-muted">
+                                                        Leave blank if no travel
+                                                        charges
+                                                    </small>
+                                                </div> */}
+                                            </div>
+
+                                            <div className="mb-3">
+                                                <div className="form-check">
+                                                    <input
+                                                        className="form-check-input"
+                                                        type="checkbox"
+                                                        id="includesMaterials"
+                                                        checked={
+                                                            quoteData.includes_materials
+                                                        }
+                                                        onChange={(e) =>
+                                                            handleInputChange(
+                                                                "includes_materials",
+                                                                e.target.checked
+                                                            )
+                                                        }
+                                                    />
+                                                    <label
+                                                        className="form-check-label"
+                                                        htmlFor="includesMaterials"
+                                                    >
+                                                        Price includes materials
+                                                        and supplies
+                                                    </label>
+                                                </div>
+                                            </div>
+
+                                            {/* <div className="mb-3">
+                                                <label className="form-label">Additional Notes</label>
+                                                <textarea
+                                                    className="form-control"
+                                                    rows="2"
+                                                    value={quoteData.additional_notes}
+                                                    onChange={(e) => handleInputChange("additional_notes", e.target.value)}
+                                                    placeholder="Any additional information or special conditions..."
+                                                    maxLength="500"
+                                                ></textarea>
+                                                <small className="text-muted">{quoteData.additional_notes.length}/500</small>
+                                            </div> */}
+                                        </div>
+                                    </div>
+
+                                    {/* Terms & Conditions */}
+                                    <div className="card-modern mb-4">
+                                        <div className="card-header">
+                                            <h5 className="mb-0">
+                                                <i className="fas fa-file-contract me-2 text-primary"></i>
+                                                Terms & Conditions
+                                            </h5>
+                                        </div>
+                                        <div className="card-body">
+                                            <div className="mb-3">
+                                                <textarea
+                                                    className="form-control"
+                                                    rows="4"
+                                                    value={
+                                                        quoteData.terms_conditions
+                                                    }
+                                                    onChange={(e) =>
+                                                        handleInputChange(
+                                                            "terms_conditions",
+                                                            e.target.value
+                                                        )
+                                                    }
+                                                    placeholder="Enter any specific terms, payment conditions, or requirements..."
+                                                    maxLength="2000"
+                                                ></textarea>
+                                                <small className="text-muted">
+                                                    Optional: Add any specific
+                                                    terms or conditions for this
+                                                    job
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </>
+                            )}
                         </div>
-                        {/* ... sidebar code ... */}
+
+                        {/* Sidebar */}
+                        <div className="col-lg-4">
+                            {/* Pricing Suggestions */}
+                            {pricingSuggestions && (
+                                <div className="card-modern mb-4">
+                                    <div className="card-header">
+                                        <h6 className="fw-bold mb-0">
+                                            <i className="fas fa-lightbulb me-2 text-warning"></i>
+                                            Pricing Suggestions
+                                        </h6>
+                                    </div>
+                                    <div className="card-body">
+                                        <div className="pricing-options">
+                                            <div
+                                                className="pricing-option mb-2 p-3 rounded border cursor-pointer hover-shadow"
+                                                onClick={() =>
+                                                    handleInputChange(
+                                                        "quoted_price",
+                                                        pricingSuggestions.competitive
+                                                    )
+                                                }
+                                            >
+                                                <div className="d-flex justify-content-between">
+                                                    <span className="fw-semibold text-success">
+                                                        Competitive
+                                                    </span>
+                                                    <span>
+                                                        Rs.{" "}
+                                                        {pricingSuggestions.competitive.toLocaleString()}
+                                                    </span>
+                                                </div>
+                                                <small className="text-muted">
+                                                    Recommended for winning
+                                                    quotes
+                                                </small>
+                                            </div>
+                                            <div
+                                                className="pricing-option mb-2 p-3 rounded border cursor-pointer hover-shadow"
+                                                onClick={() =>
+                                                    handleInputChange(
+                                                        "quoted_price",
+                                                        pricingSuggestions.suggested
+                                                    )
+                                                }
+                                            >
+                                                <div className="d-flex justify-content-between">
+                                                    <span className="fw-semibold text-primary">
+                                                        Market Rate
+                                                    </span>
+                                                    <span>
+                                                        Rs.{" "}
+                                                        {pricingSuggestions.suggested.toLocaleString()}
+                                                    </span>
+                                                </div>
+                                                <small className="text-muted">
+                                                    Average market pricing
+                                                </small>
+                                            </div>
+                                            <div
+                                                className="pricing-option mb-2 p-3 rounded border cursor-pointer hover-shadow"
+                                                onClick={() =>
+                                                    handleInputChange(
+                                                        "quoted_price",
+                                                        pricingSuggestions.premium
+                                                    )
+                                                }
+                                            >
+                                                <div className="d-flex justify-content-between">
+                                                    <span className="fw-semibold text-warning">
+                                                        Premium
+                                                    </span>
+                                                    <span>
+                                                        Rs.{" "}
+                                                        {pricingSuggestions.premium.toLocaleString()}
+                                                    </span>
+                                                </div>
+                                                <small className="text-muted">
+                                                    For premium service quality
+                                                </small>
+                                            </div>
+                                        </div>
+                                        <small className="text-muted">
+                                            Click on any option to use that
+                                            price
+                                        </small>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Quote Summary */}
+                            <div className="card-modern mb-4">
+                                <div className="card-header bg-primary text-white">
+                                    <h6 className="fw-bold mb-0">
+                                        <i className="fas fa-calculator me-2"></i>
+                                        Quote Summary
+                                    </h6>
+                                </div>
+                                <div className="card-body">
+                                    <div className="summary-item d-flex justify-content-between mb-2">
+                                        <span>Service Price:</span>
+                                        <span>
+                                            Rs.{" "}
+                                            {(
+                                                quoteData.quoted_price || 0
+                                            ).toLocaleString()}
+                                        </span>
+                                    </div>
+                                    {quoteData.travel_charges &&
+                                        quoteData.travel_charges > 0 && (
+                                            <div className="summary-item d-flex justify-content-between mb-2">
+                                                <span>Travel Charges:</span>
+                                                <span>
+                                                    Rs.{" "}
+                                                    {parseInt(
+                                                        quoteData.travel_charges
+                                                    ).toLocaleString()}
+                                                </span>
+                                            </div>
+                                        )}
+                                    <hr />
+                                    <div className="summary-total d-flex justify-content-between fw-bold">
+                                        <span>Total Quote:</span>
+                                        <span className="text-success h5 mb-0">
+                                            Rs.{" "}
+                                            {(
+                                                (parseInt(
+                                                    quoteData.quoted_price
+                                                ) || 0) +
+                                                (parseInt(
+                                                    quoteData.travel_charges
+                                                ) || 0)
+                                            ).toLocaleString()}
+                                        </span>
+                                    </div>
+                                    {quoteData.estimated_duration && (
+                                        <div className="mt-2 text-muted small">
+                                            <i className="fas fa-clock me-1"></i>
+                                            Duration:{" "}
+                                            {quoteData.estimated_duration}{" "}
+                                            hour(s)
+                                        </div>
+                                    )}
+                                    {quoteData.validity_days && (
+                                        <div className="text-muted small">
+                                            <i className="fas fa-calendar me-1"></i>
+                                            Valid for: {quoteData.validity_days}{" "}
+                                            days
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Quote Tips */}
+                            <div className="card-modern">
+                                <div className="card-header">
+                                    <h6 className="fw-bold mb-0">
+                                        <i className="fas fa-tips me-2 text-info"></i>
+                                        Quote Tips
+                                    </h6>
+                                </div>
+                                <div className="card-body">
+                                    <div className="tip-item mb-3">
+                                        <i className="fas fa-edit text-primary me-2"></i>
+                                        <small>
+                                            Be detailed about what's included
+                                        </small>
+                                    </div>
+                                    <div className="tip-item mb-3">
+                                        <i className="fas fa-dollar-sign text-success me-2"></i>
+                                        <small>
+                                            Price competitively but fairly
+                                        </small>
+                                    </div>
+                                    <div className="tip-item">
+                                        <i className="fas fa-star text-warning me-2"></i>
+                                        <small>Highlight your experience</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     {/* Submit Buttons */}
@@ -413,7 +921,7 @@ const CreateQuote = () => {
                         </button>
                         <button
                             type="submit"
-                            className="btn btn-orange"
+                            className="btn btn-primary"
                             disabled={submitLoading || !quoteData.quote_id}
                         >
                             {submitLoading ? (
@@ -430,6 +938,78 @@ const CreateQuote = () => {
                         </button>
                     </div>
                 </form>
+
+                {/* Custom Styles using app.css design system */}
+                <style>{`
+                    .card-modern {
+                        background: var(--bg-white);
+                        border-radius: var(--border-radius-lg);
+                        box-shadow: var(--shadow-sm);
+                        border: 1px solid var(--border-color);
+                        transition: var(--transition);
+                        overflow: hidden;
+                    }
+
+                    .card-modern:hover {
+                        transform: translateY(-2px);
+                        box-shadow: var(--shadow-md);
+                    }
+
+                    .card-header {
+                        background: var(--bg-light);
+                        border-bottom: 1px solid var(--border-color);
+                        padding: var(--space-4);
+                        font-weight: var(--font-semibold);
+                    }
+
+                    .card-body {
+                        padding: var(--space-4);
+                    }
+
+                    .page-header {
+                        margin-bottom: var(--space-6);
+                    }
+
+                    .pricing-option:hover {
+                        background-color: var(--bg-light);
+                        border-color: var(--primary-color);
+                    }
+
+                    .cursor-pointer {
+                        cursor: pointer;
+                    }
+
+                    .hover-shadow:hover {
+                        box-shadow: var(--shadow-sm);
+                    }
+
+                    .summary-item {
+                        font-size: var(--text-sm);
+                    }
+
+                    .summary-total {
+                        font-size: var(--text-lg);
+                    }
+
+                    .tip-item {
+                        display: flex;
+                        align-items: center;
+                    }
+
+                    @media (max-width: 768px) {
+                        .card-body {
+                            padding: var(--space-3);
+                        }
+                        
+                        .submit-actions {
+                            flex-direction: column;
+                        }
+                        
+                        .submit-actions .btn {
+                            width: 100%;
+                        }
+                    }
+                `}</style>
             </div>
         </ProviderLayout>
     );

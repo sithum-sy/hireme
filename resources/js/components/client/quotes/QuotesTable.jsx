@@ -246,9 +246,10 @@ const QuotesTable = ({
                                                         "Service"}
                                                 </div>
                                                 {quote.service_category && (
-                                                    <div className="small text-muted">
-                                                        {quote.service_category}
-                                                    </div>
+                                                    <span className={`badge bg-${quote.service_category.color || 'primary'} small mt-1`}>
+                                                        <i className={`${quote.service_category.icon || 'fas fa-cog'} me-1`} style={{fontSize: '10px'}}></i>
+                                                        {quote.service_category.name || quote.service_category}
+                                                    </span>
                                                 )}
                                             </div>
                                         </div>

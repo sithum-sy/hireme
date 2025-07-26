@@ -18,13 +18,35 @@ class QuoteController extends Controller
     {
         $request->validate([
             'status' => 'nullable|in:pending,quoted,accepted,rejected,expired,withdrawn',
-            'per_page' => 'nullable|integer|min:1|max:50'
+            'per_page' => 'nullable|integer|min:1|max:50',
+            'page' => 'nullable|integer|min:1',
+            'date_from' => 'nullable|date',
+            'date_to' => 'nullable|date',
+            'client' => 'nullable|string|max:255',
+            'service_category' => 'nullable|string|max:255',
+            'price_min' => 'nullable|numeric|min:0',
+            'price_max' => 'nullable|numeric|min:0',
+            'sort_field' => 'nullable|in:created_at,quoted_price,status,requested_date,client_name,service_title',
+            'sort_direction' => 'nullable|in:asc,desc',
+            'with' => 'nullable|string'
         ]);
 
         try {
             $user = Auth::user();
-            $query = Quote::where('provider_id', $user->id)
-                ->with(['client', 'service']);
+            $query = Quote::where('provider_id', $user->id);
+
+            // Include relationships
+            $withRelations = ['client', 'service.category'];
+            if ($request->with) {
+                $requestedWith = explode(',', $request->with);
+                $validRelations = array_intersect($requestedWith, ['client', 'service', 'provider']);
+                if (!empty($validRelations)) {
+                    // Always include service.category for proper data display
+                    $withRelations = array_merge($validRelations, ['service.category']);
+                    $withRelations = array_unique($withRelations);
+                }
+            }
+            $query->with($withRelations);
 
             // Apply filters
             if ($request->status) {
@@ -39,8 +61,51 @@ class QuoteController extends Controller
                 $query->whereDate('created_at', '<=', $request->date_to);
             }
 
+            // Client name filter
+            if ($request->client) {
+                $query->whereHas('client', function($q) use ($request) {
+                    $q->where('first_name', 'like', '%' . $request->client . '%')
+                      ->orWhere('last_name', 'like', '%' . $request->client . '%')
+                      ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ['%' . $request->client . '%']);
+                });
+            }
+
+            // Service category filter
+            if ($request->service_category) {
+                $query->whereHas('service.category', function($q) use ($request) {
+                    $q->where('slug', $request->service_category)
+                      ->orWhere('name', 'like', '%' . $request->service_category . '%');
+                });
+            }
+
+            // Price range filters
+            if ($request->price_min) {
+                $query->where('quoted_price', '>=', $request->price_min);
+            }
+
+            if ($request->price_max) {
+                $query->where('quoted_price', '<=', $request->price_max);
+            }
+
+            // Sorting
+            $sortField = $request->get('sort_field', 'created_at');
+            $sortDirection = $request->get('sort_direction', 'desc');
+            
+            // Handle special sort fields that might need joins
+            if ($sortField === 'client_name') {
+                $query->leftJoin('users as clients', 'quotes.client_id', '=', 'clients.id')
+                      ->orderByRaw("CONCAT(clients.first_name, ' ', clients.last_name) {$sortDirection}")
+                      ->select('quotes.*');
+            } elseif ($sortField === 'service_title') {
+                $query->leftJoin('services', 'quotes.service_id', '=', 'services.id')
+                      ->orderBy('services.title', $sortDirection)
+                      ->select('quotes.*');
+            } else {
+                $query->orderBy($sortField, $sortDirection);
+            }
+
             $perPage = $request->get('per_page', 15);
-            $quotes = $query->orderBy('created_at', 'desc')->paginate($perPage);
+            $quotes = $query->paginate($perPage);
 
             return response()->json([
                 'success' => true,
@@ -257,6 +322,31 @@ class QuoteController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to load pending quotes'
+            ], 500);
+        }
+    }
+
+    /**
+     * Get service categories for filtering
+     */
+    public function getServiceCategories()
+    {
+        try {
+            $categories = \App\Models\ServiceCategory::active()
+                ->ordered()
+                ->select('id', 'name', 'slug')
+                ->get();
+
+            return response()->json([
+                'success' => true,
+                'data' => $categories
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to load service categories: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to load service categories'
             ], 500);
         }
     }

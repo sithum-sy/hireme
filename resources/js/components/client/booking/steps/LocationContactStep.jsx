@@ -21,6 +21,7 @@ const LocationContactStep = ({
         location_type: bookingData.location_type || "client_address",
         client_address:
             bookingData.client_address ||
+            clientLocation?.address ||
             (clientLocation ? `Near ${clientLocation.city}` : ""),
         client_city: bookingData.client_city || clientLocation?.city || "",
         client_postal_code: bookingData.client_postal_code || "",
@@ -37,6 +38,28 @@ const LocationContactStep = ({
         bookingData.travel_fee || 0
     );
     const [showMapSelector, setShowMapSelector] = useState(false);
+
+    // Auto-fill location data when clientLocation changes
+    useEffect(() => {
+        if (clientLocation && !formData.client_address) {
+            console.log(
+                "Auto-filling location data from clientLocation:",
+                clientLocation
+            );
+
+            setFormData((prev) => ({
+                ...prev,
+                client_address:
+                    prev.client_address ||
+                    clientLocation.address ||
+                    `Near ${clientLocation.city}`,
+                client_city: prev.client_city || clientLocation.city || "",
+                // Add more location details if available
+                client_postal_code:
+                    prev.client_postal_code || clientLocation.postal_code || "",
+            }));
+        }
+    }, [clientLocation]);
 
     useEffect(() => {
         if (user && isAuthenticated) {
@@ -198,14 +221,17 @@ const LocationContactStep = ({
         if (!clientLocation) return null;
 
         return (
-            <div className="client-search-location mb-4 p-3 bg-info bg-opacity-10 rounded border-start border-info border-3">
+            <div className="client-search-location mb-4 p-3 bg-success bg-opacity-10 rounded border-start border-success border-3">
                 <h6 className="fw-bold mb-2 text-light">
-                    <i className="fas fa-search me-2" />
-                    Your Search Location
+                    <i className="fas fa-map-marked-alt me-2" />
+                    {clientLocation.accuracy === "nominatim_geocoded" ||
+                    clientLocation.accuracy === "gps_geocoded"
+                        ? "Your Selected Location"
+                        : "Your Search Location"}
                 </h6>
                 <div className="location-details">
                     <div className="d-flex align-items-center mb-2">
-                        <i className="fas fa-map-marker-alt me-2 text-info" />
+                        <i className="fas fa-map-marker-alt me-2 text-light" />
                         <span className="fw-semibold">
                             {clientLocation.address ||
                                 `${clientLocation.city}, ${clientLocation.province}`}
@@ -226,10 +252,10 @@ const LocationContactStep = ({
                         </div>
                     )}
 
-                    <div className="text-dark small">
-                        <i className="fas fa-info-circle me-2" />
-                        This is where you searched for services. You can change
-                        the service location below.
+                    <div className="text-light small">
+                        <i className="fas fa-check-circle me-2" />
+                        This location has been auto-filled in the address fields
+                        below. You can modify it if needed.
                     </div>
                 </div>
             </div>

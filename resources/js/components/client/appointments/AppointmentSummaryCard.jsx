@@ -165,30 +165,49 @@ const AppointmentSummaryCard = ({ appointment, formatDateTime }) => {
                     <div className="summary-value">
                         <div className="payment-info">
                             {/* Service Fee */}
-                            <div className="d-flex justify-content-between align-items-center mb-2 small">
-                                <span className="text-dark">
-                                    Base Service Fee
-                                </span>
-                                <span className="fw-bold">
-                                    Rs.{" "}
-                                    {appointment.base_price ||
-                                        appointment.total_price}
-                                    {appointment.service?.pricing_type !==
-                                        "fixed" && (
-                                        <small className="text-muted d-block fw-normal">
-                                            {/* Base Price (per hour) */}
-                                        </small>
-                                    )}
-                                </span>
-                            </div>
-                            <div className="d-flex justify-content-between align-items-center mb-2 small">
-                                <span className="text-dark">
-                                    Number of Hours
-                                </span>
-                                <span className="fw-bold">
-                                    {appointment.duration_hours}
-                                </span>
-                            </div>
+                            {/* Check if this appointment is from a quote */}
+                            {appointment.booking_source === "quote_acceptance" || appointment.quote_id ? (
+                                <>
+                                    <div className="d-flex justify-content-between align-items-center mb-2 small">
+                                        <span className="text-dark">
+                                            <i className="fas fa-quote-left text-success me-1"></i>
+                                            Quote Price (Total)
+                                        </span>
+                                        <span className="fw-bold text-success">
+                                            Rs. {appointment.total_price}
+                                        </span>
+                                    </div>
+                                    <div className="d-flex justify-content-between align-items-center mb-2 small">
+                                        <span className="text-dark">Duration</span>
+                                        <span className="fw-bold">
+                                            {appointment.duration_hours} {appointment.duration_hours > 1 ? "hours" : "hour"}
+                                        </span>
+                                    </div>
+                                    <div className="small text-muted mb-2">
+                                        <i className="fas fa-info-circle me-1"></i>
+                                        Fixed quote price - not charged per hour
+                                    </div>
+                                </>
+                            ) : (
+                                <>
+                                    <div className="d-flex justify-content-between align-items-center mb-2 small">
+                                        <span className="text-dark">
+                                            Base Rate (per hour)
+                                        </span>
+                                        <span className="fw-bold">
+                                            Rs. {appointment.base_price || Math.round((appointment.total_price || 0) / (appointment.duration_hours || 1))}
+                                        </span>
+                                    </div>
+                                    <div className="d-flex justify-content-between align-items-center mb-2 small">
+                                        <span className="text-dark">
+                                            Number of Hours
+                                        </span>
+                                        <span className="fw-bold">
+                                            {appointment.duration_hours}
+                                        </span>
+                                    </div>
+                                </>
+                            )}
 
                             {/* Additional Charges */}
                             {/* {appointment.travel_fee > 0 && (

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate, Link, useLocation } from "react-router-dom";
 import ClientLayout from "../../../components/layouts/ClientLayout";
 import { useClient } from "../../../context/ClientContext";
 import clientService from "../../../services/clientService";
@@ -15,7 +15,11 @@ import { constructProfileImageUrl } from "../../../hooks/useServiceImages";
 const ServiceDetail = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const routerLocation = useLocation();
     const { location } = useClient();
+    
+    // Get custom location from navigation state
+    const customLocationFromBrowse = routerLocation.state?.customLocation;
 
     // Add debugging
     // console.log("ServiceDetail render:", { id, clientLocation, locationLoading, loading });
@@ -35,6 +39,15 @@ const ServiceDetail = () => {
     const [locationLoading, setLocationLoading] = useState(true);
 
     useEffect(() => {
+        // First, check if we have a custom location from browse page
+        if (customLocationFromBrowse) {
+            console.log("Using custom location from browse page:", customLocationFromBrowse);
+            setClientLocation(customLocationFromBrowse);
+            setLocationLoading(false);
+            return;
+        }
+
+        // Otherwise, use geolocation
         if (navigator.geolocation && !clientLocation) {
             navigator.geolocation.getCurrentPosition(
                 async (position) => {
@@ -122,7 +135,7 @@ const ServiceDetail = () => {
             // Set location loading to false if geolocation is not available
             setLocationLoading(false);
         }
-    }, []);
+    }, [customLocationFromBrowse]);
 
     const reverseGeocode = async (lat, lng) => {
         try {

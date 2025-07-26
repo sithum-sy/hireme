@@ -201,6 +201,22 @@ class ProviderQuoteService {
     }
 
     /**
+     * Get service categories for filtering
+     */
+    async getServiceCategories() {
+        try {
+            const response = await axios.get(`${API_BASE}/quotes/service-categories`);
+            return {
+                success: true,
+                data: response.data.data || response.data,
+                message: "Service categories loaded successfully",
+            };
+        } catch (error) {
+            return this.handleError(error, "Failed to load service categories");
+        }
+    }
+
+    /**
      * Error handler
      */
     handleError(error, defaultMessage) {

@@ -764,20 +764,170 @@ const AppointmentDetail = () => {
                                 </div>
 
                                 <div className="summary-item">
-                                    <div className="summary-label text-muted small">
-                                        Payment
+                                    <div className="summary-label text-muted small mb-1">
+                                        <i className="fas fa-credit-card me-1"></i>
+                                        Payment Information
                                     </div>
                                     <div className="summary-value">
-                                        <div className="fw-bold text-orange h5 mb-0">
-                                            Rs.{" "}
-                                            {appointment.total_price?.toLocaleString()}
+                                        <div className="payment-info">
+                                            {/* Service Fee */}
+                                            {/* Check if this appointment is from a quote */}
+                                            {appointment.booking_source ===
+                                                "quote_acceptance" ||
+                                            appointment.quote_id ? (
+                                                <>
+                                                    <div className="d-flex justify-content-between align-items-center mb-2 small">
+                                                        <span className="text-dark">
+                                                            <i className="fas fa-quote-left text-success me-1"></i>
+                                                            Quote Price (Total)
+                                                        </span>
+                                                        <span className="fw-bold text-success">
+                                                            Rs.{" "}
+                                                            {appointment.total_price?.toLocaleString(
+                                                                "en-US",
+                                                                {
+                                                                    minimumFractionDigits: 0,
+                                                                    maximumFractionDigits: 0,
+                                                                }
+                                                            )}
+                                                        </span>
+                                                    </div>
+                                                    <div className="d-flex justify-content-between align-items-center mb-2 small">
+                                                        <span className="text-dark">
+                                                            Duration
+                                                        </span>
+                                                        <span className="fw-bold">
+                                                            {
+                                                                appointment.duration_hours
+                                                            }{" "}
+                                                            {appointment.duration_hours >
+                                                            1
+                                                                ? "hours"
+                                                                : "hour"}
+                                                        </span>
+                                                    </div>
+                                                    <div className="small text-muted mb-2">
+                                                        <i className="fas fa-info-circle me-1"></i>
+                                                        Fixed quote price - not
+                                                        charged per hour
+                                                    </div>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <div className="d-flex justify-content-between align-items-center mb-2 small">
+                                                        <span className="text-dark">
+                                                            Base Rate (per hour)
+                                                        </span>
+                                                        <span className="fw-bold">
+                                                            Rs.{" "}
+                                                            {Math.round(
+                                                                (appointment.total_price ||
+                                                                    0) /
+                                                                    (appointment.duration_hours ||
+                                                                        1)
+                                                            ).toLocaleString(
+                                                                "en-US",
+                                                                {
+                                                                    minimumFractionDigits: 0,
+                                                                    maximumFractionDigits: 0,
+                                                                }
+                                                            )}
+                                                        </span>
+                                                    </div>
+                                                    <div className="d-flex justify-content-between align-items-center mb-2 small">
+                                                        <span className="text-dark">
+                                                            Number of Hours
+                                                        </span>
+                                                        <span className="fw-bold">
+                                                            {
+                                                                appointment.duration_hours
+                                                            }
+                                                        </span>
+                                                    </div>
+                                                </>
+                                            )}
+
+                                            {/* Total Amount */}
+                                            <div className="d-flex justify-content-between align-items-center pt-2 mt-2 border-top">
+                                                <span className="fw-bold text-dark">
+                                                    Total Amount
+                                                </span>
+                                                <span className="fw-bold text-orange h6 mb-0">
+                                                    Rs.{" "}
+                                                    {appointment.total_price?.toLocaleString(
+                                                        "en-US",
+                                                        {
+                                                            minimumFractionDigits: 0,
+                                                            maximumFractionDigits: 0,
+                                                        }
+                                                    )}
+                                                </span>
+                                            </div>
+
+                                            {/* Provider Earnings */}
+                                            <div className="d-flex justify-content-between align-items-center mt-3 pt-2 border-top">
+                                                <span className="text-muted small">
+                                                    <i className="fas fa-wallet me-1"></i>
+                                                    Your Earnings
+                                                </span>
+                                                <span className="fw-bold text-success pl-2">
+                                                    Rs.{" "}
+                                                    {(
+                                                        appointment.earnings ||
+                                                        appointment.total_price ||
+                                                        0
+                                                    ).toLocaleString("en-US", {
+                                                        minimumFractionDigits: 0,
+                                                        maximumFractionDigits: 0,
+                                                    })}
+                                                </span>
+                                            </div>
+
+                                            {/* Payment Status */}
+                                            {appointment.invoice && (
+                                                <div className="d-flex justify-content-between align-items-center mt-2">
+                                                    <span className="text-muted small">
+                                                        Payment Status
+                                                    </span>
+                                                    <span
+                                                        className={`badge ${
+                                                            appointment.invoice
+                                                                .payment_status ===
+                                                            "pending"
+                                                                ? "bg-warning text-dark"
+                                                                : appointment
+                                                                      .invoice
+                                                                      .payment_status ===
+                                                                  "completed"
+                                                                ? "bg-success text-white"
+                                                                : "bg-secondary text-white"
+                                                        }`}
+                                                    >
+                                                        <i
+                                                            className={`fas ${
+                                                                appointment
+                                                                    .invoice
+                                                                    .payment_status ===
+                                                                "pending"
+                                                                    ? "fa-clock"
+                                                                    : appointment
+                                                                          .invoice
+                                                                          .payment_status ===
+                                                                      "completed"
+                                                                    ? "fa-check"
+                                                                    : "fa-info"
+                                                            } me-1`}
+                                                        ></i>
+                                                        {appointment.invoice.payment_status
+                                                            .charAt(0)
+                                                            .toUpperCase() +
+                                                            appointment.invoice.payment_status.slice(
+                                                                1
+                                                            )}
+                                                    </span>
+                                                </div>
+                                            )}
                                         </div>
-                                        {appointment.earnings && (
-                                            <small className="text-success">
-                                                Your earnings: Rs.{" "}
-                                                {appointment.earnings.toLocaleString()}
-                                            </small>
-                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -824,8 +974,16 @@ const AppointmentDetail = () => {
                                                     </small>
                                                     <strong className="text-success">
                                                         Rs.{" "}
-                                                        {appointment.earnings?.toLocaleString() ||
-                                                            appointment.total_price?.toLocaleString()}
+                                                        {(
+                                                            appointment.earnings ||
+                                                            appointment.total_price
+                                                        )?.toLocaleString(
+                                                            "en-US",
+                                                            {
+                                                                minimumFractionDigits: 0,
+                                                                maximumFractionDigits: 0,
+                                                            }
+                                                        )}
                                                     </strong>
                                                 </div>
                                                 <div className="col-4">

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import clientService from "../../../services/clientService";
 import DurationDetailsStep from "./steps/DurationDetailsStep";
 import LocationContactStep from "./steps/LocationContactStep";
 import PaymentConfirmationStep from "./steps/PaymentConfirmationStep";
@@ -14,6 +15,8 @@ const BookingModal = ({
     provider,
     selectedSlot,
     clientLocation,
+    quoteId = null, // Optional quote ID for quote acceptance bookings
+    onQuoteAccepted = null, // Callback when quote is accepted
 }) => {
     const navigate = useNavigate();
     const [currentStep, setCurrentStep] = useState(1);
@@ -70,7 +73,8 @@ const BookingModal = ({
         // Booking metadata
         payment_method: "cash",
         agreed_to_terms: false,
-        booking_source: "web_app_multi_step",
+        booking_source: quoteId ? "quote_acceptance" : "web_app_multi_step",
+        quote_id: quoteId, // Include quote ID if this is a quote acceptance
     }));
 
     const steps = [
@@ -263,52 +267,71 @@ const BookingModal = ({
     };
 
     const handleBookingComplete = async (result) => {
-        // console.log(
-        //     "   BookingModal: Booking completion started with result:",
-        //     result
-        // );
-
         try {
-            // Close the modal first
-            onHide();
-
             // Check if booking was successful
             if (result && result.success) {
-                console.log("  BookingModal: Booking completed successfully");
+                console.log("BookingModal: Booking completed successfully");
+
+                // If this was a quote acceptance, try to update the quote status
+                if (quoteId && onQuoteAccepted) {
+                    try {
+                        console.log("Attempting to accept quote:", quoteId);
+                        const quoteUpdateResult = await clientService.acceptQuote(quoteId, {
+                            appointment_id: result.data?.id || result.appointment?.id,
+                            notes: "Quote accepted through booking process"
+                        });
+
+                        if (quoteUpdateResult.success) {
+                            console.log("Quote status updated successfully");
+                            onQuoteAccepted(quoteUpdateResult.data);
+                        } else {
+                            console.log("Quote update message:", quoteUpdateResult.message);
+                            // If quote cannot be accepted (likely already accepted), that's OK
+                            // The appointment was still created successfully
+                            if (quoteUpdateResult.message && quoteUpdateResult.message.includes("cannot be accepted")) {
+                                console.log("Quote was likely already accepted during appointment creation - this is normal");
+                            }
+                        }
+                    } catch (quoteError) {
+                        console.log("Quote update error (non-critical):", quoteError);
+                        // Don't throw this error as the appointment was still created successfully
+                    }
+                }
+
+                // Close the modal
+                onHide();
 
                 // Show toast notification
-                toast.success(
-                    result.message || "Booking request submitted successfully!",
-                    {
-                        position: "top-right",
-                        autoClose: 5000,
-                        hideProgressBar: false,
-                        closeOnClick: true,
-                        pauseOnHover: true,
-                        draggable: true,
-                    }
-                );
+                const message = quoteId 
+                    ? "Quote accepted and appointment created successfully!"
+                    : (result.message || "Booking request submitted successfully!");
+
+                toast.success(message, {
+                    position: "top-right",
+                    autoClose: 5000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                });
 
                 // Navigate to appointments page with success message
                 navigate("/client/appointments", {
                     state: {
-                        message:
-                            result.message ||
-                            "Booking request submitted successfully!",
+                        message: message,
                         type: "success",
                         appointment: result.data || result.appointment,
                         fromBooking: true,
+                        quoteAccepted: !!quoteId,
                     },
                 });
             } else {
                 // Handle booking failure
                 console.error("BookingModal: Booking failed:", result);
-
-                // You can show an error notification here
-                // For now, stay on the current page
+                onHide();
             }
         } catch (error) {
-            console.error("   BookingModal: Booking completion failed:", error);
+            console.error("BookingModal: Booking completion failed:", error);
             onHide();
         }
     };

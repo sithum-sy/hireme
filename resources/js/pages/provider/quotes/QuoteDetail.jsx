@@ -3,11 +3,17 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import ProviderLayout from "../../../components/layouts/ProviderLayout";
 import LoadingSpinner from "../../../components/LoadingSpinner";
 import providerQuoteService from "../../../services/providerQuoteService";
-import { formatDateTime } from "../../../utils/dateUtils";
+import { useQuotePDF } from "../../../components/shared/hooks/useQuotePDF";
 
 const QuoteDetail = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+
+    // Initialize Quote PDF hook
+    const { downloadQuotePDF } = useQuotePDF("provider", {
+        primaryColor: "#007bff",
+        companyName: "HireMe",
+    });
 
     const [quote, setQuote] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -61,28 +67,48 @@ const QuoteDetail = () => {
         }
     };
 
-    // Get days remaining until expiry
+    const formatDate = (dateString) => {
+        if (!dateString) return "N/A";
+        return new Date(dateString).toLocaleDateString("en-US", {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+        });
+    };
+
+    const formatDateTime = (dateString) => {
+        if (!dateString) return "N/A";
+        return new Date(dateString).toLocaleString("en-US", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+        });
+    };
+
+    const formatPrice = (price) => {
+        if (!price) return "Rs. 0";
+        return `Rs. ${parseInt(price).toLocaleString()}`;
+    };
+
     const getDaysUntilExpiry = () => {
         if (!quote?.expires_at) return null;
-
-        try {
-            const expiryDate = new Date(quote.expires_at);
-            const today = new Date();
-            const diffTime = expiryDate - today;
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-            return diffDays;
-        } catch (error) {
-            return null;
-        }
+        const expiryDate = new Date(quote.expires_at);
+        const today = new Date();
+        const diffTime = expiryDate - today;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        return diffDays;
     };
 
     const getStatusBadge = (status) => {
         const badges = {
-            pending: "bg-secondary text-white",
+            pending: "bg-warning text-dark",
             quoted: "bg-info text-white",
             accepted: "bg-success text-white",
             rejected: "bg-danger text-white",
-            withdrawn: "bg-warning text-dark",
+            withdrawn: "bg-secondary text-white",
             expired: "bg-dark text-white",
         };
         return badges[status] || "bg-secondary text-white";
@@ -90,20 +116,56 @@ const QuoteDetail = () => {
 
     const getStatusText = (status) => {
         const statusTexts = {
-            pending: "Draft",
-            quoted: "Sent to Client",
+            pending: "Awaiting Response",
+            quoted: "Quote Sent",
             accepted: "Accepted",
-            rejected: "Rejected",
+            rejected: "Declined",
             withdrawn: "Withdrawn",
             expired: "Expired",
         };
         return statusTexts[status] || status;
     };
 
+    const getUrgencyBadge = (urgency) => {
+        if (!urgency || urgency === "normal") return null;
+        const badges = {
+            urgent: "bg-warning text-dark",
+            emergency: "bg-danger text-white",
+        };
+        return (
+            <span className={`badge ${badges[urgency]} me-2`}>
+                <i className="fas fa-exclamation-triangle me-1"></i>
+                {urgency.toUpperCase()}
+            </span>
+        );
+    };
+
+    const renderServiceCategory = (quote) => {
+        const category = quote.service_category;
+        if (!category) return <span className="text-muted">No category</span>;
+
+        const iconClass = category.icon || "fas fa-cog";
+        const colorClass = category.color
+            ? `text-${category.color}`
+            : "text-primary";
+
+        return (
+            <span className="d-flex align-items-center">
+                <i className={`${iconClass} ${colorClass} me-2`}></i>
+                <span>{category.name}</span>
+            </span>
+        );
+    };
+
     if (loading) {
         return (
             <ProviderLayout>
-                <LoadingSpinner message="Loading quote details..." />
+                <div
+                    className="d-flex justify-content-center align-items-center"
+                    style={{ minHeight: "400px" }}
+                >
+                    <LoadingSpinner message="Loading quote details..." />
+                </div>
             </ProviderLayout>
         );
     }
@@ -112,8 +174,10 @@ const QuoteDetail = () => {
         return (
             <ProviderLayout>
                 <div className="text-center py-5">
-                    <h4 className="text-danger">Quote not found</h4>
-                    <Link to="/provider/quotes" className="btn btn-orange">
+                    <i className="fas fa-quote-left fa-3x text-muted mb-4"></i>
+                    <h4 className="text-muted mb-3">Quote not found</h4>
+                    <Link to="/provider/quotes" className="btn btn-primary">
+                        <i className="fas fa-arrow-left me-2"></i>
                         Back to Quotes
                     </Link>
                 </div>
@@ -123,139 +187,103 @@ const QuoteDetail = () => {
 
     const daysUntilExpiry = getDaysUntilExpiry();
     const totalAmount =
-        (parseInt(quote.quoted_price) || 0) +
-        (parseInt(quote.travel_charges) || 0);
-
-    const getClientRequestInfo = (quote) => {
-        const requestData = quote.quote_request_data || {};
-
-        return {
-            // Client requirements
-            requirements:
-                quote.client_requirements ||
-                requestData.message ||
-                "No specific requirements provided",
-
-            // Contact info
-            phone: requestData.phone || quote.client?.contact_number,
-            email: requestData.email || quote.client?.email,
-            contact_preference: requestData.contact_preference || "phone",
-
-            // Location info
-            location_type: requestData.location_type || "client_address",
-            address: requestData.address,
-            city: requestData.city,
-
-            // Service details
-            requested_date: requestData.requested_date,
-            requested_time: requestData.requested_time,
-            urgency: requestData.urgency || "normal",
-            special_requirements: requestData.special_requirements,
-
-            // Service info
-            service_id: requestData.service_id,
-            provider_id: requestData.provider_id,
-            quote_type: requestData.quote_type || "standard",
-        };
-    };
+        (parseFloat(quote.quoted_price) || 0) +
+        (parseFloat(quote.travel_fee) || 0);
 
     return (
         <ProviderLayout>
             <div className="quote-detail-page">
-                {/* Breadcrumb */}
-                <nav aria-label="breadcrumb" className="mb-4">
-                    <ol className="breadcrumb">
-                        <li className="breadcrumb-item">
-                            <Link
-                                to="/provider/quotes"
-                                className="text-orange text-decoration-none"
-                            >
-                                My Quotes
-                            </Link>
-                        </li>
-                        <li className="breadcrumb-item active">
-                            Quote #{quote.id}
-                        </li>
-                    </ol>
-                </nav>
-
-                {/* Header */}
-                <div className="page-header d-flex justify-content-between align-items-start mb-4">
-                    <div>
-                        <h2 className="fw-bold mb-2">
-                            Quote #{quote.id}
-                            <span className="badge bg-orange bg-opacity-10 text-orange ms-3">
-                                {quote.service_title}
-                            </span>
-                        </h2>
-                        <div className="d-flex align-items-center gap-3">
-                            <span
-                                className={`badge ${getStatusBadge(
-                                    quote.status
-                                )} px-3 py-2`}
-                            >
-                                {getStatusText(quote.status)}
-                            </span>
-                            <span className="text-muted">
-                                Created:{" "}
-                                {formatDateTime(quote.created_at, "00:00").date}
-                            </span>
-                        </div>
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="action-buttons">
-                        {quote.status === "pending" && (
-                            <div className="d-flex gap-2">
-                                <Link
-                                    to={`/provider/quotes/${quote.id}/edit`}
-                                    className="btn btn-primary"
+                {/* Page Header */}
+                <div className="page-header mb-4">
+                    <div className="d-flex flex-column flex-lg-row justify-content-between align-items-start">
+                        <div className="header-info mb-3 mb-lg-0">
+                            <h1 className="page-title mb-2">
+                                Quote {quote.quote_number || `#${quote.id}`}
+                            </h1>
+                            <div className="d-flex flex-wrap align-items-center gap-3">
+                                <span
+                                    className={`badge ${getStatusBadge(
+                                        quote.status
+                                    )} px-3 py-2`}
                                 >
-                                    <i className="fas fa-edit me-2"></i>
-                                    Edit & Send
-                                </Link>
-                                <button
-                                    className="btn btn-outline-danger"
-                                    onClick={() => setShowWithdrawModal(true)}
-                                >
-                                    <i className="fas fa-trash me-2"></i>
-                                    Delete Draft
-                                </button>
+                                    {getStatusText(quote.status)}
+                                </span>
+                                {getUrgencyBadge(quote.urgency)}
+                                <span className="text-muted">
+                                    <i className="fas fa-calendar me-1"></i>
+                                    Created: {formatDateTime(quote.created_at)}
+                                </span>
                             </div>
-                        )}
+                        </div>
 
-                        {quote.status === "quoted" && daysUntilExpiry > 0 && (
+                        {/* Action Buttons */}
+                        <div className="d-flex flex-wrap gap-2">
+                            {quote.status === "pending" && (
+                                <>
+                                    <Link
+                                        to={`/provider/quotes/create?quote_id=${quote.id}`}
+                                        className="btn btn-success"
+                                    >
+                                        <i className="fas fa-reply me-2"></i>
+                                        Send Quote
+                                    </Link>
+                                    <button
+                                        className="btn btn-outline-danger"
+                                        onClick={() =>
+                                            setShowWithdrawModal(true)
+                                        }
+                                    >
+                                        <i className="fas fa-trash me-2"></i>
+                                        Delete
+                                    </button>
+                                </>
+                            )}
+
+                            {quote.status === "quoted" &&
+                                daysUntilExpiry > 0 && (
+                                    <>
+                                        <Link
+                                            to={`/provider/quotes/${quote.id}/edit`}
+                                            className="btn btn-outline-warning"
+                                        >
+                                            <i className="fas fa-edit me-2"></i>
+                                            Edit
+                                        </Link>
+                                        <button
+                                            className="btn btn-outline-danger"
+                                            onClick={() =>
+                                                setShowWithdrawModal(true)
+                                            }
+                                            disabled={actionLoading}
+                                        >
+                                            <i className="fas fa-undo me-2"></i>
+                                            Withdraw
+                                        </button>
+                                    </>
+                                )}
+
+                            {quote.status === "accepted" && (
+                                <Link
+                                    to={`/provider/appointments?quote_id=${quote.id}`}
+                                    className="btn btn-success"
+                                >
+                                    <i className="fas fa-calendar me-2"></i>
+                                    View Appointment
+                                </Link>
+                            )}
+
                             <button
-                                className="btn btn-outline-warning"
-                                onClick={() => setShowWithdrawModal(true)}
-                                disabled={actionLoading}
+                                className="btn btn-outline-secondary"
+                                onClick={() => downloadQuotePDF(quote)}
                             >
-                                <i className="fas fa-undo me-2"></i>
-                                Withdraw Quote
+                                <i className="fas fa-print me-2"></i>
+                                Print PDF
                             </button>
-                        )}
-
-                        {quote.status === "accepted" && (
-                            <Link
-                                to={`/provider/appointments?quote_id=${quote.id}`}
-                                className="btn btn-success"
-                            >
-                                <i className="fas fa-calendar me-2"></i>
-                                View Appointment
-                            </Link>
-                        )}
-
-                        <button
-                            className="btn btn-outline-secondary"
-                            onClick={() => window.print()}
-                        >
-                            <i className="fas fa-print me-2"></i>
-                            Print
-                        </button>
+                        </div>
                     </div>
                 </div>
 
-                {/* Status-specific Alerts */}
+                {/* Status Alerts */}
                 {quote.status === "quoted" && daysUntilExpiry !== null && (
                     <div
                         className={`alert ${
@@ -312,400 +340,293 @@ const QuoteDetail = () => {
                 <div className="row">
                     {/* Main Content */}
                     <div className="col-lg-8">
-                        {/* Client Information */}
-                        <div className="card border-0 shadow-sm mb-4">
-                            <div className="card-header bg-white border-bottom">
-                                <h5 className="fw-bold mb-0">
-                                    <i className="fas fa-user me-2 text-orange"></i>
-                                    Client Request Information
+                        {/* Service Information */}
+                        <div className="card-modern mb-4">
+                            <div className="card-header">
+                                <h5 className="mb-0">
+                                    <i className="fas fa-cog me-2 text-primary"></i>
+                                    Service Information
                                 </h5>
                             </div>
                             <div className="card-body">
                                 <div className="row">
                                     <div className="col-md-8">
-                                        <h6 className="fw-bold mb-2">
-                                            {quote.client?.first_name}{" "}
-                                            {quote.client?.last_name}
+                                        <h6 className="fw-bold mb-3">
+                                            {quote.service_title ||
+                                                quote.service?.title}
                                         </h6>
-
-                                        {/* Contact Info */}
-                                        <div className="contact-info mb-3">
-                                            {getClientRequestInfo(quote)
-                                                .phone && (
-                                                <div className="mb-2">
-                                                    <i className="fas fa-phone text-success me-2"></i>
-
-                                                    <a
-                                                        href={`tel:${
-                                                            getClientRequestInfo(
-                                                                quote
-                                                            ).phone
-                                                        }`}
-                                                        className="text-decoration-none"
-                                                    >
-                                                        {
-                                                            getClientRequestInfo(
-                                                                quote
-                                                            ).phone
-                                                        }
-                                                    </a>
+                                        {quote.service_category && (
+                                            <div className="mb-3">
+                                                <label className="small text-muted">
+                                                    Category
+                                                </label>
+                                                <div>
+                                                    {renderServiceCategory(
+                                                        quote
+                                                    )}
                                                 </div>
-                                            )}
-                                            {getClientRequestInfo(quote)
-                                                .email && (
-                                                <div className="mb-2">
-                                                    <i className="fas fa-envelope text-info me-2"></i>
-
-                                                    <a
-                                                        href={`mailto:${
-                                                            getClientRequestInfo(
-                                                                quote
-                                                            ).email
-                                                        }`}
-                                                        className="text-decoration-none"
-                                                    >
-                                                        {
-                                                            getClientRequestInfo(
-                                                                quote
-                                                            ).email
-                                                        }
-                                                    </a>
-                                                </div>
-                                            )}
-                                            <div className="mb-2">
-                                                <i className="fas fa-comments text-primary me-2"></i>
-                                                <strong>
-                                                    Preferred Contact:
-                                                </strong>{" "}
-                                                <span className="text-capitalize">
-                                                    {
-                                                        getClientRequestInfo(
-                                                            quote
-                                                        ).contact_preference
-                                                    }
-                                                </span>
                                             </div>
-                                        </div>
-
-                                        {/* Service Request Details */}
-                                        <div className="service-request">
-                                            <h6 className="fw-semibold">
-                                                Service Request Details:
-                                            </h6>
+                                        )}
+                                        <div className="mb-3">
+                                            <label className="small text-muted">
+                                                Client Requirements
+                                            </label>
                                             <div className="bg-light rounded p-3">
-                                                <div className="row">
-                                                    <div className="col-md-6">
-                                                        <p className="mb-2">
-                                                            <strong>
-                                                                Service:
-                                                            </strong>{" "}
-                                                            {
-                                                                quote.service
-                                                                    ?.title
-                                                            }
-                                                        </p>
-                                                        <p className="mb-2">
-                                                            <strong>
-                                                                What they need:
-                                                            </strong>
-                                                        </p>
-                                                        <p className="mb-2 text-primary">
-                                                            "
-                                                            {
-                                                                getClientRequestInfo(
-                                                                    quote
-                                                                ).requirements
-                                                            }
-                                                            "
-                                                        </p>
-                                                        <p className="mb-2">
-                                                            <strong>
-                                                                Urgency:
-                                                            </strong>{" "}
-                                                            <span className="text-capitalize">
-                                                                {
-                                                                    getClientRequestInfo(
-                                                                        quote
-                                                                    ).urgency
-                                                                }
-                                                            </span>
-                                                        </p>
-                                                    </div>
-                                                    <div className="col-md-6">
-                                                        {getClientRequestInfo(
-                                                            quote
-                                                        ).requested_date && (
-                                                            <p className="mb-2">
-                                                                <strong>
-                                                                    Preferred
-                                                                    Date:
-                                                                </strong>{" "}
-                                                                {new Date(
-                                                                    getClientRequestInfo(
-                                                                        quote
-                                                                    ).requested_date
-                                                                ).toLocaleDateString(
-                                                                    "en-US",
-                                                                    {
-                                                                        weekday:
-                                                                            "long",
-                                                                        year: "numeric",
-                                                                        month: "long",
-                                                                        day: "numeric",
-                                                                    }
-                                                                )}
-                                                            </p>
-                                                        )}
-
-                                                        {getClientRequestInfo(
-                                                            quote
-                                                        ).requested_time && (
-                                                            <p className="mb-2">
-                                                                <strong>
-                                                                    Preferred
-                                                                    Time:
-                                                                </strong>{" "}
-                                                                {
-                                                                    getClientRequestInfo(
-                                                                        quote
-                                                                    )
-                                                                        .requested_time
-                                                                }
-                                                            </p>
-                                                        )}
-
-                                                        <p className="mb-2">
-                                                            <strong>
-                                                                Location Type:
-                                                            </strong>{" "}
-                                                            {getClientRequestInfo(
-                                                                quote
-                                                            ).location_type ===
-                                                            "client_address"
-                                                                ? "At Client Location"
-                                                                : getClientRequestInfo(
-                                                                      quote
-                                                                  )
-                                                                      .location_type ===
-                                                                  "provider_location"
-                                                                ? "At Provider Location"
-                                                                : "Custom Location"}
-                                                        </p>
-
-                                                        {getClientRequestInfo(
-                                                            quote
-                                                        ).address && (
-                                                            <p className="mb-2">
-                                                                <strong>
-                                                                    Address:
-                                                                </strong>{" "}
-                                                                {
-                                                                    getClientRequestInfo(
-                                                                        quote
-                                                                    ).address
-                                                                }
-                                                                {getClientRequestInfo(
-                                                                    quote
-                                                                ).city &&
-                                                                    `, ${
-                                                                        getClientRequestInfo(
-                                                                            quote
-                                                                        ).city
-                                                                    }`}
-                                                            </p>
-                                                        )}
-                                                    </div>
-                                                </div>
-
-                                                {getClientRequestInfo(quote)
-                                                    .special_requirements && (
-                                                    <div className="mt-2 pt-2 border-top">
-                                                        <strong>
-                                                            Special
-                                                            Requirements:
-                                                        </strong>
-                                                        <p className="mb-0 mt-1 text-muted">
-                                                            {
-                                                                getClientRequestInfo(
-                                                                    quote
-                                                                )
-                                                                    .special_requirements
-                                                            }
-                                                        </p>
+                                                {quote.message && (
+                                                    <div className="mb-2">
+                                                        <strong>Description:</strong>
+                                                        <div className="mt-1">{quote.message}</div>
                                                     </div>
                                                 )}
-
-                                                <div className="mt-2 pt-2 border-top">
-                                                    <small className="text-muted">
-                                                        <i className="fas fa-calendar me-1"></i>
-                                                        Request submitted:{" "}
-                                                        {new Date(
-                                                            quote.created_at
-                                                        ).toLocaleDateString(
-                                                            "en-US",
-                                                            {
-                                                                month: "short",
-                                                                day: "numeric",
-                                                                year: "numeric",
-                                                                hour: "2-digit",
-                                                                minute: "2-digit",
-                                                            }
-                                                        )}
-                                                    </small>
-                                                </div>
+                                                {quote.client_requirements && (
+                                                    <div className={quote.message ? "mt-3" : ""}>
+                                                        <strong>Special Requirements:</strong>
+                                                        <div className="mt-1">{quote.client_requirements}</div>
+                                                    </div>
+                                                )}
+                                                {!quote.message && !quote.client_requirements && (
+                                                    <em className="text-muted">No specific requirements provided</em>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-
-                                <div className="col-md-4 text-end">
-                                    <div className="client-actions">
-                                        {getClientRequestInfo(quote).phone && (
-                                            <a
-                                                href={`tel:${
-                                                    getClientRequestInfo(quote)
-                                                        .phone
-                                                }`}
-                                                className="btn btn-success btn-sm mb-2 w-100"
-                                            >
-                                                <i className="fas fa-phone me-2"></i>
-                                                Call Client
-                                            </a>
-                                        )}
-                                        {getClientRequestInfo(quote).email && (
-                                            <a
-                                                href={`mailto:${
-                                                    getClientRequestInfo(quote)
-                                                        .email
-                                                }`}
-                                                className="btn btn-outline-primary btn-sm w-100"
-                                            >
-                                                <i className="fas fa-envelope me-2"></i>
-                                                Email Client
-                                            </a>
-                                        )}
-                                        <div className="mt-3 p-2 bg-light rounded text-start">
-                                            <small className="text-muted">
-                                                <strong>Client Profile:</strong>
-                                                <br />
-                                                Member since:{" "}
-                                                {new Date(
-                                                    quote.client?.created_at
-                                                ).getFullYear()}
-                                                <br />
-                                                Email:{" "}
-                                                {quote.client?.email_verified_at
-                                                    ? "Verified"
-                                                    : "Unverified"}
-                                            </small>
+                                    <div className="col-md-4">
+                                        <div className="service-details">
+                                            {quote.requested_date && (
+                                                <div className="mb-3">
+                                                    <label className="small text-muted">
+                                                        Requested Date
+                                                    </label>
+                                                    <div className="fw-medium">
+                                                        {formatDate(
+                                                            quote.requested_date
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            )}
+                                            {quote.requested_time && (
+                                                <div className="mb-3">
+                                                    <label className="small text-muted">
+                                                        Requested Time
+                                                    </label>
+                                                    <div className="fw-medium">
+                                                        {quote.requested_time}
+                                                    </div>
+                                                </div>
+                                            )}
+                                            {quote.location_summary && (
+                                                <div className="mb-3">
+                                                    <label className="small text-muted">
+                                                        Location
+                                                    </label>
+                                                    <div className="fw-medium">
+                                                        <i className="fas fa-map-marker-alt me-1 text-muted"></i>
+                                                        {quote.location_summary}
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
                             </div>
+                        </div>
 
-                            {/* Quote Details */}
-                            <div className="card border-0 shadow-sm mb-4">
-                                <div className="card-header bg-white border-bottom">
-                                    <h5 className="fw-bold mb-0">
-                                        <i className="fas fa-quote-left me-2 text-orange"></i>
-                                        Quote Details
+                        {/* Client Information */}
+                        <div className="card-modern mb-4">
+                            <div className="card-header">
+                                <h5 className="mb-0">
+                                    <i className="fas fa-user me-2 text-primary"></i>
+                                    Client Information
+                                </h5>
+                            </div>
+                            <div className="card-body">
+                                <div className="row">
+                                    <div className="col-md-8">
+                                        <div className="d-flex align-items-center mb-3">
+                                            <h6 className="fw-bold mb-0 me-2">
+                                                {quote.client_name}
+                                            </h6>
+                                            {quote.client_verified && (
+                                                <span className="badge bg-success bg-opacity-10 text-success">
+                                                    <i className="fas fa-check-circle me-1"></i>
+                                                    Verified
+                                                </span>
+                                            )}
+                                        </div>
+
+                                        <div className="client-contact">
+                                            {quote.client?.email && (
+                                                <div className="mb-2">
+                                                    <i className="fas fa-envelope text-muted me-2"></i>
+                                                    <a
+                                                        href={`mailto:${quote.client.email}`}
+                                                        className="text-decoration-none"
+                                                    >
+                                                        {quote.client.email}
+                                                    </a>
+                                                </div>
+                                            )}
+                                            {quote.client?.contact_number && (
+                                                <div className="mb-2">
+                                                    <i className="fas fa-phone text-muted me-2"></i>
+                                                    <a
+                                                        href={`tel:${quote.client.contact_number}`}
+                                                        className="text-decoration-none"
+                                                    >
+                                                        {
+                                                            quote.client
+                                                                .contact_number
+                                                        }
+                                                    </a>
+                                                </div>
+                                            )}
+                                            <div className="small text-muted">
+                                                <i className="fas fa-calendar me-1"></i>
+                                                Member since{" "}
+                                                {new Date(
+                                                    quote.client?.created_at
+                                                ).getFullYear()}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="col-md-4">
+                                        <div className="d-grid gap-2">
+                                            {quote.client?.contact_number && (
+                                                <a
+                                                    href={`tel:${quote.client.contact_number}`}
+                                                    className="btn btn-success btn-sm"
+                                                >
+                                                    <i className="fas fa-phone me-2"></i>
+                                                    Call Client
+                                                </a>
+                                            )}
+                                            {quote.client?.email && (
+                                                <a
+                                                    href={`mailto:${quote.client.email}`}
+                                                    className="btn btn-outline-primary btn-sm"
+                                                >
+                                                    <i className="fas fa-envelope me-2"></i>
+                                                    Email Client
+                                                </a>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Quote Details */}
+                        {quote.status !== "pending" && (
+                            <div className="card-modern mb-4">
+                                <div className="card-header">
+                                    <h5 className="mb-0">
+                                        <i className="fas fa-quote-left me-2 text-primary"></i>
+                                        Your Quote Response
                                     </h5>
                                 </div>
                                 <div className="card-body">
                                     <div className="row mb-3">
                                         <div className="col-md-6">
-                                            <div className="detail-item mb-3">
-                                                <label className="small text-muted">
-                                                    Quoted Price
-                                                </label>
-                                                <div className="fw-bold text-orange h5">
-                                                    Rs.{" "}
-                                                    {quote.quoted_price?.toLocaleString()}
-                                                </div>
+                                            <label className="small text-muted">
+                                                Quoted Price
+                                            </label>
+                                            <div className="fw-bold text-success h5 mb-0">
+                                                {formatPrice(
+                                                    quote.quoted_price
+                                                )}
                                             </div>
                                         </div>
                                         <div className="col-md-6">
-                                            <div className="detail-item mb-3">
-                                                <label className="small text-muted">
-                                                    Estimated Duration
-                                                </label>
-                                                <div className="fw-semibold">
-                                                    {quote.estimated_duration}{" "}
-                                                    hour(s)
-                                                </div>
+                                            <label className="small text-muted">
+                                                Estimated Duration
+                                            </label>
+                                            <div className="fw-medium">
+                                                {quote.duration_hours ||
+                                                    quote.estimated_duration}{" "}
+                                                hour(s)
                                             </div>
                                         </div>
                                     </div>
 
-                                    <div className="quote-description mb-3">
-                                        <label className="small text-muted">
-                                            Quote Description
-                                        </label>
-                                        <div className="bg-light rounded p-3 mt-1">
-                                            <p className="mb-0">
-                                                {quote.quote_description}
-                                            </p>
-                                        </div>
-                                    </div>
+                                    {quote.travel_fee &&
+                                        quote.travel_fee > 0 && (
+                                            <div className="row mb-3">
+                                                <div className="col-md-6">
+                                                    <label className="small text-muted">
+                                                        Travel Fee
+                                                    </label>
+                                                    <div className="fw-medium">
+                                                        {formatPrice(
+                                                            quote.travel_fee
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
 
-                                    {quote.additional_notes && (
-                                        <div className="additional-notes mb-3">
+                                    {(quote.quote_details ||
+                                        quote.provider_response) && (
+                                        <div className="mb-3">
                                             <label className="small text-muted">
-                                                Additional Notes
+                                                Quote Description
                                             </label>
-                                            <div className="bg-light rounded p-3 mt-1">
-                                                <p className="mb-0">
-                                                    {quote.additional_notes}
-                                                </p>
+                                            <div className="bg-light rounded p-3">
+                                                {quote.quote_details ||
+                                                    quote.provider_response}
                                             </div>
                                         </div>
                                     )}
 
-                                    {quote.terms_conditions && (
-                                        <div className="terms-conditions">
+                                    {quote.terms_and_conditions && (
+                                        <div className="mb-3">
                                             <label className="small text-muted">
                                                 Terms & Conditions
                                             </label>
-                                            <div className="bg-light rounded p-3 mt-1">
-                                                <p className="mb-0">
-                                                    {quote.terms_conditions}
-                                                </p>
+                                            <div className="bg-light rounded p-3">
+                                                {quote.terms_and_conditions}
                                             </div>
+                                        </div>
+                                    )}
+
+                                    {quote.expires_at && (
+                                        <div className="small text-muted">
+                                            <i className="fas fa-clock me-1"></i>
+                                            Valid until:{" "}
+                                            {formatDateTime(quote.expires_at)}
                                         </div>
                                     )}
                                 </div>
                             </div>
+                        )}
 
-                            {/* Quote Timeline */}
-                            <div className="card border-0 shadow-sm mb-4">
-                                <div className="card-header bg-white border-bottom">
-                                    <h5 className="fw-bold mb-0">
-                                        <i className="fas fa-history me-2 text-orange"></i>
-                                        Quote Timeline
-                                    </h5>
-                                </div>
-                                <div className="card-body">
-                                    <div className="timeline">
-                                        <div className="timeline-item">
-                                            <div className="timeline-marker bg-primary">
-                                                <i className="fas fa-plus text-white"></i>
-                                            </div>
-                                            <div className="timeline-content">
-                                                <h6 className="fw-bold">
-                                                    Quote Created
-                                                </h6>
-                                                <p className="text-muted mb-0">
-                                                    {
-                                                        formatDateTime(
-                                                            quote.created_at,
-                                                            "00:00"
-                                                        ).fullDate
-                                                    }
-                                                </p>
-                                            </div>
+                        {/* Quote Timeline */}
+                        <div className="card-modern">
+                            <div className="card-header">
+                                <h5 className="mb-0">
+                                    <i className="fas fa-history me-2 text-primary"></i>
+                                    Quote Timeline
+                                </h5>
+                            </div>
+                            <div className="card-body">
+                                <div className="timeline">
+                                    <div className="timeline-item">
+                                        <div className="timeline-marker bg-primary">
+                                            <i className="fas fa-plus text-white"></i>
                                         </div>
+                                        <div className="timeline-content">
+                                            <h6 className="fw-bold">
+                                                Quote Request Received
+                                            </h6>
+                                            <p className="text-muted mb-0">
+                                                {formatDateTime(
+                                                    quote.created_at
+                                                )}
+                                            </p>
+                                        </div>
+                                    </div>
 
-                                        {quote.status !== "pending" && (
+                                    {quote.status !== "pending" &&
+                                        quote.responded_at && (
                                             <div className="timeline-item">
                                                 <div className="timeline-marker bg-info">
                                                     <i className="fas fa-paper-plane text-white"></i>
@@ -715,14 +636,16 @@ const QuoteDetail = () => {
                                                         Quote Sent
                                                     </h6>
                                                     <p className="text-muted mb-0">
-                                                        Quote sent to client for
-                                                        review
+                                                        {formatDateTime(
+                                                            quote.responded_at
+                                                        )}
                                                     </p>
                                                 </div>
                                             </div>
                                         )}
 
-                                        {quote.status === "accepted" && (
+                                    {quote.status === "accepted" &&
+                                        quote.client_responded_at && (
                                             <div className="timeline-item">
                                                 <div className="timeline-marker bg-success">
                                                     <i className="fas fa-check text-white"></i>
@@ -732,156 +655,173 @@ const QuoteDetail = () => {
                                                         Quote Accepted
                                                     </h6>
                                                     <p className="text-muted mb-0">
-                                                        Client accepted your
-                                                        quote
+                                                        {formatDateTime(
+                                                            quote.client_responded_at
+                                                        )}
                                                     </p>
                                                 </div>
                                             </div>
                                         )}
 
-                                        {quote.status === "rejected" && (
+                                    {quote.status === "rejected" &&
+                                        quote.client_responded_at && (
                                             <div className="timeline-item">
                                                 <div className="timeline-marker bg-danger">
                                                     <i className="fas fa-times text-white"></i>
                                                 </div>
                                                 <div className="timeline-content">
                                                     <h6 className="fw-bold">
-                                                        Quote Rejected
+                                                        Quote Declined
                                                     </h6>
                                                     <p className="text-muted mb-0">
-                                                        Client declined your
-                                                        quote
+                                                        {formatDateTime(
+                                                            quote.client_responded_at
+                                                        )}
                                                     </p>
                                                 </div>
                                             </div>
                                         )}
 
-                                        {quote.status === "withdrawn" && (
-                                            <div className="timeline-item">
-                                                <div className="timeline-marker bg-warning">
-                                                    <i className="fas fa-undo text-white"></i>
-                                                </div>
-                                                <div className="timeline-content">
-                                                    <h6 className="fw-bold">
-                                                        Quote Withdrawn
-                                                    </h6>
-                                                    <p className="text-muted mb-0">
-                                                        You withdrew this quote
-                                                    </p>
-                                                </div>
+                                    {quote.status === "withdrawn" && (
+                                        <div className="timeline-item">
+                                            <div className="timeline-marker bg-warning">
+                                                <i className="fas fa-undo text-white"></i>
                                             </div>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Sidebar */}
-                        <div className="col-lg-4">
-                            {/* Quote Summary */}
-                            <div className="card border-0 shadow-sm mb-4">
-                                <div className="card-header bg-orange text-white">
-                                    <h6 className="fw-bold mb-0">
-                                        <i className="fas fa-calculator me-2"></i>
-                                        Quote Summary
-                                    </h6>
-                                </div>
-                                <div className="card-body">
-                                    <div className="summary-item d-flex justify-content-between mb-2">
-                                        <span>Service Price:</span>
-                                        <span>
-                                            Rs.{" "}
-                                            {quote.quoted_price?.toLocaleString()}
-                                        </span>
-                                    </div>
-
-                                    {quote.travel_charges > 0 && (
-                                        <div className="summary-item d-flex justify-content-between mb-2">
-                                            <span>Travel Charges:</span>
-                                            <span>
-                                                Rs.{" "}
-                                                {quote.travel_charges.toLocaleString()}
-                                            </span>
+                                            <div className="timeline-content">
+                                                <h6 className="fw-bold">
+                                                    Quote Withdrawn
+                                                </h6>
+                                                <p className="text-muted mb-0">
+                                                    You withdrew this quote
+                                                </p>
+                                            </div>
                                         </div>
                                     )}
-
-                                    <hr />
-
-                                    <div className="summary-total d-flex justify-content-between fw-bold">
-                                        <span>Total Quote:</span>
-                                        <span className="text-orange h5 mb-0">
-                                            Rs. {totalAmount.toLocaleString()}
-                                        </span>
-                                    </div>
-
-                                    <div className="summary-details mt-3">
-                                        <div className="small text-muted mb-1">
-                                            <i className="fas fa-clock me-1"></i>
-                                            Duration: {quote.estimated_duration}{" "}
-                                            hour(s)
-                                        </div>
-                                        <div className="small text-muted mb-1">
-                                            <i className="fas fa-calendar me-1"></i>
-                                            Valid for: {quote.validity_days}{" "}
-                                            days
-                                        </div>
-                                        {quote.includes_materials && (
-                                            <div className="small text-success">
-                                                <i className="fas fa-check me-1"></i>
-                                                Includes materials
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Quote Statistics */}
-                            <div className="card border-0 shadow-sm">
-                                <div className="card-header bg-white border-bottom">
-                                    <h6 className="fw-bold mb-0">
-                                        <i className="fas fa-chart-bar me-2 text-orange"></i>
-                                        Performance
-                                    </h6>
-                                </div>
-                                <div className="card-body">
-                                    <div className="stat-item d-flex justify-content-between mb-2">
-                                        <span className="small">
-                                            Your Quote Win Rate:
-                                        </span>
-                                        <span className="badge bg-success">
-                                            78%
-                                        </span>
-                                    </div>
-                                    <div className="stat-item d-flex justify-content-between mb-2">
-                                        <span className="small">
-                                            Average Response Time:
-                                        </span>
-                                        <span className="badge bg-info">
-                                            2.3 hours
-                                        </span>
-                                    </div>
-                                    <div className="stat-item d-flex justify-content-between">
-                                        <span className="small">
-                                            Total Quotes Sent:
-                                        </span>
-                                        <span className="badge bg-primary">
-                                            45
-                                        </span>
-                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* Back Button */}
-                    <div className="mt-4">
-                        <Link
-                            to="/provider/quotes"
-                            className="btn btn-outline-secondary"
-                        >
-                            <i className="fas fa-arrow-left me-2"></i>
-                            Back to All Quotes
-                        </Link>
+                    {/* Sidebar */}
+                    <div className="col-lg-4">
+                        {/* Quote Summary */}
+                        <div className="card-modern mb-4">
+                            <div className="card-header bg-primary text-white">
+                                <h6 className="fw-bold mb-0">
+                                    <i className="fas fa-calculator me-2"></i>
+                                    Quote Summary
+                                </h6>
+                            </div>
+                            <div className="card-body">
+                                {quote.status === "pending" ? (
+                                    <div className="text-center py-4">
+                                        <i className="fas fa-clock fa-2x text-muted mb-3"></i>
+                                        <h6 className="text-muted">
+                                            Quote Not Sent Yet
+                                        </h6>
+                                        <p className="small text-muted mb-3">
+                                            Send your quote response to the
+                                            client
+                                        </p>
+                                        <Link
+                                            to={`/provider/quotes/create?quote_id=${quote.id}`}
+                                            className="btn btn-success"
+                                        >
+                                            <i className="fas fa-reply me-2"></i>
+                                            Send Quote
+                                        </Link>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <div className="summary-item d-flex justify-content-between mb-2">
+                                            <span>Service Price:</span>
+                                            <span className="fw-medium">
+                                                {formatPrice(
+                                                    quote.quoted_price
+                                                )}
+                                            </span>
+                                        </div>
+
+                                        {quote.travel_fee &&
+                                            quote.travel_fee > 0 && (
+                                                <div className="summary-item d-flex justify-content-between mb-2">
+                                                    <span>Travel Fee:</span>
+                                                    <span className="fw-medium">
+                                                        {formatPrice(
+                                                            quote.travel_fee
+                                                        )}
+                                                    </span>
+                                                </div>
+                                            )}
+
+                                        <hr />
+
+                                        <div className="summary-total d-flex justify-content-between fw-bold mb-3">
+                                            <span>Total Quote:</span>
+                                            <span className="text-success h5 mb-0">
+                                                {formatPrice(totalAmount)}
+                                            </span>
+                                        </div>
+
+                                        <div className="summary-details">
+                                            <div className="small text-muted mb-1">
+                                                <i className="fas fa-clock me-1"></i>
+                                                Duration:{" "}
+                                                {quote.duration_hours ||
+                                                    quote.estimated_duration}{" "}
+                                                hour(s)
+                                            </div>
+                                            {quote.expires_at && (
+                                                <div className="small text-muted">
+                                                    <i className="fas fa-calendar me-1"></i>
+                                                    Valid until:{" "}
+                                                    {formatDate(
+                                                        quote.expires_at
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Quick Actions */}
+                        <div className="card-modern">
+                            <div className="card-header">
+                                <h6 className="fw-bold mb-0">
+                                    <i className="fas fa-bolt me-2 text-primary"></i>
+                                    Quick Actions
+                                </h6>
+                            </div>
+                            <div className="card-body">
+                                <div className="d-grid gap-2">
+                                    <Link
+                                        to="/provider/quotes"
+                                        className="btn btn-outline-secondary"
+                                    >
+                                        <i className="fas fa-arrow-left me-2"></i>
+                                        Back to All Quotes
+                                    </Link>
+                                    <button
+                                        className="btn btn-outline-primary"
+                                        onClick={() => downloadQuotePDF(quote)}
+                                    >
+                                        <i className="fas fa-print me-2"></i>
+                                        Print Quote
+                                    </button>
+                                    {quote.status === "accepted" && (
+                                        <Link
+                                            to={`/provider/appointments?quote_id=${quote.id}`}
+                                            className="btn btn-success"
+                                        >
+                                            <i className="fas fa-calendar me-2"></i>
+                                            View Appointment
+                                        </Link>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -895,7 +835,7 @@ const QuoteDetail = () => {
                                     <div className="modal-header">
                                         <h5 className="modal-title">
                                             {quote.status === "pending"
-                                                ? "Delete Draft"
+                                                ? "Delete Quote"
                                                 : "Withdraw Quote"}
                                         </h5>
                                         <button
@@ -909,15 +849,15 @@ const QuoteDetail = () => {
                                     <div className="modal-body">
                                         <p className="text-muted mb-3">
                                             {quote.status === "pending"
-                                                ? "Are you sure you want to delete this draft quote? This action cannot be undone."
+                                                ? "Are you sure you want to delete this quote? This action cannot be undone."
                                                 : "Are you sure you want to withdraw this quote? The client will be notified and won't be able to accept it anymore."}
                                         </p>
                                         <div className="mb-3">
                                             <label className="form-label">
-                                                Reason{" "}
+                                                Reason for{" "}
                                                 {quote.status === "pending"
-                                                    ? "for deletion"
-                                                    : "for withdrawal"}{" "}
+                                                    ? "deletion"
+                                                    : "withdrawal"}{" "}
                                                 *
                                             </label>
                                             <textarea
@@ -931,7 +871,7 @@ const QuoteDetail = () => {
                                                 }
                                                 placeholder={
                                                     quote.status === "pending"
-                                                        ? "Why are you deleting this draft?"
+                                                        ? "Why are you deleting this quote?"
                                                         : "Why are you withdrawing this quote?"
                                                 }
                                             ></textarea>
@@ -949,11 +889,7 @@ const QuoteDetail = () => {
                                         </button>
                                         <button
                                             type="button"
-                                            className={`btn ${
-                                                quote.status === "pending"
-                                                    ? "btn-danger"
-                                                    : "btn-warning"
-                                            }`}
+                                            className="btn btn-danger"
                                             onClick={handleWithdraw}
                                             disabled={
                                                 actionLoading ||
@@ -965,7 +901,7 @@ const QuoteDetail = () => {
                                                     ? "Deleting..."
                                                     : "Withdrawing..."
                                                 : quote.status === "pending"
-                                                ? "Delete Draft"
+                                                ? "Delete Quote"
                                                 : "Withdraw Quote"}
                                         </button>
                                     </div>
@@ -975,44 +911,110 @@ const QuoteDetail = () => {
                     </>
                 )}
 
+                {/* Custom Styles using app.css design system */}
                 <style>{`
-                .timeline {
-                    position: relative;
-                    padding-left: 2rem;
-                }
-                
-                .timeline-item {
-                    position: relative;
-                    margin-bottom: 2rem;
-                }
-                
-                .timeline-item:not(:last-child)::before {
-                    content: '';
-                    position: absolute;
-                    left: -1.75rem;
-                    top: 2rem;
-                    bottom: -2rem;
-                    width: 2px;
-                    background: #dee2e6;
-                }
-                
-                .timeline-marker {
-                    position: absolute;
-                    left: -2rem;
-                    top: 0;
-                    width: 2.5rem;
-                    height: 2.5rem;
-                    border-radius: 50%;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    z-index: 2;
-                }
-                
-                .timeline-content {
-                    padding-left: 0.5rem;
-                }
-            `}</style>
+                    .page-header {
+                        margin-bottom: var(--space-6);
+                    }
+                    
+                    .page-title {
+                        color: var(--text-primary);
+                        font-weight: var(--font-bold);
+                        margin-bottom: var(--space-2);
+                    }
+
+                    .card-modern {
+                        background: var(--bg-white);
+                        border-radius: var(--border-radius-lg);
+                        box-shadow: var(--shadow-sm);
+                        border: 1px solid var(--border-color);
+                        transition: var(--transition);
+                        overflow: hidden;
+                    }
+
+                    .card-modern:hover {
+                        transform: translateY(-2px);
+                        box-shadow: var(--shadow-md);
+                    }
+
+                    .card-header {
+                        background: var(--bg-light);
+                        border-bottom: 1px solid var(--border-color);
+                        padding: var(--space-4);
+                        font-weight: var(--font-semibold);
+                    }
+
+                    .card-body {
+                        padding: var(--space-4);
+                    }
+
+                    .timeline {
+                        position: relative;
+                        padding-left: var(--space-8);
+                    }
+                    
+                    .timeline-item {
+                        position: relative;
+                        margin-bottom: var(--space-6);
+                    }
+                    
+                    .timeline-item:not(:last-child)::before {
+                        content: '';
+                        position: absolute;
+                        left: -2rem;
+                        top: 2.5rem;
+                        bottom: -2rem;
+                        width: 2px;
+                        background: var(--border-color);
+                    }
+                    
+                    .timeline-marker {
+                        position: absolute;
+                        left: -2.25rem;
+                        top: 0;
+                        width: 2.5rem;
+                        height: 2.5rem;
+                        border-radius: 50%;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        z-index: 2;
+                        box-shadow: var(--shadow-sm);
+                    }
+                    
+                    .timeline-content {
+                        padding-left: var(--space-2);
+                    }
+
+                    .summary-item {
+                        font-size: var(--text-sm);
+                    }
+
+                    .summary-total {
+                        font-size: var(--text-lg);
+                    }
+
+
+                    @media (max-width: 768px) {
+                        .page-header .d-flex {
+                            flex-direction: column;
+                        }
+
+                        .timeline {
+                            padding-left: var(--space-6);
+                        }
+
+                        .timeline-marker {
+                            left: -1.75rem;
+                            width: 2rem;
+                            height: 2rem;
+                        }
+
+                        .timeline-item:not(:last-child)::before {
+                            left: -1.5rem;
+                        }
+                    }
+                `}</style>
             </div>
         </ProviderLayout>
     );
