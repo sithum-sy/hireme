@@ -4,6 +4,14 @@ import { useProvider } from "../../../context/ProviderContext";
 import { useServices } from "../../../context/ServicesContext";
 import ProviderLayout from "../../../components/layouts/ProviderLayout";
 
+// Components
+import ServiceFilters from "../../../components/provider/services/list/ServiceFilters";
+import ServiceCard from "../../../components/provider/services/list/ServiceCard";
+import ServiceTable from "../../../components/provider/services/list/ServiceTable";
+
+// Hooks
+import { useServicesList } from "../../../hooks/provider/useServicesList";
+
 const ProviderServices = () => {
     const navigate = useNavigate();
     const { businessStats } = useProvider();
@@ -17,17 +25,32 @@ const ProviderServices = () => {
         getServiceCategories,
     } = useServices();
 
-    // Local state
-    const [filter, setFilter] = useState("all");
-    const [searchQuery, setSearchQuery] = useState("");
-    const [sortBy, setSortBy] = useState("created_at");
-    const [sortOrder, setSortOrder] = useState("desc");
-    const [selectedServices, setSelectedServices] = useState([]);
+    const [categories, setCategories] = useState([]);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [serviceToDelete, setServiceToDelete] = useState(null);
-    const [categories, setCategories] = useState([]);
-    const [selectedCategory, setSelectedCategory] = useState("");
-    const [viewMode, setViewMode] = useState("grid"); // grid or list
+    const [bulkDeleteServices, setBulkDeleteServices] = useState([]);
+
+    // Custom hook for list management
+    const {
+        filter,
+        setFilter,
+        searchQuery,
+        setSearchQuery,
+        sortBy,
+        setSortBy,
+        sortOrder,
+        setSortOrder,
+        selectedServices,
+        selectedCategory,
+        setSelectedCategory,
+        viewMode,
+        setViewMode,
+        filteredAndSortedServices,
+        allSelected,
+        handleServiceSelect,
+        handleSelectAll,
+        clearSelection,
+    } = useServicesList(services, categories);
 
     // Load data on mount
     useEffect(() => {
@@ -45,177 +68,77 @@ const ProviderServices = () => {
         }
     };
 
-    // Filter and search services
-    const filteredServices = (Array.isArray(services) ? services : []).filter(
-        (service) => {
-            // Filter by status
-            if (filter === "active" && !service.is_active) return false;
-            if (filter === "inactive" && service.is_active) return false;
-
-            // Filter by category
-            if (
-                selectedCategory &&
-                service.category_id !== parseInt(selectedCategory)
-            )
-                return false;
-
-            // Search filter
-            if (searchQuery) {
-                const query = searchQuery.toLowerCase();
-                return (
-                    service.title.toLowerCase().includes(query) ||
-                    service.description.toLowerCase().includes(query) ||
-                    service.category.name.toLowerCase().includes(query) ||
-                    service.service_areas.some((area) =>
-                        area.toLowerCase().includes(query)
-                    )
-                );
+    const handleToggleStatus = async (serviceId, currentStatus) => {
+        try {
+            const result = await toggleServiceStatus(serviceId);
+            if (result.success) {
+                // Refresh services after status change
+                await getMyServices();
             }
-
-            return true;
+        } catch (error) {
+            console.error("Error toggling service status:", error);
         }
-    );
-
-    // Sort services
-    const sortedServices = [...filteredServices].sort((a, b) => {
-        let aValue, bValue;
-
-        switch (sortBy) {
-            case "title":
-                aValue = a.title.toLowerCase();
-                bValue = b.title.toLowerCase();
-                break;
-            case "price":
-                aValue = a.base_price;
-                bValue = b.base_price;
-                break;
-            case "rating":
-                aValue = a.average_rating || 0;
-                bValue = b.average_rating || 0;
-                break;
-            case "views":
-                aValue = a.views_count || 0;
-                bValue = b.views_count || 0;
-                break;
-            case "bookings":
-                aValue = a.bookings_count || 0;
-                bValue = b.bookings_count || 0;
-                break;
-            default: // created_at
-                aValue = new Date(a.created_at);
-                bValue = new Date(b.created_at);
-        }
-
-        if (sortOrder === "asc") {
-            return aValue > bValue ? 1 : -1;
-        } else {
-            return aValue < bValue ? 1 : -1;
-        }
-    });
-
-    // Service counts for filter tabs
-    const serviceCounts = {
-        all: Array.isArray(services) ? services.length : 0,
-        active: Array.isArray(services)
-            ? services.filter((s) => s.is_active).length
-            : 0,
-        inactive: Array.isArray(services)
-            ? services.filter((s) => !s.is_active).length
-            : 0,
     };
 
-    // Handle service actions
-    const handleDelete = (service) => {
+    const handleDeleteService = (service) => {
         setServiceToDelete(service);
         setShowDeleteModal(true);
     };
 
     const confirmDelete = async () => {
         if (serviceToDelete) {
-            const result = await deleteService(serviceToDelete.id);
-            if (result.success) {
-                setShowDeleteModal(false);
-                setServiceToDelete(null);
-                // Show success message
+            try {
+                const result = await deleteService(serviceToDelete.id);
+                if (result.success) {
+                    await getMyServices();
+                    setShowDeleteModal(false);
+                    setServiceToDelete(null);
+                }
+            } catch (error) {
+                console.error("Error deleting service:", error);
             }
         }
     };
 
-    const handleToggleStatus = async (serviceId) => {
-        await toggleServiceStatus(serviceId);
+    const handleBulkDelete = () => {
+        setBulkDeleteServices(selectedServices);
+        setShowDeleteModal(true);
     };
 
-    const handleBulkAction = async (action) => {
-        // Implement bulk actions
-        console.log(`Bulk ${action} for services:`, selectedServices);
-    };
-
-    // Get status badge
-    const getStatusBadge = (isActive) => {
-        return isActive ? (
-            <span className="badge bg-success">
-                <i className="fas fa-check-circle me-1"></i>
-                Active
-            </span>
-        ) : (
-            <span className="badge bg-secondary">
-                <i className="fas fa-pause-circle me-1"></i>
-                Inactive
-            </span>
-        );
-    };
-
-    // Get pricing display
-    const getPricingDisplay = (service) => {
-        if (service.pricing_type === "fixed") {
-            return `Rs. ${service.base_price.toLocaleString()}`;
-        } else if (service.pricing_type === "hourly") {
-            return `Rs. ${service.base_price.toLocaleString()}/hour`;
-        } else {
-            return "Custom Pricing";
+    const confirmBulkDelete = async () => {
+        try {
+            const deletePromises = bulkDeleteServices.map(serviceId => 
+                deleteService(serviceId)
+            );
+            await Promise.all(deletePromises);
+            await getMyServices();
+            setBulkDeleteServices([]);
+            setShowDeleteModal(false);
+            clearSelection();
+        } catch (error) {
+            console.error("Error bulk deleting services:", error);
         }
     };
 
-    // Get performance indicator color
-    const getPerformanceColor = (rating) => {
-        if (rating >= 4.5) return "success";
-        if (rating >= 4.0) return "warning";
-        if (rating >= 3.0) return "info";
-        return "secondary";
+    const handleBulkToggleStatus = async (newStatus) => {
+        try {
+            const togglePromises = selectedServices.map(serviceId => 
+                toggleServiceStatus(serviceId)
+            );
+            await Promise.all(togglePromises);
+            await getMyServices();
+            clearSelection();
+        } catch (error) {
+            console.error("Error bulk toggling status:", error);
+        }
     };
 
-    // Service analytics
-    const getServiceAnalytics = () => {
-        const safeServices = Array.isArray(services) ? services : [];
-        const totalViews = safeServices.reduce(
-            (sum, service) => sum + (service.views_count || 0),
-            0
-        );
-        const totalBookings = safeServices.reduce(
-            (sum, service) => sum + (service.bookings_count || 0),
-            0
-        );
-        const avgRating =
-            safeServices.length > 0
-                ? safeServices.reduce(
-                      (sum, service) => sum + (service.average_rating || 0),
-                      0
-                  ) / safeServices.length
-                : 0;
-
-        return { totalViews, totalBookings, avgRating };
-    };
-
-    const analytics = getServiceAnalytics();
-
-    if (loading && services.length === 0) {
+    if (loading) {
         return (
             <ProviderLayout>
-                <div className="d-flex justify-content-center align-items-center h-400">
+                <div className="d-flex justify-content-center align-items-center" style={{ height: "50vh" }}>
                     <div className="text-center">
-                        <div className="spinner-border text-primary mb-3" role="status">
-                            <span className="visually-hidden">Loading...</span>
-                        </div>
+                        <div className="spinner-border text-primary mb-3"></div>
                         <p className="text-muted">Loading your services...</p>
                     </div>
                 </div>
@@ -223,817 +146,138 @@ const ProviderServices = () => {
         );
     }
 
+    if (error) {
+        return (
+            <ProviderLayout>
+                <div className="alert alert-danger">
+                    <i className="fas fa-exclamation-triangle me-2"></i>
+                    {error}
+                </div>
+            </ProviderLayout>
+        );
+    }
+
     return (
         <ProviderLayout>
-            <div className="provider-services">
-                {/* Header Section */}
-                <div className="services-header mb-4">
-                    <div className="row align-items-center">
-                        <div className="col-md-6">
-                            <h4 className="fw-bold mb-1">
-                                <i className="fas fa-concierge-bell text-primary me-2"></i>
+            <div className="services-page">
+                {/* Page Header */}
+                <div className="page-header mb-4">
+                    <div className="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 className="fw-bold mb-1 text-primary">
+                                <i className="fas fa-cogs me-2"></i>
                                 My Services
                             </h4>
                             <p className="text-muted mb-0">
-                                Manage your service offerings and track
-                                performance
+                                Manage and track your service offerings
                             </p>
                         </div>
-                        <div className="col-md-6 text-md-end">
-                            <Link
-                                to="/provider/services/create"
-                                className="btn btn-primary"
-                            >
-                                <i className="fas fa-plus me-2"></i>
-                                Add New Service
-                            </Link>
-                        </div>
+                        <Link
+                            to="/provider/services/create"
+                            className="btn btn-primary"
+                        >
+                            <i className="fas fa-plus me-2"></i>
+                            Add New Service
+                        </Link>
                     </div>
                 </div>
 
-                {/* Analytics Cards */}
-                <div className="row mb-4">
-                    <div className="col-md-3 col-6">
-                        <div className="card border-0 shadow-sm">
-                            <div className="card-body text-center">
-                                <div className="text-primary mb-2">
-                                    <i className="fas fa-concierge-bell fa-2x"></i>
-                                </div>
-                                <h4 className="fw-bold mb-1">
-                                    {businessStats.activeServices}
-                                </h4>
-                                <small className="text-muted">
-                                    Active Services
-                                </small>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="col-md-3 col-6">
-                        <div className="card border-0 shadow-sm">
-                            <div className="card-body text-center">
-                                <div className="text-info mb-2">
-                                    <i className="fas fa-eye fa-2x"></i>
-                                </div>
-                                <h4 className="fw-bold mb-1">
-                                    {analytics.totalViews.toLocaleString()}
-                                </h4>
-                                <small className="text-muted">
-                                    Total Views
-                                </small>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="col-md-3 col-6">
-                        <div className="card border-0 shadow-sm">
-                            <div className="card-body text-center">
-                                <div className="text-success mb-2">
-                                    <i className="fas fa-calendar-check fa-2x"></i>
-                                </div>
-                                <h4 className="fw-bold mb-1">
-                                    {analytics.totalBookings}
-                                </h4>
-                                <small className="text-muted">
-                                    Total Bookings
-                                </small>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="col-md-3 col-6">
-                        <div className="card border-0 shadow-sm">
-                            <div className="card-body text-center">
-                                <div className="text-warning mb-2">
-                                    <i className="fas fa-star fa-2x"></i>
-                                </div>
-                                <h4 className="fw-bold mb-1">
-                                    {analytics.avgRating.toFixed(1)}
-                                </h4>
-                                <small className="text-muted">
-                                    Average Rating
-                                </small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Filters and Controls */}
-                <div className="controls-section mb-4">
-                    <div className="card border-0 shadow-sm">
-                        <div className="card-body">
-                            <div className="row align-items-center">
-                                {/* Filter Tabs */}
-                                <div className="col-md-4">
-                                    <ul className="nav nav-pills">
-                                        <li className="nav-item">
-                                            <button
-                                                className={`nav-link ${
-                                                    filter === "all"
-                                                        ? "active"
-                                                        : ""
-                                                }`}
-                                                onClick={() => setFilter("all")}
-                                            >
-                                                All ({serviceCounts.all})
-                                            </button>
-                                        </li>
-                                        <li className="nav-item">
-                                            <button
-                                                className={`nav-link ${
-                                                    filter === "active"
-                                                        ? "active"
-                                                        : ""
-                                                }`}
-                                                onClick={() =>
-                                                    setFilter("active")
-                                                }
-                                            >
-                                                Active ({serviceCounts.active})
-                                            </button>
-                                        </li>
-                                        <li className="nav-item">
-                                            <button
-                                                className={`nav-link ${
-                                                    filter === "inactive"
-                                                        ? "active"
-                                                        : ""
-                                                }`}
-                                                onClick={() =>
-                                                    setFilter("inactive")
-                                                }
-                                            >
-                                                Inactive (
-                                                {serviceCounts.inactive})
-                                            </button>
-                                        </li>
-                                    </ul>
-                                </div>
-
-                                {/* Search and Category Filter */}
-                                <div className="col-md-5">
-                                    <div className="row g-2">
-                                        <div className="col-7">
-                                            <div className="input-group">
-                                                <span className="input-group-text">
-                                                    <i className="fas fa-search"></i>
-                                                </span>
-                                                <input
-                                                    type="text"
-                                                    className="form-control"
-                                                    placeholder="Search services..."
-                                                    value={searchQuery}
-                                                    onChange={(e) =>
-                                                        setSearchQuery(
-                                                            e.target.value
-                                                        )
-                                                    }
-                                                />
-                                            </div>
-                                        </div>
-                                        <div className="col-5">
-                                            <select
-                                                className="form-select"
-                                                value={selectedCategory}
-                                                onChange={(e) =>
-                                                    setSelectedCategory(
-                                                        e.target.value
-                                                    )
-                                                }
-                                            >
-                                                <option value="">
-                                                    All Categories
-                                                </option>
-                                                {Array.isArray(categories) &&
-                                                    categories.map(
-                                                        (category) => (
-                                                            <option
-                                                                key={
-                                                                    category.id
-                                                                }
-                                                                value={
-                                                                    category.id
-                                                                }
-                                                            >
-                                                                {category.name}
-                                                            </option>
-                                                        )
-                                                    )}
-                                            </select>
-                                        </div>
+                {/* Quick Stats */}
+                {businessStats && (
+                    <div className="row mb-4">
+                        <div className="col-md-3">
+                            <div className="card border-0 shadow-sm">
+                                <div className="card-body text-center">
+                                    <div className="h3 text-primary mb-1">
+                                        {businessStats.total_services || 0}
                                     </div>
-                                </div>
-
-                                {/* Sort and View Controls */}
-                                <div className="col-md-3 text-end">
-                                    <div className="d-flex justify-content-end gap-2">
-                                        <select
-                                            className="form-select form-select-sm w-auto"
-                                            value={`${sortBy}-${sortOrder}`}
-                                            onChange={(e) => {
-                                                const [field, order] =
-                                                    e.target.value.split("-");
-                                                setSortBy(field);
-                                                setSortOrder(order);
-                                            }}
-                                        >
-                                            <option value="created_at-desc">
-                                                Newest First
-                                            </option>
-                                            <option value="created_at-asc">
-                                                Oldest First
-                                            </option>
-                                            <option value="title-asc">
-                                                Name A-Z
-                                            </option>
-                                            <option value="title-desc">
-                                                Name Z-A
-                                            </option>
-                                            <option value="price-desc">
-                                                Price High-Low
-                                            </option>
-                                            <option value="price-asc">
-                                                Price Low-High
-                                            </option>
-                                            <option value="rating-desc">
-                                                Highest Rated
-                                            </option>
-                                            <option value="views-desc">
-                                                Most Viewed
-                                            </option>
-                                            <option value="bookings-desc">
-                                                Most Booked
-                                            </option>
-                                        </select>
-
-                                        <div className="btn-group" role="group">
-                                            <button
-                                                className={`btn btn-outline-secondary ${
-                                                    viewMode === "grid"
-                                                        ? "active"
-                                                        : ""
-                                                }`}
-                                                onClick={() =>
-                                                    setViewMode("grid")
-                                                }
-                                            >
-                                                <i className="fas fa-th"></i>
-                                            </button>
-                                            <button
-                                                className={`btn btn-outline-secondary ${
-                                                    viewMode === "list"
-                                                        ? "active"
-                                                        : ""
-                                                }`}
-                                                onClick={() =>
-                                                    setViewMode("list")
-                                                }
-                                            >
-                                                <i className="fas fa-list"></i>
-                                            </button>
-                                        </div>
-                                    </div>
+                                    <small className="text-muted">Total Services</small>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </div>
-
-                {/* Bulk Actions */}
-                {selectedServices.length > 0 && (
-                    <div className="bulk-actions-bar mb-3">
-                        <div className="alert alert-info d-flex justify-content-between align-items-center">
-                            <span>
-                                <i className="fas fa-check-square me-2"></i>
-                                {selectedServices.length} service
-                                {selectedServices.length > 1 ? "s" : ""}{" "}
-                                selected
-                            </span>
-                            <div className="btn-group">
-                                <button
-                                    className="btn btn-success btn-sm"
-                                    onClick={() => handleBulkAction("activate")}
-                                >
-                                    <i className="fas fa-play me-1"></i>
-                                    Activate
-                                </button>
-                                <button
-                                    className="btn btn-warning btn-sm"
-                                    onClick={() =>
-                                        handleBulkAction("deactivate")
-                                    }
-                                >
-                                    <i className="fas fa-pause me-1"></i>
-                                    Deactivate
-                                </button>
-                                <button
-                                    className="btn btn-danger btn-sm"
-                                    onClick={() => handleBulkAction("delete")}
-                                >
-                                    <i className="fas fa-trash me-1"></i>
-                                    Delete
-                                </button>
+                        <div className="col-md-3">
+                            <div className="card border-0 shadow-sm">
+                                <div className="card-body text-center">
+                                    <div className="h3 text-success mb-1">
+                                        {businessStats.active_services || 0}
+                                    </div>
+                                    <small className="text-muted">Active Services</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="col-md-3">
+                            <div className="card border-0 shadow-sm">
+                                <div className="card-body text-center">
+                                    <div className="h3 text-warning mb-1">
+                                        {businessStats.total_views || 0}
+                                    </div>
+                                    <small className="text-muted">Total Views</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="col-md-3">
+                            <div className="card border-0 shadow-sm">
+                                <div className="card-body text-center">
+                                    <div className="h3 text-info mb-1">
+                                        {businessStats.total_bookings || 0}
+                                    </div>
+                                    <small className="text-muted">Total Bookings</small>
+                                </div>
                             </div>
                         </div>
                     </div>
                 )}
 
-                {/* Services Display */}
-                <div className="services-content">
-                    {sortedServices.length > 0 ? (
-                        <div className={viewMode === "grid" ? "row" : ""}>
-                            {sortedServices.map((service) => (
-                                <div
-                                    key={service.id}
-                                    className={
-                                        viewMode === "grid"
-                                            ? "col-lg-6 col-xl-4 mb-4"
-                                            : "mb-3"
-                                    }
-                                >
-                                    {viewMode === "grid" ? (
-                                        // Grid View
-                                        <div className="card h-100 shadow-sm border-0 service-card">
-                                            <div className="service-image position-relative">
-                                                {service.first_image_url ? (
-                                                    <img
-                                                        src={
-                                                            service.first_image_url
-                                                        }
-                                                        alt={service.title}
-                                                        className="card-img-top service-card-image"
-                                                    />
-                                                ) : (
-                                                    <div className="no-image bg-light d-flex align-items-center justify-content-center service-placeholder">
-                                                        <i className="fas fa-image fa-3x text-muted"></i>
-                                                    </div>
-                                                )}
-                                                <div className="position-absolute top-0 end-0 m-2">
-                                                    {getStatusBadge(
-                                                        service.is_active
-                                                    )}
-                                                </div>
-                                                <div className="position-absolute top-0 start-0 m-2">
-                                                    <input
-                                                        type="checkbox"
-                                                        className="form-check-input"
-                                                        checked={selectedServices.includes(
-                                                            service.id
-                                                        )}
-                                                        onChange={(e) => {
-                                                            if (
-                                                                e.target.checked
-                                                            ) {
-                                                                setSelectedServices(
-                                                                    [
-                                                                        ...selectedServices,
-                                                                        service.id,
-                                                                    ]
-                                                                );
-                                                            } else {
-                                                                setSelectedServices(
-                                                                    selectedServices.filter(
-                                                                        (id) =>
-                                                                            id !==
-                                                                            service.id
-                                                                    )
-                                                                );
-                                                            }
-                                                        }}
-                                                    />
-                                                </div>
-                                            </div>
+                {/* Filters */}
+                <ServiceFilters
+                    filter={filter}
+                    setFilter={setFilter}
+                    searchQuery={searchQuery}
+                    setSearchQuery={setSearchQuery}
+                    selectedCategory={selectedCategory}
+                    setSelectedCategory={setSelectedCategory}
+                    categories={categories}
+                    sortBy={sortBy}
+                    setSortBy={setSortBy}
+                    sortOrder={sortOrder}
+                    setSortOrder={setSortOrder}
+                    viewMode={viewMode}
+                    setViewMode={setViewMode}
+                    servicesCount={services?.length || 0}
+                    selectedServices={selectedServices}
+                    onBulkDelete={handleBulkDelete}
+                    onBulkToggleStatus={handleBulkToggleStatus}
+                />
 
-                                            <div className="card-body">
-                                                {/* Category and Title */}
-                                                <div className="mb-2">
-                                                    <span
-                                                        className={`badge bg-${
-                                                            service.category
-                                                                .color ||
-                                                            "primary"
-                                                        } bg-opacity-10 text-${
-                                                            service.category
-                                                                .color ||
-                                                            "primary"
-                                                        } mb-2`}
-                                                    >
-                                                        <i
-                                                            className={`${service.category.icon} me-1`}
-                                                        ></i>
-                                                        {service.category.name}
-                                                    </span>
-                                                    <h5 className="card-title mb-1">
-                                                        {service.title}
-                                                    </h5>
-                                                </div>
-
-                                                {/* Description */}
-                                                <p className="card-text text-muted small">
-                                                    {service.description
-                                                        .length > 100
-                                                        ? service.description.substring(
-                                                              0,
-                                                              100
-                                                          ) + "..."
-                                                        : service.description}
-                                                </p>
-
-                                                {/* Location Info */}
-                                                {service.location && (
-                                                    <div className="location-info bg-light rounded p-2 mb-3">
-                                                        <div className="d-flex align-items-center mb-1">
-                                                            <i className="fas fa-map-marker-alt text-danger me-2"></i>
-                                                            <small className="fw-semibold">
-                                                                {
-                                                                    service
-                                                                        .location
-                                                                        .address
-                                                                }
-                                                            </small>
-                                                        </div>
-                                                        <div className="d-flex align-items-center">
-                                                            <i className="fas fa-circle-notch text-primary me-2"></i>
-                                                            <small>
-                                                                Service radius:{" "}
-                                                                {
-                                                                    service.service_radius
-                                                                }
-                                                                km
-                                                            </small>
-                                                        </div>
-                                                    </div>
-                                                )}
-
-                                                {/* Service Areas */}
-                                                <div className="mb-3">
-                                                    <small className="text-muted">
-                                                        Service Areas:
-                                                    </small>
-                                                    <div className="d-flex flex-wrap gap-1 mt-1">
-                                                        {service.service_areas
-                                                            .slice(0, 3)
-                                                            .map(
-                                                                (
-                                                                    area,
-                                                                    index
-                                                                ) => (
-                                                                    <span
-                                                                        key={
-                                                                            index
-                                                                        }
-                                                                        className="badge bg-light text-dark"
-                                                                    >
-                                                                        {area}
-                                                                    </span>
-                                                                )
-                                                            )}
-                                                        {service.service_areas
-                                                            .length > 3 && (
-                                                            <span className="badge bg-light text-dark">
-                                                                +
-                                                                {service
-                                                                    .service_areas
-                                                                    .length -
-                                                                    3}{" "}
-                                                                more
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                </div>
-
-                                                {/* Stats Row */}
-                                                <div className="stats-row d-flex justify-content-between align-items-center mb-3">
-                                                    <div className="price fw-bold text-primary">
-                                                        {getPricingDisplay(service)}
-                                                    </div>
-                                                    <div className="stats d-flex gap-3 small text-muted">
-                                                        <span title="Rating">
-                                                            <i
-                                                                className={`fas fa-star text-${getPerformanceColor(
-                                                                    service.average_rating
-                                                                )}`}
-                                                            ></i>{" "}
-                                                            {service.average_rating ||
-                                                                "N/A"}
-                                                        </span>
-                                                        <span title="Views">
-                                                            <i className="fas fa-eye"></i>{" "}
-                                                            {service.views_count ||
-                                                                0}
-                                                        </span>
-                                                        <span title="Bookings">
-                                                            <i className="fas fa-calendar-check"></i>{" "}
-                                                            {service.bookings_count ||
-                                                                0}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            {/* Card Footer with Actions */}
-                                            <div className="card-footer bg-white border-top">
-                                                <div className="d-flex gap-2">
-                                                    <Link
-                                                        to={`/provider/services/${service.id}/edit`}
-                                                        className="btn btn-outline-primary btn-sm flex-grow-1"
-                                                    >
-                                                        <i className="fas fa-edit me-1"></i>
-                                                        Edit
-                                                    </Link>
-                                                    <button
-                                                        className={`btn btn-sm ${
-                                                            service.is_active
-                                                                ? "btn-outline-warning"
-                                                                : "btn-outline-success"
-                                                        }`}
-                                                        onClick={() =>
-                                                            handleToggleStatus(
-                                                                service.id
-                                                            )
-                                                        }
-                                                        title={
-                                                            service.is_active
-                                                                ? "Deactivate"
-                                                                : "Activate"
-                                                        }
-                                                    >
-                                                        <i
-                                                            className={`fas ${
-                                                                service.is_active
-                                                                    ? "fa-pause"
-                                                                    : "fa-play"
-                                                            }`}
-                                                        ></i>
-                                                    </button>
-                                                    <Link
-                                                        to={`/provider/services/${service.id}`} // Add this link
-                                                        className="btn btn-outline-info btn-sm"
-                                                        title="View Details"
-                                                    >
-                                                        <i className="fas fa-eye"></i>
-                                                    </Link>
-                                                    <button
-                                                        className="btn btn-outline-danger btn-sm"
-                                                        onClick={() =>
-                                                            handleDelete(
-                                                                service
-                                                            )
-                                                        }
-                                                        title="Delete"
-                                                    >
-                                                        <i className="fas fa-trash"></i>
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        // List View
-                                        <div className="card border-0 shadow-sm service-list-item">
-                                            <div className="card-body">
-                                                <div className="row align-items-center">
-                                                    <div className="col-md-8">
-                                                        <div className="d-flex align-items-start">
-                                                            <div className="me-3">
-                                                                <input
-                                                                    type="checkbox"
-                                                                    className="form-check-input"
-                                                                    checked={selectedServices.includes(
-                                                                        service.id
-                                                                    )}
-                                                                    onChange={(
-                                                                        e
-                                                                    ) => {
-                                                                        if (
-                                                                            e
-                                                                                .target
-                                                                                .checked
-                                                                        ) {
-                                                                            setSelectedServices(
-                                                                                [
-                                                                                    ...selectedServices,
-                                                                                    service.id,
-                                                                                ]
-                                                                            );
-                                                                        } else {
-                                                                            setSelectedServices(
-                                                                                selectedServices.filter(
-                                                                                    (
-                                                                                        id
-                                                                                    ) =>
-                                                                                        id !==
-                                                                                        service.id
-                                                                                )
-                                                                            );
-                                                                        }
-                                                                    }}
-                                                                />
-                                                            </div>
-                                                            <div className="service-image me-3">
-                                                                {service.first_image_url ? (
-                                                                    <img
-                                                                        src={service.first_image_url}
-                                                                        alt={service.title}
-                                                                        className="rounded service-list-image"
-                                                                    />
-                                                                ) : (
-                                                                    <div className="bg-light rounded d-flex align-items-center justify-content-center service-list-placeholder">
-                                                                        <i className="fas fa-image text-muted"></i>
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                            <div className="flex-grow-1">
-                                                                <div className="d-flex align-items-center mb-1">
-                                                                    <h6 className="mb-0 me-2">
-                                                                        {
-                                                                            service.title
-                                                                        }
-                                                                    </h6>
-                                                                    {getStatusBadge(
-                                                                        service.is_active
-                                                                    )}
-                                                                    <span
-                                                                        className={`badge bg-${
-                                                                            service
-                                                                                .category
-                                                                                .color ||
-                                                                            "primary"
-                                                                        } bg-opacity-10 text-${
-                                                                            service
-                                                                                .category
-                                                                                .color ||
-                                                                            "primary"
-                                                                        } ms-2`}
-                                                                    >
-                                                                        <i
-                                                                            className={`${service.category.icon} me-1`}
-                                                                        ></i>
-                                                                        {
-                                                                            service
-                                                                                .category
-                                                                                .name
-                                                                        }
-                                                                    </span>
-                                                                </div>
-                                                                <p className="text-muted small mb-2">
-                                                                    {service
-                                                                        .description
-                                                                        .length >
-                                                                    150
-                                                                        ? service.description.substring(
-                                                                              0,
-                                                                              150
-                                                                          ) +
-                                                                          "..."
-                                                                        : service.description}
-                                                                </p>
-                                                                <div className="d-flex gap-3 small text-muted">
-                                                                    <span>
-                                                                        <i className="fas fa-map-marker-alt me-1"></i>
-                                                                        {service.service_areas
-                                                                            .slice(
-                                                                                0,
-                                                                                2
-                                                                            )
-                                                                            .join(
-                                                                                ", "
-                                                                            )}
-                                                                        {service
-                                                                            .service_areas
-                                                                            .length >
-                                                                            2 &&
-                                                                            ` +${
-                                                                                service
-                                                                                    .service_areas
-                                                                                    .length -
-                                                                                2
-                                                                            } more`}
-                                                                    </span>
-                                                                    <span>
-                                                                        <i className="fas fa-eye me-1"></i>
-                                                                        {service.views_count ||
-                                                                            0}{" "}
-                                                                        views
-                                                                    </span>
-                                                                    <span>
-                                                                        <i className="fas fa-calendar-check me-1"></i>
-                                                                        {service.bookings_count ||
-                                                                            0}{" "}
-                                                                        bookings
-                                                                    </span>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div className="col-md-4 text-end">
-                                                        <div className="mb-2">
-                                                            <div className="fw-bold text-primary mb-1">
-                                                                {getPricingDisplay(service)}
-                                                            </div>
-                                                            <div className="d-flex align-items-center justify-content-end">
-                                                                <span
-                                                                    className={`badge bg-${getPerformanceColor(
-                                                                        service.average_rating
-                                                                    )}`}
-                                                                >
-                                                                    ⭐{" "}
-                                                                    {service.average_rating ||
-                                                                        "N/A"}
-                                                                </span>
-                                                            </div>
-                                                        </div>
-                                                        <div className="d-flex gap-1 justify-content-end">
-                                                            <Link
-                                                                to={`/provider/services/${service.id}/edit`}
-                                                                className="btn btn-outline-primary btn-sm"
-                                                            >
-                                                                <i className="fas fa-edit"></i>
-                                                            </Link>
-                                                            <button
-                                                                className={`btn btn-sm ${
-                                                                    service.is_active
-                                                                        ? "btn-outline-warning"
-                                                                        : "btn-outline-success"
-                                                                }`}
-                                                                onClick={() =>
-                                                                    handleToggleStatus(
-                                                                        service.id
-                                                                    )
-                                                                }
-                                                            >
-                                                                <i
-                                                                    className={`fas ${
-                                                                        service.is_active
-                                                                            ? "fa-pause"
-                                                                            : "fa-play"
-                                                                    }`}
-                                                                ></i>
-                                                            </button>
-                                                            <Link
-                                                                to={`/provider/services/${service.id}`}
-                                                                className="btn btn-outline-info btn-sm"
-                                                            >
-                                                                <i className="fas fa-eye"></i>
-                                                            </Link>
-                                                            <button
-                                                                className="btn btn-outline-danger btn-sm"
-                                                                onClick={() =>
-                                                                    handleDelete(
-                                                                        service
-                                                                    )
-                                                                }
-                                                            >
-                                                                <i className="fas fa-trash"></i>
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            ))}
-                        </div>
-                    ) : (
-                        // Empty State
-                        <div className="empty-state text-center py-5">
-                            <div className="empty-icon mb-4">
-                                <i className="fas fa-concierge-bell fa-4x text-muted"></i>
+                {/* Services Grid/List */}
+                {viewMode === "grid" ? (
+                    <div className="services-grid">
+                        {filteredAndSortedServices.length > 0 ? (
+                            <div className="row">
+                                {filteredAndSortedServices.map((service) => (
+                                    <div key={service.id} className="col-lg-4 col-md-6 mb-4">
+                                        <ServiceCard
+                                            service={service}
+                                            onToggleStatus={handleToggleStatus}
+                                            onDelete={handleDeleteService}
+                                            onSelect={handleServiceSelect}
+                                            isSelected={selectedServices.includes(service.id)}
+                                        />
+                                    </div>
+                                ))}
                             </div>
-                            <h5 className="text-muted mb-3">
-                                {searchQuery || selectedCategory
-                                    ? "No services match your filters"
-                                    : filter === "all"
-                                    ? "No services found"
-                                    : `No ${filter} services found`}
-                            </h5>
-                            <p className="text-muted mb-4">
-                                {searchQuery || selectedCategory
-                                    ? "Try adjusting your search or filter criteria"
-                                    : filter === "all"
-                                    ? "Get started by creating your first service offering"
-                                    : `You don't have any ${filter} services yet`}
-                            </p>
-                            <div className="d-flex gap-2 justify-content-center">
-                                {searchQuery || selectedCategory ? (
-                                    <>
-                                        <button
-                                            className="btn btn-outline-secondary"
-                                            onClick={() => {
-                                                setSearchQuery("");
-                                                setSelectedCategory("");
-                                                setFilter("all");
-                                            }}
-                                        >
-                                            <i className="fas fa-times me-2"></i>
-                                            Clear Filters
-                                        </button>
-                                        <Link
-                                            to="/provider/services/create"
-                                            className="btn btn-primary"
-                                        >
-                                            <i className="fas fa-plus me-2"></i>
-                                            Add New Service
-                                        </Link>
-                                    </>
-                                ) : (
+                        ) : (
+                            <div className="text-center py-5">
+                                <div className="mb-4">
+                                    <i className="fas fa-search fa-4x text-muted"></i>
+                                </div>
+                                <h5 className="text-muted">No services found</h5>
+                                <p className="text-muted mb-4">
+                                    {searchQuery || selectedCategory || filter !== "all"
+                                        ? "Try adjusting your filters or search terms."
+                                        : "You haven't created any services yet."}
+                                </p>
+                                {(!searchQuery && !selectedCategory && filter === "all") && (
                                     <Link
                                         to="/provider/services/create"
                                         className="btn btn-primary"
@@ -1043,325 +287,79 @@ const ProviderServices = () => {
                                     </Link>
                                 )}
                             </div>
-                        </div>
-                    )}
-                </div>
-
-                {/* Delete Confirmation Modal */}
-                {showDeleteModal && serviceToDelete && (
-                    <div className="modal-backdrop">
-                        <div className="modal-dialog modal-dialog-centered">
-                            <div className="modal-content">
-                                <div className="modal-header">
-                                    <h5 className="modal-title">
-                                        <i className="fas fa-exclamation-triangle text-warning me-2"></i>
-                                        Confirm Delete
-                                    </h5>
-                                    <button
-                                        type="button"
-                                        className="btn-close"
-                                        onClick={() =>
-                                            setShowDeleteModal(false)
-                                        }
-                                    ></button>
-                                </div>
-                                <div className="modal-body">
-                                    <div className="text-center mb-3">
-                                        <div className="service-preview p-3 bg-light rounded">
-                                            <h6 className="fw-bold">
-                                                {serviceToDelete.title}
-                                            </h6>
-                                            <p className="text-muted small mb-0">
-                                                {serviceToDelete.category.name}{" "}
-                                                •{" "}
-                                                {getPricingDisplay(
-                                                    serviceToDelete
-                                                )}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <p className="text-center">
-                                        Are you sure you want to delete this
-                                        service? This action cannot be undone.
-                                    </p>
-                                    <div className="alert alert-warning">
-                                        <div className="d-flex align-items-center">
-                                            <i className="fas fa-info-circle me-2"></i>
-                                            <small>
-                                                <strong>Note:</strong> This
-                                                service has{" "}
-                                                {serviceToDelete.bookings_count ||
-                                                    0}{" "}
-                                                booking
-                                                {(serviceToDelete.bookings_count ||
-                                                    0) !== 1
-                                                    ? "s"
-                                                    : ""}
-                                                and{" "}
-                                                {serviceToDelete.views_count ||
-                                                    0}{" "}
-                                                view
-                                                {(serviceToDelete.views_count ||
-                                                    0) !== 1
-                                                    ? "s"
-                                                    : ""}
-                                                .
-                                            </small>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="modal-footer">
-                                    <button
-                                        type="button"
-                                        className="btn btn-secondary"
-                                        onClick={() =>
-                                            setShowDeleteModal(false)
-                                        }
-                                    >
-                                        <i className="fas fa-times me-2"></i>
-                                        Cancel
-                                    </button>
-                                    <button
-                                        type="button"
-                                        className="btn btn-danger"
-                                        onClick={confirmDelete}
-                                        disabled={loading}
-                                    >
-                                        {loading ? (
-                                            <>
-                                                <span className="spinner-border spinner-border-sm me-2"></span>
-                                                Deleting...
-                                            </>
-                                        ) : (
-                                            <>
-                                                <i className="fas fa-trash me-2"></i>
-                                                Delete Service
-                                            </>
-                                        )}
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
+                        )}
                     </div>
-                )}
-
-                {/* Error Alert */}
-                {error && (
-                    <div className="alert alert-danger alert-dismissible fade show">
-                        <i className="fas fa-exclamation-circle me-2"></i>
-                        {error}
-                        <button
-                            type="button"
-                            className="btn-close"
-                            onClick={() => setError(null)}
-                        ></button>
-                    </div>
+                ) : (
+                    <ServiceTable
+                        services={filteredAndSortedServices}
+                        onToggleStatus={handleToggleStatus}
+                        onDelete={handleDeleteService}
+                        onSelect={handleServiceSelect}
+                        onSelectAll={handleSelectAll}
+                        selectedServices={selectedServices}
+                        allSelected={allSelected}
+                    />
                 )}
             </div>
 
-            {/* Design System Compatible Styles */}
-            <style>{`
-                .provider-services {
-                    animation: fadeIn 0.3s ease-in;
-                }
-
-                @keyframes fadeIn {
-                    from {
-                        opacity: 0;
-                        transform: translateY(10px);
-                    }
-                    to {
-                        opacity: 1;
-                        transform: translateY(0);
-                    }
-                }
-
-                .service-card,
-                .service-list-item {
-                    transition: var(--transition);
-                    border: 1px solid transparent !important;
-                }
-
-                .service-card:hover,
-                .service-list-item:hover {
-                    transform: translateY(-2px);
-                    box-shadow: var(--shadow-lg) !important;
-                    border-color: var(--current-role-primary) !important;
-                }
-
-                .nav-pills .nav-link {
-                    color: var(--text-secondary);
-                    border-radius: var(--border-radius-xl);
-                    padding: var(--space-2) var(--space-4);
-                    margin-right: var(--space-2);
-                }
-
-                .nav-pills .nav-link.active {
-                    background-color: var(--current-role-primary);
-                    color: white;
-                }
-
-                .nav-pills .nav-link:hover:not(.active) {
-                    background-color: var(--current-role-light);
-                    color: var(--current-role-primary);
-                }
-
-                .location-info {
-                    border-left: 3px solid var(--current-role-primary);
-                }
-
-                .service-image img {
-                    transition: var(--transition);
-                }
-
-                .service-card:hover .service-image img {
-                    transform: scale(1.05);
-                }
-
-                .stats-row .stats span {
-                    transition: var(--transition-fast);
-                }
-
-                .stats-row .stats span:hover {
-                    color: var(--current-role-primary) !important;
-                }
-
-                .modal-backdrop {
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    right: 0;
-                    bottom: 0;
-                    background: var(--bg-overlay);
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    z-index: 1050;
-                    animation: fadeIn 0.2s ease-in;
-                }
-
-                .modal-dialog {
-                    background: var(--bg-white);
-                    border-radius: var(--border-radius-lg);
-                    max-width: 500px;
-                    width: 90%;
-                    margin: var(--space-8) auto;
-                    animation: slideIn 0.3s ease-out;
-                }
-
-                @keyframes slideIn {
-                    from {
-                        opacity: 0;
-                        transform: translateY(-50px);
-                    }
-                    to {
-                        opacity: 1;
-                        transform: translateY(0);
-                    }
-                }
-
-                .modal-content {
-                    border: none;
-                    border-radius: var(--border-radius-lg);
-                    box-shadow: var(--shadow-xl);
-                }
-
-                .bulk-actions-bar {
-                    position: sticky;
-                    top: 80px;
-                    z-index: 100;
-                }
-
-                .controls-section .card {
-                    border: 1px solid var(--border-color);
-                }
-
-                .empty-state {
-                    padding: var(--space-16) var(--space-4);
-                }
-
-                .empty-icon {
-                    opacity: 0.5;
-                }
-
-                .service-preview {
-                    border: 1px solid var(--border-color);
-                }
-
-                .btn-group .btn.active {
-                    background-color: var(--current-role-primary);
-                    border-color: var(--current-role-primary);
-                    color: white;
-                }
-
-                /* Responsive adjustments using design system breakpoints */
-                @media (max-width: 768px) {
-                    .controls-section .row {
-                        flex-direction: column;
-                    }
-
-                    .controls-section .col-md-4,
-                    .controls-section .col-md-5,
-                    .controls-section .col-md-3 {
-                        margin-bottom: var(--space-4);
-                    }
-
-                    .service-card .card-body {
-                        padding: var(--space-4);
-                    }
-
-                    .service-list-item .row {
-                        flex-direction: column;
-                    }
-
-                    .service-list-item .col-md-4 {
-                        text-align: left !important;
-                        margin-top: var(--space-4);
-                    }
-                }
-
-                @media (max-width: 576px) {
-                    .analytics .col-6 {
-                        margin-bottom: var(--space-4);
-                    }
-
-                    .analytics .card-body {
-                        padding: var(--space-4);
-                    }
-
-                    .analytics h4 {
-                        font-size: var(--text-xl);
-                    }
-                }
-
-                .service-card .position-absolute {
-                    z-index: 10;
-                }
-
-                .h-400 {
-                    height: 400px;
-                }
-
-                .service-card-image {
-                    height: 200px;
-                    object-fit: cover;
-                }
-
-                .service-placeholder {
-                    height: 200px;
-                }
-
-                .service-list-image {
-                    width: 60px;
-                    height: 60px;
-                    object-fit: cover;
-                }
-
-                .service-list-placeholder {
-                    width: 60px;
-                    height: 60px;
-                }
-            `}</style>
+            {/* Delete Confirmation Modal */}
+            {showDeleteModal && (
+                <div className="modal show d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+                    <div className="modal-dialog">
+                        <div className="modal-content">
+                            <div className="modal-header">
+                                <h5 className="modal-title">
+                                    {bulkDeleteServices.length > 0 
+                                        ? "Delete Selected Services" 
+                                        : "Delete Service"}
+                                </h5>
+                                <button
+                                    type="button"
+                                    className="btn-close"
+                                    onClick={() => {
+                                        setShowDeleteModal(false);
+                                        setServiceToDelete(null);
+                                        setBulkDeleteServices([]);
+                                    }}
+                                ></button>
+                            </div>
+                            <div className="modal-body">
+                                {bulkDeleteServices.length > 0 ? (
+                                    <p>
+                                        Are you sure you want to delete {bulkDeleteServices.length} selected service(s)? 
+                                        This action cannot be undone.
+                                    </p>
+                                ) : (
+                                    <p>
+                                        Are you sure you want to delete "{serviceToDelete?.title}"? 
+                                        This action cannot be undone.
+                                    </p>
+                                )}
+                            </div>
+                            <div className="modal-footer">
+                                <button
+                                    type="button"
+                                    className="btn btn-secondary"
+                                    onClick={() => {
+                                        setShowDeleteModal(false);
+                                        setServiceToDelete(null);
+                                        setBulkDeleteServices([]);
+                                    }}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="button"
+                                    className="btn btn-danger"
+                                    onClick={bulkDeleteServices.length > 0 ? confirmBulkDelete : confirmDelete}
+                                >
+                                    Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </ProviderLayout>
     );
 };
