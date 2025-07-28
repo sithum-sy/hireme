@@ -13,7 +13,7 @@ class Review extends Model
         'appointment_id',
         'reviewer_id',
         'reviewee_id',
-        'service_id', //  Added
+        'service_id',
         'review_type',
         'rating',
         'comment',
@@ -26,12 +26,12 @@ class Review extends Model
         'is_verified',
         'is_featured',
         'is_hidden',
-        'status', //   Added
+        'status',
         'provider_response',
         'provider_responded_at',
         'helpful_count',
-        'flagged_at', //   Added
-        'moderation_notes' //   Added
+        'flagged_at',
+        'moderation_notes'
     ];
 
     protected $casts = [
@@ -41,7 +41,7 @@ class Review extends Model
         'is_featured' => 'boolean',
         'is_hidden' => 'boolean',
         'provider_responded_at' => 'datetime',
-        'flagged_at' => 'datetime' //   Added
+        'flagged_at' => 'datetime'
     ];
 
     // Constants

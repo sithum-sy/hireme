@@ -6,15 +6,19 @@ import ProviderLayout from "../../components/layouts/ProviderLayout";
 import availabilityService from "../../services/availabilityService";
 import AppointmentSections from "../../components/provider/dashboard/AppointmentSections";
 
+// Widget to show provider's availability status
 const AvailabilityWidget = () => {
+    // State variables for availability data, loading and error
     const [availabilityData, setAvailabilityData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
+    // Load availability data when component mounts
     useEffect(() => {
         loadAvailabilityData();
     }, []);
 
+    // Function to fetch availability summary from service
     const loadAvailabilityData = async () => {
         try {
             setLoading(true);
@@ -24,7 +28,7 @@ const AvailabilityWidget = () => {
                 setAvailabilityData(result.data);
             } else {
                 setError("Failed to load availability data");
-                // Set default data for display
+                // Set default data for display if fetch fails
                 setAvailabilityData({
                     total_working_days: 5,
                     total_weekly_hours: 40,
@@ -35,7 +39,7 @@ const AvailabilityWidget = () => {
         } catch (error) {
             console.error("Error loading availability data:", error);
             setError("Unable to connect to server");
-            // Set default data for display
+            // Set default data for display if error occurs
             setAvailabilityData({
                 total_working_days: 5,
                 total_weekly_hours: 40,
@@ -47,6 +51,7 @@ const AvailabilityWidget = () => {
         }
     };
 
+    // Function to determine availability status based on data
     const getAvailabilityStatus = () => {
         if (!availabilityData)
             return { color: "secondary", text: "Unknown", icon: "question" };
@@ -54,6 +59,7 @@ const AvailabilityWidget = () => {
         const workingDays = availabilityData.total_working_days || 0;
         const blockedTimes = availabilityData.blocked_times_count || 0;
 
+        // Different status based on working days and blocked times
         if (workingDays === 0) {
             return {
                 color: "danger",
@@ -79,6 +85,7 @@ const AvailabilityWidget = () => {
 
     const status = getAvailabilityStatus();
 
+    // Show loading spinner while data is being fetched
     if (loading) {
         return (
             <div className="dashboard-card availability-widget">
@@ -98,6 +105,7 @@ const AvailabilityWidget = () => {
         );
     }
 
+    // Render availability widget with status and summary
     return (
         <div className="dashboard-card availability-widget">
             <div className="dashboard-card-header">
@@ -105,6 +113,7 @@ const AvailabilityWidget = () => {
                     <i className="fas fa-calendar-alt"></i>
                     <span>Availability Status</span>
                 </h6>
+                {/* Link to manage availability */}
                 <Link
                     to="/provider/availability"
                     className="btn btn-outline-primary btn-sm"
@@ -113,6 +122,7 @@ const AvailabilityWidget = () => {
                 </Link>
             </div>
             <div className="dashboard-card-body">
+                {/* Show error if any */}
                 {error && (
                     <div className="alert alert-warning">
                         <i className="fas fa-exclamation-triangle"></i>
@@ -120,6 +130,7 @@ const AvailabilityWidget = () => {
                     </div>
                 )}
 
+                {/* Show current availability status */}
                 <div className="availability-status">
                     <div className={`status-indicator ${status.color}`}>
                         <i className={`fas fa-${status.icon}`}></i>
@@ -134,6 +145,7 @@ const AvailabilityWidget = () => {
                     </div>
                 </div>
 
+                {/* Show summary of working days and weekly hours */}
                 <div className="availability-summary">
                     <div className="availability-stats">
                         <div className="stat-item">
@@ -150,6 +162,7 @@ const AvailabilityWidget = () => {
                         </div>
                     </div>
 
+                    {/* Show next blocked period if available */}
                     {availabilityData?.next_blocked_period && (
                         <div className="alert alert-warning">
                             <i className="fas fa-exclamation-triangle"></i>
@@ -164,6 +177,7 @@ const AvailabilityWidget = () => {
                     )}
                 </div>
 
+                {/* Actions to update schedule or block time */}
                 <div className="availability-actions">
                     <Link
                         to="/provider/availability/schedule"
@@ -232,7 +246,7 @@ const ProviderDashboard = () => {
         },
     ];
 
-    // Fixed: Get performance indicators directly from dashboardMetrics
+    // Get performance indicators directly from dashboardMetrics
     const getPerformanceData = () => {
         const performanceData = dashboardMetrics?.performanceIndicators || {};
 
@@ -285,6 +299,11 @@ const ProviderDashboard = () => {
     return (
         <ProviderLayout>
             <div className="page-content">
+                {/* Today's Schedule Section */}
+                <div className="todays-schedule-section mb-6">
+                    <AppointmentSections />
+                </div>
+
                 {/* Quick Actions */}
                 <div className="quick-actions-section mb-6">
                     <div className="section-header mb-4">
@@ -328,11 +347,6 @@ const ProviderDashboard = () => {
                             </Link>
                         ))}
                     </div>
-                </div>
-
-                {/* Today's Schedule Section */}
-                <div className="todays-schedule-section mb-6">
-                    <AppointmentSections />
                 </div>
 
                 {/* Sidebar Widgets in Grid Layout */}
@@ -543,7 +557,7 @@ const ProviderDashboard = () => {
                         <div className="card-body">
                             <div className="row g-3">
                                 <div className="col-lg-3 col-md-6">
-                                    <div className="text-center p-3 bg-success bg-opacity-10 rounded">
+                                    <div className="text-center p-3 border border-success bg-opacity-10 rounded">
                                         <div className="mb-2">
                                             <i className="fas fa-eye fa-2x text-success"></i>
                                         </div>
@@ -557,7 +571,7 @@ const ProviderDashboard = () => {
                                     </div>
                                 </div>
                                 <div className="col-lg-3 col-md-6">
-                                    <div className="text-center p-3 bg-info bg-opacity-10 rounded">
+                                    <div className="text-center p-3 border border-info bg-opacity-10 rounded">
                                         <div className="mb-2">
                                             <i className="fas fa-percentage fa-2x text-info"></i>
                                         </div>
@@ -573,7 +587,7 @@ const ProviderDashboard = () => {
                                     </div>
                                 </div>
                                 <div className="col-lg-3 col-md-6">
-                                    <div className="text-center p-3 bg-warning bg-opacity-10 rounded">
+                                    <div className="text-center p-3 border border-warning bg-opacity-10 rounded">
                                         <div className="mb-2">
                                             <i className="fas fa-medal fa-2x text-warning"></i>
                                         </div>
@@ -592,7 +606,7 @@ const ProviderDashboard = () => {
                                     </div>
                                 </div>
                                 <div className="col-lg-3 col-md-6">
-                                    <div className="text-center p-3 bg-primary bg-opacity-10 rounded">
+                                    <div className="text-center p-3 border border-primary-subtle bg-opacity-10 rounded">
                                         <div className="mb-2">
                                             <i className="fas fa-calendar-check fa-2x text-primary"></i>
                                         </div>

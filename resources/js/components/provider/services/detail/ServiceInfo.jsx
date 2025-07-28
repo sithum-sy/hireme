@@ -54,6 +54,7 @@ const ServiceInfo = ({ service, activeTab, setActiveTab }) => {
             const result = await getServiceReviews(service.id);
             if (result.success) {
                 setReviews(result.data || []);
+                console.log("Review - ", result.data);
             }
         } catch (error) {
             console.error("Error fetching reviews:", error);
@@ -101,13 +102,15 @@ const ServiceInfo = ({ service, activeTab, setActiveTab }) => {
     // Smart Avatar Component for Clients
     const ClientAvatar = ({ client, size = 40, variant = "primary" }) => {
         const [imageError, setImageError] = useState(false);
-        
+
         // If we have an image and no error, show ProfileImage
         if (client?.profile_image_url && !imageError) {
             return (
                 <ProfileImage
                     src={client.profile_image_url}
-                    alt={`${client.first_name || 'Client'} ${client.last_name || ''}`}
+                    alt={`${client.first_name || "Client"} ${
+                        client.last_name || ""
+                    }`}
                     size={size}
                     className={`border border-${variant} border-opacity-25`}
                     onError={() => setImageError(true)}
@@ -362,23 +365,29 @@ const ServiceInfo = ({ service, activeTab, setActiveTab }) => {
                                         className="booking-item border rounded p-3 mb-3 bg-white shadow-sm"
                                         style={{
                                             transition: "all 0.2s ease",
-                                            cursor: "default"
+                                            cursor: "default",
                                         }}
                                         onMouseEnter={(e) => {
-                                            e.currentTarget.style.transform = "translateY(-2px)";
-                                            e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.1)";
+                                            e.currentTarget.style.transform =
+                                                "translateY(-2px)";
+                                            e.currentTarget.style.boxShadow =
+                                                "0 4px 12px rgba(0,0,0,0.1)";
                                         }}
                                         onMouseLeave={(e) => {
-                                            e.currentTarget.style.transform = "translateY(0)";
-                                            e.currentTarget.style.boxShadow = "0 2px 4px rgba(0,0,0,0.05)";
+                                            e.currentTarget.style.transform =
+                                                "translateY(0)";
+                                            e.currentTarget.style.boxShadow =
+                                                "0 2px 4px rgba(0,0,0,0.05)";
                                         }}
                                     >
                                         <div className="row align-items-center">
                                             <div className="col-md-8">
                                                 <div className="d-flex align-items-center">
                                                     <div className="me-3">
-                                                        <ClientAvatar 
-                                                            client={appointment.client}
+                                                        <ClientAvatar
+                                                            client={
+                                                                appointment.client
+                                                            }
                                                             size={40}
                                                             variant="primary"
                                                         />
@@ -386,15 +395,18 @@ const ServiceInfo = ({ service, activeTab, setActiveTab }) => {
                                                     <div>
                                                         <div className="d-flex align-items-center justify-content-between">
                                                             <h6 className="mb-1">
-                                                                {appointment.client
+                                                                {appointment
+                                                                    .client
                                                                     ?.first_name ||
                                                                     "Client"}{" "}
-                                                                {appointment.client
+                                                                {appointment
+                                                                    .client
                                                                     ?.last_name ||
                                                                     ""}
                                                             </h6>
                                                             <small className="text-muted">
-                                                                #APT{appointment.id}
+                                                                #APT
+                                                                {appointment.id}
                                                             </small>
                                                         </div>
                                                         <div className="text-muted small">
@@ -407,14 +419,24 @@ const ServiceInfo = ({ service, activeTab, setActiveTab }) => {
                                                         {appointment.client_address && (
                                                             <div className="text-muted small">
                                                                 <i className="fas fa-map-marker-alt me-1"></i>
-                                                                {appointment.client_address}
+                                                                {
+                                                                    appointment.client_address
+                                                                }
                                                             </div>
                                                         )}
                                                         {appointment.client_notes && (
                                                             <div className="text-muted small mt-1">
                                                                 <i className="fas fa-comment me-1"></i>
-                                                                <span className="text-truncate d-inline-block" style={{maxWidth: "250px"}}>
-                                                                    {appointment.client_notes}
+                                                                <span
+                                                                    className="text-truncate d-inline-block"
+                                                                    style={{
+                                                                        maxWidth:
+                                                                            "250px",
+                                                                    }}
+                                                                >
+                                                                    {
+                                                                        appointment.client_notes
+                                                                    }
                                                                 </span>
                                                             </div>
                                                         )}
@@ -457,7 +479,8 @@ const ServiceInfo = ({ service, activeTab, setActiveTab }) => {
                                                     </div>
                                                 )}
                                                 <div className="small text-muted mb-2">
-                                                    {appointment.duration_hours}h duration
+                                                    {appointment.duration_hours}
+                                                    h duration
                                                 </div>
                                                 <div className="d-flex flex-column gap-2">
                                                     <Link
@@ -468,10 +491,16 @@ const ServiceInfo = ({ service, activeTab, setActiveTab }) => {
                                                         <i className="fas fa-eye me-1"></i>
                                                         View Details
                                                     </Link>
-                                                    {(appointment.status === 'pending' || appointment.status === 'confirmed') && (
+                                                    {(appointment.status ===
+                                                        "pending" ||
+                                                        appointment.status ===
+                                                            "confirmed") && (
                                                         <div className="small text-muted">
                                                             <i className="fas fa-clock me-1"></i>
-                                                            {appointment.status === 'pending' ? 'Awaiting confirmation' : 'Scheduled'}
+                                                            {appointment.status ===
+                                                            "pending"
+                                                                ? "Awaiting confirmation"
+                                                                : "Scheduled"}
                                                         </div>
                                                     )}
                                                 </div>
@@ -518,7 +547,7 @@ const ServiceInfo = ({ service, activeTab, setActiveTab }) => {
                                     >
                                         <div className="d-flex align-items-start">
                                             <div className="me-3">
-                                                <ClientAvatar 
+                                                <ClientAvatar
                                                     client={review.reviewer}
                                                     size={40}
                                                     variant="warning"
@@ -584,6 +613,17 @@ const ServiceInfo = ({ service, activeTab, setActiveTab }) => {
                                                         </p>
                                                     </div>
                                                 )}
+                                                <div className="d-flex flex-column gap-2">
+                                                    <Link
+                                                        // to={`/provider/appointments/${appointment.id}`}
+                                                        to={`/provider/appointments/${review.appointment.id}`}
+                                                        className="btn btn-outline-primary btn-sm"
+                                                        title="View appointment details"
+                                                    >
+                                                        <i className="fas fa-eye me-1"></i>
+                                                        View Details
+                                                    </Link>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
