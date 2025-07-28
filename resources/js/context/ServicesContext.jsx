@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState } from "react";
 import axios from "axios";
+import notificationService from "../services/notificationService";
 
 const ServicesContext = createContext();
 
@@ -69,6 +70,11 @@ export const ServicesProvider = ({ children }) => {
             if (response.data.success) {
                 // Refresh services list
                 await getMyServices();
+                
+                // Show success notification with service name
+                const serviceName = response.data.data.title || 'Service';
+                notificationService.success(`${serviceName} created successfully! Check your notifications for details.`);
+                
                 return {
                     success: true,
                     data: response.data.data,
@@ -153,6 +159,11 @@ export const ServicesProvider = ({ children }) => {
             if (response.data.success) {
                 // Refresh services list
                 await getMyServices();
+                
+                // Show success notification with service name  
+                const serviceName = response.data.data.title || 'Service';
+                notificationService.success(`${serviceName} updated successfully! Changes saved.`);
+                
                 return {
                     success: true,
                     data: response.data.data,
@@ -188,6 +199,10 @@ export const ServicesProvider = ({ children }) => {
             if (response.data.success) {
                 // Refresh services list
                 await getMyServices();
+                
+                // Show success notification
+                notificationService.success("Service deleted successfully!");
+                
                 return {
                     success: true,
                     message: response.data.message,
@@ -218,6 +233,12 @@ export const ServicesProvider = ({ children }) => {
             if (response.data.success) {
                 // Refresh services list
                 await getMyServices();
+                
+                // Show success notification based on service status
+                const status = response.data.data.status;
+                const message = status === 'Active' ? 'Service activated successfully!' : 'Service deactivated successfully!';
+                notificationService.success(message);
+                
                 return {
                     success: true,
                     data: response.data.data,
@@ -260,6 +281,50 @@ export const ServicesProvider = ({ children }) => {
         }
     };
 
+    // Get service appointments
+    const getServiceAppointments = async (serviceId) => {
+        try {
+            const response = await axios.get(
+                `/api/provider/services/${serviceId}/appointments`
+            );
+            if (response.data.success) {
+                return {
+                    success: true,
+                    data: response.data.data,
+                };
+            }
+        } catch (error) {
+            return {
+                success: false,
+                message:
+                    error.response?.data?.message ||
+                    "Failed to fetch service appointments",
+            };
+        }
+    };
+
+    // Get service reviews
+    const getServiceReviews = async (serviceId) => {
+        try {
+            const response = await axios.get(
+                `/api/provider/services/${serviceId}/reviews`
+            );
+            if (response.data.success) {
+                return {
+                    success: true,
+                    data: response.data.data,
+                };
+            }
+        } catch (error) {
+            return {
+                success: false,
+                message:
+                    error.response?.data?.message ||
+                    "Failed to fetch service reviews",
+            };
+        }
+    };
+
     const value = {
         services,
         loading,
@@ -271,6 +336,8 @@ export const ServicesProvider = ({ children }) => {
         deleteService,
         toggleServiceStatus,
         getServiceCategories,
+        getServiceAppointments,
+        getServiceReviews,
     };
 
     return (

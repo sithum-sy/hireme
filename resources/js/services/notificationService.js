@@ -16,28 +16,38 @@ class NotificationService {
     }
 
     showNotification(message, type) {
+        // Calculate position for stacking notifications
+        const existingNotifications = document.querySelectorAll('.toast-notification');
+        const topOffset = 80 + (existingNotifications.length * 90); // Stack with 90px spacing
+        
         const notification = document.createElement("div");
-        notification.className = `alert alert-${this.getBootstrapClass(
-            type
-        )} position-fixed`;
+        const enhancedStyles = this.getEnhancedStyles(type);
+        
+        notification.className = `alert position-fixed toast-notification`;
         notification.style.cssText = `
-            top: 20px;
+            top: ${topOffset}px;
             right: 20px;
-            z-index: 9999;
-            min-width: 300px;
-            max-width: 400px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            border: none;
+            z-index: 10000;
+            min-width: 320px;
+            max-width: 420px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+            border: 2px solid ${enhancedStyles.borderColor};
+            background: ${enhancedStyles.background};
+            color: ${enhancedStyles.color};
             animation: slideInRight 0.3s ease;
+            backdrop-filter: blur(10px);
+            margin-bottom: 10px;
+            border-radius: 12px;
+            font-weight: 500;
         `;
 
         notification.innerHTML = `
             <div class="d-flex justify-content-between align-items-center">
                 <div class="d-flex align-items-center">
-                    <i class="fas ${this.getIcon(type)} me-2"></i>
-                    <span>${message}</span>
+                    <i class="fas ${this.getIcon(type)} me-2" style="font-size: 1.2rem;"></i>
+                    <span style="font-weight: 500;">${message}</span>
                 </div>
-                <button type="button" class="btn-close" onclick="this.parentElement.parentElement.remove()"></button>
+                <button type="button" class="btn-close btn-close-white" onclick="this.parentElement.parentElement.remove()" style="filter: brightness(0) invert(1); opacity: 0.8;"></button>
             </div>
         `;
 
@@ -58,11 +68,37 @@ class NotificationService {
     getBootstrapClass(type) {
         const classes = {
             success: "success",
-            error: "danger",
+            error: "danger", 
             warning: "warning",
             info: "info",
         };
         return classes[type] || "info";
+    }
+
+    getEnhancedStyles(type) {
+        const styles = {
+            success: {
+                background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+                borderColor: "#10b981",
+                color: "#ffffff"
+            },
+            error: {
+                background: "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)", 
+                borderColor: "#ef4444",
+                color: "#ffffff"
+            },
+            warning: {
+                background: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
+                borderColor: "#f59e0b", 
+                color: "#ffffff"
+            },
+            info: {
+                background: "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)",
+                borderColor: "#3b82f6",
+                color: "#ffffff"
+            }
+        };
+        return styles[type] || styles.info;
     }
 
     getIcon(type) {

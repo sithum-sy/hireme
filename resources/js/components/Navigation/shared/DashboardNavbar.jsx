@@ -302,6 +302,9 @@ const DashboardNavbar = memo(
                 reminder: "fas fa-bell text-warning",
                 request: "fas fa-hand-paper text-primary",
                 review: "fas fa-star text-warning",
+                service: "fas fa-concierge-bell text-info",
+                system: "fas fa-cog text-secondary",
+                general: "fas fa-info-circle text-info",
             };
             return icons[type] || "fas fa-bell text-info";
         };

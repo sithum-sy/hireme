@@ -464,12 +464,12 @@ const DashboardSidebar = ({
                     //     },
                     // ],
                 },
-                {
-                    id: "reviews",
-                    icon: "fas fa-star",
-                    label: "Reviews & Ratings",
-                    path: "/provider/reviews",
-                },
+                // {
+                //     id: "reviews",
+                //     icon: "fas fa-star",
+                //     label: "Reviews & Ratings",
+                //     path: "/provider/reviews",
+                // },
                 {
                     id: "profile",
                     icon: "fas fa-user",

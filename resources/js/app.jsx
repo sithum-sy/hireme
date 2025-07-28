@@ -657,7 +657,7 @@ function App() {
                                                     }
                                                 />
 
-                                                <Route
+                                                {/* <Route
                                                     path="profile/personal"
                                                     element={
                                                         <PlaceholderPage
@@ -668,9 +668,9 @@ function App() {
                                                             variant="info"
                                                         />
                                                     }
-                                                />
+                                                /> */}
 
-                                                <Route
+                                                {/* <Route
                                                     path="profile/verification"
                                                     element={
                                                         <PlaceholderPage
@@ -690,7 +690,7 @@ function App() {
                                                             }
                                                         />
                                                     }
-                                                />
+                                                /> */}
 
                                                 {/* Provider Reports Routes */}
                                                 <Route
@@ -701,7 +701,7 @@ function App() {
                                                 />
 
                                                 {/* Provider Reviews */}
-                                                <Route
+                                                {/* <Route
                                                     path="reviews"
                                                     element={
                                                         <PlaceholderPage
@@ -725,7 +725,7 @@ function App() {
                                                             }
                                                         />
                                                     }
-                                                />
+                                                /> */}
 
                                                 {/* Default provider route redirect */}
                                                 <Route

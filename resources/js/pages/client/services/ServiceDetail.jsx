@@ -472,9 +472,30 @@ const ServiceDetail = () => {
                     <p className="text-muted">
                         The service you're looking for doesn't exist.
                     </p>
-                    <Link to="/client/services" className="btn btn-primary">
+                    <button 
+                        className="btn btn-primary"
+                        onClick={() => {
+                            if (customLocationFromBrowse) {
+                                // Navigate back with custom location preserved in URL
+                                const params = new URLSearchParams();
+                                params.set("lat", customLocationFromBrowse.lat.toString());
+                                params.set("lng", customLocationFromBrowse.lng.toString());
+                                params.set("city", customLocationFromBrowse.city || "");
+                                params.set("address", customLocationFromBrowse.address || "");
+                                if (customLocationFromBrowse.province) {
+                                    params.set("province", customLocationFromBrowse.province);
+                                }
+                                if (customLocationFromBrowse.radius) {
+                                    params.set("radius", customLocationFromBrowse.radius.toString());
+                                }
+                                navigate(`/client/services?${params.toString()}`);
+                            } else {
+                                navigate("/client/services");
+                            }
+                        }}
+                    >
                         Browse Services
-                    </Link>
+                    </button>
                 </div>
             </ClientLayout>
         );
@@ -483,6 +504,35 @@ const ServiceDetail = () => {
     return (
         <ClientLayout>
             <div className="service-detail-page">
+                {/* Back Navigation */}
+                <div className="mb-3">
+                    <button 
+                        className="btn btn-outline-secondary btn-sm"
+                        onClick={() => {
+                            if (customLocationFromBrowse) {
+                                // Navigate back with custom location preserved in URL
+                                const params = new URLSearchParams();
+                                params.set("lat", customLocationFromBrowse.lat.toString());
+                                params.set("lng", customLocationFromBrowse.lng.toString());
+                                params.set("city", customLocationFromBrowse.city || "");
+                                params.set("address", customLocationFromBrowse.address || "");
+                                if (customLocationFromBrowse.province) {
+                                    params.set("province", customLocationFromBrowse.province);
+                                }
+                                if (customLocationFromBrowse.radius) {
+                                    params.set("radius", customLocationFromBrowse.radius.toString());
+                                }
+                                navigate(`/client/services?${params.toString()}`);
+                            } else {
+                                navigate("/client/services");
+                            }
+                        }}
+                    >
+                        <i className="fas fa-arrow-left me-2"></i>
+                        Back to Services
+                    </button>
+                </div>
+                
                 <div className="row">
                     {/* Main Content */}
                     <div className="col-lg-8">

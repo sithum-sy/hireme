@@ -29,53 +29,56 @@ const AppointmentDetail = () => {
     const canStartService = () => {
         if (appointment.status !== "confirmed") return false;
 
-        try {
-            const now = new Date();
+        // DEVELOPMENT: Time checking commented out - always allow starting service
+        return true;
 
-            const appointmentDate = appointment.appointment_date;
-            const appointmentTime = appointment.appointment_time;
+        // try {
+        //     const now = new Date();
 
-            if (!appointmentDate || !appointmentTime) return false;
+        //     const appointmentDate = appointment.appointment_date;
+        //     const appointmentTime = appointment.appointment_time;
 
-            let appointmentDateTime;
+        //     if (!appointmentDate || !appointmentTime) return false;
 
-            if (typeof appointmentDate === "string") {
-                let datePart;
-                if (appointmentDate.includes("T")) {
-                    datePart = appointmentDate.split("T")[0];
-                } else {
-                    datePart = appointmentDate;
-                }
+        //     let appointmentDateTime;
 
-                let timePart;
-                if (
-                    typeof appointmentTime === "string" &&
-                    appointmentTime.includes("T")
-                ) {
-                    timePart = appointmentTime.split("T")[1].split(".")[0];
-                } else {
-                    timePart = appointmentTime.toString();
-                }
+        //     if (typeof appointmentDate === "string") {
+        //         let datePart;
+        //         if (appointmentDate.includes("T")) {
+        //             datePart = appointmentDate.split("T")[0];
+        //         } else {
+        //             datePart = appointmentDate;
+        //         }
 
-                appointmentDateTime = new Date(`${datePart}T${timePart}`);
-            } else {
-                appointmentDateTime = new Date(appointmentDate);
-            }
+        //         let timePart;
+        //         if (
+        //             typeof appointmentTime === "string" &&
+        //             appointmentTime.includes("T")
+        //         ) {
+        //             timePart = appointmentTime.split("T")[1].split(".")[0];
+        //         } else {
+        //             timePart = appointmentTime.toString();
+        //         }
 
-            if (isNaN(appointmentDateTime.getTime())) return false;
+        //         appointmentDateTime = new Date(`${datePart}T${timePart}`);
+        //     } else {
+        //         appointmentDateTime = new Date(appointmentDate);
+        //     }
 
-            // Allow starting 15 minutes before scheduled time
-            // const graceMinutes = 15;
-            const graceMinutes = 60 * 24;
-            const allowedStartTime = new Date(
-                appointmentDateTime.getTime() - graceMinutes * 60 * 1000
-            );
+        //     if (isNaN(appointmentDateTime.getTime())) return false;
 
-            return now >= allowedStartTime;
-        } catch (error) {
-            console.error("Error checking appointment time:", error);
-            return false;
-        }
+        //     // Allow starting 15 minutes before scheduled time
+        //     // const graceMinutes = 15;
+        //     // const graceMinutes = 60 * 24;
+        //     // const allowedStartTime = new Date(
+        //     //     appointmentDateTime.getTime() - graceMinutes * 60 * 1000
+        //     // );
+
+        //     // return now >= allowedStartTime;
+        // } catch (error) {
+        //     console.error("Error checking appointment time:", error);
+        //     return false;
+        // }
     };
 
     const getTimeUntilStart = () => {
@@ -106,24 +109,24 @@ const AppointmentDetail = () => {
             if (isNaN(appointmentDateTime.getTime())) return null;
 
             // const graceMinutes = 15;
-            const graceMinutes = 60 * 24;
-            const allowedStartTime = new Date(
-                appointmentDateTime.getTime() - graceMinutes * 60 * 1000
-            );
+            // const graceMinutes = 60 * 24;
+            // const allowedStartTime = new Date(
+            //     appointmentDateTime.getTime() - graceMinutes * 60 * 1000
+            // );
 
-            if (now >= allowedStartTime) return null;
+            // if (now >= allowedStartTime) return null;
 
-            const timeDiff = allowedStartTime - now;
-            const hoursUntil = Math.floor(timeDiff / (1000 * 60 * 60));
-            const minutesUntil = Math.floor(
-                (timeDiff % (1000 * 60 * 60)) / (1000 * 60)
-            );
+            // const timeDiff = allowedStartTime - now;
+            // const hoursUntil = Math.floor(timeDiff / (1000 * 60 * 60));
+            // const minutesUntil = Math.floor(
+            //     (timeDiff % (1000 * 60 * 60)) / (1000 * 60)
+            // );
 
-            if (hoursUntil > 0) {
-                return `${hoursUntil}h ${minutesUntil}m`;
-            } else {
-                return `${minutesUntil}m`;
-            }
+            // if (hoursUntil > 0) {
+            //     return `${hoursUntil}h ${minutesUntil}m`;
+            // } else {
+            //     return `${minutesUntil}m`;
+            // }
         } catch (error) {
             return null;
         }
@@ -131,20 +134,20 @@ const AppointmentDetail = () => {
 
     // Update your handleStatusUpdate function for "in_progress"
     const handleStatusUpdate = async (status, requiresNotes = false) => {
-        // Special validation for starting service
-        if (status === "in_progress" && !canStartService()) {
-            const timeUntil = getTimeUntilStart();
-            if (timeUntil) {
-                alert(
-                    `You can start this service in ${timeUntil} (15 minutes before scheduled time).`
-                );
-            } else {
-                alert(
-                    "This service cannot be started yet. Please wait until the scheduled time."
-                );
-            }
-            return;
-        }
+        // Special validation for starting service - COMMENTED OUT FOR DEVELOPMENT
+        // if (status === "in_progress" && !canStartService()) {
+        //     const timeUntil = getTimeUntilStart();
+        //     if (timeUntil) {
+        //         alert(
+        //             `You can start this service in ${timeUntil} (15 minutes before scheduled time).`
+        //         );
+        //     } else {
+        //         alert(
+        //             "This service cannot be started yet. Please wait until the scheduled time."
+        //         );
+        //     }
+        //     return;
+        // }
 
         if (requiresNotes && !notes.trim()) {
             setPendingAction(status);
@@ -171,12 +174,12 @@ const AppointmentDetail = () => {
                 if (status === "cancelled_by_provider") {
                     // Show success message and redirect
                     setTimeout(() => {
-                        navigate('/provider/appointments', { 
+                        navigate("/provider/appointments", {
                             replace: true,
-                            state: { 
-                                message: 'Appointment cancelled successfully',
-                                type: 'success'
-                            }
+                            state: {
+                                message: "Appointment cancelled successfully",
+                                type: "success",
+                            },
                         });
                     }, 1000); // Small delay to show the updated status first
                 }

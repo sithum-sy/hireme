@@ -58,16 +58,16 @@ const LocationPicker = ({
         },
     });
 
-    return position ? (
+    return position && Array.isArray(position) && position.length >= 2 ? (
         <>
             <Marker position={position}>
                 <Popup>
                     <div>
                         <strong>Selected Location</strong>
                         <br />
-                        Lat: {position[0].toFixed(4)}
+                        Lat: {typeof position[0] === 'number' ? position[0].toFixed(4) : 'N/A'}
                         <br />
-                        Lng: {position[1].toFixed(4)}
+                        Lng: {typeof position[1] === 'number' ? position[1].toFixed(4) : 'N/A'}
                         <br />
                         Radius: {radius}km
                     </div>
@@ -223,9 +223,15 @@ const EnhancedLocationSelector = ({ value, onChange, error }) => {
     // Initialize with existing value
     useEffect(() => {
         if (value && value.lat && value.lng) {
-            setPosition([value.lat, value.lng]);
-            setRadius(value.radius || 15);
-            setMapKey((prev) => prev + 1);
+            // Ensure lat and lng are valid numbers
+            const lat = parseFloat(value.lat);
+            const lng = parseFloat(value.lng);
+            
+            if (!isNaN(lat) && !isNaN(lng)) {
+                setPosition([lat, lng]);
+                setRadius(value.radius || 15);
+                setMapKey((prev) => prev + 1);
+            }
         }
     }, [value]);
 
@@ -403,7 +409,7 @@ const EnhancedLocationSelector = ({ value, onChange, error }) => {
             </div>
 
             {/* Current Location Display */}
-            {position && (
+            {position && Array.isArray(position) && position.length >= 2 && (
                 <div className="current-location p-3 bg-light rounded border">
                     <h6 className="mb-2">
                         <i className="fas fa-map-marker-alt me-2 text-primary"></i>
@@ -411,8 +417,8 @@ const EnhancedLocationSelector = ({ value, onChange, error }) => {
                     </h6>
                     <div className="small text-muted">
                         <div>
-                            Coordinates: {position[0].toFixed(4)},{" "}
-                            {position[1].toFixed(4)}
+                            Coordinates: {typeof position[0] === 'number' ? position[0].toFixed(4) : 'N/A'},{" "}
+                            {typeof position[1] === 'number' ? position[1].toFixed(4) : 'N/A'}
                         </div>
                         <div>Service Radius: {radius}km</div>
                     </div>

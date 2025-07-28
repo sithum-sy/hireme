@@ -96,6 +96,42 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->date_of_birth ? $this->date_of_birth->age : null;
     }
 
+    public function getProfileImageUrlAttribute()
+    {
+        if (!$this->profile_picture) {
+            return null;
+        }
+
+        // If it's already a full URL, return as is
+        if (str_starts_with($this->profile_picture, 'http')) {
+            return $this->profile_picture;
+        }
+
+        // If it already starts with /images/, return as is
+        if (str_starts_with($this->profile_picture, '/images/')) {
+            return $this->profile_picture;
+        }
+
+        // If it starts with images/, add leading slash
+        if (str_starts_with($this->profile_picture, 'images/')) {
+            return '/' . $this->profile_picture;
+        }
+
+        // Check if file exists in the profile_pictures directory
+        $profilePicturePath = 'images/profile_pictures/' . basename($this->profile_picture);
+        if (file_exists(public_path($profilePicturePath))) {
+            return asset($profilePicturePath);
+        }
+
+        // Legacy support - check old storage location
+        if (file_exists(public_path('storage/' . $this->profile_picture))) {
+            return asset('storage/' . $this->profile_picture);
+        }
+
+        // Default to profile_pictures directory
+        return asset('images/profile_pictures/' . basename($this->profile_picture));
+    }
+
     // Role helper methods
     public function hasRole($role)
     {

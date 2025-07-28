@@ -182,14 +182,14 @@ const ProviderServices = () => {
                     </div>
                 </div>
 
-                {/* Quick Stats */}
-                {businessStats && (
+                {/* Quick Stats - Calculate from actual services */}
+                {services && services.length >= 0 && (
                     <div className="row mb-4">
                         <div className="col-md-3">
                             <div className="card border-0 shadow-sm">
                                 <div className="card-body text-center">
                                     <div className="h3 text-primary mb-1">
-                                        {businessStats.total_services || 0}
+                                        {services.length}
                                     </div>
                                     <small className="text-muted">Total Services</small>
                                 </div>
@@ -199,7 +199,7 @@ const ProviderServices = () => {
                             <div className="card border-0 shadow-sm">
                                 <div className="card-body text-center">
                                     <div className="h3 text-success mb-1">
-                                        {businessStats.active_services || 0}
+                                        {services.filter(service => service.is_active).length}
                                     </div>
                                     <small className="text-muted">Active Services</small>
                                 </div>
@@ -209,7 +209,7 @@ const ProviderServices = () => {
                             <div className="card border-0 shadow-sm">
                                 <div className="card-body text-center">
                                     <div className="h3 text-warning mb-1">
-                                        {businessStats.total_views || 0}
+                                        {services.reduce((total, service) => total + (service.views_count || 0), 0)}
                                     </div>
                                     <small className="text-muted">Total Views</small>
                                 </div>
@@ -219,7 +219,7 @@ const ProviderServices = () => {
                             <div className="card border-0 shadow-sm">
                                 <div className="card-body text-center">
                                     <div className="h3 text-info mb-1">
-                                        {businessStats.total_bookings || 0}
+                                        {services.reduce((total, service) => total + (service.bookings_count || 0), 0)}
                                     </div>
                                     <small className="text-muted">Total Bookings</small>
                                 </div>
@@ -232,74 +232,56 @@ const ProviderServices = () => {
                 <ServiceFilters
                     filter={filter}
                     setFilter={setFilter}
-                    searchQuery={searchQuery}
-                    setSearchQuery={setSearchQuery}
                     selectedCategory={selectedCategory}
                     setSelectedCategory={setSelectedCategory}
                     categories={categories}
                     sortBy={sortBy}
                     setSortBy={setSortBy}
-                    sortOrder={sortOrder}
-                    setSortOrder={setSortOrder}
-                    viewMode={viewMode}
-                    setViewMode={setViewMode}
-                    servicesCount={services?.length || 0}
+                    services={services}
                     selectedServices={selectedServices}
                     onBulkDelete={handleBulkDelete}
                     onBulkToggleStatus={handleBulkToggleStatus}
                 />
 
-                {/* Services Grid/List */}
-                {viewMode === "grid" ? (
-                    <div className="services-grid">
-                        {filteredAndSortedServices.length > 0 ? (
-                            <div className="row">
-                                {filteredAndSortedServices.map((service) => (
-                                    <div key={service.id} className="col-lg-4 col-md-6 mb-4">
-                                        <ServiceCard
-                                            service={service}
-                                            onToggleStatus={handleToggleStatus}
-                                            onDelete={handleDeleteService}
-                                            onSelect={handleServiceSelect}
-                                            isSelected={selectedServices.includes(service.id)}
-                                        />
-                                    </div>
-                                ))}
-                            </div>
-                        ) : (
-                            <div className="text-center py-5">
-                                <div className="mb-4">
-                                    <i className="fas fa-search fa-4x text-muted"></i>
+                {/* Services Grid */}
+                <div className="services-grid">
+                    {filteredAndSortedServices.length > 0 ? (
+                        <div className="row">
+                            {filteredAndSortedServices.map((service) => (
+                                <div key={service.id} className="col-lg-4 col-md-6 mb-4">
+                                    <ServiceCard
+                                        service={service}
+                                        onToggleStatus={handleToggleStatus}
+                                        onDelete={handleDeleteService}
+                                        onSelect={handleServiceSelect}
+                                        isSelected={selectedServices.includes(service.id)}
+                                    />
                                 </div>
-                                <h5 className="text-muted">No services found</h5>
-                                <p className="text-muted mb-4">
-                                    {searchQuery || selectedCategory || filter !== "all"
-                                        ? "Try adjusting your filters or search terms."
-                                        : "You haven't created any services yet."}
-                                </p>
-                                {(!searchQuery && !selectedCategory && filter === "all") && (
-                                    <Link
-                                        to="/provider/services/create"
-                                        className="btn btn-primary"
-                                    >
-                                        <i className="fas fa-plus me-2"></i>
-                                        Create Your First Service
-                                    </Link>
-                                )}
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="text-center py-5">
+                            <div className="mb-4">
+                                <i className="fas fa-search fa-4x text-muted"></i>
                             </div>
-                        )}
-                    </div>
-                ) : (
-                    <ServiceTable
-                        services={filteredAndSortedServices}
-                        onToggleStatus={handleToggleStatus}
-                        onDelete={handleDeleteService}
-                        onSelect={handleServiceSelect}
-                        onSelectAll={handleSelectAll}
-                        selectedServices={selectedServices}
-                        allSelected={allSelected}
-                    />
-                )}
+                            <h5 className="text-muted">No services found</h5>
+                            <p className="text-muted mb-4">
+                                {selectedCategory || filter !== "all"
+                                    ? "Try adjusting your filters."
+                                    : "You haven't created any services yet."}
+                            </p>
+                            {(!selectedCategory && filter === "all") && (
+                                <Link
+                                    to="/provider/services/create"
+                                    className="btn btn-primary"
+                                >
+                                    <i className="fas fa-plus me-2"></i>
+                                    Create Your First Service
+                                </Link>
+                            )}
+                        </div>
+                    )}
+                </div>
             </div>
 
             {/* Delete Confirmation Modal */}

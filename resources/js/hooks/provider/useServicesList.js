@@ -32,25 +32,53 @@ export const useServicesList = (services, categories) => {
 
     // Filter and search services
     const filteredServices = useMemo(() => {
-        return (Array.isArray(services) ? services : []).filter((service) => {
+        if (!Array.isArray(services)) {
+            return [];
+        }
+
+        return services.filter((service) => {
+            if (!service) return false;
+
             // Filter by status
             if (filter === "active" && !service.is_active) return false;
             if (filter === "inactive" && service.is_active) return false;
 
             // Filter by category
-            if (selectedCategory && service.category_id !== parseInt(selectedCategory)) {
-                return false;
+            if (selectedCategory && selectedCategory !== "") {
+                const categoryId = parseInt(selectedCategory);
+                
+                // Try different ways the category might be stored
+                let serviceCategoryId = null;
+                
+                if (service.category_id !== undefined) {
+                    serviceCategoryId = parseInt(service.category_id);
+                } else if (service.category && service.category.id !== undefined) {
+                    serviceCategoryId = parseInt(service.category.id);
+                } else if (service.service_category_id !== undefined) {
+                    serviceCategoryId = parseInt(service.service_category_id);
+                }
+                
+                // If we couldn't find a category ID, skip this service
+                if (serviceCategoryId === null || isNaN(serviceCategoryId)) {
+                    return false;
+                }
+                
+                // Filter based on category match
+                if (serviceCategoryId !== categoryId) {
+                    return false;
+                }
             }
 
-            // Search filter
+            // Search filter (currently disabled in simplified filter, but keeping logic for future)
             if (searchQuery) {
                 const query = searchQuery.toLowerCase();
                 return (
-                    service.title.toLowerCase().includes(query) ||
-                    service.description.toLowerCase().includes(query) ||
-                    service.category.name.toLowerCase().includes(query) ||
-                    (service.service_areas && service.service_areas.some((area) =>
-                        area.toLowerCase().includes(query)
+                    (service.title || "").toLowerCase().includes(query) ||
+                    (service.description || "").toLowerCase().includes(query) ||
+                    (service.category?.name || "").toLowerCase().includes(query) ||
+                    (service.service_areas && Array.isArray(service.service_areas) && 
+                     service.service_areas.some((area) =>
+                        (area || "").toLowerCase().includes(query)
                     ))
                 );
             }
@@ -66,33 +94,47 @@ export const useServicesList = (services, categories) => {
 
             switch (sortBy) {
                 case "title":
-                    aValue = a.title.toLowerCase();
-                    bValue = b.title.toLowerCase();
+                    aValue = (a.title || "").toLowerCase();
+                    bValue = (b.title || "").toLowerCase();
                     break;
+                case "base_price":
                 case "price":
-                    aValue = a.base_price;
-                    bValue = b.base_price;
+                    aValue = parseFloat(a.base_price) || 0;
+                    bValue = parseFloat(b.base_price) || 0;
                     break;
+                case "average_rating":
                 case "rating":
-                    aValue = a.average_rating || 0;
-                    bValue = b.average_rating || 0;
+                    aValue = parseFloat(a.average_rating) || 0;
+                    bValue = parseFloat(b.average_rating) || 0;
                     break;
+                case "views_count":
                 case "views":
-                    aValue = a.views_count || 0;
-                    bValue = b.views_count || 0;
+                    aValue = parseInt(a.views_count) || 0;
+                    bValue = parseInt(b.views_count) || 0;
                     break;
+                case "bookings_count":
                 case "bookings":
-                    aValue = a.bookings_count || 0;
-                    bValue = b.bookings_count || 0;
+                    aValue = parseInt(a.bookings_count) || 0;
+                    bValue = parseInt(b.bookings_count) || 0;
                     break;
                 case "created_at":
                 default:
-                    aValue = new Date(a.created_at);
-                    bValue = new Date(b.created_at);
+                    aValue = new Date(a.created_at || 0);
+                    bValue = new Date(b.created_at || 0);
                     break;
             }
 
-            if (sortOrder === "asc") {
+            // Determine sort order based on the field type
+            let defaultOrder = "desc";
+            if (sortBy === "title") {
+                defaultOrder = "asc"; // Alphabetical ascending
+            } else if (["base_price", "price", "average_rating", "rating", "views_count", "views", "bookings_count", "bookings"].includes(sortBy)) {
+                defaultOrder = "desc"; // Higher values first
+            }
+
+            const order = sortOrder || defaultOrder;
+
+            if (order === "asc") {
                 return aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
             } else {
                 return aValue < bValue ? 1 : aValue > bValue ? -1 : 0;

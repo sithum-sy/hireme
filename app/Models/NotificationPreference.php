@@ -39,6 +39,11 @@ class NotificationPreference extends Model
     const TYPE_QUOTE_RECEIVED = 'quote_received';
     const TYPE_QUOTE_ACCEPTED = 'quote_accepted';
     const TYPE_QUOTE_DECLINED = 'quote_declined';
+    const TYPE_SERVICE_CREATED = 'service_created';
+    const TYPE_SERVICE_UPDATED = 'service_updated';
+    const TYPE_SERVICE_ACTIVATED = 'service_activated';
+    const TYPE_SERVICE_DEACTIVATED = 'service_deactivated';
+    const TYPE_SERVICE_DELETED = 'service_deleted';
 
     public static function getNotificationTypes()
     {
@@ -58,6 +63,11 @@ class NotificationPreference extends Model
             self::TYPE_QUOTE_RECEIVED => 'Quote requests',
             self::TYPE_QUOTE_ACCEPTED => 'Quote accepted',
             self::TYPE_QUOTE_DECLINED => 'Quote declined',
+            self::TYPE_SERVICE_CREATED => 'Service created',
+            self::TYPE_SERVICE_UPDATED => 'Service updated',
+            self::TYPE_SERVICE_ACTIVATED => 'Service activated',
+            self::TYPE_SERVICE_DEACTIVATED => 'Service deactivated',
+            self::TYPE_SERVICE_DELETED => 'Service deleted',
         ];
     }
 

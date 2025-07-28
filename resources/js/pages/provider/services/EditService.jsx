@@ -65,6 +65,7 @@ const EditService = () => {
     const [categories, setCategories] = useState([]);
     const [existingImagesPreviews, setExistingImagesPreviews] = useState([]);
     const [validationErrors, setValidationErrors] = useState({});
+    const [submitClicked, setSubmitClicked] = useState(false);
 
     // Steps configuration
     const steps = [
@@ -239,6 +240,19 @@ const EditService = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
+        // Prevent automatic submission unless user is on step 4 and explicitly clicked submit
+        if (currentStep !== 4) {
+            return;
+        }
+
+        // Only allow submission if submit button was explicitly clicked
+        if (!submitClicked) {
+            return;
+        }
+        
+        // Reset the flag
+        setSubmitClicked(false);
+
         if (!validateForm(formData, selectedAreas)) {
             return;
         }
@@ -286,10 +300,12 @@ const EditService = () => {
                 submitData.append(`service_images[${index}]`, image);
             });
 
-            // Existing images to keep
-            formData.existing_images.forEach((imageUrl, index) => {
-                submitData.append(`existing_images[${index}]`, imageUrl);
-            });
+            // Existing images to keep - send as JSON string
+            if (formData.existing_images && formData.existing_images.length > 0) {
+                submitData.append('existing_images', JSON.stringify(formData.existing_images));
+            } else {
+                submitData.append('existing_images', '[]');
+            }
 
             const result = await updateService(id, submitData);
 
@@ -408,20 +424,13 @@ const EditService = () => {
                                     {/* Step 3: Service Areas */}
                                     {currentStep === 3 && (
                                         <ServiceAreasStep
-                                            nearbyAreas={nearbyAreas}
-                                            showAllAreas={showAllAreas}
-                                            setShowAllAreas={setShowAllAreas}
-                                            selectedAreas={selectedAreas}
-                                            onAreaSelection={
-                                                handleAreaSelection
-                                            }
+                                            formData={formData}
                                             errors={validationErrors}
-                                            locationSet={
-                                                !!(
-                                                    formData.latitude &&
-                                                    formData.longitude
-                                                )
-                                            }
+                                            dynamicAreas={nearbyAreas}
+                                            showAllAreas={showAllAreas}
+                                            locationLoading={false}
+                                            onServiceAreasChange={handleAreaSelection}
+                                            onShowAllAreas={() => setShowAllAreas(!showAllAreas)}
                                         />
                                     )}
 
@@ -429,6 +438,7 @@ const EditService = () => {
                                     {currentStep === 4 && (
                                         <DetailsStep
                                             formData={formData}
+                                            categories={categories}
                                             errors={validationErrors}
                                             onInputChange={handleInputChange}
                                             onImageUpload={handleImageUpload}
@@ -440,6 +450,7 @@ const EditService = () => {
                                             existingImagesPreviews={
                                                 existingImagesPreviews
                                             }
+                                            getPricingPreview={getPricingPreview}
                                         />
                                     )}
                                 </div>
@@ -472,6 +483,7 @@ const EditService = () => {
                                             type="submit"
                                             className="btn btn-success"
                                             disabled={isSubmitting || loading}
+                                            onClick={() => setSubmitClicked(true)}
                                         >
                                             {isSubmitting ? (
                                                 <>

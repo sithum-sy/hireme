@@ -1,17 +1,19 @@
 import React from "react";
 import { Link } from "react-router-dom";
 
-const ServiceCard = ({ 
-    service, 
-    onToggleStatus, 
-    onDelete, 
+const ServiceCard = ({
+    service,
+    onToggleStatus,
+    onDelete,
     onSelect,
-    isSelected = false 
+    isSelected = false,
 }) => {
     const formatPrice = (price, pricingType) => {
         if (pricingType === "custom") return "Custom pricing";
         const formattedPrice = `Rs. ${parseFloat(price).toLocaleString()}`;
-        return pricingType === "hourly" ? `${formattedPrice}/hr` : formattedPrice;
+        return pricingType === "hourly"
+            ? `${formattedPrice}/hr`
+            : formattedPrice;
     };
 
     const getStatusBadge = (isActive) => {
@@ -23,7 +25,8 @@ const ServiceCard = ({
     };
 
     const getRatingDisplay = (rating) => {
-        const stars = Math.floor(rating);
+        const numericRating = parseFloat(rating) || 0;
+        const stars = Math.floor(numericRating);
         return (
             <div className="d-flex align-items-center">
                 {[...Array(5)].map((_, i) => (
@@ -35,7 +38,9 @@ const ServiceCard = ({
                         style={{ fontSize: "0.75rem" }}
                     ></i>
                 ))}
-                <span className="ms-1 small text-muted">({rating.toFixed(1)})</span>
+                <span className="ms-1 small text-muted">
+                    ({numericRating.toFixed(1)})
+                </span>
             </div>
         );
     };
@@ -50,7 +55,9 @@ const ServiceCard = ({
                             className="form-check-input"
                             type="checkbox"
                             checked={isSelected}
-                            onChange={(e) => onSelect(service.id, e.target.checked)}
+                            onChange={(e) =>
+                                onSelect(service.id, e.target.checked)
+                            }
                         />
                     </div>
                     {getStatusBadge(service.is_active)}
@@ -98,7 +105,10 @@ const ServiceCard = ({
                     {/* Pricing */}
                     <div className="pricing mb-3">
                         <h6 className="text-primary mb-1">
-                            {formatPrice(service.base_price, service.pricing_type)}
+                            {formatPrice(
+                                service.base_price,
+                                service.pricing_type
+                            )}
                         </h6>
                         <small className="text-muted">
                             Duration: {service.duration_hours} hour
@@ -122,15 +132,23 @@ const ServiceCard = ({
                                     <div className="fw-semibold text-success">
                                         {service.bookings_count || 0}
                                     </div>
-                                    <small className="text-muted">Bookings</small>
+                                    <small className="text-muted">
+                                        Bookings
+                                    </small>
                                 </div>
                             </div>
                             <div className="col-4">
                                 <div className="stat-item">
-                                    <div className="fw-semibold">
-                                        {service.average_rating > 0
-                                            ? service.average_rating.toFixed(1)
-                                            : "N/A"}
+                                    <div className="fw-semibold text-secondary">
+                                        {(() => {
+                                            const rating =
+                                                parseFloat(
+                                                    service.average_rating
+                                                ) || 0;
+                                            return rating > 0
+                                                ? rating.toFixed(1)
+                                                : "N/A";
+                                        })()}
                                     </div>
                                     <small className="text-muted">Rating</small>
                                 </div>
@@ -139,70 +157,195 @@ const ServiceCard = ({
                     </div>
 
                     {/* Rating Display */}
-                    {service.average_rating > 0 && (
+                    {(() => {
+                        const rating = parseFloat(service.average_rating) || 0;
+                        return rating > 0;
+                    })() && (
                         <div className="rating mb-3">
                             {getRatingDisplay(service.average_rating)}
                         </div>
                     )}
 
                     {/* Service Areas */}
-                    {service.service_areas && service.service_areas.length > 0 && (
-                        <div className="service-areas mb-3">
-                            <small className="text-muted d-block mb-1">Service Areas:</small>
-                            <div className="d-flex flex-wrap gap-1">
-                                {service.service_areas.slice(0, 2).map((area, index) => (
-                                    <span key={index} className="badge bg-light text-dark">
-                                        {area}
-                                    </span>
-                                ))}
-                                {service.service_areas.length > 2 && (
-                                    <span className="badge bg-light text-dark">
-                                        +{service.service_areas.length - 2} more
-                                    </span>
-                                )}
+                    {service.service_areas &&
+                        service.service_areas.length > 0 && (
+                            <div className="service-areas mb-3">
+                                <small className="text-muted d-block mb-1">
+                                    Service Areas:
+                                </small>
+                                <div className="d-flex flex-wrap gap-1">
+                                    {service.service_areas
+                                        .slice(0, 2)
+                                        .map((area, index) => (
+                                            <span
+                                                key={index}
+                                                className="badge bg-light text-dark"
+                                            >
+                                                {area}
+                                            </span>
+                                        ))}
+                                    {service.service_areas.length > 2 && (
+                                        <span className="badge bg-light text-dark">
+                                            +{service.service_areas.length - 2}{" "}
+                                            more
+                                        </span>
+                                    )}
+                                </div>
                             </div>
-                        </div>
-                    )}
+                        )}
                 </div>
             </div>
 
             {/* Card Footer with Actions */}
             <div className="card-footer bg-light border-top-0 p-3">
-                <div className="btn-group w-100" role="group">
-                    <Link
-                        to={`/provider/services/${service.id}`}
-                        className="btn btn-outline-primary btn-sm"
-                    >
-                        <i className="fas fa-eye me-1"></i>
-                        View
-                    </Link>
-                    <Link
-                        to={`/provider/services/${service.id}/edit`}
-                        className="btn btn-outline-secondary btn-sm"
-                    >
-                        <i className="fas fa-edit me-1"></i>
-                        Edit
-                    </Link>
-                    <button
-                        className={`btn btn-sm ${
-                            service.is_active 
-                                ? "btn-outline-warning" 
-                                : "btn-outline-success"
-                        }`}
-                        onClick={() => onToggleStatus(service.id, service.is_active)}
-                        title={service.is_active ? "Deactivate" : "Activate"}
-                    >
-                        <i className={`fas fa-${service.is_active ? "pause" : "play"} me-1`}></i>
-                        {service.is_active ? "Pause" : "Activate"}
-                    </button>
-                    <button
-                        className="btn btn-outline-danger btn-sm"
-                        onClick={() => onDelete(service)}
-                        title="Delete Service"
-                    >
-                        <i className="fas fa-trash me-1"></i>
-                        Delete
-                    </button>
+                {/* Desktop Layout: Horizontal buttons with flexible sizing */}
+                <div className="d-none d-lg-block">
+                    <div className="d-flex gap-2 w-100">
+                        <Link
+                            to={`/provider/services/${service.id}`}
+                            className="btn btn-outline-primary btn-sm flex-fill"
+                            title="View service details"
+                        >
+                            <i className="fas fa-eye"></i>
+                            <span className="d-none d-xxl-inline ms-1">View</span>
+                        </Link>
+                        <Link
+                            to={`/provider/services/${service.id}/edit`}
+                            className="btn btn-outline-secondary btn-sm flex-fill"
+                            title="Edit service"
+                        >
+                            <i className="fas fa-edit"></i>
+                            <span className="d-none d-xxl-inline ms-1">Edit</span>
+                        </Link>
+                        <button
+                            className={`btn btn-sm flex-fill ${
+                                service.is_active
+                                    ? "btn-outline-warning"
+                                    : "btn-outline-success"
+                            }`}
+                            onClick={() =>
+                                onToggleStatus(service.id, service.is_active)
+                            }
+                            title={service.is_active ? "Deactivate service" : "Activate service"}
+                        >
+                            <i
+                                className={`fas fa-${
+                                    service.is_active ? "pause" : "play"
+                                }`}
+                            ></i>
+                            <span className="d-none d-xxl-inline ms-1">
+                                {service.is_active ? "Pause" : "Activate"}
+                            </span>
+                        </button>
+                        <button
+                            className="btn btn-outline-danger btn-sm flex-fill"
+                            onClick={() => onDelete(service)}
+                            title="Delete service"
+                        >
+                            <i className="fas fa-trash"></i>
+                            <span className="d-none d-xxl-inline ms-1">Delete</span>
+                        </button>
+                    </div>
+                </div>
+
+                {/* Medium screens: 2x2 grid */}
+                <div className="d-none d-md-block d-lg-none">
+                    <div className="row g-2">
+                        <div className="col-6">
+                            <Link
+                                to={`/provider/services/${service.id}`}
+                                className="btn btn-outline-primary btn-sm w-100"
+                            >
+                                <i className="fas fa-eye me-1"></i>
+                                View
+                            </Link>
+                        </div>
+                        <div className="col-6">
+                            <Link
+                                to={`/provider/services/${service.id}/edit`}
+                                className="btn btn-outline-secondary btn-sm w-100"
+                            >
+                                <i className="fas fa-edit me-1"></i>
+                                Edit
+                            </Link>
+                        </div>
+                        <div className="col-6">
+                            <button
+                                className={`btn btn-sm w-100 ${
+                                    service.is_active
+                                        ? "btn-outline-warning"
+                                        : "btn-outline-success"
+                                }`}
+                                onClick={() =>
+                                    onToggleStatus(service.id, service.is_active)
+                                }
+                                title={service.is_active ? "Deactivate" : "Activate"}
+                            >
+                                <i
+                                    className={`fas fa-${
+                                        service.is_active ? "pause" : "play"
+                                    } me-1`}
+                                ></i>
+                                {service.is_active ? "Pause" : "Activate"}
+                            </button>
+                        </div>
+                        <div className="col-6">
+                            <button
+                                className="btn btn-outline-danger btn-sm w-100"
+                                onClick={() => onDelete(service)}
+                                title="Delete Service"
+                            >
+                                <i className="fas fa-trash me-1"></i>
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Small screens: Stacked buttons */}
+                <div className="d-block d-md-none">
+                    <div className="d-grid gap-2">
+                        <Link
+                            to={`/provider/services/${service.id}`}
+                            className="btn btn-outline-primary btn-sm"
+                        >
+                            <i className="fas fa-eye me-1"></i>
+                            View Details
+                        </Link>
+                        <Link
+                            to={`/provider/services/${service.id}/edit`}
+                            className="btn btn-outline-secondary btn-sm"
+                        >
+                            <i className="fas fa-edit me-1"></i>
+                            Edit Service
+                        </Link>
+                        <button
+                            className={`btn btn-sm ${
+                                service.is_active
+                                    ? "btn-outline-warning"
+                                    : "btn-outline-success"
+                            }`}
+                            onClick={() =>
+                                onToggleStatus(service.id, service.is_active)
+                            }
+                            title={service.is_active ? "Deactivate" : "Activate"}
+                        >
+                            <i
+                                className={`fas fa-${
+                                    service.is_active ? "pause" : "play"
+                                } me-1`}
+                            ></i>
+                            {service.is_active ? "Pause Service" : "Activate Service"}
+                        </button>
+                        <button
+                            className="btn btn-outline-danger btn-sm"
+                            onClick={() => onDelete(service)}
+                            title="Delete Service"
+                        >
+                            <i className="fas fa-trash me-1"></i>
+                            Delete Service
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

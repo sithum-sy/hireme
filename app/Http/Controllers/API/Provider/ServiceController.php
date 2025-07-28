@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\ServiceRequest;
 use App\Models\Service;
 use App\Services\ServiceService;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -15,10 +16,12 @@ use Illuminate\Support\Str;
 class ServiceController extends Controller
 {
     protected $serviceService;
+    protected $notificationService;
 
-    public function __construct(ServiceService $serviceService)
+    public function __construct(ServiceService $serviceService, NotificationService $notificationService)
     {
         $this->serviceService = $serviceService;
+        $this->notificationService = $notificationService;
     }
 
     /**
@@ -96,6 +99,16 @@ class ServiceController extends Controller
             }
 
             $service = $this->serviceService->createService($user, $request->validated());
+
+            // Send notification
+            $this->notificationService->sendServiceNotification(
+                'service_created',
+                $user,
+                [
+                    'service' => $service,
+                    'service_id' => $service->id
+                ]
+            );
 
             return response()->json([
                 'success' => true,
@@ -542,6 +555,16 @@ class ServiceController extends Controller
 
             $updatedService = $this->serviceService->updateService($service, $request->validated());
 
+            // Send notification
+            $this->notificationService->sendServiceNotification(
+                'service_updated',
+                $user,
+                [
+                    'service' => $updatedService,
+                    'service_id' => $updatedService->id
+                ]
+            );
+
             return response()->json([
                 'success' => true,
                 'message' => 'Service updated successfully',
@@ -590,7 +613,19 @@ class ServiceController extends Controller
                 ], 422);
             }
 
+            // Store service title before deletion
+            $serviceTitle = $service->title;
+            
             $this->serviceService->deleteService($service);
+
+            // Send notification
+            $this->notificationService->sendServiceNotification(
+                'service_deleted',
+                $user,
+                [
+                    'service_title' => $serviceTitle
+                ]
+            );
 
             return response()->json([
                 'success' => true,
@@ -622,6 +657,17 @@ class ServiceController extends Controller
             }
 
             $updatedService = $this->serviceService->toggleServiceStatus($service);
+
+            // Send notification based on new status
+            $notificationType = $updatedService->is_active ? 'service_activated' : 'service_deactivated';
+            $this->notificationService->sendServiceNotification(
+                $notificationType,
+                $user,
+                [
+                    'service' => $updatedService,
+                    'service_id' => $updatedService->id
+                ]
+            );
 
             return response()->json([
                 'success' => true,
@@ -767,5 +813,139 @@ class ServiceController extends Controller
         }
 
         return $baseResponse;
+    }
+
+    /**
+     * Get service appointments (Provider only)
+     */
+    public function getServiceAppointments(Service $service)
+    {
+        try {
+            $user = Auth::user();
+
+            // Check if user owns this service
+            if ($service->provider_id !== $user->id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You can only view appointments for your own services'
+                ], 403);
+            }
+
+            // Get appointments for this service with client data
+            $appointments = $service->appointments()
+                ->with(['client', 'clientReview'])
+                ->orderBy('appointment_date', 'desc')
+                ->orderBy('appointment_time', 'desc')
+                ->limit(20) // Limit to recent 20 appointments
+                ->get();
+
+            $formattedAppointments = $appointments->map(function ($appointment) {
+                return [
+                    'id' => $appointment->id,
+                    'appointment_date' => $appointment->appointment_date->format('Y-m-d'),
+                    'appointment_time' => $appointment->appointment_time,
+                    'duration_hours' => $appointment->duration_hours,
+                    'total_price' => $appointment->total_price,
+                    'status' => $appointment->status,
+                    'client_address' => $appointment->client_address,
+                    'client_city' => $appointment->client_city,
+                    'client_notes' => $appointment->client_notes,
+                    'created_at' => $appointment->created_at->format('Y-m-d H:i:s'),
+                    'client' => $appointment->client ? [
+                        'id' => $appointment->client->id,
+                        'first_name' => $appointment->client->first_name,
+                        'last_name' => $appointment->client->last_name,
+                        'email' => $appointment->client->email,
+                        'profile_image_url' => $appointment->client->profile_image_url,
+                    ] : null,
+                    'client_review' => $appointment->clientReview ? [
+                        'id' => $appointment->clientReview->id,
+                        'rating' => $appointment->clientReview->rating,
+                        'comment' => $appointment->clientReview->comment,
+                    ] : null,
+                ];
+            });
+
+            return response()->json([
+                'success' => true,
+                'data' => $formattedAppointments,
+                'message' => 'Service appointments retrieved successfully'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve service appointments',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get service reviews (Provider only)
+     */
+    public function getServiceReviews(Service $service)
+    {
+        try {
+            $user = Auth::user();
+
+            // Check if user owns this service
+            if ($service->provider_id !== $user->id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You can only view reviews for your own services'
+                ], 403);
+            }
+
+            // Get reviews for this service with reviewer data
+            $reviews = $service->clientReviews()
+                ->with(['reviewer', 'appointment'])
+                ->where('status', 'published')
+                ->where('is_hidden', false)
+                ->orderBy('created_at', 'desc')
+                ->limit(20) // Limit to recent 20 reviews
+                ->get();
+
+            $formattedReviews = $reviews->map(function ($review) {
+                return [
+                    'id' => $review->id,
+                    'rating' => $review->rating,
+                    'comment' => $review->comment,
+                    'quality_rating' => $review->quality_rating,
+                    'punctuality_rating' => $review->punctuality_rating,
+                    'communication_rating' => $review->communication_rating,
+                    'value_rating' => $review->value_rating,
+                    'would_recommend' => $review->would_recommend,
+                    'provider_response' => $review->provider_response,
+                    'provider_responded_at' => $review->provider_responded_at?->format('Y-m-d H:i:s'),
+                    'is_verified' => $review->is_verified,
+                    'is_featured' => $review->is_featured,
+                    'helpful_count' => $review->helpful_count,
+                    'created_at' => $review->created_at->format('Y-m-d H:i:s'),
+                    'reviewer' => $review->reviewer ? [
+                        'id' => $review->reviewer->id,
+                        'first_name' => $review->reviewer->first_name,
+                        'last_name' => $review->reviewer->last_name,
+                        'profile_image_url' => $review->reviewer->profile_image_url,
+                    ] : null,
+                    'appointment' => $review->appointment ? [
+                        'id' => $review->appointment->id,
+                        'appointment_date' => $review->appointment->appointment_date->format('Y-m-d'),
+                        'status' => $review->appointment->status,
+                    ] : null,
+                ];
+            });
+
+            return response()->json([
+                'success' => true,
+                'data' => $formattedReviews,
+                'message' => 'Service reviews retrieved successfully'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve service reviews',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }

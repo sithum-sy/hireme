@@ -295,7 +295,7 @@ const ProviderLayout = ({ children }) => {
                                                 {businessStats.pendingRequests})
                                             </Link>
                                             <Link
-                                                to="/provider/schedule"
+                                                to="/provider/availability/schedule"
                                                 className="btn btn-outline-light"
                                             >
                                                 <i className="fas fa-calendar me-2"></i>

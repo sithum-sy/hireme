@@ -19,6 +19,8 @@ use App\Http\Controllers\API\Provider\InvoiceController;
 Route::prefix('services')->group(function () {
     Route::get('/my-services', [ServiceController::class, 'myServices']);
     Route::get('/{service}/edit', [ServiceController::class, 'edit']);
+    Route::get('/{service}/appointments', [ServiceController::class, 'getServiceAppointments']);
+    Route::get('/{service}/reviews', [ServiceController::class, 'getServiceReviews']);
     Route::post('/', [ServiceController::class, 'store']);
     Route::match(['PUT', 'POST'], '/{service}', [ServiceController::class, 'update']);
     Route::delete('/{service}', [ServiceController::class, 'destroy']);

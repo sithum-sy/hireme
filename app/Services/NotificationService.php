@@ -11,6 +11,52 @@ use Illuminate\Support\Facades\Log;
 class NotificationService
 {
     /**
+     * Send service-related notification
+     */
+    public function sendServiceNotification(
+        string $type,
+        User $recipient,
+        array $data,
+        bool $sendEmail = false,
+        bool $sendInApp = true
+    ) {
+        try {
+            // Check if user has notifications enabled
+            if (!$this->canReceiveNotifications($recipient)) {
+                Log::info("User has notifications disabled", ['user_id' => $recipient->id]);
+                return false;
+            }
+
+            $results = [
+                'email' => false,
+                'app' => false
+            ];
+
+            if ($sendInApp && $this->shouldSendInApp($recipient, $type)) {
+                $results['app'] = $this->createInAppNotification($type, $recipient, $data);
+            }
+
+            Log::info("Service notification processed", [
+                'type' => $type,
+                'recipient' => $recipient->id,
+                'results' => $results
+            ]);
+
+            return $results;
+
+        } catch (\Exception $e) {
+            Log::error("Service notification sending failed", [
+                'type' => $type,
+                'recipient' => $recipient->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return false;
+        }
+    }
+
+    /**
      * Send notification through multiple channels
      */
     public function sendAppointmentNotification(
@@ -132,6 +178,7 @@ class NotificationService
                 'category' => $template['category'],
                 'appointment_id' => $data['appointment_id'] ?? null,
                 'quote_id' => $data['quote_id'] ?? null,
+                'service_id' => $data['service_id'] ?? null,
                 'action_url' => $this->generateActionUrl($type, $data, $recipient->role),
                 'metadata' => $this->getNotificationMetadata($type, $data),
             ]);
@@ -227,6 +274,14 @@ class NotificationService
             $rendered = str_replace('{appointment_time}', \Carbon\Carbon::parse($appointment->appointment_time)->format('g:i A'), $rendered);
         }
 
+        // Handle service-related placeholders
+        if (isset($data['service'])) {
+            $service = $data['service'];
+            $rendered = str_replace('{service_title}', $service->title ?? 'Service', $rendered);
+            $rendered = str_replace('{service_category}', $service->category->name ?? 'Category', $rendered);
+            $rendered = str_replace('{service_price}', 'Rs. ' . number_format($service->base_price ?? 0), $rendered);
+        }
+
         return $rendered;
     }
 
@@ -237,6 +292,7 @@ class NotificationService
     {
         $appointmentId = $data['appointment_id'] ?? null;
         $quoteId = $data['quote_id'] ?? null;
+        $serviceId = $data['service_id'] ?? null;
 
         switch ($type) {
             case 'appointment_request_received':
@@ -268,6 +324,18 @@ class NotificationService
                         : "/provider/quotes/{$quoteId}";
                 }
                 break;
+
+            case 'service_created':
+            case 'service_updated':
+            case 'service_activated':
+            case 'service_deactivated':
+                if ($serviceId) {
+                    return "/provider/services/{$serviceId}";
+                }
+                break;
+
+            case 'service_deleted':
+                return "/provider/services";
         }
 
         return null;
@@ -286,6 +354,12 @@ class NotificationService
         if (isset($data['appointment'])) {
             $metadata['appointment_status'] = $data['appointment']->status;
             $metadata['service_id'] = $data['appointment']->service_id;
+        }
+
+        if (isset($data['service'])) {
+            $metadata['service_id'] = $data['service']->id;
+            $metadata['service_status'] = $data['service']->is_active ? 'active' : 'inactive';
+            $metadata['service_category'] = $data['service']->category->name ?? null;
         }
 
         return $metadata;
@@ -426,6 +500,52 @@ class NotificationService
                     'message' => 'Payment has been received for the {service_name} service.',
                     'type' => 'success',
                     'category' => 'payment',
+                ],
+            ],
+
+            // Service management notifications
+            'service_created' => [
+                'service_provider' => [
+                    'title' => 'Service Created Successfully',
+                    'message' => 'Your service "{service_title}" has been created and is now live.',
+                    'type' => 'success',
+                    'category' => 'service',
+                ],
+            ],
+
+            'service_updated' => [
+                'service_provider' => [
+                    'title' => 'Service Updated Successfully',
+                    'message' => 'Your service "{service_title}" has been updated with the latest changes.',
+                    'type' => 'info',
+                    'category' => 'service',
+                ],
+            ],
+
+            'service_activated' => [
+                'service_provider' => [
+                    'title' => 'Service Activated',
+                    'message' => 'Your service "{service_title}" is now active and visible to clients.',
+                    'type' => 'success',
+                    'category' => 'service',
+                ],
+            ],
+
+            'service_deactivated' => [
+                'service_provider' => [
+                    'title' => 'Service Deactivated',
+                    'message' => 'Your service "{service_title}" has been deactivated and is no longer visible to clients.',
+                    'type' => 'warning',
+                    'category' => 'service',
+                ],
+            ],
+
+            'service_deleted' => [
+                'service_provider' => [
+                    'title' => 'Service Deleted',
+                    'message' => 'Your service "{service_title}" has been permanently deleted.',
+                    'type' => 'error',
+                    'category' => 'service',
                 ],
             ],
         ];

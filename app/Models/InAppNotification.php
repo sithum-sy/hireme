@@ -18,6 +18,7 @@ class InAppNotification extends Model
         'category',
         'appointment_id',
         'quote_id',
+        'service_id',
         'is_read',
         'action_url',
         'metadata'
@@ -44,6 +45,11 @@ class InAppNotification extends Model
     public function quote()
     {
         return $this->belongsTo(Quote::class);
+    }
+
+    public function service()
+    {
+        return $this->belongsTo(Service::class);
     }
 
     // Scopes
@@ -83,6 +89,7 @@ class InAppNotification extends Model
         $icons = [
             'appointment' => 'fa-calendar-alt',
             'payment' => 'fa-credit-card',
+            'service' => 'fa-concierge-bell',
             'system' => 'fa-cog',
             'general' => 'fa-info-circle'
         ];
@@ -118,6 +125,10 @@ class InAppNotification extends Model
         
         if ($this->quote_id) {
             return $this->quote;
+        }
+
+        if ($this->service_id) {
+            return $this->service;
         }
         
         return null;

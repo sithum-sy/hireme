@@ -42,6 +42,29 @@ const ServicesBrowse = () => {
     }, [currentLocation, filters]);
 
     useEffect(() => {
+        // Check if there's a custom location in URL parameters first
+        const urlLat = searchParams.get("lat");
+        const urlLng = searchParams.get("lng");
+        const urlCity = searchParams.get("city");
+        const urlAddress = searchParams.get("address");
+        
+        if (urlLat && urlLng) {
+            // Restore location from URL parameters
+            const restoredLocation = {
+                lat: parseFloat(urlLat),
+                lng: parseFloat(urlLng),
+                city: urlCity || "Custom Location",
+                province: searchParams.get("province") || "Sri Lanka",
+                address: urlAddress || `${urlLat}, ${urlLng}`,
+                radius: filters.radius || 5,
+                isCustomLocation: true
+            };
+            
+            console.log("✅ Restored custom location from URL:", restoredLocation);
+            setCurrentLocation(restoredLocation);
+            return;
+        }
+
         // Try to get user's current location on component mount
         if (!currentLocation && !showLocationSelector) {
             // console.log("🌐 Attempting to get user's location on mount");
@@ -329,7 +352,7 @@ const ServicesBrowse = () => {
                     setPagination(response.meta || {});
                 }
 
-                // Update URL with current filters
+                // Update URL with current filters and location
                 const newSearchParams = new URLSearchParams();
                 Object.keys(filters).forEach((key) => {
                     const value = filters[key];
@@ -338,6 +361,18 @@ const ServicesBrowse = () => {
                         newSearchParams.set(key, value);
                     }
                 });
+                
+                // Add location parameters to URL if it's a custom location
+                if (currentLocation && currentLocation.isCustomLocation) {
+                    newSearchParams.set("lat", currentLocation.lat.toString());
+                    newSearchParams.set("lng", currentLocation.lng.toString());
+                    newSearchParams.set("city", currentLocation.city || "");
+                    newSearchParams.set("address", currentLocation.address || "");
+                    if (currentLocation.province) {
+                        newSearchParams.set("province", currentLocation.province);
+                    }
+                }
+                
                 setSearchParams(newSearchParams, { replace: true });
             }
         } catch (error) {
@@ -370,10 +405,11 @@ const ServicesBrowse = () => {
         //     city: newLocation.city,
         // });
 
-        // Ensure the location has the current filter radius
+        // Ensure the location has the current filter radius and mark as custom
         const locationWithRadius = {
             ...newLocation,
             radius: filters.radius || 5,
+            isCustomLocation: true, // Mark this as a custom location
         };
 
         setCurrentLocation(locationWithRadius);
@@ -431,6 +467,11 @@ const ServicesBrowse = () => {
             radius: 5,
         };
         setFilters(clearedFilters);
+        
+        // Also clear the custom location and reset to GPS location
+        setCurrentLocation(null);
+        
+        // Clear all URL parameters including location
         setSearchParams({}, { replace: true });
     };
 

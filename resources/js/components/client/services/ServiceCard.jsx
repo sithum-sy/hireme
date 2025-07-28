@@ -4,7 +4,11 @@ import { useServicePrimaryImage } from "../../../hooks/useServiceImages";
 
 import { useState } from "react";
 
-const ServiceCard = ({ service, showDistance = true, customLocation = null }) => {
+const ServiceCard = ({
+    service,
+    showDistance = true,
+    customLocation = null,
+}) => {
     const navigate = useNavigate();
     const primaryImage = useServicePrimaryImage(service);
     const [imageError, setImageError] = useState(false);
@@ -226,8 +230,8 @@ const ServiceCard = ({ service, showDistance = true, customLocation = null }) =>
                                     e.preventDefault();
                                     e.stopPropagation();
                                     // Navigate to service detail page with booking hash and custom location
-                                    navigate(`/client/services/${service.id}#book`, {
-                                        state: { customLocation }
+                                    navigate(`/client/services/${service.id}`, {
+                                        state: { customLocation },
                                     });
                                 }}
                             >

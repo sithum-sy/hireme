@@ -207,7 +207,7 @@ class AppointmentController extends Controller
             ], 403);
         }
 
-        // Special validation for starting service
+        // Special validation for starting service - COMMENTED OUT FOR DEVELOPMENT
         // if ($request->status === 'in_progress' && $appointment->status === 'confirmed') {
         //     if (!$this->canStartService($appointment)) {
         //         return response()->json([
@@ -285,18 +285,21 @@ class AppointmentController extends Controller
                 return false;
             }
 
-            // Allow starting 15 minutes before scheduled time
+            // Allow starting 15 minutes before scheduled time - COMMENTED OUT FOR DEVELOPMENT
             // $allowedStartTime = $appointmentDateTime->copy()->subMinutes(15);
-            $allowedStartTime = $appointmentDateTime->copy()->subHours(24);
+            // $allowedStartTime = $appointmentDateTime->copy()->subHours(24);
 
-            Log::info('Time check details', [
-                'now' => $now->format('Y-m-d H:i:s'),
-                'appointment_datetime' => $appointmentDateTime->format('Y-m-d H:i:s'),
-                'allowed_start_time' => $allowedStartTime->format('Y-m-d H:i:s'),
-                'can_start' => $now->gte($allowedStartTime)
-            ]);
+            // Log::info('Time check details', [
+            //     'now' => $now->format('Y-m-d H:i:s'),
+            //     'appointment_datetime' => $appointmentDateTime->format('Y-m-d H:i:s'),
+            //     'allowed_start_time' => $allowedStartTime->format('Y-m-d H:i:s'),
+            //     'can_start' => $now->gte($allowedStartTime)
+            // ]);
 
-            return $now->gte($allowedStartTime);
+            // return $now->gte($allowedStartTime);
+            
+            // DEVELOPMENT: Always return true to allow starting service
+            return true;
         } catch (\Exception $e) {
             Log::error('Error checking appointment start time: ' . $e->getMessage(), [
                 'appointment_id' => $appointment->id,
@@ -402,7 +405,7 @@ class AppointmentController extends Controller
 
         try {
             $oldStatus = $appointment->status;
-            
+
             // Mark appointment as completed
             $appointment->update([
                 'status' => 'completed',
@@ -825,8 +828,8 @@ class AppointmentController extends Controller
             'can_confirm' => $appointment->canBeConfirmed(),
             'can_cancel' => $appointment->canBeCancelled(),
             'has_pending_reschedule' => $appointment->hasPendingRescheduleRequest(),
-            'pending_reschedule_request' => $appointment->relationLoaded('pendingRescheduleRequest') 
-                ? $appointment->getRelation('pendingRescheduleRequest') 
+            'pending_reschedule_request' => $appointment->relationLoaded('pendingRescheduleRequest')
+                ? $appointment->getRelation('pendingRescheduleRequest')
                 : null,
             // Add earnings calculation
             'earnings' => $appointment->status === 'completed' ?

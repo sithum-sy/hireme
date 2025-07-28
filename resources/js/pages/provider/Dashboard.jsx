@@ -218,7 +218,7 @@ const ProviderDashboard = () => {
             icon: "fas fa-bell",
             title: "View Requests",
             description: "Pending bookings",
-            path: "/provider/quotes",
+            path: "/provider/appointments?filter=all",
             variant: "warning",
             count: businessStats?.pendingRequests,
         },
@@ -305,14 +305,17 @@ const ProviderDashboard = () => {
                                         <div
                                             className={`action-icon mb-3 text-${action.variant} position-relative`}
                                         >
-                                            <i className={`${action.icon} fa-2x`}></i>
-                                            {action.count && action.count > 0 && (
-                                                <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                                                    {action.count > 99
-                                                        ? "99+"
-                                                        : action.count}
-                                                </span>
-                                            )}
+                                            <i
+                                                className={`${action.icon} fa-2x`}
+                                            ></i>
+                                            {action.count &&
+                                                action.count > 0 && (
+                                                    <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                                        {action.count > 99
+                                                            ? "99+"
+                                                            : action.count}
+                                                    </span>
+                                                )}
                                         </div>
                                         <h6 className="card-title mb-2">
                                             {action.title}
@@ -395,7 +398,6 @@ const ProviderDashboard = () => {
                             </div>
                         </div>
                     </div>
-
                 </div>
 
                 <div className="row mb-6">
@@ -576,8 +578,8 @@ const ProviderDashboard = () => {
                                             <i className="fas fa-medal fa-2x text-warning"></i>
                                         </div>
                                         <div className="h4 mb-1 text-warning">
-                                            {performanceIndicators.rating.value >=
-                                            4.5
+                                            {performanceIndicators.rating
+                                                .value >= 4.5
                                                 ? "Elite"
                                                 : performanceIndicators.rating
                                                       .value >= 4.0
