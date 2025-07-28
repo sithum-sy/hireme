@@ -389,6 +389,9 @@ class NotificationService
                 'client' => \App\Mail\AppointmentCancelledMail::class,
                 'service_provider' => \App\Mail\AppointmentCancelledMail::class,
             ],
+            'appointment_started' => [
+                'client' => \App\Mail\AppointmentStartedMail::class,
+            ],
             'appointment_completed' => [
                 'client' => \App\Mail\AppointmentCompletedMail::class,
                 'service_provider' => \App\Mail\AppointmentCompletedMail::class,
@@ -396,8 +399,14 @@ class NotificationService
             'invoice_generated' => [
                 'client' => \App\Mail\InvoiceGeneratedMail::class,
             ],
-            'payment_received' => [
+            'payment_receipt' => [
+                'client' => \App\Mail\PaymentReceiptMail::class,
+            ],
+            'payment_confirmed' => [
                 'service_provider' => \App\Mail\PaymentReceivedMail::class,
+            ],
+            'review_received' => [
+                'service_provider' => \App\Mail\ReviewReceivedMail::class,
             ],
         ];
     }
@@ -470,6 +479,15 @@ class NotificationService
                 ],
             ],
 
+            'appointment_started' => [
+                'client' => [
+                    'title' => 'Service Started',
+                    'message' => 'Your {service_name} appointment has started. The provider is now on their way or working on your service.',
+                    'type' => 'info',
+                    'category' => 'appointment',
+                ],
+            ],
+
             'appointment_completed' => [
                 'client' => [
                     'title' => 'Service Completed',
@@ -494,12 +512,30 @@ class NotificationService
                 ],
             ],
 
-            'payment_received' => [
-                'service_provider' => [
-                    'title' => 'Payment Received',
-                    'message' => 'Payment has been received for the {service_name} service.',
+            'payment_receipt' => [
+                'client' => [
+                    'title' => 'Payment Successful',
+                    'message' => 'Your payment for {service_name} has been processed successfully. Receipt sent to your email.',
                     'type' => 'success',
                     'category' => 'payment',
+                ],
+            ],
+
+            'payment_confirmed' => [
+                'service_provider' => [
+                    'title' => 'Payment Received',
+                    'message' => 'Payment has been received for the {service_name} service with {client_name}. Earnings are now available.',
+                    'type' => 'success',
+                    'category' => 'payment',
+                ],
+            ],
+
+            'review_received' => [
+                'service_provider' => [
+                    'title' => 'New Review Received',
+                    'message' => '{client_name} left you a {rating}-star review for {service_name}.',
+                    'type' => 'info',
+                    'category' => 'review',
                 ],
             ],
 

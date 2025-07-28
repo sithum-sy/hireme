@@ -2,9 +2,8 @@
 
 namespace App\Mail;
 
+use App\Models\Review;
 use App\Models\Appointment;
-use App\Models\Payment;
-use App\Models\Invoice;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
@@ -12,22 +11,20 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class PaymentReceivedMail extends Mailable implements ShouldQueue
+class ReviewReceivedMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
+    public $review;
     public $appointment;
-    public $payment;
-    public $invoice;
 
     /**
      * Create a new message instance.
      */
     public function __construct(array $data)
     {
+        $this->review = $data['review'];
         $this->appointment = $data['appointment'];
-        $this->payment = $data['payment'];
-        $this->invoice = $data['invoice'] ?? null;
     }
 
     /**
@@ -35,8 +32,11 @@ class PaymentReceivedMail extends Mailable implements ShouldQueue
      */
     public function envelope(): Envelope
     {
+        $rating = $this->review->rating;
+        $subject = $rating >= 4 ? 'Great Review Received!' : 'New Review Received';
+        
         return new Envelope(
-            subject: 'Payment Received - Earnings Available',
+            subject: $subject,
         );
     }
 
@@ -48,23 +48,22 @@ class PaymentReceivedMail extends Mailable implements ShouldQueue
         $baseUrl = config('app.frontend_url', config('app.url'));
         
         return new Content(
-            view: 'emails.payments.confirmed',
+            view: 'emails.reviews.received',
             with: [
+                'review' => $this->review,
                 'appointment' => $this->appointment,
-                'payment' => $this->payment,
-                'invoice' => $this->invoice,
                 'providerName' => $this->appointment->provider->first_name,
                 'clientName' => $this->appointment->client->first_name . ' ' . $this->appointment->client->last_name,
                 'serviceName' => $this->appointment->service->title,
                 'appointmentDate' => $this->appointment->appointment_date,
                 'appointmentTime' => $this->appointment->appointment_time,
-                'paymentAmount' => $this->payment->amount,
-                'paymentDate' => $this->payment->created_at,
-                'transactionId' => $this->payment->stripe_payment_intent_id ?? $this->payment->id,
+                'rating' => $this->review->rating,
+                'reviewText' => $this->review->comment,
+                'ratingStars' => str_repeat('⭐', $this->review->rating),
                 'businessName' => $this->appointment->provider->provider_profile->business_name ?? null,
                 'appointmentUrl' => $baseUrl . '/provider/appointments/' . $this->appointment->id,
+                'reviewsUrl' => $baseUrl . '/provider/reviews',
                 'dashboardUrl' => $baseUrl . '/provider/dashboard',
-                'paymentsUrl' => $baseUrl . '/provider/payments',
             ]
         );
     }

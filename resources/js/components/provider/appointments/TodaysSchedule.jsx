@@ -491,7 +491,7 @@ const TodaysSchedule = ({ onAppointmentAction, refreshTrigger }) => {
                 }
 
                 .status-progress {
-                    background: var(--current-role-primary);
+                    background: #0d6efd;
                     color: white;
                 }
 

@@ -5,11 +5,14 @@ namespace App\Http\Controllers\API\Provider;
 use App\Http\Controllers\Controller;
 use App\Models\Invoice;
 use App\Models\Appointment;
+use App\Models\Payment;
 use App\Services\InvoiceService;
+use App\Events\PaymentReceived;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
 
 class InvoiceController extends Controller
 {
@@ -414,6 +417,9 @@ class InvoiceController extends Controller
                     'status' => Appointment::STATUS_PAID,
                     'payment_received_at' => $payment->processed_at
                 ]);
+
+                // Dispatch payment received event for notifications
+                PaymentReceived::dispatch($invoice->appointment, $payment, $invoice);
             });
 
             return response()->json([

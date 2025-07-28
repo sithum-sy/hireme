@@ -604,7 +604,7 @@ const AppointmentsTable = ({
                 }
 
                 .status-progress {
-                    background: var(--orange);
+                    background: #0d6efd;
                     color: white;
                 }
 

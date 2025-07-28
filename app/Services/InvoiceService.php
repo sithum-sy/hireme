@@ -7,6 +7,7 @@ use App\Models\Appointment;
 use App\Models\Payment;
 use App\Notifications\InvoiceCreated;
 use App\Notifications\InvoiceSent;
+use App\Events\InvoiceGenerated;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
@@ -69,7 +70,10 @@ class InvoiceService
                 'invoice_created_at' => now()
             ]);
 
-            // Send notification if auto-created
+            // Dispatch event for notification system
+            InvoiceGenerated::dispatch($appointment, $invoice);
+
+            // Send notification if auto-created (legacy method)
             if (isset($options['auto_created']) && $options['auto_created']) {
                 $this->notifyClientOfNewInvoice($invoice);
             }

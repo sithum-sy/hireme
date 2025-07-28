@@ -7,6 +7,7 @@ use App\Models\Review;
 use App\Models\Appointment;
 use App\Models\User;
 use App\Models\Service;
+use App\Events\ReviewSubmitted;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -70,6 +71,9 @@ class ReviewService
             // Check if both reviews are complete
             $this->checkAndMarkAppointmentReviewed($appointment);
 
+            // Dispatch review notification event
+            ReviewSubmitted::dispatch($review, $appointment);
+
             return $review;
         });
     }
@@ -125,6 +129,9 @@ class ReviewService
 
             // Check if both reviews are complete to mark appointment as fully reviewed
             $this->checkAndMarkAppointmentReviewed($appointment);
+
+            // Dispatch review notification event
+            ReviewSubmitted::dispatch($review, $appointment);
 
             return $review;
         });

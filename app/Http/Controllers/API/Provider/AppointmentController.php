@@ -241,7 +241,7 @@ class AppointmentController extends Controller
 
             return response()->json([
                 'success' => true,
-                'data' => $appointment->fresh()->load(['service', 'client']),
+                'data' => $this->transformAppointmentForProvider($appointment->fresh()->load(['service', 'client'])),
                 'message' => 'Appointment status updated successfully'
             ]);
         } catch (\Exception $e) {

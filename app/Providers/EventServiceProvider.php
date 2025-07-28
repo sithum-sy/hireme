@@ -23,6 +23,21 @@ class EventServiceProvider extends ServiceProvider
         \App\Events\AppointmentStatusChanged::class => [
             \App\Listeners\SendAppointmentStatusNotification::class,
         ],
+        
+        // Invoice events
+        \App\Events\InvoiceGenerated::class => [
+            \App\Listeners\SendInvoiceNotification::class,
+        ],
+        
+        // Payment events
+        \App\Events\PaymentReceived::class => [
+            \App\Listeners\SendPaymentNotification::class,
+        ],
+        
+        // Review events
+        \App\Events\ReviewSubmitted::class => [
+            \App\Listeners\SendReviewNotification::class,
+        ],
     ];
 
     /**
