@@ -6,7 +6,9 @@ import TodaysSchedule from "../../../components/provider/appointments/TodaysSche
 import QuickFilterTabs from "../../../components/provider/appointments/QuickFilterTabs";
 import AppointmentsTable from "../../../components/provider/appointments/AppointmentsTable";
 import AppointmentCard from "../../../components/provider/appointments/AppointmentCard";
+import CreateInvoiceModal from "../../../components/provider/payments/CreateInvoiceModal";
 import providerAppointmentService from "../../../services/providerAppointmentService";
+import invoiceService from "../../../services/invoiceService";
 
 const AppointmentsList = () => {
     const [searchParams, setSearchParams] = useSearchParams();
@@ -33,6 +35,10 @@ const AppointmentsList = () => {
     const [declineReason, setDeclineReason] = useState("");
     const [appointmentToDecline, setAppointmentToDecline] = useState(null);
     const [declineLoading, setDeclineLoading] = useState(false);
+    
+    // Create invoice modal state
+    const [showCreateInvoiceModal, setShowCreateInvoiceModal] = useState(false);
+    const [appointmentToComplete, setAppointmentToComplete] = useState(null);
     
     // Refresh trigger for TodaysSchedule component
     const [todaysScheduleRefresh, setTodaysScheduleRefresh] = useState(0);
@@ -458,6 +464,54 @@ const AppointmentsList = () => {
         }
     };
 
+    // Handle complete service with invoice creation
+    const handleCompleteWithInvoice = async (formData) => {
+        try {
+            // First complete the service
+            const result = await providerAppointmentService.completeService(
+                appointmentToComplete.id,
+                {
+                    notes: formData.notes,
+                    create_invoice: false // Don't auto-create since we're creating manually
+                }
+            );
+            
+            if (result.success) {
+                handleStatusUpdate(result.data);
+                setTodaysScheduleRefresh(prev => prev + 1);
+                
+                // Now create the invoice using the completed appointment
+                const invoiceResult = await invoiceService.createInvoice({
+                    ...formData,
+                    appointment_id: appointmentToComplete.id
+                });
+                
+                setShowCreateInvoiceModal(false);
+                setAppointmentToComplete(null);
+                
+                if (invoiceResult.success) {
+                    setTimeout(() => {
+                        alert(`Service completed! Invoice #${invoiceResult.data.invoice_number} has been created.`);
+                        navigate(`/provider/invoices/${invoiceResult.data.id}`);
+                    }, 100);
+                } else {
+                    setTimeout(() => {
+                        alert("Service completed but failed to create invoice: " + (invoiceResult.message || "Unknown error"));
+                    }, 100);
+                }
+            }
+        } catch (error) {
+            console.error("Failed to complete service:", error);
+            throw error; // Re-throw to let modal handle the error state
+        }
+    };
+
+    // Handle invoice modal close
+    const handleCreateInvoiceModalClose = () => {
+        setShowCreateInvoiceModal(false);
+        setAppointmentToComplete(null);
+    };
+
     // Handle appointment actions from table/cards
     const handleAppointmentAction = async (action, appointment) => {
         try {
@@ -487,13 +541,8 @@ const AppointmentsList = () => {
                     }
                     break;
                 case "complete":
-                    result = await providerAppointmentService.completeService(
-                        appointment.id
-                    );
-                    if (result.success) {
-                        handleStatusUpdate(result.data);
-                        setTodaysScheduleRefresh(prev => prev + 1);
-                    }
+                    setAppointmentToComplete(appointment);
+                    setShowCreateInvoiceModal(true);
                     break;
                 case "cancel":
                     setAppointmentToCancel(appointment);
@@ -1136,6 +1185,14 @@ const AppointmentsList = () => {
                         </div>
                     </>
                 )}
+
+                {/* Create Invoice Modal */}
+                <CreateInvoiceModal
+                    appointment={appointmentToComplete}
+                    isOpen={showCreateInvoiceModal}
+                    onClose={handleCreateInvoiceModalClose}
+                    onComplete={handleCompleteWithInvoice}
+                />
 
                 {/* Custom Styles */}
                 <style>{`

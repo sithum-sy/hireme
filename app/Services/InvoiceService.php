@@ -45,6 +45,11 @@ class InvoiceService
             $subtotal = $appointment->total_price; // Use total price directly
             $providerEarnings = $subtotal; // Provider gets full amount
 
+            // Determine invoice and appointment status based on send_invoice option
+            $sendInvoice = $options['send_invoice'] ?? false;
+            $invoiceStatus = $sendInvoice ? 'sent' : 'draft';
+            $appointmentStatus = $sendInvoice ? Appointment::STATUS_INVOICE_SENT : Appointment::STATUS_COMPLETED;
+
             $invoice = Invoice::create([
                 'invoice_number' => (new Invoice())->generateInvoiceNumber(),
                 'appointment_id' => $appointment->id,
@@ -57,17 +62,19 @@ class InvoiceService
                 'provider_earnings' => $providerEarnings,
                 'payment_method' => $options['payment_method'] ?? 'cash',
                 'payment_status' => 'pending',
-                'status' => 'draft', // Start as draft
+                'status' => $invoiceStatus,
                 'due_date' => now()->addDays($options['due_days'] ?? 7),
                 'notes' => $options['notes'] ?? 'Thank you for choosing our service. Payment is due within 7 days.',
                 'line_items' => $this->generateLineItems($appointment, $options['line_items'] ?? []),
                 'issued_at' => now(),
+                'sent_at' => $sendInvoice ? now() : null,
             ]);
 
-            // Update appointment status to indicate invoice created
+            // Update appointment status based on send_invoice option
             $appointment->update([
-                'status' => Appointment::STATUS_INVOICE_SENT, // or keep as completed
-                'invoice_created_at' => now()
+                'status' => $appointmentStatus,
+                'invoice_created_at' => now(),
+                'invoice_sent_at' => $sendInvoice ? now() : null
             ]);
 
             // Dispatch event for notification system

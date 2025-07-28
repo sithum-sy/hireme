@@ -118,7 +118,7 @@ class AppointmentController extends Controller
             ], 404);
         }
 
-        $appointment->load(['client', 'service', 'quote']);
+        $appointment->load(['client', 'service', 'quote', 'invoice']);
 
         return response()->json([
             'success' => true,
@@ -833,7 +833,19 @@ class AppointmentController extends Controller
                 : null,
             // Add earnings calculation
             'earnings' => $appointment->status === 'completed' ?
-                $appointment->total_price : ($appointment->status === 'confirmed' ? $appointment->total_price : 0)
+                $appointment->total_price : ($appointment->status === 'confirmed' ? $appointment->total_price : 0),
+            // Add invoice data if exists
+            'invoice' => $appointment->relationLoaded('invoice') && $appointment->invoice
+                ? [
+                    'id' => $appointment->invoice->id,
+                    'invoice_number' => $appointment->invoice->invoice_number,
+                    'status' => $appointment->invoice->status,
+                    'payment_status' => $appointment->invoice->payment_status,
+                    'total_amount' => $appointment->invoice->total_amount,
+                    'due_date' => $appointment->invoice->due_date,
+                    'sent_at' => $appointment->invoice->sent_at,
+                ]
+                : null
         ];
     }
 }

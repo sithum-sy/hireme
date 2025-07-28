@@ -51,10 +51,11 @@ class InvoiceService {
 
             const response = await axios.post(API_BASE, {
                 appointment_id: invoiceData.appointment_id,
-                payment_method: invoiceData.payment_method,
+                payment_method: invoiceData.payment_method || null,
                 due_days: invoiceData.due_days || 7,
                 notes: invoiceData.notes,
                 line_items: invoiceData.line_items || [],
+                send_invoice: invoiceData.send_invoice || false,
             });
 
             return {

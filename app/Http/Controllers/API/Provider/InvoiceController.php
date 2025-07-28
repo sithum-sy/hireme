@@ -107,7 +107,8 @@ class InvoiceController extends Controller
             'line_items.*.description' => 'required_with:line_items|string',
             'line_items.*.quantity' => 'required_with:line_items|numeric|min:1',
             'line_items.*.rate' => 'required_with:line_items|numeric|min:0',
-            'line_items.*.amount' => 'required_with:line_items|numeric|min:0'
+            'line_items.*.amount' => 'required_with:line_items|numeric|min:0',
+            'send_invoice' => 'nullable|boolean'
         ]);
 
         try {
@@ -148,7 +149,8 @@ class InvoiceController extends Controller
                 'due_days' => $request->due_days ?? 7,
                 'notes' => $request->notes,
                 'line_items' => $request->line_items ?? [],
-                'auto_created' => false
+                'auto_created' => false,
+                'send_invoice' => $request->send_invoice ?? false
             ];
 
             $invoice = $this->invoiceService->createInvoiceFromAppointment($appointment, $invoiceData);

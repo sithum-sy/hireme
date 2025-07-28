@@ -2,8 +2,9 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import ProviderLayout from "../../../components/layouts/ProviderLayout";
 import LoadingSpinner from "../../../components/LoadingSpinner";
-import CompleteServiceModal from "../../../components/provider/appointments/CompleteServiceModal";
+import CreateInvoiceModal from "../../../components/provider/payments/CreateInvoiceModal";
 import providerAppointmentService from "../../../services/providerAppointmentService";
+import invoiceService from "../../../services/invoiceService";
 import ReviewButton from "../../../components/reviews/ReviewButton";
 import { useAppointmentPDF } from "../../../components/shared/hooks/useAppointmentPDF";
 
@@ -19,7 +20,7 @@ const AppointmentDetail = () => {
     const [actionLoading, setActionLoading] = useState(false);
     const [notes, setNotes] = useState("");
     const [showNotesModal, setShowNotesModal] = useState(false);
-    const [showCompleteModal, setShowCompleteModal] = useState(false);
+    const [showCreateInvoiceModal, setShowCreateInvoiceModal] = useState(false);
     const [pendingAction, setPendingAction] = useState(null);
 
     useEffect(() => {
@@ -261,42 +262,49 @@ const AppointmentDetail = () => {
         }
     };
 
-    const handleCompleteService = async (options) => {
-        setActionLoading(true);
+    // Handle complete service with invoice creation
+    const handleCompleteWithInvoice = async (formData) => {
         try {
-            setShowCompleteModal(false); // Close modal immediately
-
+            // First complete the service
             const result = await providerAppointmentService.completeService(
                 appointment.id,
-                options
+                {
+                    notes: formData.notes,
+                    create_invoice: false // Don't auto-create since we're creating manually
+                }
             );
-
+            
             if (result.success) {
                 setAppointment(result.data);
-
-                if (result.invoice) {
-                    const action = options.send_invoice
-                        ? "created and sent"
-                        : "created";
+                
+                // Now create the invoice using the completed appointment
+                const invoiceResult = await invoiceService.createInvoice({
+                    ...formData,
+                    appointment_id: appointment.id
+                });
+                
+                setShowCreateInvoiceModal(false);
+                
+                if (invoiceResult.success) {
                     setTimeout(() => {
-                        alert(
-                            `Service completed! Invoice #${result.invoice.invoice_number} has been ${action}.`
-                        );
+                        alert(`Service completed! Invoice #${invoiceResult.data.invoice_number} has been created.`);
+                        navigate(`/provider/invoices/${invoiceResult.data.id}`);
                     }, 100);
                 } else {
                     setTimeout(() => {
-                        alert("Service completed successfully!");
+                        alert("Service completed but failed to create invoice: " + (invoiceResult.message || "Unknown error"));
                     }, 100);
                 }
-            } else {
-                alert(result.message || "Failed to complete service");
             }
         } catch (error) {
-            console.error("Error completing service:", error);
-            alert("Error completing service");
-        } finally {
-            setActionLoading(false);
+            console.error("Failed to complete service:", error);
+            throw error; // Re-throw to let modal handle the error state
         }
+    };
+
+    // Handle invoice modal close
+    const handleCreateInvoiceModalClose = () => {
+        setShowCreateInvoiceModal(false);
     };
 
     const confirmNotesAction = () => {
@@ -571,7 +579,7 @@ const AppointmentDetail = () => {
                             <div className="d-flex gap-2">
                                 <button
                                     className="btn btn-success"
-                                    onClick={() => setShowCompleteModal(true)}
+                                    onClick={() => setShowCreateInvoiceModal(true)}
                                     disabled={actionLoading}
                                 >
                                     <i className="fas fa-check-double me-2"></i>
@@ -602,6 +610,19 @@ const AppointmentDetail = () => {
                             <i className="fas fa-download me-2"></i>
                             Download PDF
                         </button>
+
+                        {/* View Invoice Button - Available when invoice exists */}
+                        {appointment.invoice && (
+                            <button
+                                className="btn btn-outline-primary ms-2"
+                                onClick={() => navigate(`/provider/invoices/${appointment.invoice.id}`)}
+                                disabled={actionLoading}
+                                title="View invoice details"
+                            >
+                                <i className="fas fa-file-invoice me-2"></i>
+                                View Invoice
+                            </button>
+                        )}
                     </div>
                 </div>
 
@@ -1221,17 +1242,13 @@ const AppointmentDetail = () => {
                     </>
                 )}
 
-                {/* Complete Service Modal */}
-                {showCompleteModal && (
-                    <CompleteServiceModal
-                        appointment={appointment}
-                        isOpen={showCompleteModal}
-                        onClose={() =>
-                            !actionLoading && setShowCompleteModal(false)
-                        }
-                        onComplete={handleCompleteService}
-                    />
-                )}
+                {/* Create Invoice Modal */}
+                <CreateInvoiceModal
+                    appointment={appointment}
+                    isOpen={showCreateInvoiceModal}
+                    onClose={handleCreateInvoiceModalClose}
+                    onComplete={handleCompleteWithInvoice}
+                />
             </div>
 
             <style>{`

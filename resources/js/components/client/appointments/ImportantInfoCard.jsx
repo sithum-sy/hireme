@@ -47,7 +47,7 @@ const ImportantInfoCard = ({ appointment, canCancel }) => {
             invoice_sent: [
                 {
                     icon: "fas fa-file-invoice text-info",
-                    text: "Invoice has been sent - please review and make payment",
+                    text: "Invoice has been received - please review and make payment",
                 },
                 {
                     icon: "fas fa-calendar-alt text-warning",

@@ -71,6 +71,31 @@ const AppointmentsTable = ({
                 text: "Completed",
                 icon: "fa-check",
             },
+            invoice_sent: {
+                class: "status-invoice-sent",
+                text: "Invoice Sent",
+                icon: "fa-file-invoice",
+            },
+            payment_pending: {
+                class: "status-payment-pending",
+                text: "Payment Pending",
+                icon: "fa-credit-card",
+            },
+            paid: {
+                class: "status-paid",
+                text: "Paid",
+                icon: "fa-money-check-alt",
+            },
+            reviewed: {
+                class: "status-reviewed",
+                text: "Reviewed",
+                icon: "fa-star",
+            },
+            closed: {
+                class: "status-closed",
+                text: "Closed",
+                icon: "fa-check-double",
+            },
             cancelled_by_client: {
                 class: "status-cancelled",
                 text: "Cancelled by Client",
@@ -85,6 +110,16 @@ const AppointmentsTable = ({
                 class: "status-cancelled",
                 text: "No Show",
                 icon: "fa-user-times",
+            },
+            disputed: {
+                class: "status-disputed",
+                text: "Disputed",
+                icon: "fa-exclamation-triangle",
+            },
+            expired: {
+                class: "status-expired",
+                text: "Expired",
+                icon: "fa-hourglass-end",
             },
         };
 
@@ -615,6 +650,41 @@ const AppointmentsTable = ({
 
                 .status-cancelled {
                     background: var(--danger-color);
+                    color: white;
+                }
+
+                .status-invoice-sent {
+                    background: #17a2b8;
+                    color: white;
+                }
+
+                .status-payment-pending {
+                    background: #fd7e14;
+                    color: white;
+                }
+
+                .status-paid {
+                    background: #28a745;
+                    color: white;
+                }
+
+                .status-reviewed {
+                    background: #6f42c1;
+                    color: white;
+                }
+
+                .status-closed {
+                    background: #6c757d;
+                    color: white;
+                }
+
+                .status-disputed {
+                    background: #dc3545;
+                    color: white;
+                }
+
+                .status-expired {
+                    background: #495057;
                     color: white;
                 }
 
