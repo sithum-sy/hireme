@@ -118,7 +118,14 @@ class AppointmentController extends Controller
             ], 404);
         }
 
-        $appointment->load(['client', 'service', 'quote', 'invoice']);
+        // Load comprehensive relationships for PDF generation
+        $appointment->load([
+            'client', 
+            'service.category', 
+            'quote', 
+            'invoice',
+            'provider.provider_profile'
+        ]);
 
         return response()->json([
             'success' => true,
@@ -845,7 +852,57 @@ class AppointmentController extends Controller
                     'due_date' => $appointment->invoice->due_date,
                     'sent_at' => $appointment->invoice->sent_at,
                 ]
-                : null
+                : null,
+            
+            // Add comprehensive data for PDF generation (same as client gets)
+            'base_price' => $appointment->base_price ?? $appointment->total_price,
+            'travel_fee' => $appointment->travel_fee ?? 0,
+            'additional_charges' => $appointment->additional_charges ?? 0,
+            'tax_amount' => $appointment->tax_amount ?? 0,
+            'tax_rate' => $appointment->tax_rate ?? 0,
+            'discount_amount' => $appointment->discount_amount ?? 0,
+            'payment_method' => $appointment->payment_method,
+            'client_city' => $appointment->client_city,
+            'custom_address' => $appointment->custom_address,
+            'custom_city' => $appointment->custom_city,
+            'location_instructions' => $appointment->location_instructions,
+            'quote_id' => $appointment->quote_id,
+            'booking_source' => $appointment->booking_source,
+            
+            // Add full client and provider objects for PDF
+            'client' => $appointment->relationLoaded('client') ? [
+                'id' => $appointment->client->id,
+                'first_name' => $appointment->client->first_name,
+                'last_name' => $appointment->client->last_name,
+                'email' => $appointment->client->email,
+                'contact_number' => $appointment->client->contact_number,
+                'profile_picture' => $appointment->client->profile_picture,
+                'created_at' => $appointment->client->created_at,
+            ] : null,
+            
+            'provider' => $appointment->relationLoaded('provider') ? [
+                'id' => $appointment->provider->id,
+                'first_name' => $appointment->provider->first_name,
+                'last_name' => $appointment->provider->last_name,
+                'email' => $appointment->provider->email,
+                'contact_number' => $appointment->provider->contact_number,
+                'profile_picture' => $appointment->provider->profile_picture,
+                'provider_profile' => $appointment->provider->provider_profile ? [
+                    'business_name' => $appointment->provider->provider_profile->business_name,
+                    'average_rating' => $appointment->provider->provider_profile->average_rating,
+                    'total_reviews' => $appointment->provider->provider_profile->total_reviews,
+                ] : null,
+            ] : null,
+            
+            'service' => $appointment->relationLoaded('service') ? [
+                'id' => $appointment->service->id,
+                'title' => $appointment->service->title,
+                'description' => $appointment->service->description,
+                'pricing_type' => $appointment->service->pricing_type,
+                'category' => $appointment->service->category ? [
+                    'name' => $appointment->service->category->name
+                ] : null,
+            ] : null,
         ];
     }
 }
