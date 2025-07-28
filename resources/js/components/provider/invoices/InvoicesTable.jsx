@@ -1,22 +1,21 @@
 import React from "react";
 import { Link } from "react-router-dom";
 
-const InvoicesTable = ({ 
-    invoices = [], 
-    loading = false, 
-    onSort, 
-    sortField, 
-    sortDirection, 
-    onInvoiceAction 
+const InvoicesTable = ({
+    invoices = [],
+    loading = false,
+    onSort,
+    sortField,
+    sortDirection,
+    onInvoiceAction,
 }) => {
-
     const formatDate = (dateString) => {
-        if (!dateString) return 'N/A';
+        if (!dateString) return "N/A";
         const date = new Date(dateString);
-        return date.toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric'
+        return date.toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
         });
     };
 
@@ -26,14 +25,34 @@ const InvoicesTable = ({
 
     const getStatusBadge = (status) => {
         const statusMap = {
-            'draft': { class: 'status-draft', text: 'Draft', icon: 'fa-edit' },
-            'sent': { class: 'status-sent', text: 'Sent', icon: 'fa-paper-plane' },
-            'paid': { class: 'status-paid', text: 'Paid', icon: 'fa-check-circle' },
-            'overdue': { class: 'status-overdue', text: 'Overdue', icon: 'fa-exclamation-triangle' },
-            'cancelled': { class: 'status-cancelled', text: 'Cancelled', icon: 'fa-times-circle' },
+            draft: { class: "status-draft", text: "Draft", icon: "fa-edit" },
+            sent: {
+                class: "status-sent",
+                text: "Sent",
+                icon: "fa-paper-plane",
+            },
+            paid: {
+                class: "status-paid",
+                text: "Paid",
+                icon: "fa-check-circle",
+            },
+            overdue: {
+                class: "status-overdue",
+                text: "Overdue",
+                icon: "fa-exclamation-triangle",
+            },
+            cancelled: {
+                class: "status-cancelled",
+                text: "Cancelled",
+                icon: "fa-times-circle",
+            },
         };
 
-        const statusInfo = statusMap[status] || { class: 'status-unknown', text: status, icon: 'fa-question' };
+        const statusInfo = statusMap[status] || {
+            class: "status-unknown",
+            text: status,
+            icon: "fa-question",
+        };
 
         return (
             <span className={`status-badge ${statusInfo.class}`}>
@@ -45,14 +64,38 @@ const InvoicesTable = ({
 
     const getPaymentStatusBadge = (paymentStatus) => {
         const statusMap = {
-            'pending': { class: 'payment-pending', text: 'Pending', icon: 'fa-clock' },
-            'processing': { class: 'payment-processing', text: 'Processing', icon: 'fa-spinner' },
-            'completed': { class: 'payment-completed', text: 'Completed', icon: 'fa-check' },
-            'failed': { class: 'payment-failed', text: 'Failed', icon: 'fa-times' },
-            'refunded': { class: 'payment-refunded', text: 'Refunded', icon: 'fa-undo' },
+            pending: {
+                class: "payment-pending",
+                text: "Pending",
+                icon: "fa-clock",
+            },
+            processing: {
+                class: "payment-processing",
+                text: "Processing",
+                icon: "fa-spinner",
+            },
+            completed: {
+                class: "payment-completed",
+                text: "Completed",
+                icon: "fa-check",
+            },
+            failed: {
+                class: "payment-failed",
+                text: "Failed",
+                icon: "fa-times",
+            },
+            refunded: {
+                class: "payment-refunded",
+                text: "Refunded",
+                icon: "fa-undo",
+            },
         };
 
-        const statusInfo = statusMap[paymentStatus] || { class: 'payment-unknown', text: paymentStatus, icon: 'fa-question' };
+        const statusInfo = statusMap[paymentStatus] || {
+            class: "payment-unknown",
+            text: paymentStatus,
+            icon: "fa-question",
+        };
 
         return (
             <span className={`payment-badge ${statusInfo.class}`}>
@@ -69,12 +112,12 @@ const InvoicesTable = ({
     };
 
     const getSortIcon = (field) => {
-        if (sortField !== field) return 'fas fa-sort';
-        return sortDirection === 'asc' ? 'fas fa-sort-up' : 'fas fa-sort-down';
+        if (sortField !== field) return "fas fa-sort";
+        return sortDirection === "asc" ? "fas fa-sort-up" : "fas fa-sort-down";
     };
 
     const getDaysOverdue = (dueDate, status) => {
-        if (status !== 'overdue' || !dueDate) return null;
+        if (status !== "overdue" || !dueDate) return null;
         const due = new Date(dueDate);
         const today = new Date();
         const diffTime = today - due;
@@ -101,8 +144,13 @@ const InvoicesTable = ({
                         <i className="fas fa-file-invoice"></i>
                     </div>
                     <h3>No invoices found</h3>
-                    <p>You don't have any invoices matching the current filter.</p>
-                    <Link to="/provider/invoices/create" className="btn btn-orange">
+                    <p>
+                        You don't have any invoices matching the current filter.
+                    </p>
+                    <Link
+                        to="/provider/invoices/create"
+                        className="btn btn-orange"
+                    >
                         <i className="fas fa-plus"></i>
                         Create Invoice
                     </Link>
@@ -117,74 +165,47 @@ const InvoicesTable = ({
                 <table className="invoices-table">
                     <thead>
                         <tr>
-                            <th 
-                                className="sortable-header"
-                                onClick={() => handleSort('invoice_number')}
-                            >
-                                Invoice #
-                                <i className={getSortIcon('invoice_number')}></i>
-                            </th>
-                            <th 
-                                className="sortable-header"
-                                onClick={() => handleSort('client_name')}
-                            >
-                                Client
-                                <i className={getSortIcon('client_name')}></i>
-                            </th>
-                            <th 
-                                className="sortable-header"
-                                onClick={() => handleSort('created_at')}
-                            >
-                                Date Created
-                                <i className={getSortIcon('created_at')}></i>
-                            </th>
-                            <th 
-                                className="sortable-header"
-                                onClick={() => handleSort('due_date')}
-                            >
-                                Due Date
-                                <i className={getSortIcon('due_date')}></i>
-                            </th>
-                            <th 
-                                className="sortable-header"
-                                onClick={() => handleSort('total_amount')}
-                            >
-                                Amount
-                                <i className={getSortIcon('total_amount')}></i>
-                            </th>
-                            <th 
-                                className="sortable-header"
-                                onClick={() => handleSort('status')}
-                            >
-                                Status
-                                <i className={getSortIcon('status')}></i>
-                            </th>
+                            <th className="sortable-header">Invoice #</th>
+                            <th className="sortable-header">Client</th>
+                            <th className="sortable-header">Date Created</th>
+                            <th className="sortable-header">Due Date</th>
+                            <th className="sortable-header">Amount</th>
+                            <th className="sortable-header">Status</th>
                             <th>Payment</th>
                             <th className="actions-column">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {invoices.map((invoice) => (
-                            <tr 
-                                key={invoice.id} 
-                                className="invoice-row"
-                            >
+                            <tr key={invoice.id} className="invoice-row">
                                 <td className="invoice-number-cell">
                                     <div className="invoice-number">
-                                        <span className="number">#{invoice.invoice_number}</span>
+                                        <span className="number">
+                                            #{invoice.invoice_number}
+                                        </span>
                                         {invoice.appointment && (
-                                            <small className="appointment-ref">
-                                                Appointment #{invoice.appointment.id}
-                                            </small>
+                                            <div className="appointment-ref">
+                                                <i className="fas fa-calendar-check me-1 text-primary"></i>
+                                                <strong>
+                                                    Appointment #
+                                                    {invoice.appointment.id}
+                                                </strong>
+                                            </div>
                                         )}
                                     </div>
                                 </td>
                                 <td className="client-cell">
                                     <div className="client-info">
                                         <span className="client-name">
-                                            {invoice.client?.name || 
-                                             `${invoice.client?.first_name || ''} ${invoice.client?.last_name || ''}`.trim() ||
-                                             'N/A'}
+                                            {invoice.client?.name ||
+                                                `${
+                                                    invoice.client
+                                                        ?.first_name || ""
+                                                } ${
+                                                    invoice.client?.last_name ||
+                                                    ""
+                                                }`.trim() ||
+                                                "N/A"}
                                         </span>
                                         {invoice.client?.email && (
                                             <small className="client-email">
@@ -203,9 +224,16 @@ const InvoicesTable = ({
                                         <span className="due-date">
                                             {formatDate(invoice.due_date)}
                                         </span>
-                                        {getDaysOverdue(invoice.due_date, invoice.status) && (
+                                        {getDaysOverdue(
+                                            invoice.due_date,
+                                            invoice.status
+                                        ) && (
                                             <small className="overdue-days">
-                                                {getDaysOverdue(invoice.due_date, invoice.status)} days overdue
+                                                {getDaysOverdue(
+                                                    invoice.due_date,
+                                                    invoice.status
+                                                )}{" "}
+                                                days overdue
                                             </small>
                                         )}
                                     </div>
@@ -213,11 +241,16 @@ const InvoicesTable = ({
                                 <td className="amount-cell">
                                     <div className="amount-info">
                                         <span className="total-amount">
-                                            {formatCurrency(invoice.total_amount)}
+                                            {formatCurrency(
+                                                invoice.total_amount
+                                            )}
                                         </span>
                                         {invoice.paid_amount > 0 && (
                                             <small className="paid-amount">
-                                                Paid: {formatCurrency(invoice.paid_amount)}
+                                                Paid:{" "}
+                                                {formatCurrency(
+                                                    invoice.paid_amount
+                                                )}
                                             </small>
                                         )}
                                     </div>
@@ -226,35 +259,53 @@ const InvoicesTable = ({
                                     {getStatusBadge(invoice.status)}
                                 </td>
                                 <td className="payment-cell">
-                                    {invoice.payment_status ? 
-                                        getPaymentStatusBadge(invoice.payment_status) :
+                                    {invoice.payment_status ? (
+                                        getPaymentStatusBadge(
+                                            invoice.payment_status
+                                        )
+                                    ) : (
                                         <span className="text-muted">N/A</span>
-                                    }
+                                    )}
                                 </td>
                                 <td className="actions-cell">
                                     <div className="action-buttons">
-                                        <button 
+                                        <button
                                             className="btn btn-sm btn-outline-primary"
-                                            onClick={() => onInvoiceAction && onInvoiceAction('view', invoice)}
+                                            onClick={() =>
+                                                onInvoiceAction &&
+                                                onInvoiceAction("view", invoice)
+                                            }
                                             title="View Invoice"
                                         >
                                             <i className="fas fa-eye me-1"></i>
                                             View
                                         </button>
-                                        
-                                        {invoice.status === 'draft' && (
+
+                                        {invoice.status === "draft" && (
                                             <>
-                                                <button 
+                                                <button
                                                     className="btn btn-sm btn-outline-secondary"
-                                                    onClick={() => onInvoiceAction && onInvoiceAction('edit', invoice)}
+                                                    onClick={() =>
+                                                        onInvoiceAction &&
+                                                        onInvoiceAction(
+                                                            "edit",
+                                                            invoice
+                                                        )
+                                                    }
                                                     title="Edit Invoice"
                                                 >
                                                     <i className="fas fa-edit me-1"></i>
                                                     Edit
                                                 </button>
-                                                <button 
+                                                <button
                                                     className="btn btn-sm btn-outline-success"
-                                                    onClick={() => onInvoiceAction && onInvoiceAction('send', invoice)}
+                                                    onClick={() =>
+                                                        onInvoiceAction &&
+                                                        onInvoiceAction(
+                                                            "send",
+                                                            invoice
+                                                        )
+                                                    }
                                                     title="Send Invoice"
                                                 >
                                                     <i className="fas fa-paper-plane me-1"></i>
@@ -263,19 +314,32 @@ const InvoicesTable = ({
                                             </>
                                         )}
 
-                                        {(invoice.status === 'sent' || invoice.status === 'overdue') && (
+                                        {(invoice.status === "sent" ||
+                                            invoice.status === "overdue") && (
                                             <>
-                                                <button 
+                                                {/* <button
                                                     className="btn btn-sm btn-outline-info"
-                                                    onClick={() => onInvoiceAction && onInvoiceAction('resend', invoice)}
+                                                    onClick={() =>
+                                                        onInvoiceAction &&
+                                                        onInvoiceAction(
+                                                            "resend",
+                                                            invoice
+                                                        )
+                                                    }
                                                     title="Resend Invoice"
                                                 >
                                                     <i className="fas fa-paper-plane me-1"></i>
                                                     Resend
-                                                </button>
-                                                <button 
+                                                </button> */}
+                                                <button
                                                     className="btn btn-sm btn-outline-success"
-                                                    onClick={() => onInvoiceAction && onInvoiceAction('mark_paid', invoice)}
+                                                    onClick={() =>
+                                                        onInvoiceAction &&
+                                                        onInvoiceAction(
+                                                            "mark_paid",
+                                                            invoice
+                                                        )
+                                                    }
                                                     title="Mark as Paid"
                                                 >
                                                     <i className="fas fa-check me-1"></i>
@@ -283,15 +347,6 @@ const InvoicesTable = ({
                                                 </button>
                                             </>
                                         )}
-
-                                        <button 
-                                            className="btn btn-sm btn-outline-secondary"
-                                            onClick={() => onInvoiceAction && onInvoiceAction('download', invoice)}
-                                            title="Download PDF"
-                                        >
-                                            <i className="fas fa-download me-1"></i>
-                                            PDF
-                                        </button>
                                     </div>
                                 </td>
                             </tr>
@@ -408,8 +463,11 @@ const InvoicesTable = ({
                 }
 
                 .appointment-ref {
-                    font-size: var(--text-xs);
-                    color: var(--text-secondary);
+                    font-size: var(--text-sm);
+                    color: var(--text-primary);
+                    margin-top: var(--space-1);
+                    display: flex;
+                    align-items: center;
                 }
 
                 .client-info {
@@ -428,7 +486,8 @@ const InvoicesTable = ({
                     color: var(--text-secondary);
                 }
 
-                .created-date, .due-date {
+                .created-date,
+                .due-date {
                     font-weight: var(--font-medium);
                     color: var(--text-primary);
                 }
@@ -462,7 +521,8 @@ const InvoicesTable = ({
                     color: var(--info-color);
                 }
 
-                .status-badge, .payment-badge {
+                .status-badge,
+                .payment-badge {
                     display: inline-flex;
                     align-items: center;
                     gap: var(--space-1);
@@ -564,7 +624,7 @@ const InvoicesTable = ({
                         gap: var(--space-1);
                         align-items: stretch;
                     }
-                    
+
                     .action-buttons .btn {
                         justify-content: center;
                     }

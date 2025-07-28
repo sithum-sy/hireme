@@ -253,6 +253,16 @@ const InvoiceDetail = () => {
                                         </tr>
                                         <tr>
                                             <td className="text-muted">
+                                                Appointment ID:
+                                            </td>
+                                            <td className="fw-medium">
+                                                #
+                                                {invoice.appointment?.id ||
+                                                    "N/A"}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td className="text-muted">
                                                 Issue Date:
                                             </td>
                                             <td>
@@ -332,6 +342,51 @@ const InvoiceDetail = () => {
                                                 )}
                                             </td>
                                         </tr>
+                                        <tr>
+                                            <td className="text-muted">
+                                                Service Time:
+                                            </td>
+                                            <td>
+                                                {invoice.appointment
+                                                    ?.appointment_time
+                                                    ? (() => {
+                                                          const timeStr =
+                                                              invoice
+                                                                  .appointment
+                                                                  .appointment_time;
+                                                          const timeParts =
+                                                              timeStr.split(
+                                                                  ":"
+                                                              );
+                                                          if (
+                                                              timeParts.length >=
+                                                              2
+                                                          ) {
+                                                              const hours =
+                                                                  parseInt(
+                                                                      timeParts[0]
+                                                                  );
+                                                              const minutes =
+                                                                  timeParts[1];
+                                                              const ampm =
+                                                                  hours >= 12
+                                                                      ? "PM"
+                                                                      : "AM";
+                                                              const displayHour =
+                                                                  hours === 0
+                                                                      ? 12
+                                                                      : hours >
+                                                                        12
+                                                                      ? hours -
+                                                                        12
+                                                                      : hours;
+                                                              return `${displayHour}:${minutes} ${ampm}`;
+                                                          }
+                                                          return timeStr;
+                                                      })()
+                                                    : "N/A"}
+                                            </td>
+                                        </tr>
                                         {invoice.payment_method && (
                                             <tr>
                                                 <td className="text-muted">
@@ -394,9 +449,9 @@ const InvoiceDetail = () => {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {invoice.line_items?.map(
-                                            (item, index) => (
-                                                <tr key={index}>
+                                        {invoice.line_items && invoice.line_items.length > 0 ? (
+                                            invoice.line_items.map((item, index) => (
+                                                <tr key={item.id || `${item.description}-${item.rate}-${item.quantity}-${index}`}>
                                                     <td>{item.description}</td>
                                                     <td className="text-center">
                                                         {item.quantity}
@@ -412,7 +467,16 @@ const InvoiceDetail = () => {
                                                         )}
                                                     </td>
                                                 </tr>
-                                            )
+                                            ))
+                                        ) : (
+                                            <tr>
+                                                <td
+                                                    colSpan="4"
+                                                    className="text-center text-muted py-4"
+                                                >
+                                                    No line items found
+                                                </td>
+                                            </tr>
                                         )}
                                     </tbody>
                                 </table>

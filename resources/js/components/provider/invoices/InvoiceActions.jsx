@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import invoiceService from "../../../services/invoiceService";
 import CashPaymentModal from "./CashPaymentModal";
+import notificationService from "../../../services/notificationService";
 import {
     downloadInvoicePDF,
     downloadFormattedInvoicePDF,
@@ -13,24 +14,17 @@ const InvoiceActions = ({ invoice, onUpdate, onMarkPaid }) => {
     const [downloadingPDF, setDownloadingPDF] = useState(false);
 
     const handleSendInvoice = async () => {
-        if (
-            !confirm(
-                "Are you sure you want to send this invoice to the client?"
-            )
-        )
-            return;
-
         setLoading(true);
         try {
             const result = await invoiceService.sendInvoice(invoice.id);
             if (result.success) {
                 onUpdate();
-                alert("Invoice sent successfully!");
+                notificationService.success("Invoice sent successfully!");
             } else {
-                alert(result.message || "Failed to send invoice");
+                notificationService.error(result.message || "Failed to send invoice");
             }
         } catch (error) {
-            alert("Error sending invoice");
+            notificationService.error("Error sending invoice");
         }
         setLoading(false);
     };
@@ -72,7 +66,7 @@ const InvoiceActions = ({ invoice, onUpdate, onMarkPaid }) => {
             );
             if (result.success) {
                 onUpdate();
-                alert("Cash payment confirmed successfully!");
+                notificationService.success("Cash payment confirmed successfully!");
             } else {
                 throw new Error(result.message);
             }
@@ -204,10 +198,7 @@ const InvoiceActions = ({ invoice, onUpdate, onMarkPaid }) => {
                             </li>
                             <li>
                                 <button
-                                    onClick={() =>
-                                        confirm("Delete this invoice?") &&
-                                        console.log("Delete")
-                                    }
+                                    onClick={() => console.log("Delete")}
                                     className="dropdown-item text-danger"
                                 >
                                     <i className="fas fa-trash me-2"></i>

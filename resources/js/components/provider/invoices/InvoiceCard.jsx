@@ -38,10 +38,16 @@ const InvoiceCard = ({ invoice, onUpdate }) => {
                             {invoice.formatted_invoice_number ||
                                 `INV-${invoice.id}`}
                         </h5>
-                        <p className="text-secondary text-sm mb-0">
+                        <p className="text-secondary text-sm mb-1">
                             <i className="fas fa-user me-2"></i>
                             {invoice.client?.name || "Unknown Client"}
                         </p>
+                        {invoice.appointment && (
+                            <p className="text-primary text-sm mb-0">
+                                <i className="fas fa-calendar-check me-2"></i>
+                                <strong>Appointment #{invoice.appointment.id}</strong>
+                            </p>
+                        )}
                     </div>
                     <div className="text-start text-md-end">
                         <div className="mb-2">

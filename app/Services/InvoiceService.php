@@ -532,32 +532,38 @@ class InvoiceService
     {
         $items = [];
 
-        // Main service item
-        $items[] = [
-            'description' => $appointment->service->title ?? 'Service',
-            'quantity' => 1,
-            'rate' => $appointment->base_price ?? $appointment->total_price,
-            'amount' => $appointment->base_price ?? $appointment->total_price
-        ];
-
-        // Travel fee if applicable
-        if ($appointment->travel_fee > 0) {
+        // If custom items are provided, use them exclusively
+        if (!empty($customItems)) {
+            foreach ($customItems as $item) {
+                // Ensure required fields exist
+                if (isset($item['description']) && isset($item['quantity']) && isset($item['rate']) && isset($item['amount'])) {
+                    $items[] = [
+                        'description' => $item['description'],
+                        'quantity' => (float) $item['quantity'],
+                        'rate' => (float) $item['rate'],
+                        'amount' => (float) $item['amount']
+                    ];
+                }
+            }
+        } else {
+            // Only generate default items if no custom items provided
+            // Main service item
             $items[] = [
-                'description' => 'Travel/Transportation Fee',
+                'description' => $appointment->service->title ?? 'Service',
                 'quantity' => 1,
-                'rate' => $appointment->travel_fee,
-                'amount' => $appointment->travel_fee
+                'rate' => $appointment->base_price ?? $appointment->total_price,
+                'amount' => $appointment->base_price ?? $appointment->total_price
             ];
-        }
 
-        // Add custom items
-        foreach ($customItems as $item) {
-            $items[] = [
-                'description' => $item['description'],
-                'quantity' => $item['quantity'],
-                'rate' => $item['rate'],
-                'amount' => $item['amount']
-            ];
+            // Travel fee if applicable
+            if ($appointment->travel_fee > 0) {
+                $items[] = [
+                    'description' => 'Travel/Transportation Fee',
+                    'quantity' => 1,
+                    'rate' => $appointment->travel_fee,
+                    'amount' => $appointment->travel_fee
+                ];
+            }
         }
 
         return $items;

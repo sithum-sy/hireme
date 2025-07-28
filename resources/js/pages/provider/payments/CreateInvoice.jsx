@@ -3,6 +3,7 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import ProviderLayout from "../../../components/layouts/ProviderLayout";
 import invoiceService from "../../../services/invoiceService";
 import providerAppointmentService from "../../../services/providerAppointmentService";
+import notificationService from "../../../services/notificationService";
 
 const CreateInvoice = () => {
     const [searchParams] = useSearchParams();
@@ -77,12 +78,13 @@ const CreateInvoice = () => {
         try {
             const result = await invoiceService.createInvoice(formData);
             if (result.success) {
+                notificationService.success("Invoice created successfully!");
                 navigate(`/provider/invoices/${result.data.id}`);
             } else {
-                alert(result.message || "Failed to create invoice");
+                notificationService.error(result.message || "Failed to create invoice");
             }
         } catch (error) {
-            alert("Error creating invoice");
+            notificationService.error("Error creating invoice");
         }
         setLoading(false);
     };

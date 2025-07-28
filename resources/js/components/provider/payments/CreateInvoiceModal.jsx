@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import invoiceService from "../../../services/invoiceService";
+import notificationService from "../../../services/notificationService";
 
 const CreateInvoiceModal = ({ appointment, isOpen, onClose, onComplete }) => {
     const [formData, setFormData] = useState({
@@ -55,7 +56,7 @@ const CreateInvoiceModal = ({ appointment, isOpen, onClose, onComplete }) => {
             await onComplete(formData);
         } catch (error) {
             console.error("Error in completion flow:", error);
-            alert("Error completing service and creating invoice");
+            notificationService.error("Error completing service and creating invoice");
             setLoading(false);
         }
     };

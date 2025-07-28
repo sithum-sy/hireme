@@ -70,43 +70,73 @@ const InvoiceSection = ({ appointment, onPaymentClick, canBePaid }) => {
                             <small className="text-muted">Invoice Items:</small>
                             {invoice.line_items &&
                             invoice.line_items.length > 0 ? (
-                                invoice.line_items.map((item, index) => (
-                                    <div
-                                        key={index}
-                                        className="d-flex justify-content-between py-2 border-bottom"
-                                    >
-                                        <div>
-                                            <div className="fw-semibold">
-                                                {item.description}
+                                (() => {
+                                    // Deduplicate line items based on description, rate, and quantity
+                                    const uniqueItems = invoice.line_items.filter((item, index, self) => 
+                                        index === self.findIndex(i => 
+                                            i.description === item.description && 
+                                            parseFloat(i.rate) === parseFloat(item.rate) && 
+                                            parseFloat(i.quantity) === parseFloat(item.quantity)
+                                        )
+                                    );
+                                    
+                                    return uniqueItems.map((item, index) => (
+                                        <div
+                                            key={item.id || `${item.description}-${item.rate}-${item.quantity}-${index}`}
+                                            className="d-flex justify-content-between py-2 border-bottom"
+                                        >
+                                            <div>
+                                                <div className="fw-semibold">
+                                                    {item.description}
+                                                </div>
+                                                {item.quantity > 1 && (
+                                                    <small className="text-muted">
+                                                        Qty: {item.quantity} ×{" "}
+                                                        {formatCurrency(item.rate)}
+                                                    </small>
+                                                )}
                                             </div>
-                                            {item.quantity > 1 && (
-                                                <small className="text-muted">
-                                                    Qty: {item.quantity} ×{" "}
-                                                    {formatCurrency(item.rate)}
-                                                </small>
-                                            )}
+                                            <div className="fw-semibold">
+                                                {formatCurrency(item.amount)}
+                                            </div>
                                         </div>
-                                        <div className="fw-semibold">
-                                            {formatCurrency(item.amount)}
-                                        </div>
-                                    </div>
-                                ))
+                                    ));
+                                })()
                             ) : (
                                 <div className="d-flex justify-content-between py-2">
                                     <div>
                                         <div className="fw-semibold">
-                                            {appointment.service?.title || "Service"}
+                                            {appointment.service?.title ||
+                                                "Service"}
                                         </div>
-                                        {appointment.booking_source === "quote_acceptance" || appointment.quote_id ? (
+                                        {appointment.booking_source ===
+                                            "quote_acceptance" ||
+                                        appointment.quote_id ? (
                                             <small className="text-muted">
                                                 <i className="fas fa-quote-left text-success me-1"></i>
-                                                Fixed quote price ({appointment.duration_hours} {appointment.duration_hours > 1 ? "hours" : "hour"})
+                                                Fixed quote price (
+                                                {appointment.duration_hours}{" "}
+                                                {appointment.duration_hours > 1
+                                                    ? "hours"
+                                                    : "hour"}
+                                                )
                                             </small>
                                         ) : (
                                             <small className="text-muted">
-                                                {appointment.duration_hours} {appointment.duration_hours > 1 ? "hours" : "hour"} × {formatCurrency(
-                                                    Math.round((appointment.total_price || 0) / (appointment.duration_hours || 1))
-                                                )} per hour
+                                                {appointment.duration_hours}{" "}
+                                                {appointment.duration_hours > 1
+                                                    ? "hours"
+                                                    : "hour"}{" "}
+                                                ×{" "}
+                                                {formatCurrency(
+                                                    Math.round(
+                                                        (appointment.total_price ||
+                                                            0) /
+                                                            (appointment.duration_hours ||
+                                                                1)
+                                                    )
+                                                )}{" "}
+                                                per hour
                                             </small>
                                         )}
                                     </div>
