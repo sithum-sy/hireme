@@ -121,15 +121,6 @@ const AppointmentHeader = ({
                                 <i className="fas fa-calendar-alt me-2"></i>
                                 Request Reschedule
                             </button>
-                            <button
-                                className="btn btn-outline-info"
-                                onClick={onContactToggle}
-                            >
-                                <i className="fas fa-comments me-2"></i>
-                                {showContactPanel
-                                    ? "Hide Contact"
-                                    : "Contact Provider"}
-                            </button>
                             {canBeCancelled && (
                                 <button
                                     className="btn btn-outline-danger"

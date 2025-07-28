@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import clientAppointmentService from "../../../services/clientAppointmentService";
 
-const TodaysSchedule = ({ onAppointmentAction }) => {
+const TodaysSchedule = ({ onAppointmentAction, canCancelAppointment }) => {
     const [todaysAppointments, setTodaysAppointments] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -307,20 +307,27 @@ const TodaysSchedule = ({ onAppointmentAction }) => {
                                             <i className="fas fa-calendar-alt me-1"></i>
                                             Reschedule
                                         </button>
-                                        <button
-                                            className="btn btn-sm btn-outline-danger"
-                                            onClick={() =>
-                                                onAppointmentAction &&
-                                                onAppointmentAction(
-                                                    "cancel",
-                                                    appointment
-                                                )
-                                            }
-                                            title="Cancel"
-                                        >
-                                            <i className="fas fa-times me-1"></i>
-                                            Cancel
-                                        </button>
+                                        {canCancelAppointment && 
+                                         canCancelAppointment(
+                                             appointment.appointment_date,
+                                             appointment.appointment_time,
+                                             appointment.status
+                                         ) && (
+                                            <button
+                                                className="btn btn-sm btn-outline-danger"
+                                                onClick={() =>
+                                                    onAppointmentAction &&
+                                                    onAppointmentAction(
+                                                        "cancel",
+                                                        appointment
+                                                    )
+                                                }
+                                                title="Cancel"
+                                            >
+                                                <i className="fas fa-times me-1"></i>
+                                                Cancel
+                                            </button>
+                                        )}
                                     </>
                                 )}
 

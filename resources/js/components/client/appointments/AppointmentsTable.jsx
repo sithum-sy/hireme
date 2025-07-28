@@ -8,6 +8,7 @@ const AppointmentsTable = ({
     sortField,
     sortDirection,
     onAppointmentAction,
+    canCancelAppointment,
 }) => {
     const formatDate = (dateString) => {
         const date = new Date(dateString);
@@ -316,20 +317,27 @@ const AppointmentsTable = ({
                                                     <i className="fas fa-calendar-alt me-1"></i>
                                                     Reschedule
                                                 </button>
-                                                <button
-                                                    className="btn btn-sm btn-outline-danger"
-                                                    onClick={() =>
-                                                        onAppointmentAction &&
-                                                        onAppointmentAction(
-                                                            "cancel",
-                                                            appointment
-                                                        )
-                                                    }
-                                                    title="Cancel"
-                                                >
-                                                    <i className="fas fa-times me-1"></i>
-                                                    Cancel
-                                                </button>
+                                                {canCancelAppointment && 
+                                                 canCancelAppointment(
+                                                     appointment.appointment_date,
+                                                     appointment.appointment_time,
+                                                     appointment.status
+                                                 ) && (
+                                                    <button
+                                                        className="btn btn-sm btn-outline-danger"
+                                                        onClick={() =>
+                                                            onAppointmentAction &&
+                                                            onAppointmentAction(
+                                                                "cancel",
+                                                                appointment
+                                                            )
+                                                        }
+                                                        title="Cancel"
+                                                    >
+                                                        <i className="fas fa-times me-1"></i>
+                                                        Cancel
+                                                    </button>
+                                                )}
                                             </>
                                         )}
 

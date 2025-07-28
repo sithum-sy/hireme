@@ -26,7 +26,7 @@ const AppointmentsList = () => {
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState(false);
     const [activeFilter, setActiveFilter] = useState(
-        searchParams.get("filter") || "today"
+        searchParams.get("filter") || "all"
     );
     const [sortField, setSortField] = useState("appointment_date");
     const [sortDirection, setSortDirection] = useState("asc");
@@ -58,14 +58,45 @@ const AppointmentsList = () => {
 
     // Initialize filters based on activeFilter on mount
     useEffect(() => {
-        if (activeFilter === "today" && !filters.date_from) {
+        // Don't set date filters when activeFilter is "today" - show all appointments in table
+        // TodaysSchedule component will handle today's filtering separately
+        if (activeFilter !== "today" && activeFilter !== "all") {
             const today = new Date().toISOString().split("T")[0];
-            setFilters(prev => ({
-                ...prev,
-                date_from: today,
-                date_to: today,
-                status: "all"
-            }));
+            
+            switch (activeFilter) {
+                case "upcoming":
+                    setFilters(prev => ({
+                        ...prev,
+                        date_from: today,
+                        date_to: "",
+                        status: "pending"
+                    }));
+                    break;
+                case "confirmed":
+                    setFilters(prev => ({
+                        ...prev,
+                        date_from: today,
+                        date_to: "",
+                        status: "confirmed"
+                    }));
+                    break;
+                case "completed":
+                    setFilters(prev => ({
+                        ...prev,
+                        status: "completed",
+                        date_from: "",
+                        date_to: ""
+                    }));
+                    break;
+                case "cancelled":
+                    setFilters(prev => ({
+                        ...prev,
+                        status: "cancelled",
+                        date_from: "",
+                        date_to: ""
+                    }));
+                    break;
+            }
         }
     }, [activeFilter]);
 
@@ -383,11 +414,16 @@ const AppointmentsList = () => {
 
         switch (filterType) {
             case "today":
+                // For "today" filter, don't restrict the main table - show all appointments
+                // TodaysSchedule component will handle today's appointments separately
                 newFilters = {
-                    ...filters,
-                    date_from: today,
-                    date_to: today,
                     status: "all",
+                    date_from: "",
+                    date_to: "",
+                    service_type: "",
+                    category: "all",
+                    price_min: "",
+                    price_max: "",
                 };
                 break;
             case "upcoming":
@@ -1069,11 +1105,10 @@ const AppointmentsList = () => {
                 </div>
 
                 {/* Today's Schedule Priority Section */}
-                {activeFilter === "today" && (
-                    <TodaysSchedule
-                        onAppointmentAction={handleAppointmentAction}
-                    />
-                )}
+                <TodaysSchedule
+                    onAppointmentAction={handleAppointmentAction}
+                    canCancelAppointment={canCancelAppointment}
+                />
 
                 {/* Quick Filter Tabs */}
                 <QuickFilterTabs
@@ -1293,6 +1328,7 @@ const AppointmentsList = () => {
                     sortField={sortField}
                     sortDirection={sortDirection}
                     onAppointmentAction={handleAppointmentAction}
+                    canCancelAppointment={canCancelAppointment}
                 />
 
                 {/* Pagination */}

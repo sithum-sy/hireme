@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import providerAppointmentService from "../../../services/providerAppointmentService";
 
-const TodaysSchedule = ({ onAppointmentAction }) => {
+const TodaysSchedule = ({ onAppointmentAction, refreshTrigger }) => {
     const [todaysAppointments, setTodaysAppointments] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -9,6 +9,13 @@ const TodaysSchedule = ({ onAppointmentAction }) => {
     useEffect(() => {
         loadTodaysAppointments();
     }, []);
+
+    // Refresh when refreshTrigger changes
+    useEffect(() => {
+        if (refreshTrigger) {
+            loadTodaysAppointments();
+        }
+    }, [refreshTrigger]);
 
     const loadTodaysAppointments = async () => {
         try {

@@ -1091,7 +1091,17 @@ const AppointmentDetail = () => {
                                 <div className="modal-content">
                                     <div className="modal-header">
                                         <h5 className="modal-title">
-                                            Add Notes
+                                            {pendingAction === "cancelled_by_provider" ? (
+                                                <>
+                                                    <i className="fas fa-exclamation-triangle text-warning me-2"></i>
+                                                    Cancel Appointment
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <i className="fas fa-sticky-note text-info me-2"></i>
+                                                    Add Notes
+                                                </>
+                                            )}
                                         </h5>
                                         <button
                                             type="button"
@@ -1099,12 +1109,57 @@ const AppointmentDetail = () => {
                                             onClick={() =>
                                                 setShowNotesModal(false)
                                             }
+                                            disabled={actionLoading}
                                         ></button>
                                     </div>
                                     <div className="modal-body">
+                                        {/* Show appointment details for cancellation */}
+                                        {pendingAction === "cancelled_by_provider" && appointment && (
+                                            <div className="appointment-info mb-3 p-3 bg-light rounded">
+                                                <h6 className="mb-2">
+                                                    <i className="fas fa-info-circle text-info me-2"></i>
+                                                    Appointment Details
+                                                </h6>
+                                                <div className="row">
+                                                    <div className="col-sm-6">
+                                                        <small className="text-muted">Client:</small>
+                                                        <div className="fw-bold">{appointment.client_name}</div>
+                                                    </div>
+                                                    <div className="col-sm-6">
+                                                        <small className="text-muted">Service:</small>
+                                                        <div className="fw-bold">{appointment.service_title}</div>
+                                                    </div>
+                                                    <div className="col-sm-6 mt-2">
+                                                        <small className="text-muted">Date:</small>
+                                                        <div className="fw-bold">
+                                                            {formatDateTime(appointment.appointment_date, appointment.appointment_time).fullDate}
+                                                        </div>
+                                                    </div>
+                                                    <div className="col-sm-6 mt-2">
+                                                        <small className="text-muted">Time:</small>
+                                                        <div className="fw-bold">
+                                                            {formatDateTime(appointment.appointment_date, appointment.appointment_time).time}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Show warning for cancellation */}
+                                        {pendingAction === "cancelled_by_provider" && (
+                                            <div className="alert alert-warning">
+                                                <i className="fas fa-exclamation-triangle me-2"></i>
+                                                <strong>Warning:</strong> This action cannot be undone. The client will be notified of the cancellation.
+                                            </div>
+                                        )}
+
                                         <div className="mb-3">
                                             <label className="form-label">
-                                                Notes (Optional)
+                                                {pendingAction === "cancelled_by_provider" ? (
+                                                    <strong>Reason for Cancellation *</strong>
+                                                ) : (
+                                                    "Notes (Optional)"
+                                                )}
                                             </label>
                                             <textarea
                                                 className="form-control"
@@ -1113,29 +1168,51 @@ const AppointmentDetail = () => {
                                                 onChange={(e) =>
                                                     setNotes(e.target.value)
                                                 }
-                                                placeholder="Add any notes about this status update..."
+                                                placeholder={
+                                                    pendingAction === "cancelled_by_provider"
+                                                        ? "Please provide a clear reason for the cancellation. This will be shared with the client."
+                                                        : "Add any notes about this status update..."
+                                                }
+                                                disabled={actionLoading}
                                             ></textarea>
+                                            {pendingAction === "cancelled_by_provider" && (
+                                                <div className="form-text">
+                                                    A cancellation reason is required to help the client understand why their appointment was cancelled.
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                     <div className="modal-footer">
                                         <button
                                             type="button"
-                                            className="btn btn-secondary"
+                                            className="btn btn-outline-secondary"
                                             onClick={() =>
                                                 setShowNotesModal(false)
                                             }
+                                            disabled={actionLoading}
                                         >
-                                            Cancel
+                                            <i className="fas fa-times me-2"></i>
+                                            {pendingAction === "cancelled_by_provider" ? "Keep Appointment" : "Cancel"}
                                         </button>
                                         <button
                                             type="button"
-                                            className="btn btn-primary"
+                                            className={`btn ${pendingAction === "cancelled_by_provider" ? "btn-danger" : "btn-primary"}`}
                                             onClick={confirmNotesAction}
-                                            disabled={actionLoading}
+                                            disabled={actionLoading || (pendingAction === "cancelled_by_provider" && !notes.trim())}
                                         >
-                                            {actionLoading
-                                                ? "Updating..."
-                                                : "Confirm"}
+                                            {actionLoading ? (
+                                                <>
+                                                    <div className="spinner-border spinner-border-sm me-2" role="status">
+                                                        <span className="visually-hidden">Loading...</span>
+                                                    </div>
+                                                    {pendingAction === "cancelled_by_provider" ? "Cancelling..." : "Updating..."}
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <i className={`fas ${pendingAction === "cancelled_by_provider" ? "fa-ban" : "fa-check"} me-2`}></i>
+                                                    {pendingAction === "cancelled_by_provider" ? "Cancel Appointment" : "Confirm"}
+                                                </>
+                                            )}
                                         </button>
                                     </div>
                                 </div>

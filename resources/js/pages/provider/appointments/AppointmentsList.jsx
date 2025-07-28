@@ -21,6 +21,21 @@ const AppointmentsList = () => {
     const [sortField, setSortField] = useState("appointment_date");
     const [sortDirection, setSortDirection] = useState("asc");
     const [viewMode, setViewMode] = useState("table"); // 'table' or 'cards'
+    
+    // Cancellation modal state
+    const [showCancelModal, setShowCancelModal] = useState(false);
+    const [cancelReason, setCancelReason] = useState("");
+    const [appointmentToCancel, setAppointmentToCancel] = useState(null);
+    const [cancelLoading, setCancelLoading] = useState(false);
+    
+    // Reschedule decline modal state
+    const [showDeclineModal, setShowDeclineModal] = useState(false);
+    const [declineReason, setDeclineReason] = useState("");
+    const [appointmentToDecline, setAppointmentToDecline] = useState(null);
+    const [declineLoading, setDeclineLoading] = useState(false);
+    
+    // Refresh trigger for TodaysSchedule component
+    const [todaysScheduleRefresh, setTodaysScheduleRefresh] = useState(0);
     const [filters, setFilters] = useState({
         status: searchParams.get("status") || "all",
         date_from: searchParams.get("date_from") || "",
@@ -259,6 +274,13 @@ const AppointmentsList = () => {
         );
         // Reload stats to reflect the status change
         loadStats();
+        
+        // Trigger refresh of TodaysSchedule if the updated appointment is for today
+        const appointmentDate = new Date(updatedAppointment.appointment_date);
+        const today = new Date();
+        if (appointmentDate.toDateString() === today.toDateString()) {
+            setTodaysScheduleRefresh(prev => prev + 1);
+        }
     };
 
     // Handle filter changes for quick tabs
@@ -366,6 +388,76 @@ const AppointmentsList = () => {
         setSortDirection(newDirection);
     };
 
+    // Handle cancellation confirmation
+    const handleCancelConfirm = async () => {
+        if (!appointmentToCancel || !cancelReason.trim()) return;
+
+        setCancelLoading(true);
+        try {
+            const result = await providerAppointmentService.cancelAppointment(
+                appointmentToCancel.id,
+                cancelReason
+            );
+            
+            if (result.success) {
+                handleStatusUpdate(result.data);
+                setShowCancelModal(false);
+                setCancelReason("");
+                setAppointmentToCancel(null);
+                // Trigger additional refresh for today's schedule
+                setTodaysScheduleRefresh(prev => prev + 1);
+            }
+        } catch (error) {
+            console.error("Failed to cancel appointment:", error);
+        } finally {
+            setCancelLoading(false);
+        }
+    };
+
+    // Handle cancellation modal close
+    const handleCancelModalClose = () => {
+        if (!cancelLoading) {
+            setShowCancelModal(false);
+            setCancelReason("");
+            setAppointmentToCancel(null);
+        }
+    };
+
+    // Handle reschedule decline confirmation
+    const handleDeclineConfirm = async () => {
+        if (!appointmentToDecline || !declineReason.trim()) return;
+
+        setDeclineLoading(true);
+        try {
+            const result = await providerAppointmentService.declineRescheduleRequest(
+                appointmentToDecline.id,
+                declineReason
+            );
+            
+            if (result.success) {
+                handleStatusUpdate(result.data);
+                setShowDeclineModal(false);
+                setDeclineReason("");
+                setAppointmentToDecline(null);
+                // Trigger additional refresh for today's schedule
+                setTodaysScheduleRefresh(prev => prev + 1);
+            }
+        } catch (error) {
+            console.error("Failed to decline reschedule:", error);
+        } finally {
+            setDeclineLoading(false);
+        }
+    };
+
+    // Handle decline modal close
+    const handleDeclineModalClose = () => {
+        if (!declineLoading) {
+            setShowDeclineModal(false);
+            setDeclineReason("");
+            setAppointmentToDecline(null);
+        }
+    };
+
     // Handle appointment actions from table/cards
     const handleAppointmentAction = async (action, appointment) => {
         try {
@@ -382,6 +474,7 @@ const AppointmentsList = () => {
                         );
                     if (result.success) {
                         handleStatusUpdate(result.data);
+                        setTodaysScheduleRefresh(prev => prev + 1);
                     }
                     break;
                 case "start":
@@ -390,6 +483,7 @@ const AppointmentsList = () => {
                     );
                     if (result.success) {
                         handleStatusUpdate(result.data);
+                        setTodaysScheduleRefresh(prev => prev + 1);
                     }
                     break;
                 case "complete":
@@ -398,22 +492,12 @@ const AppointmentsList = () => {
                     );
                     if (result.success) {
                         handleStatusUpdate(result.data);
+                        setTodaysScheduleRefresh(prev => prev + 1);
                     }
                     break;
                 case "cancel":
-                    const reason = prompt(
-                        "Please provide a reason for cancellation:"
-                    );
-                    if (reason) {
-                        result =
-                            await providerAppointmentService.cancelAppointment(
-                                appointment.id,
-                                reason
-                            );
-                        if (result.success) {
-                            handleStatusUpdate(result.data);
-                        }
-                    }
+                    setAppointmentToCancel(appointment);
+                    setShowCancelModal(true);
                     break;
                 case "approve_reschedule":
                     result =
@@ -422,22 +506,12 @@ const AppointmentsList = () => {
                         );
                     if (result.success) {
                         handleStatusUpdate(result.data);
+                        setTodaysScheduleRefresh(prev => prev + 1);
                     }
                     break;
                 case "decline_reschedule":
-                    const declineReason = prompt(
-                        "Please provide a reason for declining the reschedule:"
-                    );
-                    if (declineReason) {
-                        result =
-                            await providerAppointmentService.declineRescheduleRequest(
-                                appointment.id,
-                                declineReason
-                            );
-                        if (result.success) {
-                            handleStatusUpdate(result.data);
-                        }
-                    }
+                    setAppointmentToDecline(appointment);
+                    setShowDeclineModal(true);
                     break;
                 default:
                     break;
@@ -491,6 +565,7 @@ const AppointmentsList = () => {
                 {activeFilter === "today" && (
                     <TodaysSchedule
                         onAppointmentAction={handleAppointmentAction}
+                        refreshTrigger={todaysScheduleRefresh}
                     />
                 )}
 
@@ -844,6 +919,222 @@ const AppointmentsList = () => {
                             </ul>
                         </nav>
                     </div>
+                )}
+
+                {/* Cancellation Modal */}
+                {showCancelModal && (
+                    <>
+                        <div className="modal-backdrop fade show"></div>
+                        <div className="modal fade show d-block" tabIndex="-1">
+                            <div className="modal-dialog modal-dialog-centered">
+                                <div className="modal-content">
+                                    <div className="modal-header">
+                                        <h5 className="modal-title">
+                                            <i className="fas fa-exclamation-triangle text-warning me-2"></i>
+                                            Cancel Appointment
+                                        </h5>
+                                        <button
+                                            type="button"
+                                            className="btn-close"
+                                            onClick={handleCancelModalClose}
+                                            disabled={cancelLoading}
+                                        ></button>
+                                    </div>
+                                    <div className="modal-body">
+                                        {appointmentToCancel && (
+                                            <div className="appointment-info mb-3 p-3 bg-light rounded">
+                                                <h6 className="mb-2">
+                                                    <i className="fas fa-info-circle text-info me-2"></i>
+                                                    Appointment Details
+                                                </h6>
+                                                <div className="row">
+                                                    <div className="col-sm-6">
+                                                        <small className="text-muted">Client:</small>
+                                                        <div className="fw-bold">{appointmentToCancel.client_name}</div>
+                                                    </div>
+                                                    <div className="col-sm-6">
+                                                        <small className="text-muted">Service:</small>
+                                                        <div className="fw-bold">{appointmentToCancel.service_title}</div>
+                                                    </div>
+                                                    <div className="col-sm-6 mt-2">
+                                                        <small className="text-muted">Date:</small>
+                                                        <div className="fw-bold">
+                                                            {new Date(appointmentToCancel.appointment_date).toLocaleDateString()}
+                                                        </div>
+                                                    </div>
+                                                    <div className="col-sm-6 mt-2">
+                                                        <small className="text-muted">Time:</small>
+                                                        <div className="fw-bold">{appointmentToCancel.appointment_time}</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+                                        
+                                        <div className="alert alert-warning">
+                                            <i className="fas fa-exclamation-triangle me-2"></i>
+                                            <strong>Warning:</strong> This action cannot be undone. The client will be notified of the cancellation.
+                                        </div>
+
+                                        <div className="mb-3">
+                                            <label className="form-label">
+                                                <strong>Reason for Cancellation *</strong>
+                                            </label>
+                                            <textarea
+                                                className="form-control"
+                                                rows="4"
+                                                value={cancelReason}
+                                                onChange={(e) => setCancelReason(e.target.value)}
+                                                placeholder="Please provide a clear reason for the cancellation. This will be shared with the client."
+                                                disabled={cancelLoading}
+                                            ></textarea>
+                                            <div className="form-text">
+                                                A cancellation reason is required to help the client understand why their appointment was cancelled.
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="modal-footer">
+                                        <button
+                                            type="button"
+                                            className="btn btn-outline-secondary"
+                                            onClick={handleCancelModalClose}
+                                            disabled={cancelLoading}
+                                        >
+                                            <i className="fas fa-times me-2"></i>
+                                            Keep Appointment
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className="btn btn-danger"
+                                            onClick={handleCancelConfirm}
+                                            disabled={cancelLoading || !cancelReason.trim()}
+                                        >
+                                            {cancelLoading ? (
+                                                <>
+                                                    <div className="spinner-border spinner-border-sm me-2" role="status">
+                                                        <span className="visually-hidden">Loading...</span>
+                                                    </div>
+                                                    Cancelling...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <i className="fas fa-ban me-2"></i>
+                                                    Cancel Appointment
+                                                </>
+                                            )}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </>
+                )}
+
+                {/* Reschedule Decline Modal */}
+                {showDeclineModal && (
+                    <>
+                        <div className="modal-backdrop fade show"></div>
+                        <div className="modal fade show d-block" tabIndex="-1">
+                            <div className="modal-dialog modal-dialog-centered">
+                                <div className="modal-content">
+                                    <div className="modal-header">
+                                        <h5 className="modal-title">
+                                            <i className="fas fa-calendar-times text-warning me-2"></i>
+                                            Decline Reschedule Request
+                                        </h5>
+                                        <button
+                                            type="button"
+                                            className="btn-close"
+                                            onClick={handleDeclineModalClose}
+                                            disabled={declineLoading}
+                                        ></button>
+                                    </div>
+                                    <div className="modal-body">
+                                        {appointmentToDecline && (
+                                            <div className="appointment-info mb-3 p-3 bg-light rounded">
+                                                <h6 className="mb-2">
+                                                    <i className="fas fa-info-circle text-info me-2"></i>
+                                                    Reschedule Request Details
+                                                </h6>
+                                                <div className="row">
+                                                    <div className="col-sm-6">
+                                                        <small className="text-muted">Client:</small>
+                                                        <div className="fw-bold">{appointmentToDecline.client_name}</div>
+                                                    </div>
+                                                    <div className="col-sm-6">
+                                                        <small className="text-muted">Service:</small>
+                                                        <div className="fw-bold">{appointmentToDecline.service_title}</div>
+                                                    </div>
+                                                    <div className="col-sm-6 mt-2">
+                                                        <small className="text-muted">Current Date:</small>
+                                                        <div className="fw-bold">
+                                                            {new Date(appointmentToDecline.appointment_date).toLocaleDateString()}
+                                                        </div>
+                                                    </div>
+                                                    <div className="col-sm-6 mt-2">
+                                                        <small className="text-muted">Current Time:</small>
+                                                        <div className="fw-bold">{appointmentToDecline.appointment_time}</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+                                        
+                                        <div className="alert alert-info">
+                                            <i className="fas fa-info-circle me-2"></i>
+                                            <strong>Note:</strong> The client will be notified that their reschedule request has been declined and the original appointment time will remain.
+                                        </div>
+
+                                        <div className="mb-3">
+                                            <label className="form-label">
+                                                <strong>Reason for Declining *</strong>
+                                            </label>
+                                            <textarea
+                                                className="form-control"
+                                                rows="4"
+                                                value={declineReason}
+                                                onChange={(e) => setDeclineReason(e.target.value)}
+                                                placeholder="Please explain why you cannot accommodate the reschedule request. This will help the client understand your decision."
+                                                disabled={declineLoading}
+                                            ></textarea>
+                                            <div className="form-text">
+                                                A clear reason helps maintain good client relationships and professionalism.
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="modal-footer">
+                                        <button
+                                            type="button"
+                                            className="btn btn-outline-secondary"
+                                            onClick={handleDeclineModalClose}
+                                            disabled={declineLoading}
+                                        >
+                                            <i className="fas fa-times me-2"></i>
+                                            Cancel
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className="btn btn-warning"
+                                            onClick={handleDeclineConfirm}
+                                            disabled={declineLoading || !declineReason.trim()}
+                                        >
+                                            {declineLoading ? (
+                                                <>
+                                                    <div className="spinner-border spinner-border-sm me-2" role="status">
+                                                        <span className="visually-hidden">Loading...</span>
+                                                    </div>
+                                                    Declining...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <i className="fas fa-calendar-times me-2"></i>
+                                                    Decline Reschedule
+                                                </>
+                                            )}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </>
                 )}
 
                 {/* Custom Styles */}
