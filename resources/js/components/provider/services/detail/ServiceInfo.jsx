@@ -54,7 +54,7 @@ const ServiceInfo = ({ service, activeTab, setActiveTab }) => {
             const result = await getServiceReviews(service.id);
             if (result.success) {
                 setReviews(result.data || []);
-                console.log("Review - ", result.data);
+                // console.log("Review - ", result.data);
             }
         } catch (error) {
             console.error("Error fetching reviews:", error);

@@ -452,18 +452,18 @@ const DashboardSidebar = ({
                     label: "Invoices",
                     path: "/provider/invoices",
                 },
-                {
-                    id: "earnings",
-                    icon: "fas fa-dollar-sign",
-                    label: "Earnings",
-                    path: "/provider/earnings",
-                    // children: [
-                    //     {
-                    //         label: "Overview",
-                    //         path: "/provider/earnings/overview",
-                    //     },
-                    // ],
-                },
+                // {
+                //     id: "earnings",
+                //     icon: "fas fa-dollar-sign",
+                //     label: "Earnings",
+                //     path: "/provider/earnings",
+                //     // children: [
+                //     //     {
+                //     //         label: "Overview",
+                //     //         path: "/provider/earnings/overview",
+                //     //     },
+                //     // ],
+                // },
                 // {
                 //     id: "reviews",
                 //     icon: "fas fa-star",

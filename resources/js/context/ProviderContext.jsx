@@ -222,42 +222,17 @@ export const ProviderProvider = ({ children }) => {
         setLoading(true);
         setError(null);
         try {
-            // Uncomment when endpoint is ready
-            // const response = await axios.get(
-            //     `/api/provider/profile/statistics?period=${period}`
-            // );
+            const response = await axios.get(
+                `/api/provider/dashboard/business-statistics?period=${period}`
+            );
 
-            // if (response.data.success) {
-            //     setBusinessStats(response.data.data);
-            //     return {
-            //         success: true,
-            //         data: response.data.data,
-            //     };
-            // }
-
-            // Use mock data for now
-            const mockStats = {
-                totalEarnings: 25450.0,
-                monthlyEarnings: 8750.0,
-                weeklyEarnings: 2150.0,
-                todaysEarnings: 450.0,
-                totalAppointments: 156,
-                todaysAppointments: 3,
-                pendingRequests: 5,
-                averageRating: 4.8,
-                responseRate: 95,
-                completedJobs: 142,
-                activeServices: 8,
-                totalViews: 1247,
-                conversionRate: 12.5,
-            };
-
-            setBusinessStats(mockStats);
-
-            return {
-                success: true,
-                data: mockStats,
-            };
+            if (response.data.success) {
+                setBusinessStats(response.data.data);
+                return {
+                    success: true,
+                    data: response.data.data,
+                };
+            }
         } catch (error) {
             const errorMessage =
                 error.response?.data?.message ||
@@ -277,114 +252,17 @@ export const ProviderProvider = ({ children }) => {
         setLoading(true);
         setError(null);
         try {
-            // For now, use mock data since the endpoint might not exist yet
-            const mockMetrics = {
-                recentAppointments: [
-                    {
-                        id: 1,
-                        client: "Sarah Perera",
-                        service: "House Cleaning",
-                        date: "2025-07-15",
-                        time: "10:00 AM",
-                        status: "confirmed",
-                        location: "Bambalapitiya, Colombo",
-                        earnings: 150,
-                    },
-                    {
-                        id: 2,
-                        client: "Kamal Silva",
-                        service: "Plumbing Repair",
-                        date: "2025-07-16",
-                        time: "2:00 PM",
-                        status: "pending",
-                        location: "Mount Lavinia",
-                        earnings: 200,
-                    },
-                ],
-                recentEarnings: [
-                    { date: "Mon", amount: 250 },
-                    { date: "Tue", amount: 180 },
-                    { date: "Wed", amount: 320 },
-                    { date: "Thu", amount: 150 },
-                    { date: "Fri", amount: 280 },
-                    { date: "Sat", amount: 450 },
-                    { date: "Sun", amount: 200 },
-                ],
-                performanceIndicators: {
-                    responseRate: {
-                        value: 95,
-                        status: "excellent",
-                        trend: "up",
-                    },
-                    rating: {
-                        value: 4.8,
-                        status: "excellent",
-                        trend: "stable",
-                    },
-                    bookingRate: {
-                        value: 12.5,
-                        status: "good",
-                        trend: "up",
-                    },
-                },
-                monthlyTrends: [
-                    { month: "Jan", bookings: 45, earnings: 6750 },
-                    { month: "Feb", bookings: 52, earnings: 7800 },
-                    { month: "Mar", bookings: 48, earnings: 7200 },
-                    { month: "Apr", bookings: 61, earnings: 9150 },
-                    { month: "May", bookings: 55, earnings: 8250 },
-                    { month: "Jun", bookings: 58, earnings: 8700 },
-                ],
-                topServices: [
-                    {
-                        id: 1,
-                        title: "House Cleaning",
-                        bookings: 23,
-                        earnings: 3450,
-                        rating: 4.9,
-                    },
-                    {
-                        id: 2,
-                        title: "Math Tutoring",
-                        bookings: 18,
-                        earnings: 2700,
-                        rating: 5.0,
-                    },
-                    {
-                        id: 3,
-                        title: "Plumbing Repair",
-                        bookings: 15,
-                        earnings: 3000,
-                        rating: 4.6,
-                    },
-                ],
-                clientReviews: [
-                    {
-                        id: 1,
-                        client: "Sarah Perera",
-                        rating: 5,
-                        comment:
-                            "Excellent cleaning service! Very professional.",
-                        service: "House Cleaning",
-                        date: "2025-07-10",
-                    },
-                    {
-                        id: 2,
-                        client: "Nuwan Fernando",
-                        rating: 5,
-                        comment: "Great tutoring session. Highly recommended!",
-                        service: "Math Tutoring",
-                        date: "2025-07-08",
-                    },
-                ],
-            };
+            const response = await axios.get(
+                `/api/provider/dashboard/metrics`
+            );
 
-            setDashboardMetrics(mockMetrics);
-
-            return {
-                success: true,
-                data: mockMetrics,
-            };
+            if (response.data.success) {
+                setDashboardMetrics(response.data.data);
+                return {
+                    success: true,
+                    data: response.data.data,
+                };
+            }
         } catch (error) {
             const errorMessage =
                 error.response?.data?.message ||
@@ -746,53 +624,16 @@ export const ProviderProvider = ({ children }) => {
         setLoading(true);
         setError(null);
         try {
-            // Mock earnings data
-            const mockEarnings = {
-                current: {
-                    total: businessStats.monthlyEarnings,
-                    thisMonth: businessStats.monthlyEarnings,
-                    thisWeek: businessStats.weeklyEarnings,
-                    today: businessStats.todaysEarnings,
-                },
-                history: [
-                    {
-                        date: "2025-07-01",
-                        amount: 150,
-                        service: "House Cleaning",
-                    },
-                    {
-                        date: "2025-07-03",
-                        amount: 200,
-                        service: "Plumbing Repair",
-                    },
-                    {
-                        date: "2025-07-05",
-                        amount: 300,
-                        service: "Math Tutoring",
-                    },
-                    {
-                        date: "2025-07-08",
-                        amount: 150,
-                        service: "House Cleaning",
-                    },
-                    {
-                        date: "2025-07-10",
-                        amount: 250,
-                        service: "Garden Maintenance",
-                    },
-                ],
-                breakdown: {
-                    "House Cleaning": 2100,
-                    "Math Tutoring": 1800,
-                    "Plumbing Repair": 1600,
-                    "Garden Maintenance": 1250,
-                },
-            };
+            const response = await axios.get(
+                `/api/provider/dashboard/earnings?period=${period}`
+            );
 
-            return {
-                success: true,
-                data: mockEarnings,
-            };
+            if (response.data.success) {
+                return {
+                    success: true,
+                    data: response.data.data,
+                };
+            }
         } catch (error) {
             const errorMessage =
                 error.response?.data?.message ||

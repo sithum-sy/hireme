@@ -61,7 +61,7 @@
 </head>
 <body>
     <div class="header">
-        <div class="success-icon">✓</div>
+        <div class="success-icon text-light">✓</div>
         <h1>Appointment Confirmed!</h1>
     </div>
     

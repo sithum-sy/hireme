@@ -102,6 +102,12 @@ Route::prefix('invoices')->group(function () {
 });
 
 // Provider Dashboard & Analytics
+Route::prefix('dashboard')->group(function () {
+    Route::get('/business-statistics', [App\Http\Controllers\API\Provider\DashboardController::class, 'getBusinessStatistics']);
+    Route::get('/metrics', [App\Http\Controllers\API\Provider\DashboardController::class, 'getDashboardMetrics']);
+    Route::get('/earnings', [App\Http\Controllers\API\Provider\DashboardController::class, 'getEarningsData']);
+});
+
 Route::get('/dashboard/stats', [ProfileController::class, 'getProviderDashboardStats']);
 // Route::get('/analytics/earnings', [AppointmentController::class, 'getEarningsAnalytics']);
 Route::get('/analytics/performance', [ProfileController::class, 'getPerformanceAnalytics']);
