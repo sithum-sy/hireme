@@ -4,6 +4,7 @@ import ProviderLayout from "../../../components/layouts/ProviderLayout";
 import InvoicesTable from "../../../components/provider/invoices/InvoicesTable";
 import InvoiceCard from "../../../components/provider/invoices/InvoiceCard";
 import QuickFilterTabs from "../../../components/provider/invoices/QuickFilterTabs";
+import { InvoicesDownloadButton } from "../../../components/shared/InvoicePDFDownloader";
 import invoiceService from "../../../services/invoiceService";
 import notificationService from "../../../services/notificationService";
 
@@ -429,6 +430,14 @@ const InvoicesList = () => {
                             ></i>
                             {viewMode === "table" ? "Card View" : "Table View"}
                         </button>
+                        <InvoicesDownloadButton
+                            invoices={invoices}
+                            role="provider"
+                            variant="outline-orange"
+                            showIcon={true}
+                            showText={true}
+                            title="Download All Visible Invoices as PDF"
+                        />
                         <button
                             className="btn btn-orange"
                             onClick={() =>

@@ -4,6 +4,7 @@ import ProviderLayout from "../../../components/layouts/ProviderLayout";
 import invoiceService from "../../../services/invoiceService";
 import InvoiceActions from "../../../components/provider/invoices/InvoiceActions";
 import MarkPaidModal from "../../../components/provider/invoices/MarkPaidModal";
+import { InvoiceDownloadButton } from "../../../components/shared/InvoicePDFDownloader";
 import { formatCurrency, formatDate } from "../../../utils/formatters";
 
 const InvoiceDetail = () => {
@@ -120,11 +121,19 @@ const InvoiceDetail = () => {
                                 </div>
                             </div>
 
-                            <InvoiceActions
-                                invoice={invoice}
-                                onUpdate={handleInvoiceUpdate}
-                                onMarkPaid={() => setShowMarkPaidModal(true)}
-                            />
+                            <div className="d-flex gap-2 align-items-center">
+                                <InvoiceDownloadButton
+                                    invoice={invoice}
+                                    role="provider"
+                                    variant="outline-success"
+                                    title="Download Invoice PDF"
+                                />
+                                <InvoiceActions
+                                    invoice={invoice}
+                                    onUpdate={handleInvoiceUpdate}
+                                    onMarkPaid={() => setShowMarkPaidModal(true)}
+                                />
+                            </div>
                         </div>
                     </div>
                 </div>

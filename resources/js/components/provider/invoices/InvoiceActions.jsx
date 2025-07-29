@@ -3,15 +3,14 @@ import invoiceService from "../../../services/invoiceService";
 import CashPaymentModal from "./CashPaymentModal";
 import notificationService from "../../../services/notificationService";
 import {
-    downloadInvoicePDF,
-    downloadFormattedInvoicePDF,
-} from "../../../utils/pdfGenerator.js";
+    InvoiceDownloadButton,
+    InvoicePreviewButton,
+} from "../../shared/InvoicePDFDownloader";
 
 const InvoiceActions = ({ invoice, onUpdate, onMarkPaid }) => {
     const [loading, setLoading] = useState(false);
     const [showCashModal, setShowCashModal] = useState(false);
     const [showDropdown, setShowDropdown] = useState(false);
-    const [downloadingPDF, setDownloadingPDF] = useState(false);
 
     const handleSendInvoice = async () => {
         setLoading(true);
@@ -21,32 +20,14 @@ const InvoiceActions = ({ invoice, onUpdate, onMarkPaid }) => {
                 onUpdate();
                 notificationService.success("Invoice sent successfully!");
             } else {
-                notificationService.error(result.message || "Failed to send invoice");
+                notificationService.error(
+                    result.message || "Failed to send invoice"
+                );
             }
         } catch (error) {
             notificationService.error("Error sending invoice");
         }
         setLoading(false);
-    };
-
-    const handleDownloadPDF = async () => {
-        if (downloadingPDF) return;
-
-        setDownloadingPDF(true);
-        try {
-            // Option 1: Download as image-based PDF
-            await downloadInvoicePDF(
-                "invoice-content", // ID of the invoice container
-                `invoice-${invoice.invoice_number}.pdf`
-            );
-
-            // Option 2: Download as formatted PDF (alternative)
-            // await downloadFormattedInvoicePDF(invoice, `invoice-${invoice.invoice_number}.pdf`);
-        } catch (error) {
-            console.error("PDF download failed:", error);
-        } finally {
-            setDownloadingPDF(false);
-        }
     };
 
     const canConfirmCash = () => {
@@ -66,7 +47,9 @@ const InvoiceActions = ({ invoice, onUpdate, onMarkPaid }) => {
             );
             if (result.success) {
                 onUpdate();
-                notificationService.success("Cash payment confirmed successfully!");
+                notificationService.success(
+                    "Cash payment confirmed successfully!"
+                );
             } else {
                 throw new Error(result.message);
             }
@@ -127,88 +110,6 @@ const InvoiceActions = ({ invoice, onUpdate, onMarkPaid }) => {
                 </button>
             )}
 
-            {/* More Actions Dropdown */}
-            <div className="dropdown">
-                <button
-                    className="btn btn-outline-secondary dropdown-toggle"
-                    type="button"
-                    data-bs-toggle="dropdown"
-                    aria-expanded="false"
-                >
-                    <i className="fas fa-ellipsis-v"></i>
-                </button>
-                <ul className="dropdown-menu dropdown-menu-end">
-                    <li>
-                        <button
-                            className="dropdown-item"
-                            onClick={() => window.print()}
-                        >
-                            <i className="fas fa-download me-2"></i>
-                            Download PDF
-                        </button>
-                        {/* <button
-                            className="dropdown-item"
-                            onClick={handleDownloadPDF}
-                            disabled={downloadingPDF}
-                        >
-                            {downloadingPDF ? (
-                                <>
-                                    <i className="fas fa-spinner fa-spin me-2"></i>
-                                    Generating PDF...
-                                </>
-                            ) : (
-                                <>
-                                    <i className="fas fa-download me-2"></i>
-                                    Download PDF
-                                </>
-                            )}
-                        </button> */}
-                    </li>
-                    <li>
-                        {/* <button
-                            className="dropdown-item"
-                            onClick={() =>
-                                navigator.clipboard.writeText(
-                                    window.location.href
-                                )
-                            }
-                        >
-                            <i className="fas fa-link me-2"></i>
-                            Copy Link
-                        </button> */}
-                    </li>
-                    {/* <li>
-                        <hr className="dropdown-divider" />
-                    </li>
-                    <li>
-                        <button
-                            className="dropdown-item"
-                            onClick={() =>
-                                (window.location.href = `/provider/invoices/${invoice.id}/duplicate`)
-                            }
-                        >
-                            <i className="fas fa-copy me-2"></i>
-                            Duplicate Invoice
-                        </button>
-                    </li> */}
-                    {invoice.status === "draft" && (
-                        <>
-                            <li>
-                                <hr className="dropdown-divider" />
-                            </li>
-                            <li>
-                                <button
-                                    onClick={() => console.log("Delete")}
-                                    className="dropdown-item text-danger"
-                                >
-                                    <i className="fas fa-trash me-2"></i>
-                                    Delete
-                                </button>
-                            </li>
-                        </>
-                    )}
-                </ul>
-            </div>
             {/* Cash Payment Modal */}
             {showCashModal && (
                 <CashPaymentModal

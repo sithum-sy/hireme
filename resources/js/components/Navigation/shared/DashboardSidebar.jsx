@@ -326,27 +326,32 @@ const DashboardSidebar = ({
                     label: "My Quotes",
                     path: "/client/quotes",
                 },
+                // {
+                //     id: "payments",
+                //     icon: "fas fa-credit-card",
+                //     label: "My Payments",
+                //     path: "/client/payments",
+                //     children: [
+                //         {
+                //             label: "Payment History",
+                //             path: "/client/payments/history",
+                //         },
+                //         {
+                //             label: "Invoices",
+                //             path: "/client/payments/invoices",
+                //         },
+                //     ],
+                // },
                 {
-                    id: "payments",
-                    icon: "fas fa-credit-card",
-                    label: "My Payments",
-                    path: "/client/payments",
-                    children: [
-                        {
-                            label: "Payment History",
-                            path: "/client/payments/history",
-                        },
-                        {
-                            label: "Invoices",
-                            path: "/client/payments/invoices",
-                        },
-                    ],
+                    id: "profile",
+                    icon: "fas fa-user",
+                    label: "My Profile",
+                    path: "/client/profile",
                 },
-
                 {
                     id: "reports",
                     icon: "fas fa-chart-line",
-                    label: "My Reports",
+                    label: "Reports & Analytics",
                     path: "/client/reports",
                     children: [
                         {
@@ -371,18 +376,13 @@ const DashboardSidebar = ({
                         },
                     ],
                 },
-                {
-                    id: "profile",
-                    icon: "fas fa-user",
-                    label: "My Profile",
-                    path: "/client/profile",
-                },
-                {
-                    id: "reviews",
-                    icon: "fas fa-star",
-                    label: "Reviews & Ratings",
-                    path: "/client/reviews",
-                },
+
+                // {
+                //     id: "reviews",
+                //     icon: "fas fa-star",
+                //     label: "Reviews & Ratings",
+                //     path: "/client/reviews",
+                // },
                 // {
                 //     id: "support",
                 //     icon: "fas fa-headset",
@@ -406,7 +406,7 @@ const DashboardSidebar = ({
                 {
                     id: "services",
                     icon: "fas fa-concierge-bell",
-                    label: "My Services",
+                    label: "Services",
                     path: "/provider/services",
                     children: [
                         { label: "All Services", path: "/provider/services" },
@@ -473,7 +473,7 @@ const DashboardSidebar = ({
                 {
                     id: "profile",
                     icon: "fas fa-user",
-                    label: "My Profile",
+                    label: "Profile",
                     path: "/provider/provider-profile",
                 },
                 {

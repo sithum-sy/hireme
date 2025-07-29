@@ -1,5 +1,6 @@
 // components/client/appointments/InvoiceSection.jsx
 import React from "react";
+import { InvoiceDownloadButton } from "../../shared/InvoicePDFDownloader";
 
 const InvoiceSection = ({ appointment, onPaymentClick, canBePaid }) => {
     const invoice = appointment.invoice;
@@ -41,13 +42,27 @@ const InvoiceSection = ({ appointment, onPaymentClick, canBePaid }) => {
                         <i className="fas fa-file-invoice me-2 text-info"></i>
                         Invoice Details
                     </h5>
-                    <span
-                        className={`badge ${getPaymentStatusBadge(
-                            invoice.payment_status
-                        )}`}
-                    >
-                        {invoice.payment_status_text || invoice.payment_status}
-                    </span>
+                    <div className="d-flex align-items-center gap-2">
+                        <InvoiceDownloadButton
+                            invoice={{
+                                ...invoice,
+                                appointment: appointment,
+                                provider: appointment.provider,
+                                client: appointment.client
+                            }}
+                            role="client"
+                            variant="outline-primary"
+                            size="sm"
+                            title="Download/Print Invoice PDF"
+                        />
+                        <span
+                            className={`badge ${getPaymentStatusBadge(
+                                invoice.payment_status
+                            )}`}
+                        >
+                            {invoice.payment_status_text || invoice.payment_status}
+                        </span>
+                    </div>
                 </div>
             </div>
             <div className="card-body">

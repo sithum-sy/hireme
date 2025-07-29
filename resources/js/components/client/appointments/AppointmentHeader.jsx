@@ -18,20 +18,72 @@ const AppointmentHeader = ({
 }) => {
     const getStatusBadge = (status) => {
         const badges = {
-            pending: "bg-warning text-dark",
-            confirmed: "bg-success text-white",
-            in_progress: "bg-primary text-white",
-            completed: "bg-info text-white",
-            invoice_sent: "bg-info text-white",
-            payment_pending: "bg-warning text-dark",
-            paid: "bg-success text-white",
-            reviewed: "bg-success text-white",
-            closed: "bg-secondary text-white",
-            cancelled_by_client: "bg-danger text-white",
-            cancelled_by_provider: "bg-danger text-white",
-            no_show: "bg-secondary text-white",
+            pending: {
+                class: "bg-warning text-dark",
+                text: "Pending",
+                icon: "fa-clock",
+            },
+            confirmed: {
+                class: "bg-success text-white",
+                text: "Confirmed",
+                icon: "fa-check-circle",
+            },
+            in_progress: {
+                class: "bg-primary text-white",
+                text: "In Progress",
+                icon: "fa-play-circle",
+            },
+            completed: {
+                class: "bg-info text-white",
+                text: "Completed",
+                icon: "fa-check-double",
+            },
+            invoice_sent: {
+                class: "bg-info text-white",
+                text: "Invoice Received",
+                icon: "fa-file-invoice",
+            },
+            payment_pending: {
+                class: "bg-warning text-dark",
+                text: "Payment Pending",
+                icon: "fa-clock",
+            },
+            paid: {
+                class: "bg-success text-white",
+                text: "Paid",
+                icon: "fa-check",
+            },
+            reviewed: {
+                class: "bg-success text-white",
+                text: "Reviewed",
+                icon: "fa-star",
+            },
+            closed: {
+                class: "bg-secondary text-white",
+                text: "Closed",
+                icon: "fa-lock",
+            },
+            cancelled_by_client: {
+                class: "bg-danger text-white",
+                text: "Cancelled by You",
+                icon: "fa-user-times",
+            },
+            cancelled_by_provider: {
+                class: "bg-danger text-white",
+                text: "Cancelled by Provider",
+                icon: "fa-user-times",
+            },
+            no_show: {
+                class: "bg-secondary text-white",
+                text: "No Show",
+                icon: "fa-exclamation-triangle",
+            },
         };
-        return badges[status] || "bg-secondary text-white";
+        return badges[status] || {
+            class: "bg-secondary text-white",
+            text: status?.replace("_", " ") || "Unknown",
+            icon: "fa-question-circle",
+        };
     };
 
     return (
@@ -46,10 +98,10 @@ const AppointmentHeader = ({
                         <span
                             className={`badge ${getStatusBadge(
                                 appointment.status
-                            )} px-3 py-2`}
+                            ).class} px-3 py-2`}
                         >
-                            {appointment.status_text ||
-                                appointment.status.replace("_", " ")}
+                            <i className={`fas ${getStatusBadge(appointment.status).icon} me-2`}></i>
+                            {appointment.status_text || getStatusBadge(appointment.status).text}
                         </span>
                         <span className="text-muted">
                             Appointment #{appointment.id}
