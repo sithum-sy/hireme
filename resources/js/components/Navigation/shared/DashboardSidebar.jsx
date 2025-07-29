@@ -203,18 +203,7 @@ const DashboardSidebar = ({
                     id: "categories",
                     icon: "fas fa-tags",
                     label: "Service Categories",
-                    path: "/staff/categories",
-                    children: [
-                        { label: "All Categories", path: "/staff/categories" },
-                        {
-                            label: "Add Category",
-                            path: "/staff/categories/create",
-                        },
-                        {
-                            label: "Category Analytics",
-                            path: "/staff/categories/analytics",
-                        },
-                    ],
+                    path: "/staff/service-categories",
                 },
                 {
                     id: "users",
@@ -222,14 +211,8 @@ const DashboardSidebar = ({
                     label: "Users",
                     path: "/staff/users",
                     children: [
-                        { label: "View Users", path: "/staff/users" },
                         { label: "Clients", path: "/staff/users/clients" },
                         { label: "Providers", path: "/staff/users/providers" },
-                        {
-                            label: "Pending Approvals",
-                            path: "/staff/users/pending",
-                            badge: "3",
-                        },
                     ],
                 },
                 {
@@ -237,65 +220,31 @@ const DashboardSidebar = ({
                     icon: "fas fa-concierge-bell",
                     label: "Services",
                     path: "/staff/services",
-                    children: [
-                        { label: "All Services", path: "/staff/services" },
-                        {
-                            label: "Pending Review",
-                            path: "/staff/services/pending",
-                            badge: "5",
-                        },
-                    ],
                 },
                 {
                     id: "appointments",
                     icon: "fas fa-calendar-alt",
                     label: "Appointments",
                     path: "/staff/appointments",
-                    badge: "12",
                 },
                 {
                     id: "reports",
                     icon: "fas fa-chart-line",
-                    label: "Reports",
+                    label: "Reports & Analytics",
                     path: "/staff/reports",
-                    children: [
-                        {
-                            label: "Weekly Reports",
-                            path: "/staff/reports/weekly",
-                        },
-                        {
-                            label: "Category Performance",
-                            path: "/staff/reports/categories",
-                        },
-                    ],
                 },
                 {
                     id: "profile",
                     icon: "fas fa-user",
                     label: "My Profile",
                     path: "/staff/profile",
-                    children: [
-                        {
-                            label: "Profile Overview",
-                            path: "/staff/profile",
-                        },
-                        {
-                            label: "Personal Information",
-                            path: "/staff/profile/personal",
-                        },
-                        {
-                            label: "Security Settings",
-                            path: "/staff/profile/security",
-                        },
-                    ],
                 },
-                {
-                    id: "support",
-                    icon: "fas fa-headset",
-                    label: "Customer Support",
-                    path: "/staff/support",
-                    badge: "7",
-                },
+                // {
+                //     id: "support",
+                //     icon: "fas fa-headset",
+                //     label: "Customer Support",
+                //     path: "/staff/support",
+                // },
             ],
             client: [
                 {

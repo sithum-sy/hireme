@@ -29,7 +29,7 @@ export const UserStatsCard = ({ users = {}, loading = false }) => {
 
     const totalUsers = users.overview?.total || 0;
     const growthRate = users.overview?.growth_rate || 0;
-    const newToday = users.overview?.new_today || 0;
+    const newToday = (users.clients?.new_today || 0) + (users.providers?.new_today || 0);
 
     return (
         <div className="card border-0 shadow-sm">

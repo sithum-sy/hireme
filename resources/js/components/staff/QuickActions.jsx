@@ -61,8 +61,16 @@ export const StaffQuickActions = ({ onAction }) => {
                         >
                             <div className="card h-100 border border-2 border-opacity-25">
                                 <div className="card-body text-center d-flex flex-column">
-                                    <div className={`mb-3 rounded-circle d-inline-flex align-items-center justify-content-center bg-${action.variant} bg-opacity-10 text-${action.variant} mx-auto`} style={{width: '60px', height: '60px'}}>
-                                        <i className={`${action.icon} fa-2x`}></i>
+                                    <div
+                                        className={`mb-3 rounded-circle d-inline-flex align-items-center justify-content-center bg-${action.variant} bg-opacity-10 text-${action.variant} mx-auto`}
+                                        style={{
+                                            width: "60px",
+                                            height: "60px",
+                                        }}
+                                    >
+                                        <i
+                                            className={`${action.icon} fa-2x`}
+                                        ></i>
                                     </div>
                                     <h6 className="card-title fw-bold mb-2">
                                         {action.title}
@@ -168,7 +176,9 @@ export const ManagementQuickActions = ({ stats = {}, onAction }) => {
                         <div
                             key={action.id}
                             className={`list-group-item list-group-item-action border-0 px-0 cursor-pointer ${
-                                action.urgent ? "bg-warning bg-opacity-10" : ""
+                                action.urgent
+                                    ? "bg-secondary bg-opacity-10"
+                                    : ""
                             }`}
                             onClick={() => handleActionClick(action)}
                         >
@@ -176,7 +186,10 @@ export const ManagementQuickActions = ({ stats = {}, onAction }) => {
                                 <div className="me-3">
                                     <div
                                         className={`rounded-circle d-flex align-items-center justify-content-center bg-${action.variant} bg-opacity-10 text-${action.variant}`}
-                                        style={{width: '40px', height: '40px'}}
+                                        style={{
+                                            width: "40px",
+                                            height: "40px",
+                                        }}
                                     >
                                         <i className={action.icon}></i>
                                     </div>

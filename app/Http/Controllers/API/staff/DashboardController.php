@@ -66,31 +66,6 @@ class DashboardController extends Controller
         }
     }
 
-    /**
-     * Get platform statistics
-     */
-    // public function getStats(Request $request)
-    // {
-    //     try {
-    //         $cacheMinutes = $request->get('cache', 5);
-    //         $stats = $this->statisticsService->getPlatformStats($cacheMinutes);
-
-    //         return response()->json([
-    //             'success' => true,
-    //             'data' => $stats,
-    //             'meta' => [
-    //                 'cached_for' => $cacheMinutes . ' minutes',
-    //                 'generated_at' => now()->toISOString(),
-    //             ]
-    //         ]);
-    //     } catch (\Exception $e) {
-    //         return response()->json([
-    //             'success' => false,
-    //             'message' => 'Failed to fetch statistics',
-    //             'error' => app()->environment('local') ? $e->getMessage() : 'An error occurred'
-    //         ], 500);
-    //     }
-    // }
     public function getStats(Request $request)
     {
         try {
@@ -102,42 +77,42 @@ class DashboardController extends Controller
             try {
                 $stats['users'] = $this->statisticsService->getUserStatistics();
             } catch (\Exception $e) {
-                \Log::error('User statistics error: ' . $e->getMessage());
+                Log::error('User statistics error: ' . $e->getMessage());
                 $stats['users'] = ['error' => 'Failed to load user statistics'];
             }
 
             try {
                 $stats['services'] = $this->statisticsService->getServiceStatistics();
             } catch (\Exception $e) {
-                \Log::error('Service statistics error: ' . $e->getMessage());
+                Log::error('Service statistics error: ' . $e->getMessage());
                 $stats['services'] = ['error' => 'Failed to load service statistics'];
             }
 
             try {
                 $stats['categories'] = $this->statisticsService->getCategoryStatistics();
             } catch (\Exception $e) {
-                \Log::error('Category statistics error: ' . $e->getMessage());
+                Log::error('Category statistics error: ' . $e->getMessage());
                 $stats['categories'] = ['error' => 'Failed to load category statistics'];
             }
 
             try {
                 $stats['appointments'] = $this->statisticsService->getAppointmentStatistics();
             } catch (\Exception $e) {
-                \Log::error('Appointment statistics error: ' . $e->getMessage());
+                Log::error('Appointment statistics error: ' . $e->getMessage());
                 $stats['appointments'] = ['error' => 'Failed to load appointment statistics'];
             }
 
             try {
                 $stats['platform_health'] = $this->statisticsService->getPlatformHealthStats();
             } catch (\Exception $e) {
-                \Log::error('Platform health error: ' . $e->getMessage());
+                Log::error('Platform health error: ' . $e->getMessage());
                 $stats['platform_health'] = ['error' => 'Failed to load platform health'];
             }
 
             try {
                 $stats['trends'] = $this->statisticsService->getTrendData();
             } catch (\Exception $e) {
-                \Log::error('Trends error: ' . $e->getMessage());
+                Log::error('Trends error: ' . $e->getMessage());
                 $stats['trends'] = ['error' => 'Failed to load trend data'];
             }
 
@@ -150,7 +125,7 @@ class DashboardController extends Controller
                 ]
             ]);
         } catch (\Exception $e) {
-            \Log::error('Stats general error: ' . $e->getMessage());
+            Log::error('Stats general error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch statistics',

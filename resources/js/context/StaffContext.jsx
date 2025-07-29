@@ -67,6 +67,7 @@ export const StaffProvider = ({ children }) => {
             if (response.data.success) {
                 const data = response.data.data;
                 setDashboardData(data);
+                setDashboardStats(data.stats || null);
                 setTasks(data.tasks || []);
                 setActivities(data.activities || []);
                 setQuickActions(data.quick_actions || []);

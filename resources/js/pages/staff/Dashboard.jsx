@@ -198,20 +198,20 @@ const StaffDashboard = () => {
                         {/* Main Statistics Cards */}
                         <div className="responsive-grid responsive-grid-sm responsive-grid-md responsive-grid-lg mb-6">
                             <UserStatsCard
-                                users={dashboardStats.users || {}}
+                                users={dashboardStats?.users || {}}
                                 loading={dashboardLoading}
                             />
                             <ActiveUsersCard
-                                users={dashboardStats.users || {}}
+                                users={dashboardStats?.users || {}}
                                 loading={dashboardLoading}
                             />
                             <ProvidersCard
-                                users={dashboardStats.users || {}}
-                                services={dashboardStats.services || {}}
+                                users={dashboardStats?.users || {}}
+                                services={dashboardStats?.services || {}}
                                 loading={dashboardLoading}
                             />
                             <CategoriesCard
-                                categories={dashboardStats.categories || {}}
+                                categories={dashboardStats?.categories || {}}
                                 loading={dashboardLoading}
                             />
                         </div>
@@ -219,11 +219,11 @@ const StaffDashboard = () => {
                         {/* Secondary Statistics Cards */}
                         <div className="responsive-grid responsive-grid-sm responsive-grid-md mb-6">
                             <ServicesCard
-                                services={dashboardStats.services || {}}
+                                services={dashboardStats?.services || {}}
                                 loading={dashboardLoading}
                             />
                             <AppointmentsCard
-                                appointments={dashboardStats.appointments || {}}
+                                appointments={dashboardStats?.appointments || {}}
                                 loading={dashboardLoading}
                             />
 
@@ -237,23 +237,23 @@ const StaffDashboard = () => {
                                 </div>
                                 <div className="dashboard-card-body">
                                     <div className="health-grid">
-                                        <div className="health-item success">
-                                            <i className="fas fa-check-circle"></i>
-                                            <span>API</span>
+                                        <div className={`health-item ${dashboardStats?.platform_health?.database_status === 'healthy' ? 'success' : 'danger'}`}>
+                                            <i className={`fas ${dashboardStats?.platform_health?.database_status === 'healthy' ? 'fa-check-circle' : 'fa-times-circle'}`}></i>
+                                            <span>Database</span>
                                         </div>
                                         <div className="health-item success">
-                                            <i className="fas fa-database"></i>
-                                            <span>Database</span>
+                                            <i className="fas fa-server"></i>
+                                            <span>API</span>
                                         </div>
                                         <div className="health-item warning">
                                             <span className="health-value">
-                                                85%
+                                                {dashboardStats?.platform_health?.storage?.used_percentage || '0'}%
                                             </span>
                                             <span>Storage</span>
                                         </div>
                                         <div className="health-item success">
                                             <span className="health-value">
-                                                99.9%
+                                                {dashboardStats?.platform_health?.system_performance?.uptime || '99.9%'}
                                             </span>
                                             <span>Uptime</span>
                                         </div>
@@ -277,7 +277,7 @@ const StaffDashboard = () => {
                                             </div>
                                             <div className="alert-content">
                                                 <h6 className="alert-value">
-                                                    {dashboardStats.users
+                                                    {dashboardStats?.users
                                                         ?.providers?.pending ||
                                                         0}
                                                 </h6>
@@ -292,7 +292,7 @@ const StaffDashboard = () => {
                                             </div>
                                             <div className="alert-content">
                                                 <h6 className="alert-value">
-                                                    {dashboardStats.categories
+                                                    {dashboardStats?.categories
                                                         ?.overview?.inactive ||
                                                         0}
                                                 </h6>
@@ -312,7 +312,7 @@ const StaffDashboard = () => {
                             <div className="content-main">
                                 <PlatformGrowthChart
                                     data={
-                                        dashboardStats.trends
+                                        dashboardStats?.trends
                                             ?.user_registrations || []
                                     }
                                     loading={dashboardLoading}
@@ -335,8 +335,8 @@ const StaffDashboard = () => {
                             {/* Recent User Activity */}
                             <UserActivityFeed
                                 users={
-                                    dashboardStats.users?.activity
-                                        ?.recent_logins || []
+                                    dashboardStats?.users?.activity
+                                        ?.top_active_users || []
                                 }
                                 loading={dashboardLoading}
                             />
@@ -354,14 +354,14 @@ const StaffDashboard = () => {
                             <ManagementQuickActions
                                 stats={{
                                     pendingProviders:
-                                        dashboardStats.users?.providers
+                                        dashboardStats?.users?.providers
                                             ?.pending || 0,
                                     inactiveCategories:
-                                        dashboardStats.categories?.overview
+                                        dashboardStats?.categories?.overview
                                             ?.inactive || 0,
                                     newUsers:
-                                        dashboardStats.users?.overview
-                                            ?.new_today || 0,
+                                        ((dashboardStats?.users?.clients?.new_today || 0) + 
+                                         (dashboardStats?.users?.providers?.new_today || 0)),
                                 }}
                                 onAction={handleQuickAction}
                             />

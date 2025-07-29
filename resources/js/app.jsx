@@ -864,19 +864,19 @@ function App() {
 
                                             {/* Service Categories Management */}
                                             <Route
-                                                path="categories"
+                                                path="service-categories"
                                                 element={<CategoriesList />}
                                             />
                                             <Route
-                                                path="categories/create"
+                                                path="service-categories/create"
                                                 element={<CreateCategory />}
                                             />
                                             <Route
-                                                path="categories/:id/edit"
+                                                path="service-categories/:id/edit"
                                                 element={<EditCategory />}
                                             />
                                             <Route
-                                                path="categories/:id"
+                                                path="service-categories/:id"
                                                 element={<CategoryDetails />}
                                             />
 

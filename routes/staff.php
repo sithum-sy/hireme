@@ -42,10 +42,4 @@ Route::middleware(['auth:sanctum', 'staff'])->group(function () {
         Route::patch('/sort-order', [ServiceCategoryController::class, 'updateSortOrder']);
         Route::get('/{category}/analytics', [ServiceCategoryController::class, 'analytics']);
     });
-
-    // Future staff routes will be added here:
-    // - User management
-    // - Appointment management
-    // - Dispute resolution
-    // - Reports and analytics
 });
