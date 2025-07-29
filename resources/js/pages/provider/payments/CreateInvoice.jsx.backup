@@ -81,7 +81,9 @@ const CreateInvoice = () => {
                 notificationService.success("Invoice created successfully!");
                 navigate(`/provider/invoices/${result.data.id}`);
             } else {
-                notificationService.error(result.message || "Failed to create invoice");
+                notificationService.error(
+                    result.message || "Failed to create invoice"
+                );
             }
         } catch (error) {
             notificationService.error("Error creating invoice");
@@ -250,12 +252,12 @@ const CreateInvoice = () => {
                                         <option value="card">
                                             Credit/Debit Card
                                         </option>
-                                        <option value="bank_transfer">
+                                        {/* <option value="bank_transfer">
                                             Bank Transfer
                                         </option>
                                         <option value="online">
                                             Online Payment
-                                        </option>
+                                        </option> */}
                                     </select>
                                 </div>
 

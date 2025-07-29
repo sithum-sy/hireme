@@ -73,13 +73,13 @@ const ProviderDetailsCard = ({ appointment }) => {
                                 <div className="d-flex align-items-center">
                                     <i className="fas fa-star text-warning me-1"></i>
                                     <span className="me-2">
-                                        {appointment.provider?.provider_profile
-                                            ?.average_rating || 0}
+                                        {appointment.provider?.calculated_average_rating || 
+                                         appointment.provider?.provider_profile?.average_rating || 0}
                                     </span>
                                     <span className="text-muted small">
                                         (
-                                        {appointment.provider?.provider_profile
-                                            ?.total_reviews || 0}{" "}
+                                        {appointment.provider?.calculated_reviews_count || 
+                                         appointment.provider?.provider_profile?.total_reviews || 0}{" "}
                                         reviews)
                                     </span>
                                     {appointment.provider?.provider_profile

@@ -43,7 +43,9 @@ const AppointmentUpdateModal = ({
         special_requirements: appointment.client_notes || "",
         base_price: appointment.base_price || appointment.total_price,
         // Preserve quote information if this appointment came from a quote
-        booking_source: appointment.booking_source || (appointment.quote_id ? "quote_acceptance" : "web_app_multi_step"),
+        booking_source:
+            appointment.booking_source ||
+            (appointment.quote_id ? "quote_acceptance" : "web_app_multi_step"),
         quote_id: appointment.quote_id,
     });
 
@@ -78,7 +80,11 @@ const AppointmentUpdateModal = ({
                 special_requirements: appointment.client_notes || "",
                 base_price: appointment.base_price || appointment.total_price,
                 // Preserve quote information if this appointment came from a quote
-                booking_source: appointment.booking_source || (appointment.quote_id ? "quote_acceptance" : "web_app_multi_step"),
+                booking_source:
+                    appointment.booking_source ||
+                    (appointment.quote_id
+                        ? "quote_acceptance"
+                        : "web_app_multi_step"),
                 quote_id: appointment.quote_id,
             };
 
@@ -223,8 +229,7 @@ const AppointmentUpdateModal = ({
         } catch (error) {
             console.error("Update failed:", error);
             setErrors({
-                general:
-                    "Failed to update appointment. Please try again.",
+                general: "Failed to update appointment. Please try again.",
             });
         } finally {
             setLoading(false);
@@ -349,7 +354,9 @@ const AppointmentUpdateModal = ({
                                     <div>
                                         {updateMode === "edit" ? (
                                             <>
-                                                <strong>Direct Edit Mode:</strong>{" "}
+                                                <strong>
+                                                    Direct Edit Mode:
+                                                </strong>{" "}
                                                 Changes will be applied
                                                 immediately since your
                                                 appointment is still pending
@@ -360,8 +367,8 @@ const AppointmentUpdateModal = ({
                                                 <strong>
                                                     Reschedule Request Mode:
                                                 </strong>{" "}
-                                                Your appointment is confirmed, so
-                                                changes require provider
+                                                Your appointment is confirmed,
+                                                so changes require provider
                                                 approval. You will receive a
                                                 response within 24 hours.
                                             </>
@@ -371,78 +378,90 @@ const AppointmentUpdateModal = ({
                             </div>
 
                             {/* Reschedule Reason for confirmed appointments */}
-                            {updateMode === "reschedule" && currentStep === 1 && (
-                                <div className="reschedule-reason-section mx-3 mb-3">
-                                    <div className="card border-warning">
-                                        <div className="card-body">
-                                            <h6 className="fw-bold text-warning mb-3">
-                                                <i className="fas fa-question-circle me-2" />
-                                                Why do you need to reschedule?
-                                            </h6>
-                                            <div className="row">
-                                                <div className="col-md-6 mb-3">
-                                                    <label
-                                                        htmlFor="rescheduleReason"
-                                                        className="form-label"
-                                                    >
-                                                        Reason *
-                                                    </label>
-                                                    <select
-                                                        id="rescheduleReason"
-                                                        className="form-select"
-                                                        value={rescheduleReason}
-                                                        onChange={
-                                                            handleRescheduleReasonChange
-                                                        }
-                                                        required
-                                                    >
-                                                        <option value="personal_emergency">
-                                                            Personal emergency
-                                                        </option>
-                                                        <option value="work_conflict">
-                                                            Work schedule conflict
-                                                        </option>
-                                                        <option value="travel_plans">
-                                                            Travel plans changed
-                                                        </option>
-                                                        <option value="health_reasons">
-                                                            Health reasons
-                                                        </option>
-                                                        <option value="weather_concerns">
-                                                            Weather concerns
-                                                        </option>
-                                                        <option value="other">
-                                                            Other reason
-                                                        </option>
-                                                    </select>
-                                                </div>
-                                                <div className="col-md-6 mb-3">
-                                                    <label
-                                                        htmlFor="rescheduleNotes"
-                                                        className="form-label"
-                                                    >
-                                                        Additional Notes
-                                                    </label>
-                                                    <textarea
-                                                        id="rescheduleNotes"
-                                                        className="form-control"
-                                                        rows="2"
-                                                        placeholder="Please explain why you need to reschedule..."
-                                                        value={rescheduleNotes}
-                                                        onChange={
-                                                            handleRescheduleNotesChange
-                                                        }
-                                                        maxLength="500"
-                                                    />
-                                                    <small className="text-muted">
-                                                        {rescheduleNotes.length}/500
-                                                    </small>
+                            {updateMode === "reschedule" &&
+                                currentStep === 1 && (
+                                    <div className="reschedule-reason-section mx-3 mb-3">
+                                        <div className="card border-warning">
+                                            <div className="card-body">
+                                                <h6 className="fw-bold text-warning mb-3">
+                                                    <i className="fas fa-question-circle me-2" />
+                                                    Why do you need to
+                                                    reschedule?
+                                                </h6>
+                                                <div className="row">
+                                                    <div className="col-md-6 mb-3">
+                                                        <label
+                                                            htmlFor="rescheduleReason"
+                                                            className="form-label"
+                                                        >
+                                                            Reason *
+                                                        </label>
+                                                        <select
+                                                            id="rescheduleReason"
+                                                            className="form-select"
+                                                            value={
+                                                                rescheduleReason
+                                                            }
+                                                            onChange={
+                                                                handleRescheduleReasonChange
+                                                            }
+                                                            required
+                                                        >
+                                                            <option value="personal_emergency">
+                                                                Personal
+                                                                emergency
+                                                            </option>
+                                                            <option value="work_conflict">
+                                                                Work schedule
+                                                                conflict
+                                                            </option>
+                                                            <option value="travel_plans">
+                                                                Travel plans
+                                                                changed
+                                                            </option>
+                                                            <option value="health_reasons">
+                                                                Health reasons
+                                                            </option>
+                                                            <option value="weather_concerns">
+                                                                Weather concerns
+                                                            </option>
+                                                            <option value="other">
+                                                                Other reason
+                                                            </option>
+                                                        </select>
+                                                    </div>
+                                                    <div className="col-md-6 mb-3">
+                                                        <label
+                                                            htmlFor="rescheduleNotes"
+                                                            className="form-label"
+                                                        >
+                                                            Additional Notes
+                                                        </label>
+                                                        <textarea
+                                                            id="rescheduleNotes"
+                                                            className="form-control"
+                                                            rows="2"
+                                                            placeholder="Please explain why you need to reschedule..."
+                                                            value={
+                                                                rescheduleNotes
+                                                            }
+                                                            onChange={
+                                                                handleRescheduleNotesChange
+                                                            }
+                                                            maxLength="500"
+                                                        />
+                                                        <small className="text-muted">
+                                                            {
+                                                                rescheduleNotes.length
+                                                            }
+                                                            /500
+                                                        </small>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                            )}
+                                )}
 
                             {/* Step Content */}
                             {currentStep === 1 && updateMode === "edit" && (
@@ -455,15 +474,16 @@ const AppointmentUpdateModal = ({
                                 />
                             )}
 
-                            {currentStep === 1 && updateMode === "reschedule" && (
-                                <TimeSelectionStep
-                                    service={appointment.service}
-                                    provider={appointment.provider}
-                                    bookingData={bookingData}
-                                    selectedSlot={selectedSlot}
-                                    onStepComplete={handleTimeStepComplete}
-                                />
-                            )}
+                            {currentStep === 1 &&
+                                updateMode === "reschedule" && (
+                                    <TimeSelectionStep
+                                        service={appointment.service}
+                                        provider={appointment.provider}
+                                        bookingData={bookingData}
+                                        selectedSlot={selectedSlot}
+                                        onStepComplete={handleTimeStepComplete}
+                                    />
+                                )}
 
                             {currentStep === 2 && (
                                 <DurationDetailsStep
@@ -496,7 +516,7 @@ const AppointmentUpdateModal = ({
                                 <div className="changes-summary mx-3 mb-3">
                                     <div className="card border-warning">
                                         <div className="card-header bg-warning bg-opacity-10 border-warning">
-                                            <h6 className="fw-bold mb-0 text-warning">
+                                            <h6 className="fw-bold mb-0 text-light">
                                                 <i className="fas fa-exclamation-triangle me-2" />
                                                 Pending Changes
                                             </h6>

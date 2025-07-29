@@ -52,44 +52,45 @@ export const StaffQuickActions = ({ onAction }) => {
                 </h5>
             </div>
             <div className="card-body">
-                <div className="responsive-grid responsive-grid-sm responsive-grid-md">
+                <div className="row g-3">
                     {quickActions.map((action) => (
-                        <button
-                            key={action.id}
-                            className={`btn p-0 border-0 bg-transparent h-100`}
-                            onClick={() => handleActionClick(action)}
-                        >
-                            <div className="card h-100 border border-2 border-opacity-25">
-                                <div className="card-body text-center d-flex flex-column">
-                                    <div
-                                        className={`mb-3 rounded-circle d-inline-flex align-items-center justify-content-center bg-${action.variant} bg-opacity-10 text-${action.variant} mx-auto`}
-                                        style={{
-                                            width: "60px",
-                                            height: "60px",
-                                        }}
-                                    >
-                                        <i
-                                            className={`${action.icon} fa-2x`}
-                                        ></i>
-                                    </div>
-                                    <h6 className="card-title fw-bold mb-2">
-                                        {action.title}
-                                    </h6>
-                                    <p className="card-text text-muted small flex-grow-1">
-                                        {action.description}
-                                    </p>
-                                    {action.count && (
-                                        <div className="mt-2">
-                                            <span
-                                                className={`badge bg-${action.variant}`}
-                                            >
-                                                {action.count}
-                                            </span>
+                        <div key={action.id} className="col-12 col-sm-6 col-md-3">
+                            <button
+                                className={`btn p-0 border-0 bg-transparent h-100 w-100`}
+                                onClick={() => handleActionClick(action)}
+                            >
+                                <div className="card h-100 border border-opacity-25">
+                                    <div className="card-body text-center d-flex flex-column">
+                                        <div
+                                            className={`mb-3 rounded-circle d-inline-flex align-items-center justify-content-center bg-${action.variant} bg-opacity-10 text-${action.variant} mx-auto`}
+                                            style={{
+                                                width: "60px",
+                                                height: "60px",
+                                            }}
+                                        >
+                                            <i
+                                                className={`${action.icon} fa-2x`}
+                                            ></i>
                                         </div>
-                                    )}
+                                        <h6 className="card-title fw-bold mb-2">
+                                            {action.title}
+                                        </h6>
+                                        <p className="card-text text-muted small flex-grow-1">
+                                            {action.description}
+                                        </p>
+                                        {action.count && (
+                                            <div className="mt-2">
+                                                <span
+                                                    className={`badge bg-${action.variant}`}
+                                                >
+                                                    {action.count}
+                                                </span>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
-                        </button>
+                            </button>
+                        </div>
                     ))}
                 </div>
             </div>

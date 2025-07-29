@@ -9,6 +9,7 @@ use App\Http\Controllers\API\Client\ProviderController;
 use App\Http\Controllers\API\Client\DashboardController;
 use App\Http\Controllers\API\Client\AppointmentController;
 use App\Http\Controllers\API\Client\QuoteController;
+use App\Http\Controllers\API\Client\ReportController;
 
 /*
 |--------------------------------------------------------------------------
@@ -96,9 +97,9 @@ Route::prefix('dashboard')->group(function () {
 
 // Client Reports
 Route::prefix('reports')->group(function () {
-    Route::get('/personal-activity', [\App\Http\Controllers\API\Client\ReportController::class, 'personalActivity']);
-    Route::get('/spending-analysis', [\App\Http\Controllers\API\Client\ReportController::class, 'spendingAnalysis']);
-    Route::get('/service-history', [\App\Http\Controllers\API\Client\ReportController::class, 'serviceHistory']);
-    Route::get('/preferences', [\App\Http\Controllers\API\Client\ReportController::class, 'preferences']);
-    Route::get('/transaction-history', [\App\Http\Controllers\API\Client\ReportController::class, 'transactionHistory']);
+    Route::get('/personal-activity', [ReportController::class, 'personalActivity']);
+    Route::get('/spending-analysis', [ReportController::class, 'spendingAnalysis']);
+    Route::get('/service-history', [ReportController::class, 'serviceHistory']);
+    Route::get('/preferences', [ReportController::class, 'preferences']);
+    Route::get('/transaction-history', [ReportController::class, 'transactionHistory']);
 });

@@ -4,6 +4,7 @@
 import React, { useState, useEffect } from "react";
 import { useStaff } from "../../../context/StaffContext";
 import { useNavigate, useParams } from "react-router-dom";
+import StaffLayout from "../../../components/layouts/StaffLayout";
 
 const CategoryDetails = () => {
     const navigate = useNavigate();
@@ -89,106 +90,117 @@ const CategoryDetails = () => {
 
     if (loading) {
         return (
-            <div
-                className="d-flex justify-content-center align-items-center"
-                style={{ minHeight: "400px" }}
-            >
-                <div className="text-center">
+            <StaffLayout>
+                <div className="staff-dashboard-content">
                     <div
-                        className="spinner-border text-primary mb-3"
-                        role="status"
+                        className="d-flex justify-content-center align-items-center"
+                        style={{ minHeight: "400px" }}
                     >
-                        <span className="visually-hidden">Loading...</span>
+                        <div className="text-center">
+                            <div
+                                className="spinner-border text-primary mb-3"
+                                role="status"
+                            >
+                                <span className="visually-hidden">Loading...</span>
+                            </div>
+                            <p className="text-muted">Loading category details...</p>
+                        </div>
                     </div>
-                    <p className="text-muted">Loading category details...</p>
                 </div>
-            </div>
+            </StaffLayout>
         );
     }
 
     if (!category) {
         return (
-            <div className="text-center py-5">
-                <i className="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
-                <h4 className="text-muted">Category Not Found</h4>
-                <p className="text-muted">
-                    The requested category could not be found.
-                </p>
-                <button
-                    className="btn btn-primary"
-                    onClick={() => navigate("/staff/categories")}
-                >
-                    <i className="fas fa-arrow-left me-2"></i>
-                    Back to Categories
-                </button>
-            </div>
+            <StaffLayout>
+                <div className="staff-dashboard-content">
+                    <div className="text-center py-5">
+                        <i className="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+                        <h4 className="text-muted">Category Not Found</h4>
+                        <p className="text-muted">
+                            The requested category could not be found.
+                        </p>
+                        <button
+                            className="btn btn-primary"
+                            onClick={() => navigate("/staff/service-categories")}
+                        >
+                            <i className="fas fa-arrow-left me-2"></i>
+                            Back to Categories
+                        </button>
+                    </div>
+                </div>
+            </StaffLayout>
         );
     }
 
     return (
-        <>
-            {/* Page Header */}
-            <div className="d-flex justify-content-between align-items-start mb-4">
-                <div className="d-flex align-items-center">
-                    <div
-                        className="category-icon me-3 d-flex align-items-center justify-content-center rounded"
-                        style={{
-                            width: "60px",
-                            height: "60px",
-                            backgroundColor: category.color || "#6c757d",
-                            color: "white",
-                        }}
-                    >
-                        <i
-                            className={`${
-                                category.icon || "fas fa-folder"
-                            } fa-2x`}
-                        ></i>
-                    </div>
-                    <div>
-                        <h1 className="h3 mb-1">
-                            {category.name}
-                            <span
-                                className={`badge ms-3 ${
-                                    category.is_active
-                                        ? "bg-success"
-                                        : "bg-secondary"
-                                }`}
+        <StaffLayout>
+            <div className="staff-dashboard-content">
+                {/* Page Header */}
+                <div className="page-header d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-6">
+                    <div className="mb-3 mb-md-0">
+                        <div className="d-flex align-items-center mb-2">
+                            <div
+                                className="category-icon me-3 d-flex align-items-center justify-content-center rounded"
+                                style={{
+                                    width: "60px",
+                                    height: "60px",
+                                    backgroundColor: category.color || "#6c757d",
+                                    color: "white",
+                                }}
                             >
-                                {category.is_active ? "Active" : "Inactive"}
-                            </span>
-                        </h1>
-                        <p className="text-muted mb-0">
-                            {category.description}
-                        </p>
-                        <small className="text-muted">
-                            Created {formatDate(category.created_at)} • Last
-                            updated {formatDate(category.updated_at)}
-                        </small>
+                                <i
+                                    className={`${
+                                        category.icon || "fas fa-folder"
+                                    } fa-2x`}
+                                ></i>
+                            </div>
+                            <div>
+                                <h1 className="page-title mb-1">
+                                    {category.name}
+                                    <span
+                                        className={`badge ms-3 ${
+                                            category.is_active
+                                                ? "bg-success"
+                                                : "bg-secondary"
+                                        }`}
+                                    >
+                                        {category.is_active ? "Active" : "Inactive"}
+                                    </span>
+                                </h1>
+                                <p className="page-subtitle mb-0">
+                                    {category.description}
+                                </p>
+                                <small className="text-muted">
+                                    Created {formatDate(category.created_at)} • Last
+                                    updated {formatDate(category.updated_at)}
+                                </small>
+                            </div>
+                        </div>
                     </div>
-                </div>
 
-                <div className="d-flex gap-2">
-                    <button
-                        className="btn btn-outline-secondary"
-                        onClick={() => loadCategoryData()}
-                        disabled={loading}
-                    >
-                        <i
-                            className={`fas fa-sync-alt ${
-                                loading ? "fa-spin" : ""
-                            } me-2`}
-                        ></i>
-                        Refresh
-                    </button>
-                    <a
-                        href={`/staff/categories/${id}/edit`}
-                        className="btn btn-primary"
-                    >
-                        <i className="fas fa-edit me-2"></i>
-                        Edit Category
-                    </a>
-                    <div className="dropdown">
+                    <div className="d-flex flex-column flex-md-row align-items-start align-items-md-center gap-3">
+                        <button
+                            className="btn btn-outline-primary btn-responsive"
+                            onClick={() => loadCategoryData()}
+                            disabled={loading}
+                        >
+                            <i
+                                className={`fas fa-sync-alt ${
+                                    loading ? "fa-spin" : ""
+                                } me-2`}
+                            ></i>
+                            <span>Refresh</span>
+                        </button>
+                        <a
+                            href={`/staff/service-categories/${id}/edit`}
+                            className="btn btn-primary btn-responsive"
+                        >
+                            <i className="fas fa-edit me-2"></i>
+                            <span>Edit Category</span>
+                        </a>
+                        <div className="dropdown">
                         <button
                             className="btn btn-outline-secondary dropdown-toggle"
                             data-bs-toggle="dropdown"
@@ -229,15 +241,15 @@ const CategoryDetails = () => {
                             </li>
                         </ul>
                     </div>
-                    <button
-                        className="btn btn-outline-secondary"
-                        onClick={() => navigate("/staff/categories")}
-                    >
-                        <i className="fas fa-arrow-left me-2"></i>
-                        Back to Categories
-                    </button>
+                        <button
+                            className="btn btn-outline-secondary btn-responsive"
+                            onClick={() => navigate("/staff/service-categories")}
+                        >
+                            <i className="fas fa-arrow-left me-2"></i>
+                            <span>Back to Categories</span>
+                        </button>
+                    </div>
                 </div>
-            </div>
 
             {/* Messages */}
             {errors.categoryDetails && (
@@ -1009,11 +1021,12 @@ const CategoryDetails = () => {
                                     )}
                                 </button>
                             </div>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
-        </>
+                )}
+            </div>
+        </StaffLayout>
     );
 };
 

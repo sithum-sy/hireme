@@ -62,38 +62,38 @@ const AppointmentsList = () => {
         // TodaysSchedule component will handle today's filtering separately
         if (activeFilter !== "today" && activeFilter !== "all") {
             const today = new Date().toISOString().split("T")[0];
-            
+
             switch (activeFilter) {
                 case "upcoming":
-                    setFilters(prev => ({
+                    setFilters((prev) => ({
                         ...prev,
                         date_from: today,
                         date_to: "",
-                        status: "pending"
+                        status: "pending",
                     }));
                     break;
                 case "confirmed":
-                    setFilters(prev => ({
+                    setFilters((prev) => ({
                         ...prev,
                         date_from: today,
                         date_to: "",
-                        status: "confirmed"
+                        status: "confirmed",
                     }));
                     break;
                 case "completed":
-                    setFilters(prev => ({
+                    setFilters((prev) => ({
                         ...prev,
                         status: "completed,closed",
                         date_from: "",
-                        date_to: ""
+                        date_to: "",
                     }));
                     break;
                 case "cancelled":
-                    setFilters(prev => ({
+                    setFilters((prev) => ({
                         ...prev,
                         status: "cancelled",
                         date_from: "",
-                        date_to: ""
+                        date_to: "",
                     }));
                     break;
             }
@@ -117,49 +117,30 @@ const AppointmentsList = () => {
 
     const loadCategories = async () => {
         try {
-            // Try multiple endpoints to find categories
-            const endpoints = [
-                "/api/service-categories",
-                "/api/client/service-categories",
-                "/api/categories",
-            ];
+            // Use the public service categories endpoint with high per_page to get all categories
+            const response = await fetch(
+                "/api/service-categories?per_page=100",
+                {
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                }
+            );
 
-            for (const endpoint of endpoints) {
-                try {
-                    const response = await fetch(endpoint, {
-                        headers: {
-                            Authorization: `Bearer ${localStorage.getItem(
-                                "token"
-                            )}`,
-                            "Content-Type": "application/json",
-                        },
-                    });
-
-                    if (response.ok) {
-                        const data = await response.json();
-                        const categoryData = data.success
-                            ? data.data
-                            : data.data || data;
-                        if (
-                            categoryData &&
-                            Array.isArray(categoryData) &&
-                            categoryData.length > 0
-                        ) {
-                            setCategories(categoryData);
-                            console.log("Categories loaded from:", endpoint);
-                            return; // Success, exit the loop
-                        }
-                    }
-                } catch (err) {
-                    console.log(`Endpoint ${endpoint} failed:`, err.message);
-                    continue; // Try next endpoint
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success && data.data?.data) {
+                    setCategories(data.data.data);
+                    // console.log("Categories loaded successfully:", data.data.data.length, "categories");
+                    return;
                 }
             }
 
-            // If all endpoints fail, extract categories from existing appointments
+            console.error("Failed to load categories:", response.status);
+            // Fallback to extracting categories from appointments
             extractCategoriesFromAppointments();
         } catch (error) {
-            console.error("Failed to load categories:", error);
+            console.error("Error fetching categories:", error);
             extractCategoriesFromAppointments();
         }
     };
@@ -171,12 +152,16 @@ const AppointmentsList = () => {
 
         return appointments.sort((a, b) => {
             // Create full datetime objects for comparison
-            const dateTimeA = new Date(`${a.appointment_date} ${a.appointment_time}`);
-            const dateTimeB = new Date(`${b.appointment_date} ${b.appointment_time}`);
+            const dateTimeA = new Date(
+                `${a.appointment_date} ${a.appointment_time}`
+            );
+            const dateTimeB = new Date(
+                `${b.appointment_date} ${b.appointment_time}`
+            );
 
             // Check if appointments are in progress
-            const aInProgress = a.status === 'in_progress';
-            const bInProgress = b.status === 'in_progress';
+            const aInProgress = a.status === "in_progress";
+            const bInProgress = b.status === "in_progress";
 
             // In-progress appointments always go to top
             if (aInProgress && !bInProgress) return -1;
@@ -558,8 +543,9 @@ const AppointmentsList = () => {
                 (apt) =>
                     apt.appointment_date >= today && apt.status === "confirmed"
             ).length,
-            completed: appointments.filter((apt) => ["completed", "closed"].includes(apt.status))
-                .length,
+            completed: appointments.filter((apt) =>
+                ["completed", "closed"].includes(apt.status)
+            ).length,
             cancelled: appointments.filter((apt) =>
                 ["cancelled_by_client", "cancelled_by_provider"].includes(
                     apt.status

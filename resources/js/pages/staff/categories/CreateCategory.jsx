@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useStaff } from "../../../context/StaffContext";
 import { useNavigate } from "react-router-dom";
+import StaffLayout from "../../../components/layouts/StaffLayout";
 
 const CreateCategory = () => {
     const navigate = useNavigate();
@@ -197,7 +198,7 @@ const CreateCategory = () => {
     };
 
     const handleCancel = () => {
-        navigate("/staff/categories");
+        navigate("/staff/service-categories");
     };
 
     const resetForm = () => {
@@ -217,38 +218,40 @@ const CreateCategory = () => {
     };
 
     return (
-        <>
-            {/* Page Header */}
-            <div className="d-flex justify-content-between align-items-center mb-4">
-                <div>
-                    <h1 className="h3 mb-1">Create New Category</h1>
-                    <p className="text-muted mb-0">
-                        Add a new service category to organize platform services
-                    </p>
+        <StaffLayout>
+            <div className="staff-dashboard-content">
+                {/* Page Header */}
+                <div className="page-header d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-6">
+                    <div className="mb-3 mb-md-0">
+                        <h1 className="page-title">Create New Category</h1>
+                        <p className="page-subtitle">
+                            Add a new service category to organize platform services
+                        </p>
+                    </div>
+
+                    <div className="d-flex flex-column flex-md-row align-items-start align-items-md-center gap-3">
+                        <button
+                            type="button"
+                            className="btn btn-outline-secondary btn-responsive"
+                            onClick={() => setPreviewMode(!previewMode)}
+                        >
+                            <i
+                                className={`fas fa-${
+                                    previewMode ? "edit" : "eye"
+                                } me-2`}
+                            ></i>
+                            <span>{previewMode ? "Edit" : "Preview"}</span>
+                        </button>
+                        <button
+                            type="button"
+                            className="btn btn-outline-secondary btn-responsive"
+                            onClick={handleCancel}
+                        >
+                            <i className="fas fa-arrow-left me-2"></i>
+                            <span>Back to Categories</span>
+                        </button>
+                    </div>
                 </div>
-                <div className="d-flex gap-2">
-                    <button
-                        type="button"
-                        className="btn btn-outline-secondary"
-                        onClick={() => setPreviewMode(!previewMode)}
-                    >
-                        <i
-                            className={`fas fa-${
-                                previewMode ? "edit" : "eye"
-                            } me-2`}
-                        ></i>
-                        {previewMode ? "Edit" : "Preview"}
-                    </button>
-                    <button
-                        type="button"
-                        className="btn btn-outline-secondary"
-                        onClick={handleCancel}
-                    >
-                        <i className="fas fa-arrow-left me-2"></i>
-                        Back to Categories
-                    </button>
-                </div>
-            </div>
 
             <div className="row">
                 <div className="col-lg-8">
@@ -834,11 +837,12 @@ const CreateCategory = () => {
                                     /3 completed
                                 </small>
                             </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </>
+        </StaffLayout>
     );
 };
 

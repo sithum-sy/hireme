@@ -39,6 +39,8 @@ const AppointmentDetail = () => {
 
     // Load appointment details on component mount
     useEffect(() => {
+        // Scroll to top when component mounts or ID changes
+        window.scrollTo(0, 0);
         loadAppointmentDetail();
     }, [id]);
 

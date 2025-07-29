@@ -9,6 +9,7 @@ const CreateInvoiceModal = ({ appointment, isOpen, onClose, onComplete }) => {
         notes: "",
         line_items: [],
         send_invoice: false,
+        payment_method: null,
     });
     const [loading, setLoading] = useState(false);
 
@@ -20,6 +21,7 @@ const CreateInvoiceModal = ({ appointment, isOpen, onClose, onComplete }) => {
                 notes: "",
                 line_items: generateDefaultLineItems(appointment),
                 send_invoice: false,
+                payment_method: appointment.payment_method || null, // Use payment method from appointment
             });
             setLoading(false);
             document.body.style.overflow = "hidden";
@@ -179,7 +181,7 @@ const CreateInvoiceModal = ({ appointment, isOpen, onClose, onComplete }) => {
                                     {appointment.service_title}
                                 </div>
                             </div>
-                            <div className="col-md-3">
+                            <div className="col-md-2">
                                 <small className="text-muted">Date:</small>
                                 <div className="fw-medium">
                                     {new Date(
@@ -187,10 +189,19 @@ const CreateInvoiceModal = ({ appointment, isOpen, onClose, onComplete }) => {
                                     ).toLocaleDateString()}
                                 </div>
                             </div>
-                            <div className="col-md-3">
+                            <div className="col-md-2">
                                 <small className="text-muted">Time:</small>
                                 <div className="fw-medium">
                                     {appointment.appointment_time || "Not set"}
+                                </div>
+                            </div>
+                            <div className="col-md-2">
+                                <small className="text-muted">Payment Method:</small>
+                                <div className="fw-medium">
+                                    <i className={`fas ${appointment.payment_method === 'cash' ? 'fa-money-bill-wave' : 'fa-credit-card'} me-1`}></i>
+                                    {appointment.payment_method === 'cash' ? 'Cash' : 
+                                     appointment.payment_method === 'card' ? 'Card' :
+                                     appointment.payment_method || 'Not specified'}
                                 </div>
                             </div>
                         </div>

@@ -29,11 +29,27 @@ class AppointmentController extends Controller
     public function index(Request $request)
     {
         $request->validate([
-            'status' => 'nullable|in:pending,confirmed,in_progress,completed,cancelled_by_client,cancelled_by_provider,no_show,disputed',
+            'status' => 'nullable|string',
             'date_from' => 'nullable|date',
             'date_to' => 'nullable|date|after_or_equal:date_from',
             'per_page' => 'nullable|integer|min:1|max:50'
         ]);
+
+        // Validate status values after splitting
+        if ($request->has('status') && $request->status) {
+            $allowedStatuses = ['pending', 'confirmed', 'in_progress', 'completed', 'cancelled_by_client', 'cancelled_by_provider', 'no_show', 'disputed', 'closed'];
+            $statusValues = explode(',', $request->status);
+            
+            foreach ($statusValues as $status) {
+                $status = trim($status);
+                if (!in_array($status, $allowedStatuses)) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => "Invalid status value: {$status}. Allowed values: " . implode(', ', $allowedStatuses)
+                    ], 422);
+                }
+            }
+        }
 
         try {
             $user = Auth::user();

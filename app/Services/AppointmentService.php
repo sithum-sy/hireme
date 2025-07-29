@@ -335,9 +335,7 @@ class AppointmentService
             ->update(['status' => 'expired']);
     }
 
-    /**
-     * Get appointment statistics
-     */
+
     public function getAppointmentStatistics(User $user): array
     {
         $query = Appointment::query();

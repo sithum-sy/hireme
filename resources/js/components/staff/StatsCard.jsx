@@ -74,14 +74,14 @@ export const UserStatsCard = ({ users = {}, loading = false }) => {
     );
 };
 
-// Active Users Card
+// Clients Card
 export const ActiveUsersCard = ({ users = {}, loading = false }) => {
     if (loading) return <StatCardSkeleton />;
 
-    const activeUsers = users.overview?.active || 0;
-    const totalUsers = users.overview?.total || 0;
-    const activePercentage =
-        totalUsers > 0 ? ((activeUsers / totalUsers) * 100).toFixed(1) : 0;
+    const totalClients = users.clients?.total || 0;
+    const activeClients = users.clients?.active || 0;
+    const newToday = users.clients?.new_today || 0;
+    const growthRate = users.clients?.growth_rate || 0;
 
     return (
         <div className="card border-0 shadow-sm">
@@ -89,21 +89,40 @@ export const ActiveUsersCard = ({ users = {}, loading = false }) => {
                 <div className="d-flex align-items-center">
                     <div className="flex-grow-1">
                         <h6 className="card-title text-muted mb-2 font-medium">
-                            <i className="fas fa-user-check me-2"></i>
-                            <span>Active Users</span>
+                            <i className="fas fa-user me-2"></i>
+                            <span>Clients</span>
                         </h6>
                         <h3 className="text-primary fw-bold mb-2">
-                            {activeUsers.toLocaleString()}
+                            {totalClients.toLocaleString()}
                         </h3>
-                        <div>
+                        <div className="d-flex flex-wrap gap-2">
                             <span className="badge bg-success bg-opacity-10 text-success d-flex align-items-center gap-1">
-                                <i className="fas fa-percentage small"></i>
-                                <span>{activePercentage}% of total</span>
+                                <i className="fas fa-check small"></i>
+                                <span>{activeClients} active</span>
                             </span>
+                            {growthRate !== 0 && (
+                                <span
+                                    className={`badge ${
+                                        growthRate >= 0
+                                            ? "bg-success bg-opacity-10 text-success"
+                                            : "bg-danger bg-opacity-10 text-danger"
+                                    } d-flex align-items-center gap-1`}
+                                >
+                                    <i
+                                        className={`fas fa-arrow-${
+                                            growthRate >= 0 ? "up" : "down"
+                                        } small`}
+                                    ></i>
+                                    <span>{Math.abs(growthRate)}%</span>
+                                </span>
+                            )}
+                            <small className="text-muted">
+                                {newToday} new today
+                            </small>
                         </div>
                     </div>
-                    <div className="ms-3 text-success">
-                        <i className="fas fa-user-check fa-2x"></i>
+                    <div className="ms-3 text-info">
+                        <i className="fas fa-user fa-2x"></i>
                     </div>
                 </div>
             </div>

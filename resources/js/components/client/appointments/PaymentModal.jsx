@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements } from "@stripe/react-stripe-js";
 import CardPaymentForm from "../../payments/CardPaymentForm";
@@ -11,14 +11,11 @@ const PaymentForm = ({ appointment, onSuccess, onCancel, onError }) => {
     const [paymentMethod, setPaymentMethod] = useState("cash");
     const [cashNotes, setCashNotes] = useState("");
     const [clientSecret, setClientSecret] = useState("");
+    const [stripeLoaded, setStripeLoaded] = useState(true); // Stripe Elements handles loading, default to true
 
     const createPaymentIntent = async () => {
         try {
             setLoading(true);
-            console.log(
-                "Creating payment intent for appointment:",
-                appointment.id
-            );
 
             // Get CSRF token from meta tag or cookie
             const csrfToken =
@@ -44,20 +41,16 @@ const PaymentForm = ({ appointment, onSuccess, onCancel, onError }) => {
             });
 
             const data = await response.json();
-            console.log("Payment intent response:", data);
 
             if (response.ok && data.success) {
                 setClientSecret(data.client_secret);
-                console.log("Client secret set successfully");
             } else {
-                console.error("Payment intent creation failed:", data);
                 onError(
                     data.error ||
                         "Failed to initialize card payment. Please try again."
                 );
             }
         } catch (error) {
-            console.error("Error creating payment intent:", error);
             onError("Failed to initialize card payment. Please try again.");
         } finally {
             setLoading(false);
@@ -75,9 +68,6 @@ const PaymentForm = ({ appointment, onSuccess, onCancel, onError }) => {
     // Create payment intent when stripe is selected
     useEffect(() => {
         if (paymentMethod === "stripe") {
-            console.log(
-                "Stripe payment method selected, creating payment intent..."
-            );
             createPaymentIntent();
         } else {
             // Clear client secret when switching back to cash
@@ -85,163 +75,7 @@ const PaymentForm = ({ appointment, onSuccess, onCancel, onError }) => {
         }
     }, [paymentMethod]);
 
-    // // Create payment intent when stripe is selected
-    // useEffect(() => {
-    //     if (paymentMethod === "stripe") {
-    //         createPaymentIntent();
-    //     }
-    // }, [paymentMethod]);
-
-    // // Load Stripe.js dynamically with proper environment variable
-    // useEffect(() => {
-    //     loadStripe();
-    // }, []);
-
-    // const loadStripe = async () => {
-    //     try {
-    //         if (window.Stripe) {
-    //             setStripeLoaded(true);
-    //             return;
-    //         }
-
-    //         const script = document.createElement("script");
-    //         script.src = "https://js.stripe.com/v3/";
-    //         script.onload = () => {
-    //             // Use the correct environment variable syntax for your build tool
-    //             const stripeKey =
-    //                 import.meta?.env?.VITE_STRIPE_PUBLISHABLE_KEY || // Vite
-    //                 window.env?.REACT_APP_STRIPE_PUBLISHABLE_KEY || // Custom window env
-    //                 "pk_test_51RlDXCPis5J9zHNjb9QWMMydXKG4oJrBUZ3kQFE8eWjxyfHt0mJI0GKcx59zBTNgcYhaeqRFyZXhCxzAFbf5tLsE00A9uf01Oq"; // Fallback for development
-
-    //             window.stripe = window.Stripe(stripeKey);
-    //             setStripeLoaded(true);
-    //         };
-    //         script.onerror = () => {
-    //             console.error("Failed to load Stripe.js");
-    //             setStripeLoaded(false);
-    //         };
-    //         document.head.appendChild(script);
-    //     } catch (error) {
-    //         console.error("Error loading Stripe:", error);
-    //         setStripeLoaded(false);
-    //     }
-    // };
-
-    // const handleSubmit = async (event) => {
-    //     event.preventDefault();
-    //     setLoading(true);
-
-    //     try {
-    //         if (paymentMethod === "stripe") {
-    //             await handleStripePayment();
-    //         } else if (paymentMethod === "cash") {
-    //             await handleCashPayment();
-    //         }
-    //     } catch (error) {
-    //         onError(error.message || "Payment processing failed");
-    //     } finally {
-    //         setLoading(false);
-    //     }
-    // };
-
-    // const handleStripePayment = async () => {
-    //     if (!stripeLoaded || !window.stripe) {
-    //         onError("Payment system not ready. Please try again.");
-    //         return;
-    //     }
-
-    //     try {
-    //         // Basic card validation
-    //         const cardNumber = cardDetails.number.replace(/\s/g, "");
-    //         if (cardNumber.length < 13 || cardNumber.length > 19) {
-    //             onError("Please enter a valid card number");
-    //             return;
-    //         }
-
-    //         if (!cardDetails.expiry || cardDetails.expiry.length !== 5) {
-    //             onError("Please enter a valid expiry date (MM/YY)");
-    //             return;
-    //         }
-
-    //         if (!cardDetails.cvc || cardDetails.cvc.length < 3) {
-    //             onError("Please enter a valid CVC");
-    //             return;
-    //         }
-
-    //         // Create payment method using Stripe Elements or manual approach
-    //         const paymentMethodResult = await createStripePaymentMethod();
-
-    //         if (paymentMethodResult.error) {
-    //             onError(paymentMethodResult.error.message);
-    //             return;
-    //         }
-
-    //         // Process payment through backend
-    //         const result = await clientAppointmentService.payInvoice(
-    //             appointment.id,
-    //             {
-    //                 payment_method: "stripe",
-    //                 amount: appointment.invoice.total_amount,
-    //                 stripe_payment_method_id:
-    //                     paymentMethodResult.paymentMethod.id,
-    //                 notes: "Card payment via Stripe",
-    //             }
-    //         );
-
-    //         if (result.success) {
-    //             onSuccess(result.data);
-    //         } else {
-    //             onError(result.message || "Payment failed");
-    //         }
-    //     } catch (error) {
-    //         onError("Payment processing failed: " + error.message);
-    //     }
-    // };
-
-    // const createStripePaymentMethod = async () => {
-    //     try {
-    //         const [month, year] = cardDetails.expiry.split("/");
-
-    //         return await window.stripe.createPaymentMethod({
-    //             type: "card",
-    //             card: {
-    //                 number: cardDetails.number.replace(/\s/g, ""),
-    //                 exp_month: parseInt(month),
-    //                 exp_year: parseInt(`20${year}`),
-    //                 cvc: cardDetails.cvc,
-    //             },
-    //             billing_details: {
-    //                 name: cardDetails.name,
-    //             },
-    //         });
-    //     } catch (error) {
-    //         return {
-    //             error: { message: "Invalid card details: " + error.message },
-    //         };
-    //     }
-    // };
-
-    // const handleCashPayment = async () => {
-    //     try {
-    //         const result = await clientAppointmentService.payInvoice(
-    //             appointment.id,
-    //             {
-    //                 payment_method: "cash",
-    //                 amount: appointment.invoice.total_amount,
-    //                 notes: cashNotes || "Client confirmed cash payment",
-    //             }
-    //         );
-
-    //         if (result.success) {
-    //             onSuccess(result.data);
-    //         } else {
-    //             onError(result.message || "Cash payment processing failed");
-    //         }
-    //     } catch (error) {
-    //         onError("Cash payment processing failed: " + error.message);
-    //     }
-    // };
-
+    // Handle cash payment directly
     const handleCashPayment = async () => {
         setLoading(true);
         try {
@@ -266,13 +100,31 @@ const PaymentForm = ({ appointment, onSuccess, onCancel, onError }) => {
         }
     };
 
-    const handleStripePaymentSuccess = (paymentIntent) => {
-        console.log("Stripe payment successful:", paymentIntent);
-        onSuccess(paymentIntent);
+    const handleStripePaymentSuccess = async (paymentIntent) => {
+        try {
+            // Call backend API to process the successful Stripe payment
+            const result = await clientAppointmentService.payInvoice(
+                appointment.id,
+                {
+                    payment_method: "stripe",
+                    amount: appointment.invoice.total_amount,
+                    stripe_payment_method_id: paymentIntent.payment_method,
+                    notes: `Card payment processed successfully. Payment Intent: ${paymentIntent.id}`,
+                    stripe_payment_intent_id: paymentIntent.id
+                }
+            );
+
+            if (result.success) {
+                onSuccess(result.data); // Pass the updated appointment data
+            } else {
+                onError(result.message || "Payment succeeded but failed to update appointment status");
+            }
+        } catch (error) {
+            onError("Payment succeeded but failed to update appointment status: " + error.message);
+        }
     };
 
     const handleStripePaymentError = (error) => {
-        console.error("Stripe payment error:", error);
         onError(error.message || "Card payment failed. Please try again.");
     };
 
@@ -285,34 +137,7 @@ const PaymentForm = ({ appointment, onSuccess, onCancel, onError }) => {
         // Stripe payment is handled by the CardPaymentForm component
     };
 
-    // const handleCardInputChange = (field, value) => {
-    //     let formattedValue = value;
-
-    //     if (field === "number") {
-    //         // Remove all non-digits and add spaces every 4 digits
-    //         formattedValue = value
-    //             .replace(/\D/g, "")
-    //             .replace(/(\d{4})(?=\d)/g, "$1 ");
-    //         if (formattedValue.length > 19)
-    //             formattedValue = formattedValue.slice(0, 19);
-    //     } else if (field === "expiry") {
-    //         // Format as MM/YY
-    //         formattedValue = value
-    //             .replace(/\D/g, "")
-    //             .replace(/(\d{2})(?=\d)/, "$1/");
-    //         if (formattedValue.length > 5)
-    //             formattedValue = formattedValue.slice(0, 5);
-    //     } else if (field === "cvc") {
-    //         // Only digits, max 4
-    //         formattedValue = value.replace(/\D/g, "").slice(0, 4);
-    //     }
-
-    //     setCardDetails((prev) => ({
-    //         ...prev,
-    //         [field]: formattedValue,
-    //     }));
-    // };
-
+    // Debug: Log payment method and client secret
     return (
         <form onSubmit={handleSubmit}>
             {/* Payment Method Selection */}
@@ -376,146 +201,41 @@ const PaymentForm = ({ appointment, onSuccess, onCancel, onError }) => {
                         The provider will be notified about your cash payment
                         confirmation
                     </small>
-
-                    {/* Cash Payment Action */}
-                    {/* <div className="mt-3">
-                        <button
-                            type="submit"
-                            className="btn btn-success w-100"
-                            disabled={loading}
-                        >
-                            {loading ? (
-                                <>
-                                    <span className="spinner-border spinner-border-sm me-2"></span>
-                                    Processing...
-                                </>
-                            ) : (
-                                <>
-                                    <i className="fas fa-money-bill me-2"></i>
-                                    Confirm Cash Payment
-                                </>
-                            )}
-                        </button>
-                    </div> */}
                 </div>
             )}
-
-            {/* Stripe Card Form */}
-            {/* {paymentMethod === "stripe" && (
-                <div className="stripe-payment-form mb-4">
-                    <h6 className="fw-semibold mb-3">Card Details</h6>
-
-                    <div className="row">
-                        <div className="col-12 mb-3">
-                            <label className="form-label">
-                                Cardholder Name
-                            </label>
-                            <input
-                                type="text"
-                                className="form-control"
-                                placeholder="John Doe"
-                                value={cardDetails.name}
-                                onChange={(e) =>
-                                    handleCardInputChange(
-                                        "name",
-                                        e.target.value
-                                    )
-                                }
-                                required
-                            />
-                        </div>
-
-                        <div className="col-12 mb-3">
-                            <label className="form-label">Card Number</label>
-                            <input
-                                type="text"
-                                className="form-control"
-                                placeholder="1234 5678 9012 3456"
-                                value={cardDetails.number}
-                                onChange={(e) =>
-                                    handleCardInputChange(
-                                        "number",
-                                        e.target.value
-                                    )
-                                }
-                                required
-                            />
-                        </div>
-
-                        <div className="col-6 mb-3">
-                            <label className="form-label">Expiry Date</label>
-                            <input
-                                type="text"
-                                className="form-control"
-                                placeholder="MM/YY"
-                                value={cardDetails.expiry}
-                                onChange={(e) =>
-                                    handleCardInputChange(
-                                        "expiry",
-                                        e.target.value
-                                    )
-                                }
-                                required
-                            />
-                        </div>
-
-                        <div className="col-6 mb-3">
-                            <label className="form-label">CVC</label>
-                            <input
-                                type="text"
-                                className="form-control"
-                                placeholder="123"
-                                value={cardDetails.cvc}
-                                onChange={(e) =>
-                                    handleCardInputChange("cvc", e.target.value)
-                                }
-                                required
-                            />
-                        </div>
-                    </div>
-
-                    {!stripeLoaded && (
-                        <div className="alert alert-warning">
-                            <i className="fas fa-exclamation-triangle me-2"></i>
-                            Loading payment system...
-                        </div>
-                    )}
-
-                    <small className="text-muted d-block">
-                        <i className="fas fa-shield-alt me-1"></i>
-                        Your payment information is secure and encrypted
-                    </small>
-                </div>
-            )} */}
 
             {/* Stripe Card Payment Form */}
             {paymentMethod === "stripe" && (
                 <div className="stripe-payment-form mb-4">
                     {clientSecret ? (
-                        <Elements stripe={stripePromise}>
-                            <CardPaymentForm
-                                amount={appointment.invoice.total_amount}
-                                clientSecret={clientSecret}
-                                onPaymentSuccess={handleStripePaymentSuccess}
-                                onPaymentError={handleStripePaymentError}
-                                loading={loading}
-                                setLoading={setLoading}
-                            />
-                        </Elements>
+                        <>
+                            <Elements stripe={stripePromise}>
+                                <CardPaymentForm
+                                    amount={appointment.invoice.total_amount}
+                                    clientSecret={clientSecret}
+                                    onPaymentSuccess={handleStripePaymentSuccess}
+                                    onPaymentError={handleStripePaymentError}
+                                    loading={loading}
+                                    setLoading={setLoading}
+                                />
+                            </Elements>
+                        </>
                     ) : (
-                        <div className="text-center py-4">
-                            <div
-                                className="spinner-border text-primary"
-                                role="status"
-                            >
-                                <span className="visually-hidden">
-                                    Loading...
-                                </span>
+                        <>
+                            <div className="text-center py-4">
+                                <div
+                                    className="spinner-border text-primary"
+                                    role="status"
+                                >
+                                    <span className="visually-hidden">
+                                        Loading...
+                                    </span>
+                                </div>
+                                <div className="mt-2">
+                                    Initializing card payment...
+                                </div>
                             </div>
-                            <div className="mt-2">
-                                Initializing card payment...
-                            </div>
-                        </div>
+                        </>
                     )}
                 </div>
             )}
@@ -533,51 +253,53 @@ const PaymentForm = ({ appointment, onSuccess, onCancel, onError }) => {
                 </small>
             </div>
 
-            {/* Action Buttons */}
-            <div className="d-flex gap-2">
-                <button
-                    type="button"
-                    className="btn btn-outline-secondary flex-fill"
-                    onClick={onCancel}
-                    disabled={loading}
-                >
-                    Cancel
-                </button>
-                <button
-                    type="submit"
-                    className={`btn ${
-                        paymentMethod === "stripe"
-                            ? "btn-primary"
-                            : "btn-success"
-                    } flex-fill`}
-                    disabled={
-                        loading || (paymentMethod === "stripe" && !stripeLoaded)
-                    }
-                >
-                    {loading ? (
-                        <>
-                            <span
-                                className="spinner-border spinner-border-sm me-2"
-                                role="status"
-                            ></span>
-                            Processing...
-                        </>
-                    ) : (
-                        <>
-                            <i
-                                className={`fas ${
-                                    paymentMethod === "stripe"
-                                        ? "fa-credit-card"
-                                        : "fa-money-bill"
-                                } me-2`}
-                            ></i>
-                            {paymentMethod === "stripe"
-                                ? `Pay Rs. ${appointment.invoice.total_amount}`
-                                : "Confirm Cash Payment"}
-                        </>
-                    )}
-                </button>
-            </div>
+            {/* Action Buttons - Only show for cash payment */}
+            {paymentMethod === "cash" && (
+                <div className="d-flex gap-2">
+                    <button
+                        type="button"
+                        className="btn btn-outline-secondary flex-fill"
+                        onClick={onCancel}
+                        disabled={loading}
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        type="submit"
+                        className="btn btn-success flex-fill"
+                        disabled={loading}
+                    >
+                        {loading ? (
+                            <>
+                                <span
+                                    className="spinner-border spinner-border-sm me-2"
+                                    role="status"
+                                ></span>
+                                Processing...
+                            </>
+                        ) : (
+                            <>
+                                <i className="fas fa-money-bill me-2"></i>
+                                Confirm Cash Payment
+                            </>
+                        )}
+                    </button>
+                </div>
+            )}
+
+            {/* Cancel button for Stripe payment */}
+            {paymentMethod === "stripe" && (
+                <div className="d-flex justify-content-start">
+                    <button
+                        type="button"
+                        className="btn btn-outline-secondary"
+                        onClick={onCancel}
+                        disabled={loading}
+                    >
+                        Cancel
+                    </button>
+                </div>
+            )}
         </form>
     );
 };
@@ -585,34 +307,8 @@ const PaymentForm = ({ appointment, onSuccess, onCancel, onError }) => {
 const PaymentModal = ({ show, onHide, appointment, onPaymentSuccess }) => {
     const [error, setError] = useState("");
 
-    // Debug: Log appointment data
-    useEffect(() => {
-        if (show && appointment) {
-            console.log("Payment Modal - Appointment Data:", {
-                id: appointment.id,
-                status: appointment.status,
-                invoice: appointment.invoice,
-                hasInvoice: !!appointment.invoice,
-                invoiceStatus: appointment.invoice?.payment_status,
-                canBePaid: canBePaid(),
-            });
-        }
-    }, [show, appointment]);
 
-    // Enhanced canBePaid check with logging
     const canBePaid = () => {
-        console.log("Checking if can be paid:", {
-            hasInvoice: !!appointment.invoice,
-            invoicePaymentStatus: appointment.invoice?.payment_status,
-            appointmentStatus: appointment.status,
-            result:
-                appointment.invoice &&
-                appointment.invoice.payment_status === "pending" &&
-                ["completed", "invoice_sent", "payment_pending"].includes(
-                    appointment.status
-                ),
-        });
-
         return (
             appointment.invoice &&
             appointment.invoice.payment_status === "pending" &&

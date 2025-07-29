@@ -5,13 +5,13 @@ const ServiceFilters = ({
     setFilter,
     selectedCategory,
     setSelectedCategory,
-    categories,
+    categories = [],
     sortBy,
     setSortBy,
     services = [],
     selectedServices,
     onBulkDelete,
-    onBulkToggleStatus
+    onBulkToggleStatus,
 }) => {
     const handleClearFilters = () => {
         setFilter("all");
@@ -24,14 +24,18 @@ const ServiceFilters = ({
         if (!services || services.length === 0) {
             return { all: 0, active: 0, inactive: 0 };
         }
-        
-        const activeCount = services.filter(service => service.is_active).length;
-        const inactiveCount = services.filter(service => !service.is_active).length;
-        
+
+        const activeCount = services.filter(
+            (service) => service.is_active
+        ).length;
+        const inactiveCount = services.filter(
+            (service) => !service.is_active
+        ).length;
+
         return {
             all: services.length,
             active: activeCount,
-            inactive: inactiveCount
+            inactive: inactiveCount,
         };
     };
 
@@ -51,8 +55,8 @@ const ServiceFilters = ({
                             <div className="btn-group w-100" role="group">
                                 <button
                                     className={`btn btn-sm ${
-                                        filter === "all" 
-                                            ? "btn-primary" 
+                                        filter === "all"
+                                            ? "btn-primary"
                                             : "btn-outline-primary"
                                     }`}
                                     onClick={() => setFilter("all")}
@@ -61,8 +65,8 @@ const ServiceFilters = ({
                                 </button>
                                 <button
                                     className={`btn btn-sm ${
-                                        filter === "active" 
-                                            ? "btn-success" 
+                                        filter === "active"
+                                            ? "btn-success"
                                             : "btn-outline-success"
                                     }`}
                                     onClick={() => setFilter("active")}
@@ -71,8 +75,8 @@ const ServiceFilters = ({
                                 </button>
                                 <button
                                     className={`btn btn-sm ${
-                                        filter === "inactive" 
-                                            ? "btn-secondary" 
+                                        filter === "inactive"
+                                            ? "btn-secondary"
                                             : "btn-outline-secondary"
                                     }`}
                                     onClick={() => setFilter("inactive")}
@@ -90,11 +94,19 @@ const ServiceFilters = ({
                             <select
                                 className="form-select form-select-sm"
                                 value={selectedCategory}
-                                onChange={(e) => setSelectedCategory(e.target.value)}
+                                onChange={(e) =>
+                                    setSelectedCategory(e.target.value)
+                                }
                             >
                                 <option value="">All Categories</option>
-                                {categories.map((category) => (
-                                    <option key={category.id} value={category.id}>
+                                {(Array.isArray(categories)
+                                    ? categories
+                                    : []
+                                ).map((category) => (
+                                    <option
+                                        key={category.id}
+                                        value={category.id}
+                                    >
                                         {category.name}
                                     </option>
                                 ))}
@@ -137,14 +149,18 @@ const ServiceFilters = ({
                                     <>
                                         <button
                                             className="btn btn-outline-success btn-sm"
-                                            onClick={() => onBulkToggleStatus(true)}
+                                            onClick={() =>
+                                                onBulkToggleStatus(true)
+                                            }
                                             title={`Activate ${selectedServices.length} service(s)`}
                                         >
                                             <i className="fas fa-play"></i>
                                         </button>
                                         <button
                                             className="btn btn-outline-warning btn-sm"
-                                            onClick={() => onBulkToggleStatus(false)}
+                                            onClick={() =>
+                                                onBulkToggleStatus(false)
+                                            }
                                             title={`Pause ${selectedServices.length} service(s)`}
                                         >
                                             <i className="fas fa-pause"></i>
@@ -165,7 +181,9 @@ const ServiceFilters = ({
                     {/* Active Filters Display */}
                     {(selectedCategory || filter !== "all") && (
                         <div className="active-filters mt-3 pt-2 border-top">
-                            <small className="text-muted me-2">Active filters:</small>
+                            <small className="text-muted me-2">
+                                Active filters:
+                            </small>
                             {filter !== "all" && (
                                 <span className="badge bg-primary me-2">
                                     Status: {filter}
@@ -178,7 +196,12 @@ const ServiceFilters = ({
                             )}
                             {selectedCategory && (
                                 <span className="badge bg-info me-2">
-                                    Category: {categories.find(c => c.id == selectedCategory)?.name}
+                                    Category:{" "}
+                                    {
+                                        categories.find(
+                                            (c) => c.id == selectedCategory
+                                        )?.name
+                                    }
                                     <button
                                         className="btn-close btn-close-white ms-1"
                                         style={{ fontSize: "0.6rem" }}

@@ -58,7 +58,7 @@ import CreateQuote from "./pages/provider/quotes/CreateQuote";
 import QuoteDetail from "./pages/provider/quotes/QuoteDetail";
 import EditQuote from "./pages/provider/quotes/EditQuote";
 import InvoicesList from "./pages/provider/payments/InvoicesList";
-import CreateInvoice from "./pages/provider/payments/CreateInvoice";
+// import CreateInvoice from "./pages/provider/payments/CreateInvoice";
 import InvoiceDetail from "./pages/provider/payments/InvoiceDetail";
 import EarningsOverview from "./pages/provider/payments/EarningsOverview";
 import ProviderProfile from "./pages/provider/profile/ProviderProfile";
@@ -634,10 +634,10 @@ function App() {
                                                     path="invoices"
                                                     element={<InvoicesList />}
                                                 />
-                                                <Route
+                                                {/* <Route
                                                     path="invoices/create"
                                                     element={<CreateInvoice />}
-                                                />
+                                                /> */}
                                                 <Route
                                                     path="invoices/:invoiceId"
                                                     element={<InvoiceDetail />}

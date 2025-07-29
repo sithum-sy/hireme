@@ -426,6 +426,13 @@ export const StaffProvider = ({ children }) => {
         setCategoriesLoading(true);
         setErrors((prev) => ({ ...prev, categoryDetails: null }));
 
+        if (!categoryId || isNaN(Number(categoryId))) {
+            const errorMessage = "Invalid category ID provided";
+            setErrors((prev) => ({ ...prev, categoryDetails: errorMessage }));
+            setCategoriesLoading(false);
+            throw new Error(errorMessage);
+        }
+
         try {
             const response = await axios.get(
                 `/api/staff/service-categories/${categoryId}`

@@ -306,28 +306,25 @@ const StaffDashboard = () => {
                             </div>
                         </div>
 
-                        {/* Charts and Actions Section */}
-                        <div className="dashboard-content-grid">
-                            {/* Platform Growth Chart */}
-                            <div className="content-main">
-                                <PlatformGrowthChart
-                                    data={
-                                        dashboardStats?.trends
-                                            ?.user_registrations || []
-                                    }
-                                    loading={dashboardLoading}
-                                    period={chartPeriod}
-                                    chartType={chartType}
-                                    onPeriodChange={handleChartChange}
-                                />
-                            </div>
+                        {/* Platform Growth Chart */}
+                        <div className="mb-6">
+                            <PlatformGrowthChart
+                                data={
+                                    dashboardStats?.trends
+                                        ?.user_registrations || []
+                                }
+                                loading={dashboardLoading}
+                                period={chartPeriod}
+                                chartType={chartType}
+                                onPeriodChange={handleChartChange}
+                            />
+                        </div>
 
-                            {/* Quick Actions Sidebar */}
-                            <div className="content-sidebar">
-                                <StaffQuickActions
-                                    onAction={handleQuickAction}
-                                />
-                            </div>
+                        {/* Quick Actions - Full Width */}
+                        <div className="mb-6">
+                            <StaffQuickActions
+                                onAction={handleQuickAction}
+                            />
                         </div>
 
                         {/* Activity Section */}

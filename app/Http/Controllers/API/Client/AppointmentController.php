@@ -816,8 +816,27 @@ class AppointmentController extends Controller
                 ->orderBy('appointment_time', 'desc')
                 ->paginate($perPage);
 
-            // Transform appointments to ensure correct date format
+            // Transform appointments to ensure correct date format and add rating data
             $appointments->getCollection()->transform(function ($appointment) {
+                // Calculate provider rating data for each appointment
+                $provider = $appointment->provider;
+                if ($provider) {
+                    // Calculate reviews count for this provider from Review model using scopes
+                    $reviewsCount = \App\Models\Review::forProvider($provider->id)
+                        ->visible()
+                        ->count();
+
+                    // Calculate average rating for this provider from Review model using scopes
+                    $averageRating = \App\Models\Review::forProvider($provider->id)
+                        ->visible()
+                        ->avg('rating');
+
+                    // Add calculated rating data to provider
+                    $provider->calculated_average_rating = round($averageRating ?: 0, 1);
+                    $provider->calculated_reviews_count = $reviewsCount;
+                    $provider->calculated_completed_bookings = $provider->providerAppointments()->where('status', 'completed')->count();
+                }
+
                 // Create a new array representation to avoid Eloquent's automatic date casting
                 $appointmentArray = $appointment->toArray();
                 $appointmentArray['appointment_date'] = $appointment->appointment_date->format('Y-m-d');
@@ -863,6 +882,25 @@ class AppointmentController extends Controller
                 'providerReview',
                 'quote'
             ]);
+
+            // Calculate provider rating data similar to ServiceController
+            $provider = $appointment->provider;
+            $providerProfile = $provider->providerProfile;
+            
+            // Calculate reviews count for this provider from Review model using scopes
+            $reviewsCount = \App\Models\Review::forProvider($provider->id)
+                ->visible()
+                ->count();
+
+            // Calculate average rating for this provider from Review model using scopes
+            $averageRating = \App\Models\Review::forProvider($provider->id)
+                ->visible()
+                ->avg('rating');
+
+            // Add calculated rating data to provider
+            $provider->calculated_average_rating = round($averageRating ?: 0, 1);
+            $provider->calculated_reviews_count = $reviewsCount;
+            $provider->calculated_completed_bookings = $provider->providerAppointments()->where('status', 'completed')->count();
 
             // Mark invoice as viewed by client if it exists
             if ($appointment->invoice && !$appointment->invoice->hasBeenViewed()) {
@@ -1110,6 +1148,7 @@ class AppointmentController extends Controller
             'payment_method' => 'required|in:cash,stripe',
             'amount' => 'required|numeric|min:0',
             'stripe_payment_method_id' => 'nullable|string',
+            'stripe_payment_intent_id' => 'nullable|string',
             'notes' => 'nullable|string|max:500'
         ]);
 
@@ -1159,10 +1198,11 @@ class AppointmentController extends Controller
                     'method' => $request->payment_method,
                     'status' => $request->payment_method === 'cash' ? 'pending' : 'completed',
                     'reference_id' => $this->generatePaymentReference($appointment->id),
-                    'transaction_id' => $request->stripe_payment_method_id ?? null,
+                    'transaction_id' => $request->stripe_payment_intent_id ?? $request->stripe_payment_method_id ?? null,
                     'processed_at' => $request->payment_method === 'cash' ? null : now(),
                     'notes' => $request->notes ?? ($request->payment_method === 'cash' ? 'Cash payment - pending provider confirmation' : 'Card payment processed'),
-                    'stripe_payment_intent_id' => $request->stripe_payment_method_id
+                    'stripe_payment_intent_id' => $request->stripe_payment_intent_id,
+                    'stripe_payment_method_id' => $request->stripe_payment_method_id
                 ]);
 
                 // Update invoice status

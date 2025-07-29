@@ -430,15 +430,15 @@ const InvoicesList = () => {
                             ></i>
                             {viewMode === "table" ? "Card View" : "Table View"}
                         </button>
-                        <InvoicesDownloadButton
+                        {/* <InvoicesDownloadButton
                             invoices={invoices}
                             role="provider"
                             variant="outline-orange"
                             showIcon={true}
                             showText={true}
                             title="Download All Visible Invoices as PDF"
-                        />
-                        <button
+                        /> */}
+                        {/* <button
                             className="btn btn-orange"
                             onClick={() =>
                                 navigate("/provider/invoices/create")
@@ -446,7 +446,7 @@ const InvoicesList = () => {
                         >
                             <i className="fas fa-plus me-2"></i>
                             Create Invoice
-                        </button>
+                        </button> */}
                     </div>
                 </div>
 

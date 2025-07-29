@@ -4,6 +4,7 @@
 import React, { useState, useEffect } from "react";
 import { useStaff } from "../../../context/StaffContext";
 import { useNavigate, useParams } from "react-router-dom";
+import StaffLayout from "../../../components/layouts/StaffLayout";
 
 const EditCategory = () => {
     const navigate = useNavigate();
@@ -298,70 +299,76 @@ const EditCategory = () => {
 
     if (loading) {
         return (
-            <div
-                className="d-flex justify-content-center align-items-center"
-                style={{ minHeight: "400px" }}
-            >
-                <div className="text-center">
+            <StaffLayout>
+                <div className="staff-dashboard-content">
                     <div
-                        className="spinner-border text-primary mb-3"
-                        role="status"
+                        className="d-flex justify-content-center align-items-center"
+                        style={{ minHeight: "400px" }}
                     >
-                        <span className="visually-hidden">Loading...</span>
+                        <div className="text-center">
+                            <div
+                                className="spinner-border text-primary mb-3"
+                                role="status"
+                            >
+                                <span className="visually-hidden">Loading...</span>
+                            </div>
+                            <p className="text-muted">Loading category...</p>
+                        </div>
                     </div>
-                    <p className="text-muted">Loading category...</p>
                 </div>
-            </div>
+            </StaffLayout>
         );
     }
 
     return (
-        <>
-            {/* Page Header */}
-            <div className="d-flex justify-content-between align-items-center mb-4">
-                <div>
-                    <h1 className="h3 mb-1">
-                        Edit Category: {originalData.name}
-                        {hasChanges && (
-                            <span className="badge bg-warning ms-2">
-                                Unsaved Changes
-                            </span>
-                        )}
-                    </h1>
-                    <p className="text-muted mb-0">
-                        Modify category details and settings
-                    </p>
+        <StaffLayout>
+            <div className="staff-dashboard-content">
+                {/* Page Header */}
+                <div className="page-header d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-6">
+                    <div className="mb-3 mb-md-0">
+                        <h1 className="page-title">
+                            Edit Category: {originalData.name}
+                            {hasChanges && (
+                                <span className="badge bg-warning ms-2">
+                                    Unsaved Changes
+                                </span>
+                            )}
+                        </h1>
+                        <p className="page-subtitle">
+                            Modify category details and settings
+                        </p>
+                    </div>
+
+                    <div className="d-flex flex-column flex-md-row align-items-start align-items-md-center gap-3">
+                        <button
+                            type="button"
+                            className="btn btn-outline-secondary btn-responsive"
+                            onClick={() => setPreviewMode(!previewMode)}
+                        >
+                            <i
+                                className={`fas fa-${
+                                    previewMode ? "edit" : "eye"
+                                } me-2`}
+                            ></i>
+                            <span>{previewMode ? "Edit" : "Preview"}</span>
+                        </button>
+                        <a
+                            href={`/staff/service-categories/${id}`}
+                            className="btn btn-outline-info btn-responsive"
+                        >
+                            <i className="fas fa-eye me-2"></i>
+                            <span>View Details</span>
+                        </a>
+                        <button
+                            type="button"
+                            className="btn btn-outline-secondary btn-responsive"
+                            onClick={handleCancel}
+                        >
+                            <i className="fas fa-arrow-left me-2"></i>
+                            <span>Back to Categories</span>
+                        </button>
+                    </div>
                 </div>
-                <div className="d-flex gap-2">
-                    <button
-                        type="button"
-                        className="btn btn-outline-secondary"
-                        onClick={() => setPreviewMode(!previewMode)}
-                    >
-                        <i
-                            className={`fas fa-${
-                                previewMode ? "edit" : "eye"
-                            } me-2`}
-                        ></i>
-                        {previewMode ? "Edit" : "Preview"}
-                    </button>
-                    <a
-                        href={`/staff/categories/${id}`}
-                        className="btn btn-outline-info"
-                    >
-                        <i className="fas fa-eye me-2"></i>
-                        View Details
-                    </a>
-                    <button
-                        type="button"
-                        className="btn btn-outline-secondary"
-                        onClick={handleCancel}
-                    >
-                        <i className="fas fa-arrow-left me-2"></i>
-                        Back to Categories
-                    </button>
-                </div>
-            </div>
 
             {/* Change Indicator */}
             {hasChanges && (
@@ -1212,11 +1219,12 @@ const EditCategory = () => {
                                     Discard & Leave
                                 </button>
                             </div>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
-        </>
+                )}
+            </div>
+        </StaffLayout>
     );
 };
 
