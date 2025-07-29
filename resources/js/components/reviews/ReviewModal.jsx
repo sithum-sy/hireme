@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { createPortal } from "react-dom";
 import StarRating from "./StarRating";
 import reviewService from "../../services/reviewService";
 
@@ -36,6 +37,13 @@ const ReviewModal = ({
         setError("");
 
         try {
+            console.log("Submitting review:", {
+                appointmentId: appointment.id,
+                formData: formData,
+                reviewType: reviewType,
+                user: isClientReview ? 'client' : 'provider'
+            });
+            
             const result = await reviewService.submitReview(
                 appointment.id,
                 formData
@@ -45,7 +53,13 @@ const ReviewModal = ({
                 onReviewSubmitted(result.data);
                 onClose();
             } else {
-                setError(result.message);
+                console.error("Review submission failed:", result);
+                let errorMessage = result.message;
+                if (result.errors && Object.keys(result.errors).length > 0) {
+                    const fieldErrors = Object.values(result.errors).flat();
+                    errorMessage = fieldErrors.join(', ');
+                }
+                setError(errorMessage);
             }
         } catch (error) {
             setError("Failed to submit review. Please try again.");
@@ -59,19 +73,28 @@ const ReviewModal = ({
         if (error) setError("");
     };
 
-    if (!isOpen) return null;
+    if (!isOpen || typeof document === 'undefined') return null;
 
     const reviewTarget = isClientReview ? "provider" : "client";
     const targetName = isClientReview
         ? `${appointment.provider?.first_name} ${appointment.provider?.last_name}`
         : `${appointment.client?.first_name} ${appointment.client?.last_name}`;
 
-    return (
+    return createPortal(
         <>
-            <div className="modal-backdrop fade show" onClick={onClose}></div>
-            <div className="modal fade show d-block" tabIndex="-1">
+            <div 
+                className="modal-backdrop fade show" 
+                onClick={onClose}
+                style={{ zIndex: 1040 }}
+            ></div>
+            <div 
+                className="modal fade show d-block" 
+                tabIndex="-1"
+                style={{ zIndex: 1050 }}
+                onClick={onClose}
+            >
                 <div className="modal-dialog modal-dialog-centered modal-lg">
-                    <div className="modal-content">
+                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header border-bottom">
                             <h5 className="modal-title d-flex align-items-center">
                                 <i className="fas fa-star text-warning me-2"></i>
@@ -380,8 +403,47 @@ const ReviewModal = ({
                 .detailed-ratings .star-rating {
                     justify-content: flex-start;
                 }
+                .modal-backdrop {
+                    background-color: rgba(0, 0, 0, 0.5);
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100vw;
+                    height: 100vh;
+                    z-index: 1040;
+                    opacity: 1;
+                }
+                .modal {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100vw;
+                    height: 100vh;
+                    z-index: 1050;
+                    display: flex !important;
+                    align-items: center;
+                    justify-content: center;
+                    opacity: 1;
+                }
+                .modal-dialog {
+                    max-width: 800px;
+                    width: 90%;
+                    margin: 1rem;
+                    transform: none;
+                }
+                .modal-content {
+                    max-height: 90vh;
+                    overflow-y: auto;
+                    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+                    border: none;
+                }
+                body.modal-open {
+                    overflow: hidden;
+                    padding-right: 0;
+                }
             `}</style>
-        </>
+        </>,
+        document.body
     );
 };
 

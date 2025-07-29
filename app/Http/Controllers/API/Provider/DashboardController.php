@@ -132,6 +132,7 @@ class DashboardController extends Controller
         try {
             $provider = Auth::user();
             
+            
             // Recent appointments (last 10)
             $recentAppointments = $provider->providerAppointments()
                 ->with(['client', 'service'])
@@ -143,11 +144,11 @@ class DashboardController extends Controller
                         'id' => $appointment->id,
                         'client' => $appointment->client->full_name ?? 'Unknown Client',
                         'service' => $appointment->service->title ?? 'Unknown Service',
-                        'date' => $appointment->appointment_date->format('Y-m-d'),
+                        'date' => $appointment->appointment_date ? $appointment->appointment_date->format('Y-m-d') : null,
                         'time' => $appointment->appointment_time,
                         'status' => $appointment->status,
-                        'location' => $appointment->location_address ?? 'Not specified',
-                        'earnings' => $appointment->status === 'completed' ? $appointment->service->base_price : 0,
+                        'location' => $appointment->client_address ?? 'Not specified',
+                        'earnings' => $appointment->status === 'completed' ? ($appointment->service->base_price ?? 0) : 0,
                     ];
                 });
             
@@ -351,14 +352,21 @@ class DashboardController extends Controller
             }
             
             // Earnings breakdown by service
-            $breakdown = $provider->services()
-                ->withSum(['appointments as total_earnings' => function ($query) {
-                    $query->where('status', 'completed');
-                }], 'base_price')
-                ->having('total_earnings', '>', 0)
-                ->get()
-                ->pluck('total_earnings', 'title')
-                ->toArray();
+            $breakdown = [];
+            try {
+                $services = $provider->services()->get();
+                foreach ($services as $service) {
+                    $earnings = $service->appointments()
+                        ->where('status', 'completed')
+                        ->count() * $service->base_price;
+                    if ($earnings > 0) {
+                        $breakdown[$service->title] = $earnings;
+                    }
+                }
+            } catch (\Exception $e) {
+                \Log::error('Breakdown calculation error: ' . $e->getMessage());
+                $breakdown = [];
+            }
             
             $earningsData = [
                 'current' => [

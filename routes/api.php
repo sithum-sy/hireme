@@ -124,7 +124,7 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
     });
 
     // Service Provider Routes
-    Route::prefix('provider')->middleware('role:service_provider')->group(function () {
+    Route::prefix('provider')->middleware(['auth:sanctum', 'role:service_provider'])->group(function () {
         require __DIR__ . '/provider.php';
     });
 
@@ -134,12 +134,12 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
     });
 
     // Admin routes
-    Route::prefix('admin')->middleware('role:admin')->group(function () {
+    Route::prefix('admin')->middleware(['auth:sanctum', 'role:admin'])->group(function () {
         require __DIR__ . '/admin.php';
     });
 
     // Staff routes
-    Route::prefix('staff')->middleware('role:staff')->group(function () {
+    Route::prefix('staff')->middleware(['auth:sanctum', 'role:staff'])->group(function () {
         require __DIR__ . '/staff.php';
     });
 

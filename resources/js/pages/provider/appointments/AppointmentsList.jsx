@@ -170,7 +170,14 @@ const AppointmentsList = () => {
             );
 
             if (result.success) {
-                const appointmentsList = result.data.data || [];
+                let appointmentsList = result.data.data || [];
+
+                // Apply client-side filtering for completed+closed appointments
+                if (filters.status === "completed,closed") {
+                    appointmentsList = appointmentsList.filter((apt) =>
+                        ["completed", "closed"].includes(apt.status)
+                    );
+                }
 
                 // Apply client-side sorting for additional control
                 const sortedAppointments = sortAppointments(
@@ -224,7 +231,7 @@ const AppointmentsList = () => {
                             (apt) => apt.status === "confirmed"
                         ).length,
                         completed: appointments.filter(
-                            (apt) => apt.status === "completed"
+                            (apt) => ["completed", "closed"].includes(apt.status)
                         ).length,
                         reschedule_requests: appointments.filter(
                             (apt) => apt.has_pending_reschedule === true
@@ -330,7 +337,7 @@ const AppointmentsList = () => {
             case "completed":
                 newFilters = {
                     ...filters,
-                    status: "completed",
+                    status: "completed,closed",
                     date_from: "",
                     date_to: "",
                 };
@@ -675,6 +682,11 @@ const AppointmentsList = () => {
                                         In Progress
                                     </option>
                                     <option value="completed">Completed</option>
+                                    <option value="invoice_sent">Invoice Sent</option>
+                                    <option value="payment_pending">Payment Pending</option>
+                                    <option value="paid">Paid</option>
+                                    <option value="reviewed">Reviewed</option>
+                                    <option value="closed">Closed</option>
                                     <option value="cancelled_by_client">
                                         Cancelled by Client
                                     </option>

@@ -23,6 +23,15 @@ class ReviewController extends Controller
      */
     public function submitReview(Request $request, Appointment $appointment)
     {
+        \Log::info('Review submission attempt', [
+            'appointment_id' => $appointment->id,
+            'user_id' => Auth::id(),
+            'request_data' => $request->all(),
+            'appointment_status' => $appointment->status,
+            'appointment_client_id' => $appointment->client_id,
+            'appointment_provider_id' => $appointment->provider_id
+        ]);
+
         $request->validate([
             'rating' => 'required|integer|min:1|max:5',
             'comment' => 'nullable|string|max:1000',
@@ -50,7 +59,15 @@ class ReviewController extends Controller
         }
 
         // Check if appointment can be reviewed
-        if (!$this->canReviewAppointment($appointment, $user->id, $reviewType)) {
+        $canReview = $this->canReviewAppointment($appointment, $user->id, $reviewType);
+        \Log::info('Review permission check', [
+            'can_review' => $canReview,
+            'review_type' => $reviewType,
+            'appointment_id' => $appointment->id,
+            'user_id' => $user->id
+        ]);
+        
+        if (!$canReview) {
             return response()->json([
                 'success' => false,
                 'message' => 'This appointment cannot be reviewed at this time'
@@ -125,15 +142,32 @@ class ReviewController extends Controller
     {
         // Appointment must be paid
         if ($appointment->status !== Appointment::STATUS_PAID) {
+            \Log::info('Review blocked: appointment not paid', [
+                'appointment_id' => $appointment->id,
+                'status' => $appointment->status,
+                'required_status' => Appointment::STATUS_PAID
+            ]);
             return false;
         }
 
         // Check if user is authorized for this review type
         if ($reviewType === Review::TYPE_CLIENT_TO_PROVIDER && $appointment->client_id !== $userId) {
+            \Log::info('Review blocked: not client', [
+                'appointment_id' => $appointment->id,
+                'user_id' => $userId,
+                'client_id' => $appointment->client_id,
+                'review_type' => $reviewType
+            ]);
             return false;
         }
 
         if ($reviewType === Review::TYPE_PROVIDER_TO_CLIENT && $appointment->provider_id !== $userId) {
+            \Log::info('Review blocked: not provider', [
+                'appointment_id' => $appointment->id,
+                'user_id' => $userId,
+                'provider_id' => $appointment->provider_id,
+                'review_type' => $reviewType
+            ]);
             return false;
         }
 
@@ -143,6 +177,21 @@ class ReviewController extends Controller
             ->where('review_type', $reviewType)
             ->exists();
 
-        return !$existingReview;
+        if ($existingReview) {
+            \Log::info('Review blocked: already exists', [
+                'appointment_id' => $appointment->id,
+                'user_id' => $userId,
+                'review_type' => $reviewType
+            ]);
+            return false;
+        }
+
+        \Log::info('Review allowed', [
+            'appointment_id' => $appointment->id,
+            'user_id' => $userId,
+            'review_type' => $reviewType
+        ]);
+
+        return true;
     }
 }

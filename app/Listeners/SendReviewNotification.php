@@ -34,13 +34,18 @@ class SendReviewNotification implements ShouldQueue
             'review_id' => $review->id,
             'appointment_id' => $appointment->id,
             'rating' => $review->rating,
-            'provider_id' => $appointment->provider_id
+            'review_type' => $review->review_type,
+            'reviewer_id' => $review->reviewer_id,
+            'reviewee_id' => $review->reviewee_id
         ]);
 
-        // Send notification to provider about new review
+        // Send notification to the person being reviewed (reviewee)
+        $reviewee = $review->reviewee; // This gets the person being reviewed
+        $reviewer = $review->reviewer; // This gets the person who wrote the review
+        
         $this->notificationService->sendAppointmentNotification(
             'review_received',
-            $appointment->provider,
+            $reviewee, // Send to the person being reviewed
             [
                 'review' => $review,
                 'appointment' => $appointment,
@@ -54,6 +59,9 @@ class SendReviewNotification implements ShouldQueue
                 'rating' => $review->rating,
                 'review_text' => $review->comment,
                 'rating_stars' => str_repeat('⭐', $review->rating),
+                'reviewer_name' => $reviewer->full_name,
+                'reviewee_name' => $reviewee->full_name,
+                'review_type' => $review->review_type,
             ]
         );
     }

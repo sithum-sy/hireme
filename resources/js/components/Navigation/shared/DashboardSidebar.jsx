@@ -348,34 +348,12 @@ const DashboardSidebar = ({
                     label: "My Profile",
                     path: "/client/profile",
                 },
-                {
-                    id: "reports",
-                    icon: "fas fa-chart-line",
-                    label: "Reports & Analytics",
-                    path: "/client/reports",
-                    children: [
-                        {
-                            label: "Personal Activity",
-                            path: "/client/reports",
-                        },
-                        {
-                            label: "Spending Analysis",
-                            path: "/client/reports/spending-analysis",
-                        },
-                        {
-                            label: "Service History",
-                            path: "/client/reports/service-history",
-                        },
-                        {
-                            label: "Transaction History",
-                            path: "/client/reports/transaction-history",
-                        },
-                        {
-                            label: "Preferences",
-                            path: "/client/reports/preferences",
-                        },
-                    ],
-                },
+                // {
+                //     id: "reports",
+                //     icon: "fas fa-chart-line",
+                //     label: "Reports & Analytics",
+                //     path: "/client/reports",
+                // },
 
                 // {
                 //     id: "reviews",

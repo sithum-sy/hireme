@@ -406,7 +406,7 @@ class NotificationService
                 'service_provider' => \App\Mail\PaymentReceivedMail::class,
             ],
             'review_received' => [
-                'service_provider' => \App\Mail\ReviewReceivedMail::class,
+                'default' => \App\Mail\ReviewReceivedMail::class,
             ],
         ];
     }
@@ -531,11 +531,11 @@ class NotificationService
             ],
 
             'review_received' => [
-                'service_provider' => [
+                'default' => [
                     'title' => 'New Review Received',
-                    'message' => '{client_name} left you a {rating}-star review for {service_name}.',
+                    'message' => '{reviewer_name} left you a {rating}-star review for {service_name}.',
                     'type' => 'info',
-                    'category' => 'review',
+                    'category' => 'general',
                 ],
             ],
 
@@ -545,7 +545,7 @@ class NotificationService
                     'title' => 'Service Created Successfully',
                     'message' => 'Your service "{service_title}" has been created and is now live.',
                     'type' => 'success',
-                    'category' => 'service',
+                    'category' => 'general',
                 ],
             ],
 
@@ -554,7 +554,7 @@ class NotificationService
                     'title' => 'Service Updated Successfully',
                     'message' => 'Your service "{service_title}" has been updated with the latest changes.',
                     'type' => 'info',
-                    'category' => 'service',
+                    'category' => 'general',
                 ],
             ],
 
@@ -563,7 +563,7 @@ class NotificationService
                     'title' => 'Service Activated',
                     'message' => 'Your service "{service_title}" is now active and visible to clients.',
                     'type' => 'success',
-                    'category' => 'service',
+                    'category' => 'general',
                 ],
             ],
 
@@ -572,7 +572,7 @@ class NotificationService
                     'title' => 'Service Deactivated',
                     'message' => 'Your service "{service_title}" has been deactivated and is no longer visible to clients.',
                     'type' => 'warning',
-                    'category' => 'service',
+                    'category' => 'general',
                 ],
             ],
 
@@ -581,7 +581,7 @@ class NotificationService
                     'title' => 'Service Deleted',
                     'message' => 'Your service "{service_title}" has been permanently deleted.',
                     'type' => 'error',
-                    'category' => 'service',
+                    'category' => 'general',
                 ],
             ],
         ];

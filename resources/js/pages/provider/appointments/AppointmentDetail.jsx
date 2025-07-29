@@ -271,29 +271,34 @@ const AppointmentDetail = () => {
                 appointment.id,
                 {
                     notes: formData.notes,
-                    create_invoice: false // Don't auto-create since we're creating manually
+                    create_invoice: false, // Don't auto-create since we're creating manually
                 }
             );
-            
+
             if (result.success) {
                 setAppointment(result.data);
-                
+
                 // Now create the invoice using the completed appointment
                 const invoiceResult = await invoiceService.createInvoice({
                     ...formData,
-                    appointment_id: appointment.id
+                    appointment_id: appointment.id,
                 });
-                
+
                 setShowCreateInvoiceModal(false);
-                
+
                 if (invoiceResult.success) {
                     setTimeout(() => {
-                        alert(`Service completed! Invoice #${invoiceResult.data.invoice_number} has been created.`);
+                        alert(
+                            `Service completed! Invoice #${invoiceResult.data.invoice_number} has been created.`
+                        );
                         navigate(`/provider/invoices/${invoiceResult.data.id}`);
                     }, 100);
                 } else {
                     setTimeout(() => {
-                        alert("Service completed but failed to create invoice: " + (invoiceResult.message || "Unknown error"));
+                        alert(
+                            "Service completed but failed to create invoice: " +
+                                (invoiceResult.message || "Unknown error")
+                        );
                     }, 100);
                 }
             }
@@ -485,20 +490,29 @@ const AppointmentDetail = () => {
     const handleCashConfirmation = async (confirmationData) => {
         setActionLoading(true);
         try {
-            const response = await fetch(`/api/provider/invoices/${appointment.invoice.id}/confirm-cash`, {
-                method: 'PATCH',
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
-                },
-                body: JSON.stringify({
-                    amount_received: appointment.invoice.total_amount,
-                    notes: confirmationData.notes,
-                    received_at: confirmationData.received_at || new Date().toISOString()
-                })
-            });
+            const response = await fetch(
+                `/api/provider/invoices/${appointment.invoice.id}/confirm-cash`,
+                {
+                    method: "PATCH",
+                    headers: {
+                        Authorization: `Bearer ${localStorage.getItem(
+                            "token"
+                        )}`,
+                        "Content-Type": "application/json",
+                        Accept: "application/json",
+                        "X-CSRF-TOKEN": document
+                            .querySelector('meta[name="csrf-token"]')
+                            ?.getAttribute("content"),
+                    },
+                    body: JSON.stringify({
+                        amount_received: appointment.invoice.total_amount,
+                        notes: confirmationData.notes,
+                        received_at:
+                            confirmationData.received_at ||
+                            new Date().toISOString(),
+                    }),
+                }
+            );
 
             const result = await response.json();
 
@@ -506,28 +520,38 @@ const AppointmentDetail = () => {
                 // Reload appointment details to get updated status
                 await loadAppointmentDetail();
                 setShowCashConfirmModal(false);
-                alert('Cash payment confirmed successfully! Both you and the client can now review each other.');
+                alert(
+                    "Cash payment confirmed successfully! Both you and the client can now review each other."
+                );
             } else {
-                alert(result.message || 'Failed to confirm cash payment');
+                alert(result.message || "Failed to confirm cash payment");
             }
         } catch (error) {
-            console.error('Failed to confirm cash payment:', error);
-            alert('Failed to confirm cash payment. Please try again.');
+            console.error("Failed to confirm cash payment:", error);
+            alert("Failed to confirm cash payment. Please try again.");
         } finally {
             setActionLoading(false);
         }
     };
 
     // Cash Confirmation Modal Component
-    const CashConfirmationModal = ({ appointment, isOpen, onClose, onConfirm, loading }) => {
-        const [notes, setNotes] = useState('');
-        const [receivedAt, setReceivedAt] = useState(new Date().toISOString().slice(0, 16));
+    const CashConfirmationModal = ({
+        appointment,
+        isOpen,
+        onClose,
+        onConfirm,
+        loading,
+    }) => {
+        const [notes, setNotes] = useState("");
+        const [receivedAt, setReceivedAt] = useState(
+            new Date().toISOString().slice(0, 16)
+        );
 
         const handleSubmit = (e) => {
             e.preventDefault();
             onConfirm({
                 notes,
-                received_at: receivedAt
+                received_at: receivedAt,
             });
         };
 
@@ -535,9 +559,19 @@ const AppointmentDetail = () => {
 
         return (
             <>
-                <div className="modal-backdrop fade show" onClick={onClose}></div>
-                <div className="modal fade show d-block" tabIndex="-1" role="dialog">
-                    <div className="modal-dialog modal-dialog-centered" role="document">
+                <div
+                    className="modal-backdrop fade show"
+                    onClick={onClose}
+                ></div>
+                <div
+                    className="modal fade show d-block"
+                    tabIndex="-1"
+                    role="dialog"
+                >
+                    <div
+                        className="modal-dialog modal-dialog-centered"
+                        role="document"
+                    >
                         <div className="modal-content">
                             <div className="modal-header border-bottom">
                                 <h5 className="modal-title d-flex align-items-center">
@@ -556,19 +590,36 @@ const AppointmentDetail = () => {
                                     <div className="appointment-info bg-light rounded p-3 mb-4">
                                         <div className="row">
                                             <div className="col-md-6">
-                                                <small className="text-muted">Client:</small>
-                                                <div className="fw-bold">{appointment.client_name}</div>
+                                                <small className="text-muted">
+                                                    Client:
+                                                </small>
+                                                <div className="fw-bold">
+                                                    {appointment.client_name}
+                                                </div>
                                             </div>
                                             <div className="col-md-6">
-                                                <small className="text-muted">Amount:</small>
-                                                <div className="fw-bold text-success">Rs. {appointment.invoice?.total_amount}</div>
+                                                <small className="text-muted">
+                                                    Amount:
+                                                </small>
+                                                <div className="fw-bold text-success">
+                                                    Rs.{" "}
+                                                    {
+                                                        appointment.invoice
+                                                            ?.total_amount
+                                                    }
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
 
                                     <div className="alert alert-info">
                                         <i className="fas fa-info-circle me-2"></i>
-                                        <strong>Confirm Cash Receipt:</strong> By confirming, you acknowledge that you have received the cash payment from the client. This will update the appointment status to "Paid" and allow both parties to review each other.
+                                        <strong>Confirm Cash Receipt:</strong>{" "}
+                                        By confirming, you acknowledge that you
+                                        have received the cash payment from the
+                                        client. This will update the appointment
+                                        status to "Paid" and allow both parties
+                                        to review each other.
                                     </div>
 
                                     <div className="mb-3">
@@ -580,8 +631,12 @@ const AppointmentDetail = () => {
                                             type="datetime-local"
                                             className="form-control"
                                             value={receivedAt}
-                                            onChange={(e) => setReceivedAt(e.target.value)}
-                                            max={new Date().toISOString().slice(0, 16)}
+                                            onChange={(e) =>
+                                                setReceivedAt(e.target.value)
+                                            }
+                                            max={new Date()
+                                                .toISOString()
+                                                .slice(0, 16)}
                                             required
                                         />
                                     </div>
@@ -595,7 +650,9 @@ const AppointmentDetail = () => {
                                             className="form-control"
                                             rows="3"
                                             value={notes}
-                                            onChange={(e) => setNotes(e.target.value)}
+                                            onChange={(e) =>
+                                                setNotes(e.target.value)
+                                            }
                                             placeholder="Add any additional notes about the cash payment receipt..."
                                         />
                                     </div>
@@ -737,7 +794,9 @@ const AppointmentDetail = () => {
                             <div className="d-flex gap-2">
                                 <button
                                     className="btn btn-success"
-                                    onClick={() => setShowCreateInvoiceModal(true)}
+                                    onClick={() =>
+                                        setShowCreateInvoiceModal(true)
+                                    }
                                     disabled={actionLoading}
                                 >
                                     <i className="fas fa-check-double me-2"></i>
@@ -773,7 +832,11 @@ const AppointmentDetail = () => {
                         {appointment.invoice && (
                             <button
                                 className="btn btn-outline-primary ms-2"
-                                onClick={() => navigate(`/provider/invoices/${appointment.invoice.id}`)}
+                                onClick={() =>
+                                    navigate(
+                                        `/provider/invoices/${appointment.invoice.id}`
+                                    )
+                                }
                                 disabled={actionLoading}
                                 title="View invoice details"
                             >
@@ -783,19 +846,20 @@ const AppointmentDetail = () => {
                         )}
 
                         {/* Cash Payment Confirmation Button - Show when payment received but not confirmed */}
-                        {appointment.invoice && 
-                         appointment.invoice.payment_status === 'processing' && 
-                         appointment.status === 'payment_pending' && (
-                            <button
-                                className="btn btn-success ms-2"
-                                onClick={() => handleConfirmCashPayment()}
-                                disabled={actionLoading}
-                                title="Confirm cash payment received"
-                            >
-                                <i className="fas fa-money-bill me-2"></i>
-                                Confirm Cash Received
-                            </button>
-                        )}
+                        {appointment.invoice &&
+                            appointment.invoice.payment_status ===
+                                "processing" &&
+                            appointment.status === "payment_pending" && (
+                                <button
+                                    className="btn btn-success ms-2"
+                                    onClick={() => handleConfirmCashPayment()}
+                                    disabled={actionLoading}
+                                    title="Confirm cash payment received"
+                                >
+                                    <i className="fas fa-money-bill me-2"></i>
+                                    Confirm Cash Received
+                                </button>
+                            )}
                     </div>
                 </div>
 
@@ -933,6 +997,139 @@ const AppointmentDetail = () => {
                                 </div>
                             </div>
                         )}
+
+                        {/* Review Section (only show when paid) */}
+                        {appointment.status === "paid" &&
+                            !appointment.provider_review_submitted && (
+                                <div className="review-section card border-0 shadow-sm mb-4">
+                                    <div className="card-header bg-white border-bottom">
+                                        <h5 className="fw-bold mb-0">
+                                            <i className="fas fa-star me-2 text-warning"></i>
+                                            Rate Your Client Experience
+                                        </h5>
+                                    </div>
+                                    <div className="card-body">
+                                        <p className="text-muted mb-3">
+                                            How was your experience working with
+                                            this client? Your feedback helps
+                                            maintain quality and trust on our
+                                            platform.
+                                        </p>
+                                        <div className="row align-items-center">
+                                            <div className="col-md-8">
+                                                <div className="client-info">
+                                                    <h6 className="fw-semibold mb-1">
+                                                        {
+                                                            appointment.client_name
+                                                        }
+                                                    </h6>
+                                                    <div className="text-muted small mb-2">
+                                                        <i className="fas fa-calendar me-1"></i>
+                                                        Service completed on{" "}
+                                                        {
+                                                            appointment.appointment_date
+                                                        }
+                                                    </div>
+                                                    <div className="text-success small">
+                                                        <i className="fas fa-money-bill me-1"></i>
+                                                        Earned: Rs.{" "}
+                                                        {(
+                                                            appointment.earnings ||
+                                                            appointment.total_price
+                                                        )?.toLocaleString(
+                                                            "en-US",
+                                                            {
+                                                                minimumFractionDigits: 0,
+                                                                maximumFractionDigits: 0,
+                                                            }
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="col-md-4 text-end">
+                                                <ReviewButton
+                                                    appointment={appointment}
+                                                    userType="provider"
+                                                    onReviewSubmitted={
+                                                        handleReviewSubmitted
+                                                    }
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                        {/* Completed Review Section */}
+                        {appointment.status === "paid" &&
+                            appointment.provider_review_submitted && (
+                                <div className="review-section card border-0 shadow-sm mb-4">
+                                    <div className="card-header bg-white border-bottom">
+                                        <h5 className="fw-bold mb-0">
+                                            <i className="fas fa-star me-2 text-warning"></i>
+                                            Your Client Review
+                                        </h5>
+                                    </div>
+                                    <div className="card-body">
+                                        <div className="d-flex align-items-center justify-content-between">
+                                            <div>
+                                                <p className="text-muted mb-1">
+                                                    Thank you for rating{" "}
+                                                    {appointment.client_name}
+                                                </p>
+                                                <div className="d-flex align-items-center">
+                                                    <div className="stars me-2">
+                                                        {[1, 2, 3, 4, 5].map(
+                                                            (star) => (
+                                                                <i
+                                                                    key={star}
+                                                                    className={`fas fa-star ${
+                                                                        star <=
+                                                                        (appointment
+                                                                            .provider_review
+                                                                            ?.rating ||
+                                                                            0)
+                                                                            ? "text-warning"
+                                                                            : "text-muted"
+                                                                    } me-1`}
+                                                                ></i>
+                                                            )
+                                                        )}
+                                                    </div>
+                                                    <span className="text-muted small">
+                                                        (
+                                                        {appointment
+                                                            .provider_review
+                                                            ?.rating || 0}
+                                                        /5 stars)
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <span className="badge bg-success">
+                                                <i className="fas fa-check-circle me-1"></i>
+                                                Review Submitted
+                                            </span>
+                                        </div>
+                                        {appointment.provider_review
+                                            ?.comment && (
+                                            <div className="mt-3 pt-3 border-top">
+                                                <small className="text-muted">
+                                                    Your review:
+                                                </small>
+                                                <p className="mb-0 text-dark">
+                                                    "
+                                                    {
+                                                        appointment
+                                                            .provider_review
+                                                            .comment
+                                                    }
+                                                    "
+                                                </p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
                     </div>
 
                     {/* Sidebar */}
@@ -1144,103 +1341,6 @@ const AppointmentDetail = () => {
                             </div>
                         </div>
 
-                        {/* Review Section (only show when paid) */}
-                        {appointment.status === "paid" && (
-                            <div className="card border-0 shadow-sm mb-4">
-                                <div className="card-header bg-white border-bottom">
-                                    <h6 className="fw-bold mb-0">
-                                        <i className="fas fa-star me-2 text-warning"></i>
-                                        Client Review
-                                    </h6>
-                                </div>
-                                <div className="card-body">
-                                    {/* Service Completion Info */}
-                                    <div className="completion-info mb-3">
-                                        <div className="d-flex align-items-center justify-content-between mb-2">
-                                            <span className="badge bg-success">
-                                                <i className="fas fa-check-circle me-1"></i>
-                                                Service Completed
-                                            </span>
-                                            <small className="text-muted">
-                                                Payment received
-                                            </small>
-                                        </div>
-
-                                        <div className="service-summary bg-light rounded p-2 mb-2">
-                                            <div className="row text-center">
-                                                <div className="col-4">
-                                                    <small className="text-muted d-block">
-                                                        Duration
-                                                    </small>
-                                                    <strong>
-                                                        {
-                                                            appointment.duration_hours
-                                                        }
-                                                        h
-                                                    </strong>
-                                                </div>
-                                                <div className="col-4">
-                                                    <small className="text-muted d-block">
-                                                        Earned
-                                                    </small>
-                                                    <strong className="text-success">
-                                                        Rs.{" "}
-                                                        {(
-                                                            appointment.earnings ||
-                                                            appointment.total_price
-                                                        )?.toLocaleString(
-                                                            "en-US",
-                                                            {
-                                                                minimumFractionDigits: 0,
-                                                                maximumFractionDigits: 0,
-                                                            }
-                                                        )}
-                                                    </strong>
-                                                </div>
-                                                <div className="col-4">
-                                                    <small className="text-muted d-block">
-                                                        Client
-                                                    </small>
-                                                    <strong>
-                                                        {
-                                                            appointment.client_name.split(
-                                                                " "
-                                                            )[0]
-                                                        }
-                                                    </strong>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Review Call to Action */}
-                                    <div className="review-cta text-center">
-                                        <p className="text-muted small mb-3">
-                                            <i className="fas fa-handshake me-1"></i>
-                                            Help us maintain service quality by
-                                            sharing your experience with this
-                                            client
-                                        </p>
-
-                                        <ReviewButton
-                                            appointment={appointment}
-                                            userType="provider"
-                                            onReviewSubmitted={
-                                                handleReviewSubmitted
-                                            }
-                                        />
-
-                                        <div className="mt-2">
-                                            <small className="text-muted">
-                                                Your review helps other
-                                                providers and improves our
-                                                platform
-                                            </small>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
                         {/* Quick Actions */}
                         <div className="card border-0 shadow-sm">
                             <div className="card-header bg-white border-bottom">
@@ -1285,7 +1385,8 @@ const AppointmentDetail = () => {
                                 <div className="modal-content">
                                     <div className="modal-header">
                                         <h5 className="modal-title">
-                                            {pendingAction === "cancelled_by_provider" ? (
+                                            {pendingAction ===
+                                            "cancelled_by_provider" ? (
                                                 <>
                                                     <i className="fas fa-exclamation-triangle text-warning me-2"></i>
                                                     Cancel Appointment
@@ -1308,49 +1409,85 @@ const AppointmentDetail = () => {
                                     </div>
                                     <div className="modal-body">
                                         {/* Show appointment details for cancellation */}
-                                        {pendingAction === "cancelled_by_provider" && appointment && (
-                                            <div className="appointment-info mb-3 p-3 bg-light rounded">
-                                                <h6 className="mb-2">
-                                                    <i className="fas fa-info-circle text-info me-2"></i>
-                                                    Appointment Details
-                                                </h6>
-                                                <div className="row">
-                                                    <div className="col-sm-6">
-                                                        <small className="text-muted">Client:</small>
-                                                        <div className="fw-bold">{appointment.client_name}</div>
-                                                    </div>
-                                                    <div className="col-sm-6">
-                                                        <small className="text-muted">Service:</small>
-                                                        <div className="fw-bold">{appointment.service_title}</div>
-                                                    </div>
-                                                    <div className="col-sm-6 mt-2">
-                                                        <small className="text-muted">Date:</small>
-                                                        <div className="fw-bold">
-                                                            {formatDateTime(appointment.appointment_date, appointment.appointment_time).fullDate}
+                                        {pendingAction ===
+                                            "cancelled_by_provider" &&
+                                            appointment && (
+                                                <div className="appointment-info mb-3 p-3 bg-light rounded">
+                                                    <h6 className="mb-2">
+                                                        <i className="fas fa-info-circle text-info me-2"></i>
+                                                        Appointment Details
+                                                    </h6>
+                                                    <div className="row">
+                                                        <div className="col-sm-6">
+                                                            <small className="text-muted">
+                                                                Client:
+                                                            </small>
+                                                            <div className="fw-bold">
+                                                                {
+                                                                    appointment.client_name
+                                                                }
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                    <div className="col-sm-6 mt-2">
-                                                        <small className="text-muted">Time:</small>
-                                                        <div className="fw-bold">
-                                                            {formatDateTime(appointment.appointment_date, appointment.appointment_time).time}
+                                                        <div className="col-sm-6">
+                                                            <small className="text-muted">
+                                                                Service:
+                                                            </small>
+                                                            <div className="fw-bold">
+                                                                {
+                                                                    appointment.service_title
+                                                                }
+                                                            </div>
+                                                        </div>
+                                                        <div className="col-sm-6 mt-2">
+                                                            <small className="text-muted">
+                                                                Date:
+                                                            </small>
+                                                            <div className="fw-bold">
+                                                                {
+                                                                    formatDateTime(
+                                                                        appointment.appointment_date,
+                                                                        appointment.appointment_time
+                                                                    ).fullDate
+                                                                }
+                                                            </div>
+                                                        </div>
+                                                        <div className="col-sm-6 mt-2">
+                                                            <small className="text-muted">
+                                                                Time:
+                                                            </small>
+                                                            <div className="fw-bold">
+                                                                {
+                                                                    formatDateTime(
+                                                                        appointment.appointment_date,
+                                                                        appointment.appointment_time
+                                                                    ).time
+                                                                }
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        )}
+                                            )}
 
                                         {/* Show warning for cancellation */}
-                                        {pendingAction === "cancelled_by_provider" && (
+                                        {pendingAction ===
+                                            "cancelled_by_provider" && (
                                             <div className="alert alert-warning">
                                                 <i className="fas fa-exclamation-triangle me-2"></i>
-                                                <strong>Warning:</strong> This action cannot be undone. The client will be notified of the cancellation.
+                                                <strong>Warning:</strong> This
+                                                action cannot be undone. The
+                                                client will be notified of the
+                                                cancellation.
                                             </div>
                                         )}
 
                                         <div className="mb-3">
                                             <label className="form-label">
-                                                {pendingAction === "cancelled_by_provider" ? (
-                                                    <strong>Reason for Cancellation *</strong>
+                                                {pendingAction ===
+                                                "cancelled_by_provider" ? (
+                                                    <strong>
+                                                        Reason for Cancellation
+                                                        *
+                                                    </strong>
                                                 ) : (
                                                     "Notes (Optional)"
                                                 )}
@@ -1363,15 +1500,20 @@ const AppointmentDetail = () => {
                                                     setNotes(e.target.value)
                                                 }
                                                 placeholder={
-                                                    pendingAction === "cancelled_by_provider"
+                                                    pendingAction ===
+                                                    "cancelled_by_provider"
                                                         ? "Please provide a clear reason for the cancellation. This will be shared with the client."
                                                         : "Add any notes about this status update..."
                                                 }
                                                 disabled={actionLoading}
                                             ></textarea>
-                                            {pendingAction === "cancelled_by_provider" && (
+                                            {pendingAction ===
+                                                "cancelled_by_provider" && (
                                                 <div className="form-text">
-                                                    A cancellation reason is required to help the client understand why their appointment was cancelled.
+                                                    A cancellation reason is
+                                                    required to help the client
+                                                    understand why their
+                                                    appointment was cancelled.
                                                 </div>
                                             )}
                                         </div>
@@ -1386,25 +1528,56 @@ const AppointmentDetail = () => {
                                             disabled={actionLoading}
                                         >
                                             <i className="fas fa-times me-2"></i>
-                                            {pendingAction === "cancelled_by_provider" ? "Keep Appointment" : "Cancel"}
+                                            {pendingAction ===
+                                            "cancelled_by_provider"
+                                                ? "Keep Appointment"
+                                                : "Cancel"}
                                         </button>
                                         <button
                                             type="button"
-                                            className={`btn ${pendingAction === "cancelled_by_provider" ? "btn-danger" : "btn-primary"}`}
+                                            className={`btn ${
+                                                pendingAction ===
+                                                "cancelled_by_provider"
+                                                    ? "btn-danger"
+                                                    : "btn-primary"
+                                            }`}
                                             onClick={confirmNotesAction}
-                                            disabled={actionLoading || (pendingAction === "cancelled_by_provider" && !notes.trim())}
+                                            disabled={
+                                                actionLoading ||
+                                                (pendingAction ===
+                                                    "cancelled_by_provider" &&
+                                                    !notes.trim())
+                                            }
                                         >
                                             {actionLoading ? (
                                                 <>
-                                                    <div className="spinner-border spinner-border-sm me-2" role="status">
-                                                        <span className="visually-hidden">Loading...</span>
+                                                    <div
+                                                        className="spinner-border spinner-border-sm me-2"
+                                                        role="status"
+                                                    >
+                                                        <span className="visually-hidden">
+                                                            Loading...
+                                                        </span>
                                                     </div>
-                                                    {pendingAction === "cancelled_by_provider" ? "Cancelling..." : "Updating..."}
+                                                    {pendingAction ===
+                                                    "cancelled_by_provider"
+                                                        ? "Cancelling..."
+                                                        : "Updating..."}
                                                 </>
                                             ) : (
                                                 <>
-                                                    <i className={`fas ${pendingAction === "cancelled_by_provider" ? "fa-ban" : "fa-check"} me-2`}></i>
-                                                    {pendingAction === "cancelled_by_provider" ? "Cancel Appointment" : "Confirm"}
+                                                    <i
+                                                        className={`fas ${
+                                                            pendingAction ===
+                                                            "cancelled_by_provider"
+                                                                ? "fa-ban"
+                                                                : "fa-check"
+                                                        } me-2`}
+                                                    ></i>
+                                                    {pendingAction ===
+                                                    "cancelled_by_provider"
+                                                        ? "Cancel Appointment"
+                                                        : "Confirm"}
                                                 </>
                                             )}
                                         </button>

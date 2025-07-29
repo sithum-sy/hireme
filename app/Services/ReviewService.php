@@ -195,7 +195,7 @@ class ReviewService
     }
 
     /**
-     * Check if both parties have reviewed and mark appointment as fully reviewed
+     * Check if both parties have reviewed and mark appointment as closed
      */
     private function checkAndMarkAppointmentReviewed(Appointment $appointment)
     {
@@ -210,11 +210,11 @@ class ReviewService
 
             if ($clientReview && $providerReview) {
                 $appointment->update([
-                    'status' => Appointment::STATUS_REVIEWED,
-                    'reviewed_at' => now()
+                    'status' => Appointment::STATUS_CLOSED,
+                    'reviews_completed_at' => now()
                 ]);
 
-                Log::info("Appointment {$appointment->id} marked as fully reviewed");
+                Log::info("Appointment {$appointment->id} marked as closed - both reviews completed");
             }
         } catch (\Exception $e) {
             Log::error("Failed to check appointment review status for ID {$appointment->id}: " . $e->getMessage());

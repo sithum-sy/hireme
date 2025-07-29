@@ -133,21 +133,27 @@
                 New Review Received
             @endif
         </h1>
-        <p>{{ $clientName }} has left you a review</p>
+        <p>{{ $reviewerName ?? $clientName }} has left you a review</p>
     </div>
     
     <div class="content">
-        <p>Hi {{ $providerName }},</p>
+        <p>Hi {{ $revieweeName ?? $providerName }},</p>
         
         @if($rating >= 4)
         <div class="success-box">
             <h3>🎉 Congratulations!</h3>
-            <p>You received a {{ $rating >= 5 ? 'perfect 5-star' : 'great ' . $rating . '-star' }} review! Your excellent service is being recognized by your clients.</p>
+            <p>You received a {{ $rating >= 5 ? 'perfect 5-star' : 'great ' . $rating . '-star' }} review! 
+            @if(isset($review_type) && $review_type === 'provider_to_client')
+                Your professionalism as a client is being recognized.
+            @else
+                Your excellent service is being recognized by your clients.
+            @endif
+            </p>
         </div>
         @else
         <div class="info-box">
             <h3>📝 Review Received</h3>
-            <p>{{ $clientName }} has left you a {{ $rating }}-star review. Every review helps you grow and improve your services.</p>
+            <p>{{ $reviewerName ?? $clientName }} has left you a {{ $rating }}-star review. Every review helps you grow and improve.</p>
         </div>
         @endif
         
@@ -160,8 +166,8 @@
                     <td>{{ $serviceName }}</td>
                 </tr>
                 <tr>
-                    <th>Client</th>
-                    <td>{{ $clientName }}</td>
+                    <th>Reviewed by</th>
+                    <td>{{ $reviewerName ?? $clientName }}</td>
                 </tr>
                 <tr>
                     <th>Service Date</th>
@@ -179,9 +185,9 @@
             
             @if($reviewText)
             <div class="review-text">
-                <h4>💬 Client's Feedback:</h4>
+                <h4>💬 Feedback:</h4>
                 <p>"{{ $reviewText }}"</p>
-                <small style="color: #6c757d;">- {{ $clientName }}</small>
+                <small style="color: #6c757d;">- {{ $reviewerName ?? $clientName }}</small>
             </div>
             @endif
         </div>
@@ -209,8 +215,8 @@
         @endif
         
         <div class="client-info">
-            <h4>👤 About This Client</h4>
-            <p><strong>Name:</strong> {{ $clientName }}</p>
+            <h4>👤 About This Review</h4>
+            <p><strong>From:</strong> {{ $reviewerName ?? $clientName }}</p>
             <p><strong>Service:</strong> {{ $serviceName }}</p>
             <p><strong>Date:</strong> {{ $appointmentDate->format('F j, Y') }}</p>
         </div>

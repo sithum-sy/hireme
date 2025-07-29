@@ -76,13 +76,13 @@ const ClientDashboard = () => {
             path: "/client/services",
             variant: "primary",
         },
-        {
-            icon: "fas fa-map-marker-alt",
-            title: "Find Nearby Services",
-            description: "Services in your area",
-            path: "/client/services/search",
-            variant: "info",
-        },
+        // {
+        //     icon: "fas fa-map-marker-alt",
+        //     title: "Find Nearby Services",
+        //     description: "Services in your area",
+        //     path: "/client/services/search",
+        //     variant: "info",
+        // },
         {
             icon: "fas fa-calendar-alt",
             title: "My Appointments",
@@ -105,7 +105,9 @@ const ClientDashboard = () => {
                 {/* Service Categories Grid */}
                 <div className="categories-section mb-6">
                     <div className="section-header d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4">
-                        <h2 className="section-title h3 mb-3 mb-md-0 text-primary">Browse by Category</h2>
+                        <h2 className="section-title h3 mb-3 mb-md-0 text-primary">
+                            Browse by Category
+                        </h2>
                         <Link
                             to="/client/services/categories"
                             className="btn btn-outline-primary btn-sm"
@@ -132,15 +134,20 @@ const ClientDashboard = () => {
                                     <div className="card action-card h-100 transition">
                                         <div className="card-body text-center p-4">
                                             <div
-                                                className={`action-icon mb-3 text-${category.color || 'primary'}`}
+                                                className={`action-icon mb-3 text-${
+                                                    category.color || "primary"
+                                                }`}
                                             >
-                                                <i className={`${category.icon} fa-2x`}></i>
+                                                <i
+                                                    className={`${category.icon} fa-2x`}
+                                                ></i>
                                             </div>
                                             <h6 className="card-title mb-2">
                                                 {category.name}
                                             </h6>
                                             <p className="card-text text-muted small mb-0">
-                                                {category.service_count} services
+                                                {category.service_count}{" "}
+                                                services
                                             </p>
                                         </div>
                                     </div>
@@ -152,7 +159,9 @@ const ClientDashboard = () => {
 
                 {/* Quick Actions */}
                 <div className="quick-actions-section mb-6">
-                    <h2 className="section-title h3 mb-4 text-primary">Quick Actions</h2>
+                    <h2 className="section-title h3 mb-4 text-primary">
+                        Quick Actions
+                    </h2>
                     <div className="responsive-grid responsive-grid-sm responsive-grid-md">
                         {quickActions.map((action, index) => (
                             <Link
@@ -165,7 +174,9 @@ const ClientDashboard = () => {
                                         <div
                                             className={`action-icon mb-3 text-${action.variant}`}
                                         >
-                                            <i className={`${action.icon} fa-2x`}></i>
+                                            <i
+                                                className={`${action.icon} fa-2x`}
+                                            ></i>
                                         </div>
                                         <h6 className="card-title mb-2">
                                             {action.title}
@@ -183,7 +194,9 @@ const ClientDashboard = () => {
                 {/* Popular Services */}
                 <div className="popular-services-section">
                     <div className="section-header d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4">
-                        <h2 className="section-title h3 mb-3 mb-md-0 text-primary">Popular Services</h2>
+                        <h2 className="section-title h3 mb-3 mb-md-0 text-primary">
+                            Popular Services
+                        </h2>
                         <Link
                             to="/client/services?sort_by=popularity"
                             className="btn btn-outline-primary btn-sm"
@@ -211,13 +224,21 @@ const ClientDashboard = () => {
                                         <div className="service-image position-relative overflow-hidden">
                                             {service.first_image_url ? (
                                                 <img
-                                                    src={service.first_image_url}
+                                                    src={
+                                                        service.first_image_url
+                                                    }
                                                     alt={service.title}
                                                     className="card-img-top img-responsive"
-                                                    style={{ height: '200px', objectFit: 'cover' }}
+                                                    style={{
+                                                        height: "200px",
+                                                        objectFit: "cover",
+                                                    }}
                                                 />
                                             ) : (
-                                                <div className="card-img-top d-flex align-items-center justify-content-center bg-light" style={{ height: '200px' }}>
+                                                <div
+                                                    className="card-img-top d-flex align-items-center justify-content-center bg-light"
+                                                    style={{ height: "200px" }}
+                                                >
                                                     <i className="fas fa-image fa-3x text-muted"></i>
                                                 </div>
                                             )}
@@ -226,12 +247,15 @@ const ClientDashboard = () => {
                                             <h6 className="card-title mb-2">
                                                 {service.title}
                                             </h6>
-                                            <p className="card-text text-muted small mb-3" style={{ 
-                                                display: '-webkit-box',
-                                                WebkitLineClamp: 2,
-                                                WebkitBoxOrient: 'vertical',
-                                                overflow: 'hidden'
-                                            }}>
+                                            <p
+                                                className="card-text text-muted small mb-3"
+                                                style={{
+                                                    display: "-webkit-box",
+                                                    WebkitLineClamp: 2,
+                                                    WebkitBoxOrient: "vertical",
+                                                    overflow: "hidden",
+                                                }}
+                                            >
                                                 {service.description}
                                             </p>
                                             <div className="d-flex justify-content-between align-items-center mb-2">
@@ -241,7 +265,8 @@ const ClientDashboard = () => {
                                                 <div className="d-flex align-items-center text-warning">
                                                     <i className="fas fa-star me-1"></i>
                                                     <span className="small">
-                                                        {service.average_rating || 0}
+                                                        {service.average_rating ||
+                                                            0}
                                                     </span>
                                                 </div>
                                             </div>
@@ -249,7 +274,8 @@ const ClientDashboard = () => {
                                                 <div className="d-flex align-items-center text-muted small">
                                                     <i className="fas fa-map-marker-alt me-1"></i>
                                                     <span>
-                                                        {service.distance}km away
+                                                        {service.distance}km
+                                                        away
                                                     </span>
                                                 </div>
                                             )}

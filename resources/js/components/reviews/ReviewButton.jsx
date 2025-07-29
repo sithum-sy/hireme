@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import ReviewModal from "./ReviewModal";
 import reviewService from "../../services/reviewService";
 
-const ReviewButton = ({ appointment, userType = "client" }) => {
+const ReviewButton = ({ appointment, userType = "client", onReviewSubmitted }) => {
     const [showReviewModal, setShowReviewModal] = useState(false);
     const [reviewData, setReviewData] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -22,8 +22,13 @@ const ReviewButton = ({ appointment, userType = "client" }) => {
 
     const handleReviewSubmitted = (review) => {
         setReviewData(review);
-        // Optionally refresh appointment data
-        window.location.reload(); // Simple refresh, or use proper state management
+        setShowReviewModal(false); // Close modal first
+        // Use parent callback if provided, otherwise reload page
+        if (onReviewSubmitted) {
+            onReviewSubmitted(review);
+        } else {
+            window.location.reload();
+        }
     };
 
     const loadReviews = async () => {
@@ -48,6 +53,23 @@ const ReviewButton = ({ appointment, userType = "client" }) => {
         }
     }, [appointment.id, appointment.status]);
 
+    // Handle body scroll when modal is open
+    useEffect(() => {
+        if (showReviewModal) {
+            document.body.style.overflow = 'hidden';
+            document.body.classList.add('modal-open');
+        } else {
+            document.body.style.overflow = 'unset';
+            document.body.classList.remove('modal-open');
+        }
+
+        // Cleanup on unmount
+        return () => {
+            document.body.style.overflow = 'unset';
+            document.body.classList.remove('modal-open');
+        };
+    }, [showReviewModal]);
+
     if (appointment.status !== "paid") {
         return null;
     }
@@ -64,23 +86,23 @@ const ReviewButton = ({ appointment, userType = "client" }) => {
     return (
         <>
             <button
-                className="btn btn-outline-warning btn-sm"
+                className={`btn ${userType === 'provider' ? 'btn-warning' : 'btn-outline-warning'} ${userType === 'provider' ? '' : 'btn-sm'}`}
                 onClick={() => setShowReviewModal(true)}
                 disabled={loading}
             >
-                <i className="fas fa-star me-1"></i>
+                <i className="fas fa-star me-2"></i>
                 {loading ? "Loading..." : "Write Review"}
             </button>
 
-            {showReviewModal && (
-                <ReviewModal
-                    appointment={appointment}
-                    isOpen={showReviewModal}
-                    onClose={() => setShowReviewModal(false)}
-                    onReviewSubmitted={handleReviewSubmitted}
-                    reviewType={reviewType}
-                />
-            )}
+            <ReviewModal
+                appointment={appointment}
+                isOpen={showReviewModal}
+                onClose={() => {
+                    setShowReviewModal(false);
+                }}
+                onReviewSubmitted={handleReviewSubmitted}
+                reviewType={reviewType}
+            />
         </>
     );
 };

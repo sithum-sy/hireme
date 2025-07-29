@@ -83,7 +83,7 @@ const AppointmentsList = () => {
                 case "completed":
                     setFilters(prev => ({
                         ...prev,
-                        status: "completed",
+                        status: "completed,closed",
                         date_from: "",
                         date_to: ""
                     }));
@@ -305,6 +305,13 @@ const AppointmentsList = () => {
                     );
                 }
 
+                // Apply client-side filtering for completed+closed appointments
+                if (filters.status === "completed,closed") {
+                    appointmentsData = appointmentsData.filter((apt) =>
+                        ["completed", "closed"].includes(apt.status)
+                    );
+                }
+
                 // Apply custom date sorting: closest future dates first, then past dates
                 const sortedAppointments =
                     sortAppointmentsByDate(appointmentsData);
@@ -380,6 +387,13 @@ const AppointmentsList = () => {
                     );
                 }
 
+                // Apply client-side filtering for completed+closed appointments
+                if (filters.status === "completed,closed") {
+                    appointmentsData = appointmentsData.filter((apt) =>
+                        ["completed", "closed"].includes(apt.status)
+                    );
+                }
+
                 // Apply custom date sorting: closest future dates first, then past dates
                 const sortedAppointments =
                     sortAppointmentsByDate(appointmentsData);
@@ -445,7 +459,7 @@ const AppointmentsList = () => {
             case "completed":
                 newFilters = {
                     ...filters,
-                    status: "completed",
+                    status: "completed,closed",
                     date_from: "",
                     date_to: "",
                 };
@@ -544,7 +558,7 @@ const AppointmentsList = () => {
                 (apt) =>
                     apt.appointment_date >= today && apt.status === "confirmed"
             ).length,
-            completed: appointments.filter((apt) => apt.status === "completed")
+            completed: appointments.filter((apt) => ["completed", "closed"].includes(apt.status))
                 .length,
             cancelled: appointments.filter((apt) =>
                 ["cancelled_by_client", "cancelled_by_provider"].includes(
@@ -1166,6 +1180,7 @@ const AppointmentsList = () => {
                                     </option>
                                     <option value="paid">Paid</option>
                                     <option value="reviewed">Reviewed</option>
+                                    <option value="closed">Closed</option>
                                     <option value="cancelled_by_client">
                                         Cancelled
                                     </option>

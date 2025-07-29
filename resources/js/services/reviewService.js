@@ -13,11 +13,11 @@ class ReviewService {
                 {
                     rating: reviewData.rating,
                     comment: reviewData.comment,
-                    quality_rating: reviewData.quality_rating,
-                    punctuality_rating: reviewData.punctuality_rating,
-                    communication_rating: reviewData.communication_rating,
-                    value_rating: reviewData.value_rating,
-                    would_recommend: reviewData.would_recommend,
+                    quality_rating: reviewData.quality_rating || null,
+                    punctuality_rating: reviewData.punctuality_rating || null,
+                    communication_rating: reviewData.communication_rating || null,
+                    value_rating: reviewData.value_rating || null,
+                    would_recommend: reviewData.would_recommend !== undefined ? reviewData.would_recommend : null,
                 }
             );
 
@@ -29,11 +29,13 @@ class ReviewService {
             };
         } catch (error) {
             console.error("Review submission error:", error);
+            console.error("Error response:", error.response?.data);
             return {
                 success: false,
                 message:
                     error.response?.data?.message || "Failed to submit review",
                 errors: error.response?.data?.errors || {},
+                debug: error.response?.data || {}
             };
         }
     }
