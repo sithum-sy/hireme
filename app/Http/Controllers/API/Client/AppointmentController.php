@@ -943,133 +943,6 @@ class AppointmentController extends Controller
     /**
      * NEW: Process payment for appointment invoice
      */
-    public function payInvoice(Request $request, Appointment $appointment)
-    {
-        $request->validate([
-            'payment_method' => 'required|in:stripe,cash',
-            'amount' => 'required|numeric|min:0',
-            'stripe_payment_method_id' => 'required_if:payment_method,stripe|string',
-            'notes' => 'nullable|string|max:500'
-        ]);
-
-        // Authorization checks
-        if ($appointment->client_id !== Auth::id()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unauthorized access'
-            ], 403);
-        }
-
-        if (!$appointment->canReceivePayment()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'This appointment cannot receive payment at this time'
-            ], 400);
-        }
-
-        $invoice = $appointment->invoice;
-        if (!$invoice) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No invoice found for this appointment',
-                'debug' => [
-                    'appointment_id' => $appointment->id,
-                    'appointment_status' => $appointment->status,
-                    'has_invoice' => false
-                ]
-            ], 404);
-        }
-
-        // Check if appointment can receive payment
-        if (!$appointment->canReceivePayment()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'This appointment cannot receive payment at this time',
-                'debug' => [
-                    'appointment_status' => $appointment->status,
-                    'allowed_statuses' => ['completed', 'invoice_sent', 'payment_pending'],
-                    'has_invoice' => !!$invoice
-                ]
-            ], 400);
-        }
-
-        if (!$invoice->canBePaid()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Invoice cannot be paid in its current status',
-                'debug' => [
-                    'invoice_id' => $invoice->id,
-                    'invoice_status' => $invoice->status,
-                    'payment_status' => $invoice->payment_status,
-                    'invoice_total' => $invoice->total_amount,
-                    'request_amount' => $request->amount
-                ]
-            ], 400);
-        }
-
-        // Validate payment amount
-        if ($request->amount != $invoice->total_amount) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Payment amount does not match invoice total',
-                'debug' => [
-                    'invoice_amount' => $invoice->total_amount,
-                    'payment_amount' => $request->amount
-                ]
-            ], 400);
-        }
-
-        try {
-            // Process payment through InvoiceService
-            $paymentData = [
-                'method' => $request->payment_method,
-                'amount' => $request->amount,
-                'stripe_payment_method_id' => $request->stripe_payment_method_id,
-                'notes' => $request->notes,
-                'details' => [
-                    'user_agent' => $request->header('User-Agent'),
-                    'ip_address' => $request->ip(),
-                    'processed_by' => 'client'
-                ]
-            ];
-
-            $result = $this->invoiceService->processClientPayment($invoice, $paymentData);
-
-            if ($result['success']) {
-                // Reload appointment with fresh data
-                $appointment->load([
-                    'service.category',
-                    'provider.providerProfile',
-                    'invoice',
-                    'payment'
-                ]);
-
-                return response()->json([
-                    'success' => true,
-                    'data' => $appointment,
-                    'payment' => $result['payment'],
-                    'message' => 'Payment processed successfully'
-                ]);
-            } else {
-                return response()->json([
-                    'success' => false,
-                    'message' => $result['message']
-                ], 400);
-            }
-        } catch (\Exception $e) {
-            Log::error('Payment processing failed', [
-                'appointment_id' => $appointment->id,
-                'error' => $e->getMessage(),
-                'client_id' => Auth::id()
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Payment processing failed',
-                'error' => config('app.debug') ? $e->getMessage() : 'Internal server error'
-            ], 500);
-        }
-    }
 
     /**
      * NEW: Submit review for appointment
@@ -1226,5 +1099,138 @@ class AppointmentController extends Controller
                 'message' => 'Failed to create invoice'
             ], 500);
         }
+    }
+
+    /**
+     * Pay invoice for appointment
+     */
+    public function payInvoice(Request $request, Appointment $appointment)
+    {
+        $request->validate([
+            'payment_method' => 'required|in:cash,stripe',
+            'amount' => 'required|numeric|min:0',
+            'stripe_payment_method_id' => 'nullable|string',
+            'notes' => 'nullable|string|max:500'
+        ]);
+
+        // Ensure user can only pay their own appointments
+        if ($appointment->client_id !== Auth::id()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Appointment not found'
+            ], 404);
+        }
+
+        // Check if appointment has an invoice
+        if (!$appointment->invoice) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No invoice found for this appointment'
+            ], 400);
+        }
+
+        // Check if invoice can be paid
+        $invoice = $appointment->invoice;
+        if ($invoice->payment_status !== 'pending') {
+            return response()->json([
+                'success' => false,
+                'message' => 'This invoice has already been paid or is not payable'
+            ], 400);
+        }
+
+        // Validate amount matches invoice total
+        if ((float)$request->amount !== (float)$invoice->total_amount) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Payment amount does not match invoice total'
+            ], 400);
+        }
+
+        try {
+            DB::transaction(function () use ($request, $appointment, $invoice) {
+                // Create payment record
+                $payment = \App\Models\Payment::create([
+                    'appointment_id' => $appointment->id,
+                    'invoice_id' => $invoice->id,
+                    'client_id' => $appointment->client_id,
+                    'provider_id' => $appointment->provider_id,
+                    'amount' => $request->amount,
+                    'currency' => 'LKR',
+                    'method' => $request->payment_method,
+                    'status' => $request->payment_method === 'cash' ? 'pending' : 'completed',
+                    'reference_id' => $this->generatePaymentReference($appointment->id),
+                    'transaction_id' => $request->stripe_payment_method_id ?? null,
+                    'processed_at' => $request->payment_method === 'cash' ? null : now(),
+                    'notes' => $request->notes ?? ($request->payment_method === 'cash' ? 'Cash payment - pending provider confirmation' : 'Card payment processed'),
+                    'stripe_payment_intent_id' => $request->stripe_payment_method_id
+                ]);
+
+                // Update invoice status
+                if ($request->payment_method === 'cash') {
+                    // For cash payments, mark as processing until provider confirms receipt
+                    $invoice->update([
+                        'payment_status' => 'processing', // Client has paid, but provider needs to confirm receipt
+                        'paid_at' => now(),
+                        'status' => 'paid'
+                    ]);
+                } else {
+                    // For card payments, mark as completed immediately
+                    $invoice->update([
+                        'payment_status' => 'completed',
+                        'paid_at' => now(),
+                        'status' => 'paid'
+                    ]);
+                }
+
+                // Update appointment status based on payment method
+                $appointment->update([
+                    'status' => $request->payment_method === 'cash' ? Appointment::STATUS_PAYMENT_PENDING : Appointment::STATUS_PAID,
+                    'payment_received_at' => now()
+                ]);
+
+                // Dispatch payment event for notifications
+                if (class_exists('\App\Events\PaymentReceived')) {
+                    \App\Events\PaymentReceived::dispatch($appointment, $payment, $invoice);
+                }
+            });
+
+            // Reload appointment with all relations
+            $appointment->load([
+                'service.category',
+                'provider.providerProfile', 
+                'invoice',
+                'payment',
+                'clientReview'
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => $request->payment_method === 'cash' 
+                    ? 'Payment confirmed! Waiting for provider to confirm cash receipt.'
+                    : 'Payment processed successfully!',
+                'data' => $appointment
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Payment processing failed', [
+                'appointment_id' => $appointment->id,
+                'payment_method' => $request->payment_method,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Payment processing failed. Please try again.'
+            ], 500);
+        }
+    }
+
+    /**
+     * Generate unique payment reference
+     */
+    private function generatePaymentReference($appointmentId)
+    {
+        return 'PAY_' . now()->format('YmdHis') . '_' . $appointmentId . '_' . mt_rand(1000, 9999);
     }
 }

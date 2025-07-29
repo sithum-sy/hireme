@@ -21,6 +21,7 @@ const AppointmentDetail = () => {
     const [notes, setNotes] = useState("");
     const [showNotesModal, setShowNotesModal] = useState(false);
     const [showCreateInvoiceModal, setShowCreateInvoiceModal] = useState(false);
+    const [showCashConfirmModal, setShowCashConfirmModal] = useState(false);
     const [pendingAction, setPendingAction] = useState(null);
 
     useEffect(() => {
@@ -477,6 +478,163 @@ const AppointmentDetail = () => {
         }, 100);
     };
 
+    const handleConfirmCashPayment = () => {
+        setShowCashConfirmModal(true);
+    };
+
+    const handleCashConfirmation = async (confirmationData) => {
+        setActionLoading(true);
+        try {
+            const response = await fetch(`/api/provider/invoices/${appointment.invoice.id}/confirm-cash`, {
+                method: 'PATCH',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
+                },
+                body: JSON.stringify({
+                    amount_received: appointment.invoice.total_amount,
+                    notes: confirmationData.notes,
+                    received_at: confirmationData.received_at || new Date().toISOString()
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                // Reload appointment details to get updated status
+                await loadAppointmentDetail();
+                setShowCashConfirmModal(false);
+                alert('Cash payment confirmed successfully! Both you and the client can now review each other.');
+            } else {
+                alert(result.message || 'Failed to confirm cash payment');
+            }
+        } catch (error) {
+            console.error('Failed to confirm cash payment:', error);
+            alert('Failed to confirm cash payment. Please try again.');
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
+    // Cash Confirmation Modal Component
+    const CashConfirmationModal = ({ appointment, isOpen, onClose, onConfirm, loading }) => {
+        const [notes, setNotes] = useState('');
+        const [receivedAt, setReceivedAt] = useState(new Date().toISOString().slice(0, 16));
+
+        const handleSubmit = (e) => {
+            e.preventDefault();
+            onConfirm({
+                notes,
+                received_at: receivedAt
+            });
+        };
+
+        if (!isOpen) return null;
+
+        return (
+            <>
+                <div className="modal-backdrop fade show" onClick={onClose}></div>
+                <div className="modal fade show d-block" tabIndex="-1" role="dialog">
+                    <div className="modal-dialog modal-dialog-centered" role="document">
+                        <div className="modal-content">
+                            <div className="modal-header border-bottom">
+                                <h5 className="modal-title d-flex align-items-center">
+                                    <i className="fas fa-money-bill text-success me-2"></i>
+                                    Confirm Cash Payment Received
+                                </h5>
+                                <button
+                                    type="button"
+                                    className="btn-close"
+                                    onClick={onClose}
+                                    disabled={loading}
+                                ></button>
+                            </div>
+                            <form onSubmit={handleSubmit}>
+                                <div className="modal-body">
+                                    <div className="appointment-info bg-light rounded p-3 mb-4">
+                                        <div className="row">
+                                            <div className="col-md-6">
+                                                <small className="text-muted">Client:</small>
+                                                <div className="fw-bold">{appointment.client_name}</div>
+                                            </div>
+                                            <div className="col-md-6">
+                                                <small className="text-muted">Amount:</small>
+                                                <div className="fw-bold text-success">Rs. {appointment.invoice?.total_amount}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="alert alert-info">
+                                        <i className="fas fa-info-circle me-2"></i>
+                                        <strong>Confirm Cash Receipt:</strong> By confirming, you acknowledge that you have received the cash payment from the client. This will update the appointment status to "Paid" and allow both parties to review each other.
+                                    </div>
+
+                                    <div className="mb-3">
+                                        <label className="form-label">
+                                            <i className="fas fa-calendar me-1"></i>
+                                            Date & Time Received
+                                        </label>
+                                        <input
+                                            type="datetime-local"
+                                            className="form-control"
+                                            value={receivedAt}
+                                            onChange={(e) => setReceivedAt(e.target.value)}
+                                            max={new Date().toISOString().slice(0, 16)}
+                                            required
+                                        />
+                                    </div>
+
+                                    <div className="mb-3">
+                                        <label className="form-label">
+                                            <i className="fas fa-sticky-note me-1"></i>
+                                            Additional Notes (Optional)
+                                        </label>
+                                        <textarea
+                                            className="form-control"
+                                            rows="3"
+                                            value={notes}
+                                            onChange={(e) => setNotes(e.target.value)}
+                                            placeholder="Add any additional notes about the cash payment receipt..."
+                                        />
+                                    </div>
+                                </div>
+                                <div className="modal-footer">
+                                    <button
+                                        type="button"
+                                        className="btn btn-outline-secondary"
+                                        onClick={onClose}
+                                        disabled={loading}
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="btn btn-success"
+                                        disabled={loading}
+                                    >
+                                        {loading ? (
+                                            <>
+                                                <span className="spinner-border spinner-border-sm me-2"></span>
+                                                Confirming...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <i className="fas fa-check me-2"></i>
+                                                Confirm Cash Received
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </>
+        );
+    };
+
     return (
         <ProviderLayout>
             <div className="appointment-detail-page">
@@ -621,6 +779,21 @@ const AppointmentDetail = () => {
                             >
                                 <i className="fas fa-file-invoice me-2"></i>
                                 View Invoice
+                            </button>
+                        )}
+
+                        {/* Cash Payment Confirmation Button - Show when payment received but not confirmed */}
+                        {appointment.invoice && 
+                         appointment.invoice.payment_status === 'processing' && 
+                         appointment.status === 'payment_pending' && (
+                            <button
+                                className="btn btn-success ms-2"
+                                onClick={() => handleConfirmCashPayment()}
+                                disabled={actionLoading}
+                                title="Confirm cash payment received"
+                            >
+                                <i className="fas fa-money-bill me-2"></i>
+                                Confirm Cash Received
                             </button>
                         )}
                     </div>
@@ -1249,6 +1422,17 @@ const AppointmentDetail = () => {
                     onClose={handleCreateInvoiceModalClose}
                     onComplete={handleCompleteWithInvoice}
                 />
+
+                {/* Cash Confirmation Modal */}
+                {showCashConfirmModal && (
+                    <CashConfirmationModal
+                        appointment={appointment}
+                        isOpen={showCashConfirmModal}
+                        onClose={() => setShowCashConfirmModal(false)}
+                        onConfirm={handleCashConfirmation}
+                        loading={actionLoading}
+                    />
+                )}
             </div>
 
             <style>{`

@@ -375,14 +375,15 @@ class InvoiceController extends Controller
             ], 403);
         }
 
-        // Check if invoice is for cash payment and pending
-        if ($invoice->payment_method !== 'cash' || $invoice->payment_status !== 'pending') {
+        // Check if invoice is for cash payment and processing (pending provider confirmation)
+        if ($invoice->payment_method !== 'cash' || $invoice->payment_status !== 'processing') {
             return response()->json([
                 'success' => false,
                 'message' => 'This invoice is not eligible for cash confirmation',
                 'debug' => [
                     'payment_method' => $invoice->payment_method,
-                    'payment_status' => $invoice->payment_status
+                    'payment_status' => $invoice->payment_status,
+                    'required_payment_status' => 'processing'
                 ]
             ], 400);
         }
@@ -420,8 +421,12 @@ class InvoiceController extends Controller
                     'payment_received_at' => $payment->processed_at
                 ]);
 
-                // Dispatch payment received event for notifications
-                PaymentReceived::dispatch($invoice->appointment, $payment, $invoice);
+                // For cash payments, don't dispatch PaymentReceived event again
+                // Email notifications were already sent when client made the payment
+                // Only dispatch for non-cash payments that need confirmation emails
+                if ($invoice->payment_method !== 'cash') {
+                    PaymentReceived::dispatch($invoice->appointment, $payment, $invoice);
+                }
             });
 
             return response()->json([

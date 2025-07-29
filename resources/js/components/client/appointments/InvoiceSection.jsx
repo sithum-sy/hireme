@@ -48,7 +48,7 @@ const InvoiceSection = ({ appointment, onPaymentClick, canBePaid }) => {
                                 ...invoice,
                                 appointment: appointment,
                                 provider: appointment.provider,
-                                client: appointment.client
+                                client: appointment.client,
                             }}
                             role="client"
                             variant="outline-primary"
@@ -60,7 +60,8 @@ const InvoiceSection = ({ appointment, onPaymentClick, canBePaid }) => {
                                 invoice.payment_status
                             )}`}
                         >
-                            {invoice.payment_status_text || invoice.payment_status}
+                            {invoice.payment_status_text ||
+                                invoice.payment_status}
                         </span>
                     </div>
                 </div>
@@ -87,17 +88,33 @@ const InvoiceSection = ({ appointment, onPaymentClick, canBePaid }) => {
                             invoice.line_items.length > 0 ? (
                                 (() => {
                                     // Deduplicate line items based on description, rate, and quantity
-                                    const uniqueItems = invoice.line_items.filter((item, index, self) => 
-                                        index === self.findIndex(i => 
-                                            i.description === item.description && 
-                                            parseFloat(i.rate) === parseFloat(item.rate) && 
-                                            parseFloat(i.quantity) === parseFloat(item.quantity)
-                                        )
-                                    );
-                                    
+                                    const uniqueItems =
+                                        invoice.line_items.filter(
+                                            (item, index, self) =>
+                                                index ===
+                                                self.findIndex(
+                                                    (i) =>
+                                                        i.description ===
+                                                            item.description &&
+                                                        parseFloat(i.rate) ===
+                                                            parseFloat(
+                                                                item.rate
+                                                            ) &&
+                                                        parseFloat(
+                                                            i.quantity
+                                                        ) ===
+                                                            parseFloat(
+                                                                item.quantity
+                                                            )
+                                                )
+                                        );
+
                                     return uniqueItems.map((item, index) => (
                                         <div
-                                            key={item.id || `${item.description}-${item.rate}-${item.quantity}-${index}`}
+                                            key={
+                                                item.id ||
+                                                `${item.description}-${item.rate}-${item.quantity}-${index}`
+                                            }
                                             className="d-flex justify-content-between py-2 border-bottom"
                                         >
                                             <div>
@@ -107,7 +124,9 @@ const InvoiceSection = ({ appointment, onPaymentClick, canBePaid }) => {
                                                 {item.quantity > 1 && (
                                                     <small className="text-muted">
                                                         Qty: {item.quantity} ×{" "}
-                                                        {formatCurrency(item.rate)}
+                                                        {formatCurrency(
+                                                            item.rate
+                                                        )}
                                                     </small>
                                                 )}
                                             </div>
@@ -245,21 +264,15 @@ const InvoiceSection = ({ appointment, onPaymentClick, canBePaid }) => {
                         {/* Payment Processing */}
                         {invoice.payment_status === "processing" && (
                             <div className="payment-processing">
-                                <div className="text-center p-3 bg-info bg-opacity-10 rounded">
-                                    <div
-                                        className="spinner-border text-info mb-2"
-                                        role="status"
-                                    >
-                                        <span className="visually-hidden">
-                                            Processing...
-                                        </span>
-                                    </div>
-                                    <h6 className="fw-bold text-info mb-1">
-                                        Processing Payment
+                                <div className="text-center p-3 border border-warning bg-opacity-10 rounded">
+                                    <i className="fas fa-clock fa-2x text-warning mb-2"></i>
+                                    <h6 className="fw-bold text-warning mb-1">
+                                        Awaiting Confirmation
                                     </h6>
                                     <p className="text-muted small mb-0">
-                                        Your payment is being processed. Please
-                                        wait...
+                                        {invoice.payment_method === "cash"
+                                            ? "Waiting for provider to confirm cash receipt"
+                                            : "Your payment is being processed. Please wait..."}
                                     </p>
                                 </div>
                             </div>

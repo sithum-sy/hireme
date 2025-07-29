@@ -13,6 +13,8 @@ const InvoiceDetail = () => {
     const [invoice, setInvoice] = useState(null);
     const [loading, setLoading] = useState(true);
     const [showMarkPaidModal, setShowMarkPaidModal] = useState(false);
+    const [showCashConfirmModal, setShowCashConfirmModal] = useState(false);
+    const [actionLoading, setActionLoading] = useState(false);
 
     useEffect(() => {
         loadInvoice();
@@ -33,6 +35,57 @@ const InvoiceDetail = () => {
 
     const handleInvoiceUpdate = () => {
         loadInvoice(); // Reload invoice data
+    };
+
+    const handleConfirmCashPayment = () => {
+        setShowCashConfirmModal(true);
+    };
+
+    const handleCashConfirmation = async (confirmationData) => {
+        setActionLoading(true);
+        try {
+            const response = await fetch(
+                `/api/provider/invoices/${invoiceId}/confirm-cash`,
+                {
+                    method: "PATCH",
+                    headers: {
+                        Authorization: `Bearer ${localStorage.getItem(
+                            "token"
+                        )}`,
+                        "Content-Type": "application/json",
+                        Accept: "application/json",
+                        "X-CSRF-TOKEN": document
+                            .querySelector('meta[name="csrf-token"]')
+                            ?.getAttribute("content"),
+                    },
+                    body: JSON.stringify({
+                        amount_received: invoice.total_amount,
+                        notes: confirmationData.notes,
+                        received_at:
+                            confirmationData.received_at ||
+                            new Date().toISOString(),
+                    }),
+                }
+            );
+
+            const result = await response.json();
+
+            if (result.success) {
+                // Reload invoice details to get updated status
+                await loadInvoice();
+                setShowCashConfirmModal(false);
+                alert(
+                    "Cash payment confirmed successfully! Both you and the client can now review each other."
+                );
+            } else {
+                alert(result.message || "Failed to confirm cash payment");
+            }
+        } catch (error) {
+            console.error("Failed to confirm cash payment:", error);
+            alert("Failed to confirm cash payment. Please try again.");
+        } finally {
+            setActionLoading(false);
+        }
     };
 
     if (loading) {
@@ -128,10 +181,28 @@ const InvoiceDetail = () => {
                                     variant="outline-success"
                                     title="Download Invoice PDF"
                                 />
+
+                                {/* Cash Payment Confirmation Button */}
+                                {invoice.payment_method === "cash" &&
+                                    invoice.payment_status === "processing" &&
+                                    invoice.status === "paid" && (
+                                        <button
+                                            className="btn btn-success"
+                                            onClick={handleConfirmCashPayment}
+                                            disabled={actionLoading}
+                                            title="Confirm cash payment received"
+                                        >
+                                            <i className="fas fa-money-bill me-2"></i>
+                                            Confirm Cash Received
+                                        </button>
+                                    )}
+
                                 <InvoiceActions
                                     invoice={invoice}
                                     onUpdate={handleInvoiceUpdate}
-                                    onMarkPaid={() => setShowMarkPaidModal(true)}
+                                    onMarkPaid={() =>
+                                        setShowMarkPaidModal(true)
+                                    }
                                 />
                             </div>
                         </div>
@@ -458,25 +529,35 @@ const InvoiceDetail = () => {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {invoice.line_items && invoice.line_items.length > 0 ? (
-                                            invoice.line_items.map((item, index) => (
-                                                <tr key={item.id || `${item.description}-${item.rate}-${item.quantity}-${index}`}>
-                                                    <td>{item.description}</td>
-                                                    <td className="text-center">
-                                                        {item.quantity}
-                                                    </td>
-                                                    <td className="text-end">
-                                                        {formatCurrency(
-                                                            item.rate
-                                                        )}
-                                                    </td>
-                                                    <td className="text-end fw-medium">
-                                                        {formatCurrency(
-                                                            item.amount
-                                                        )}
-                                                    </td>
-                                                </tr>
-                                            ))
+                                        {invoice.line_items &&
+                                        invoice.line_items.length > 0 ? (
+                                            invoice.line_items.map(
+                                                (item, index) => (
+                                                    <tr
+                                                        key={
+                                                            item.id ||
+                                                            `${item.description}-${item.rate}-${item.quantity}-${index}`
+                                                        }
+                                                    >
+                                                        <td>
+                                                            {item.description}
+                                                        </td>
+                                                        <td className="text-center">
+                                                            {item.quantity}
+                                                        </td>
+                                                        <td className="text-end">
+                                                            {formatCurrency(
+                                                                item.rate
+                                                            )}
+                                                        </td>
+                                                        <td className="text-end fw-medium">
+                                                            {formatCurrency(
+                                                                item.amount
+                                                            )}
+                                                        </td>
+                                                    </tr>
+                                                )
+                                            )
                                         ) : (
                                             <tr>
                                                 <td
@@ -583,8 +664,191 @@ const InvoiceDetail = () => {
                         onSuccess={handleInvoiceUpdate}
                     />
                 )}
+
+                {/* Cash Confirmation Modal */}
+                {showCashConfirmModal && (
+                    <CashConfirmationModal
+                        invoice={invoice}
+                        isOpen={showCashConfirmModal}
+                        onClose={() => setShowCashConfirmModal(false)}
+                        onConfirm={handleCashConfirmation}
+                        loading={actionLoading}
+                    />
+                )}
             </div>
         </ProviderLayout>
+    );
+};
+
+// Cash Confirmation Modal Component
+const CashConfirmationModal = ({
+    invoice,
+    isOpen,
+    onClose,
+    onConfirm,
+    loading,
+}) => {
+    const [notes, setNotes] = useState("");
+    const [receivedAt, setReceivedAt] = useState(
+        new Date().toISOString().slice(0, 16)
+    );
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        onConfirm({
+            notes,
+            received_at: receivedAt,
+        });
+    };
+
+    if (!isOpen) return null;
+
+    return (
+        <>
+            <div className="modal-backdrop fade show" onClick={onClose}></div>
+            <div
+                className="modal fade show d-block"
+                tabIndex="-1"
+                role="dialog"
+            >
+                <div
+                    className="modal-dialog modal-dialog-centered"
+                    role="document"
+                >
+                    <div className="modal-content">
+                        <div className="modal-header border-bottom">
+                            <h5 className="modal-title d-flex align-items-center">
+                                <i className="fas fa-money-bill text-success me-2"></i>
+                                Confirm Cash Payment Received
+                            </h5>
+                            <button
+                                type="button"
+                                className="btn-close"
+                                onClick={onClose}
+                                disabled={loading}
+                            ></button>
+                        </div>
+                        <form onSubmit={handleSubmit}>
+                            <div className="modal-body">
+                                <div className="invoice-info bg-light rounded p-3 mb-4">
+                                    <div className="row">
+                                        <div className="col-md-6">
+                                            <small className="text-muted">
+                                                Invoice:
+                                            </small>
+                                            <div className="fw-bold">
+                                                {invoice.invoice_number}
+                                            </div>
+                                        </div>
+                                        <div className="col-md-6">
+                                            <small className="text-muted">
+                                                Amount:
+                                            </small>
+                                            <div className="fw-bold text-success">
+                                                {formatCurrency(
+                                                    invoice.total_amount
+                                                )}
+                                            </div>
+                                        </div>
+                                        <div className="col-md-6 mt-2">
+                                            <small className="text-muted">
+                                                Client:
+                                            </small>
+                                            <div className="fw-bold">
+                                                {invoice.client?.name}
+                                            </div>
+                                        </div>
+                                        <div className="col-md-6 mt-2">
+                                            <small className="text-muted">
+                                                Service:
+                                            </small>
+                                            <div className="fw-bold">
+                                                {
+                                                    invoice.appointment?.service
+                                                        ?.title
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="alert alert-info">
+                                    <i className="fas fa-info-circle me-2"></i>
+                                    <strong>Confirm Cash Receipt:</strong> By
+                                    confirming, you acknowledge that you have
+                                    received the cash payment from the client.
+                                    This will update the invoice and appointment
+                                    status to "Paid" and allow both parties to
+                                    review each other.
+                                </div>
+
+                                <div className="mb-3">
+                                    <label className="form-label">
+                                        <i className="fas fa-calendar me-1"></i>
+                                        Date & Time Received
+                                    </label>
+                                    <input
+                                        type="datetime-local"
+                                        className="form-control"
+                                        value={receivedAt}
+                                        onChange={(e) =>
+                                            setReceivedAt(e.target.value)
+                                        }
+                                        max={new Date()
+                                            .toISOString()
+                                            .slice(0, 16)}
+                                        required
+                                    />
+                                </div>
+
+                                <div className="mb-3">
+                                    <label className="form-label">
+                                        <i className="fas fa-sticky-note me-1"></i>
+                                        Additional Notes (Optional)
+                                    </label>
+                                    <textarea
+                                        className="form-control"
+                                        rows="3"
+                                        value={notes}
+                                        onChange={(e) =>
+                                            setNotes(e.target.value)
+                                        }
+                                        placeholder="Add any additional notes about the cash payment receipt..."
+                                    />
+                                </div>
+                            </div>
+                            <div className="modal-footer">
+                                <button
+                                    type="button"
+                                    className="btn btn-outline-secondary"
+                                    onClick={onClose}
+                                    disabled={loading}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="btn btn-success"
+                                    disabled={loading}
+                                >
+                                    {loading ? (
+                                        <>
+                                            <span className="spinner-border spinner-border-sm me-2"></span>
+                                            Confirming...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <i className="fas fa-check me-2"></i>
+                                            Confirm Cash Received
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </>
     );
 };
 

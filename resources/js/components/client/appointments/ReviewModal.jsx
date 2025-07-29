@@ -379,7 +379,7 @@ const ReviewModal = ({ show, onHide, appointment, onReviewSuccess }) => {
                                         </div>
 
                                         {/* Review Guidelines */}
-                                        <div className="review-guidelines bg-info bg-opacity-10 rounded p-3 mb-4">
+                                        <div className="review-guidelines border border-info bg-opacity-10 rounded p-3 mb-4">
                                             <h6 className="fw-bold text-info mb-2">
                                                 <i className="fas fa-info-circle me-2"></i>
                                                 Review Guidelines

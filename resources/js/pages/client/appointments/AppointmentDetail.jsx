@@ -216,9 +216,11 @@ const AppointmentDetail = () => {
     };
 
     // Success handlers
-    const handlePaymentSuccess = (updatedAppointment) => {
+    const handlePaymentSuccess = async (updatedAppointment) => {
         setAppointment(updatedAppointment);
         setShowPaymentModal(false);
+        // Reload appointment details to ensure all data is fresh
+        await loadAppointmentDetail();
     };
 
     const handleReviewSuccess = (updatedAppointment) => {
