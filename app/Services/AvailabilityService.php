@@ -418,7 +418,12 @@ class AvailabilityService
             if (class_exists('\App\Models\Appointment')) {
                 return \App\Models\Appointment::where('provider_id', $provider->id)
                     ->where('appointment_date', $date)
-                    ->whereIn('status', ['pending', 'confirmed', 'in_progress'])
+                    ->whereNotIn('status', [
+                        'cancelled_by_client',
+                        'cancelled_by_provider', 
+                        'cancelled_by_staff',
+                        'expired'
+                    ])
                     ->get();
             }
 

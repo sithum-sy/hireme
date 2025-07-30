@@ -4,7 +4,9 @@
       "Bash(php:*)",
       "Bash(curl:*)",
       "Bash(grep:*)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(rm:*)",
+      "Bash(mysql:*)"
     ],
     "deny": []
   }

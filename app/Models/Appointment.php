@@ -10,6 +10,7 @@ class Appointment extends Model
 {
     use HasFactory;
 
+
     protected $fillable = [
         'client_id',
         'provider_id',
@@ -589,4 +590,5 @@ class Appointment extends Model
                     ->orWhere('auto_expired', false);
             });
     }
+
 }

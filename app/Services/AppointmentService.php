@@ -23,6 +23,12 @@ class AppointmentService
      */
     public function createBooking(User $client, array $data): array
     {
+        // If it's a direct appointment (not quote request), use retry logic for race conditions
+        if (!($data['request_quote'] ?? false) && isset($data['appointment_date']) && isset($data['appointment_time'])) {
+            return $this->createBookingWithRetry($client, $data);
+        }
+
+        // Regular booking flow for quotes
         DB::beginTransaction();
 
         try {
@@ -30,56 +36,132 @@ class AppointmentService
             $provider = User::findOrFail($data['provider_id']);
             $service = Service::findOrFail($data['service_id']);
 
-            // If it's a direct appointment (not quote request), check availability
-            if (!($data['request_quote'] ?? false)) {
-                // Check availability before creating appointment
-                if (isset($data['appointment_date']) && isset($data['appointment_time'])) {
-                    $availabilityService = app(AvailabilityService::class);
-
-                    $duration = $data['duration_hours'] ?? 1;
-                    $endTime = Carbon::parse($data['appointment_time'])->addHours($duration)->format('H:i');
-
-                    $availabilityCheck = $availabilityService->isAvailableAt(
-                        $provider,
-                        $data['appointment_date'],
-                        $data['appointment_time'],
-                        $endTime
-                    );
-
-                    if (!$availabilityCheck['available']) {
-                        throw new \Exception(
-                            "Selected time slot is no longer available: " . $availabilityCheck['reason']
-                        );
-                    }
-                }
+            if ($data['request_quote'] ?? false) {
+                // Create quote request instead of direct booking
+                $result = $this->createQuoteRequest($client, $service, $data);
+                $type = 'quote_request';
+            } else {
+                // Create direct appointment
+                $appointment = $this->createDirectAppointment($client, $service, $data);
+                $result = $appointment;
+                $type = 'appointment';
             }
 
-            try {
-                if ($data['request_quote'] ?? false) {
-                    // Create quote request instead of direct booking
-                    $result = $this->createQuoteRequest($client, $service, $data);
-                    $type = 'quote_request';
-                } else {
-                    // Create direct appointment
-                    $appointment = $this->createDirectAppointment($client, $service, $data);
-                    $result = $appointment;
-                    $type = 'appointment';
-                }
+            DB::commit();
 
-                DB::commit();
-
-                return [
-                    'type' => $type,
-                    'data' => $result,
-                ];
-            } catch (\Exception $e) {
-                DB::rollBack();
-                throw $e;
-            }
+            return [
+                'type' => $type,
+                'data' => $result,
+            ];
         } catch (\Exception $e) {
             DB::rollBack();
             throw new \Exception('Failed to create booking: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Create booking with retry logic for race conditions
+     */
+    private function createBookingWithRetry(User $client, array $data, int $maxRetries = 3): array
+    {
+        $retryCount = 0;
+        $lastException = null;
+
+        while ($retryCount < $maxRetries) {
+            DB::beginTransaction();
+            
+            try {
+                $provider = User::findOrFail($data['provider_id']);
+                $service = Service::findOrFail($data['service_id']);
+
+                $appointment = $this->createAppointmentWithLocking($client, $service, $data);
+                DB::commit();
+                
+                return [
+                    'type' => 'appointment',
+                    'data' => $appointment->load(['client', 'provider', 'service'])
+                ];
+            } catch (\Exception $e) {
+                DB::rollBack();
+                $lastException = $e;
+                
+                // Check if this is a booking conflict that might resolve with retry
+                if (strpos($e->getMessage(), 'conflicts with existing appointment') !== false ||
+                    strpos($e->getMessage(), 'no longer available') !== false) {
+                    
+                    $retryCount++;
+                    
+                    if ($retryCount < $maxRetries) {
+                        // Wait a short random time before retry (100-300ms)
+                        usleep(rand(100000, 300000));
+                        Log::info("Booking conflict detected, retrying... Attempt {$retryCount}/{$maxRetries}");
+                        continue;
+                    }
+                }
+                
+                // For other exceptions or max retries reached, throw immediately
+                break;
+            }
+        }
+
+        // If we get here, all retries failed
+        throw new \Exception('Failed to create booking after ' . $maxRetries . ' attempts: ' . $lastException->getMessage());
+    }
+
+    /**
+     * Create appointment with database locking to prevent race conditions
+     */
+    private function createAppointmentWithLocking(User $client, Service $service, array $data): Appointment
+    {
+        $provider = User::findOrFail($service->provider_id);
+        $duration = $data['duration_hours'] ?? $service->duration_hours ?? 1;
+        $endTime = Carbon::parse($data['appointment_time'])->addHours($duration)->format('H:i');
+
+        // Lock the provider's appointments table for this date to prevent concurrent bookings
+        // This ensures atomic check-and-create operation
+        $conflictingAppointment = Appointment::where('provider_id', $provider->id)
+            ->where('appointment_date', $data['appointment_date'])
+            ->whereNotIn('status', [
+                'cancelled_by_client',
+                'cancelled_by_provider', 
+                'cancelled_by_staff',
+                'expired'
+            ])
+            ->lockForUpdate() // This prevents other concurrent bookings
+            ->get();
+
+        // Check for time conflicts with the locked results
+        $requestedStart = Carbon::parse($data['appointment_time']);
+        $requestedEnd = $requestedStart->copy()->addHours($duration);
+
+        foreach ($conflictingAppointment as $existing) {
+            $existingStart = Carbon::parse($existing->appointment_time);
+            $existingEnd = $existingStart->copy()->addHours($existing->duration_hours);
+
+            // Check for overlap: start < existing_end AND end > existing_start
+            if ($requestedStart->lt($existingEnd) && $requestedEnd->gt($existingStart)) {
+                throw new \Exception(
+                    "Selected time slot conflicts with existing appointment. Please choose a different time."
+                );
+            }
+        }
+
+        // Additional availability check using the service
+        $availabilityCheck = $this->availabilityService->isAvailableAt(
+            $provider,
+            $data['appointment_date'],
+            $data['appointment_time'],
+            $endTime
+        );
+
+        if (!$availabilityCheck['available']) {
+            throw new \Exception(
+                "Selected time slot is no longer available: " . $availabilityCheck['reason']
+            );
+        }
+
+        // If we reach here, the slot is available - create the appointment
+        return $this->createDirectAppointment($client, $service, $data);
     }
 
     /**
