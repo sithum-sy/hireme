@@ -3,6 +3,34 @@ import axios from "axios";
 const API_BASE = "/api/provider";
 
 class ProviderAppointmentService {
+    constructor() {
+        this.cache = new Map();
+        this.cacheTimeout = 2 * 60 * 1000; // 2 minutes cache for appointment details
+    }
+
+    // Simple cache helper
+    getCachedData(key) {
+        const cached = this.cache.get(key);
+        if (cached && Date.now() - cached.timestamp < this.cacheTimeout) {
+            return cached.data;
+        }
+        return null;
+    }
+
+    setCachedData(key, data) {
+        this.cache.set(key, {
+            data,
+            timestamp: Date.now(),
+        });
+    }
+
+    clearCache(key = null) {
+        if (key) {
+            this.cache.delete(key);
+        } else {
+            this.cache.clear();
+        }
+    }
     /**
      * Get all provider appointments with filtering
      */
@@ -70,6 +98,10 @@ class ProviderAppointmentService {
                 `${API_BASE}/appointments/${appointmentId}/status`,
                 { status, notes }
             );
+            
+            // Clear cache for this appointment since status changed
+            this.clearCache(`appointment_${appointmentId}`);
+            
             return {
                 success: true,
                 data: response.data.data,

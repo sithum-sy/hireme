@@ -20,13 +20,13 @@ const CardPaymentForm = ({
     const elements = useElements();
     const [cardError, setCardError] = useState("");
 
-
     const elementOptions = {
         style: {
             base: {
                 fontSize: "16px",
                 color: "#212529",
-                fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+                fontFamily:
+                    "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
                 fontSmoothing: "antialiased",
                 lineHeight: "24px",
                 "::placeholder": {
@@ -51,8 +51,10 @@ const CardPaymentForm = ({
     const handleElementChange = (event) => {
         if (event.error) {
             // For development - show helpful message for invalid cards
-            if (event.error.code === 'invalid_number') {
-                setCardError("Please use a test card number: 4242 4242 4242 4242 (Visa) or 5555 5555 5555 4444 (Mastercard)");
+            if (event.error.code === "invalid_number") {
+                setCardError(
+                    "Please use a test card number: 4242 4242 4242 4242 (Visa) or 5555 5555 5555 4444 (Mastercard)"
+                );
             } else {
                 setCardError(event.error.message);
             }
@@ -91,7 +93,7 @@ const CardPaymentForm = ({
         setCardError("");
 
         const cardElement = elements.getElement(CardNumberElement);
-        
+
         if (!cardElement) {
             setLoading(false);
             onPaymentError({ message: "Card input not found" });
@@ -129,7 +131,7 @@ const CardPaymentForm = ({
                 <div className="form-group mb-3">
                     <label className="form-label">Card Number</label>
                     <div className="stripe-element" id="card-number-element">
-                        <CardNumberElement 
+                        <CardNumberElement
                             options={elementOptions}
                             onReady={handleElementReady}
                             onChange={handleElementChange}
@@ -143,8 +145,11 @@ const CardPaymentForm = ({
                     <div className="col-12 col-sm-6">
                         <div className="form-group mb-3">
                             <label className="form-label">Expiry Date</label>
-                            <div className="stripe-element" id="card-expiry-element">
-                                <CardExpiryElement 
+                            <div
+                                className="stripe-element"
+                                id="card-expiry-element"
+                            >
+                                <CardExpiryElement
                                     options={elementOptions}
                                     onReady={handleElementReady}
                                     onChange={handleElementChange}
@@ -157,8 +162,11 @@ const CardPaymentForm = ({
                     <div className="col-12 col-sm-6">
                         <div className="form-group mb-3">
                             <label className="form-label">CVC</label>
-                            <div className="stripe-element" id="card-cvc-element">
-                                <CardCvcElement 
+                            <div
+                                className="stripe-element"
+                                id="card-cvc-element"
+                            >
+                                <CardCvcElement
                                     options={elementOptions}
                                     onReady={handleElementReady}
                                     onChange={handleElementChange}
@@ -186,13 +194,17 @@ const CardPaymentForm = ({
                 </h6>
                 <div className="row">
                     <div className="col-md-6">
-                        <strong>Visa:</strong> 4242 4242 4242 4242<br/>
-                        <strong>Visa (Debit):</strong> 4000 0566 5566 5556<br/>
+                        <strong>Visa:</strong> 4242 4242 4242 4242
+                        <br />
+                        <strong>Visa (Debit):</strong> 4000 0566 5566 5556
+                        <br />
                         <strong>Mastercard:</strong> 5555 5555 5555 4444
                     </div>
                     <div className="col-md-6">
-                        <strong>Any future expiry date</strong><br/>
-                        <strong>Any 3-digit CVC</strong><br/>
+                        <strong>Any future expiry date</strong>
+                        <br />
+                        <strong>Any 3-digit CVC</strong>
+                        <br />
                         <strong>Any billing details</strong>
                     </div>
                 </div>
@@ -200,7 +212,7 @@ const CardPaymentForm = ({
 
             <button
                 type="button"
-                className="btn btn-primary w-100"
+                className="btn btn-primary w-100 justify-content-center d-flex"
                 disabled={!stripe || loading}
                 onClick={handleSubmit}
             >
@@ -212,7 +224,8 @@ const CardPaymentForm = ({
                 ) : (
                     <>
                         <i className="fas fa-credit-card me-2"></i>
-                        Pay Rs. {amount}
+                        {/* Pay Rs. {amount} */}
+                        Pay Now
                     </>
                 )}
             </button>

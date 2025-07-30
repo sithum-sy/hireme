@@ -23,6 +23,8 @@ const AppointmentDetail = () => {
     const [showCreateInvoiceModal, setShowCreateInvoiceModal] = useState(false);
     const [showCashConfirmModal, setShowCashConfirmModal] = useState(false);
     const [pendingAction, setPendingAction] = useState(null);
+    const [optimisticStatus, setOptimisticStatus] = useState(null);
+    const [statusUpdateTimer, setStatusUpdateTimer] = useState(null);
 
     useEffect(() => {
         // Scroll to top when component mounts or ID changes
@@ -136,7 +138,7 @@ const AppointmentDetail = () => {
         }
     };
 
-    // Update your handleStatusUpdate function for "in_progress"
+    // Optimized handleStatusUpdate with optimistic UI updates
     const handleStatusUpdate = async (status, requiresNotes = false) => {
         // Special validation for starting service - COMMENTED OUT FOR DEVELOPMENT
         // if (status === "in_progress" && !canStartService()) {
@@ -160,6 +162,16 @@ const AppointmentDetail = () => {
         }
 
         setActionLoading(true);
+        
+        // Optimistic UI update - show new status immediately
+        setOptimisticStatus(status);
+        
+        // Set timer to show optimistic status for at least 1 second for better UX
+        const timer = setTimeout(() => {
+            setOptimisticStatus(null);
+        }, 2000);
+        setStatusUpdateTimer(timer);
+
         try {
             const result =
                 await providerAppointmentService.updateAppointmentStatus(
@@ -169,6 +181,9 @@ const AppointmentDetail = () => {
                 );
 
             if (result.success) {
+                // Clear optimistic status and apply real data
+                clearTimeout(timer);
+                setOptimisticStatus(null);
                 setAppointment(result.data);
                 setNotes("");
                 setShowNotesModal(false);
@@ -187,8 +202,16 @@ const AppointmentDetail = () => {
                         });
                     }, 1000); // Small delay to show the updated status first
                 }
+            } else {
+                // Revert optimistic update on failure
+                clearTimeout(timer);
+                setOptimisticStatus(null);
+                console.error("Status update failed:", result.message);
             }
         } catch (error) {
+            // Revert optimistic update on error
+            clearTimeout(timer);
+            setOptimisticStatus(null);
             console.error("Status update failed:", error);
         } finally {
             setActionLoading(false);
@@ -246,6 +269,24 @@ const AppointmentDetail = () => {
             </div>
         );
     }
+
+    // Helper functions for optimistic UI
+    const getCurrentStatus = () => {
+        return optimisticStatus || appointment?.status;
+    };
+
+    const getCurrentStatusText = () => {
+        if (optimisticStatus) {
+            const statusTexts = {
+                'confirmed': 'Confirmed',
+                'in_progress': 'In Progress', 
+                'completed': 'Completed',
+                'cancelled_by_provider': 'Cancelled'
+            };
+            return statusTexts[optimisticStatus] || optimisticStatus;
+        }
+        return appointment?.status_text;
+    };
 
     const loadAppointmentDetail = async () => {
         setLoading(true);
@@ -706,10 +747,13 @@ const AppointmentDetail = () => {
                         <div className="d-flex align-items-center gap-3">
                             <span
                                 className={`badge ${getStatusBadge(
-                                    appointment.status
-                                )} px-3 py-2`}
+                                    getCurrentStatus()
+                                )} px-3 py-2 ${optimisticStatus ? 'optimistic-status' : ''}`}
                             >
-                                {appointment.status_text}
+                                {getCurrentStatusText()}
+                                {optimisticStatus && (
+                                    <i className="fas fa-spinner fa-spin ms-1"></i>
+                                )}
                             </span>
                             <span className="text-muted">
                                 Appointment #{appointment.id}
@@ -736,7 +780,7 @@ const AppointmentDetail = () => {
 
                     {/* Action Buttons */}
                     <div className="action-buttons">
-                        {appointment.status === "pending" && (
+                        {getCurrentStatus() === "pending" && (
                             <div className="d-flex gap-2">
                                 <button
                                     className="btn btn-success"
@@ -764,7 +808,7 @@ const AppointmentDetail = () => {
                             </div>
                         )}
 
-                        {appointment.status === "confirmed" && (
+                        {getCurrentStatus() === "confirmed" && (
                             <div className="d-flex gap-2">
                                 <button
                                     className="btn btn-primary"
@@ -792,7 +836,7 @@ const AppointmentDetail = () => {
                             </div>
                         )}
 
-                        {appointment.status === "in_progress" && (
+                        {getCurrentStatus() === "in_progress" && (
                             <div className="d-flex gap-2">
                                 <button
                                     className="btn btn-success"
@@ -1644,6 +1688,15 @@ const AppointmentDetail = () => {
                 .review-status-indicator .badge {
                     font-size: 0.75rem;
                     animation: pulse 2s infinite;
+                }
+
+                .optimistic-status {
+                    opacity: 0.8;
+                    transition: all 0.3s ease;
+                }
+
+                .optimistic-status .fa-spinner {
+                    font-size: 0.8em;
                 }
 
                 @keyframes pulse {

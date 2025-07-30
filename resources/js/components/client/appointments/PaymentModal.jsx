@@ -12,6 +12,7 @@ const PaymentForm = ({ appointment, onSuccess, onCancel, onError }) => {
     const [cashNotes, setCashNotes] = useState("");
     const [clientSecret, setClientSecret] = useState("");
     const [stripeLoaded, setStripeLoaded] = useState(true); // Stripe Elements handles loading, default to true
+    const [optimisticPayment, setOptimisticPayment] = useState(false);
 
     const createPaymentIntent = async () => {
         try {
@@ -75,9 +76,11 @@ const PaymentForm = ({ appointment, onSuccess, onCancel, onError }) => {
         }
     }, [paymentMethod]);
 
-    // Handle cash payment directly
+    // Handle cash payment directly with optimistic UI
     const handleCashPayment = async () => {
         setLoading(true);
+        setOptimisticPayment(true);
+        
         try {
             const result = await clientAppointmentService.payInvoice(
                 appointment.id,
@@ -91,9 +94,11 @@ const PaymentForm = ({ appointment, onSuccess, onCancel, onError }) => {
             if (result.success) {
                 onSuccess(result.data);
             } else {
+                setOptimisticPayment(false);
                 onError(result.message || "Cash payment processing failed");
             }
         } catch (error) {
+            setOptimisticPayment(false);
             onError("Cash payment processing failed: " + error.message);
         } finally {
             setLoading(false);
@@ -266,16 +271,23 @@ const PaymentForm = ({ appointment, onSuccess, onCancel, onError }) => {
                     </button>
                     <button
                         type="submit"
-                        className="btn btn-success flex-fill"
+                        className={`btn flex-fill ${
+                            optimisticPayment ? "btn-outline-success" : "btn-success"
+                        }`}
                         disabled={loading}
                     >
-                        {loading ? (
+                        {optimisticPayment ? (
+                            <>
+                                <i className="fas fa-check me-2"></i>
+                                Payment Confirmed!
+                            </>
+                        ) : loading ? (
                             <>
                                 <span
                                     className="spinner-border spinner-border-sm me-2"
                                     role="status"
                                 ></span>
-                                Processing...
+                                {optimisticPayment ? "Finalizing..." : "Processing..."}
                             </>
                         ) : (
                             <>

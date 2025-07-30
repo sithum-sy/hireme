@@ -217,12 +217,12 @@ const AppointmentDetail = () => {
         }
     };
 
-    // Success handlers
+    // Success handlers - optimized to avoid full reload
     const handlePaymentSuccess = async (updatedAppointment) => {
         setAppointment(updatedAppointment);
         setShowPaymentModal(false);
-        // Reload appointment details to ensure all data is fresh
-        await loadAppointmentDetail();
+        // No need to reload - we already have the updated data
+        // await loadAppointmentDetail(); - REMOVED for performance
     };
 
     const handleReviewSuccess = (updatedAppointment) => {

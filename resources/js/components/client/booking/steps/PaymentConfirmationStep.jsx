@@ -20,8 +20,17 @@ const PaymentConfirmationStep = ({
     const [loading, setLoading] = useState(false);
     const [errors, setErrors] = useState({});
     const [providerImageError, setProviderImageError] = useState(false);
+    const [optimisticSuccess, setOptimisticSuccess] = useState(false);
+    const [lastSubmitTime, setLastSubmitTime] = useState(0);
 
     const handleSubmitBooking = async () => {
+        // Prevent double-clicking/rapid submission
+        const now = Date.now();
+        if (now - lastSubmitTime < 2000) { // 2 second debounce
+            return;
+        }
+        setLastSubmitTime(now);
+
         // Clear previous errors
         setErrors({});
 
@@ -37,6 +46,13 @@ const PaymentConfirmationStep = ({
         }
 
         setLoading(true);
+        
+        // Optimistic update - show success immediately for better UX
+        setTimeout(() => {
+            if (loading) {
+                setOptimisticSuccess(true);
+            }
+        }, 1500);
 
         try {
             // Prepare final booking payload
@@ -65,6 +81,7 @@ const PaymentConfirmationStep = ({
                     type: response.type || "appointment",
                 });
             } else {
+                setOptimisticSuccess(false);
                 setErrors({
                     submission:
                         response.message ||
@@ -73,6 +90,7 @@ const PaymentConfirmationStep = ({
             }
         } catch (error) {
             console.error("Booking submission failed:", error);
+            setOptimisticSuccess(false);
             setErrors({
                 submission:
                     error.response?.data?.message ||
@@ -676,14 +694,23 @@ const PaymentConfirmationStep = ({
                     </button>
 
                     <button
-                        className="btn btn-primary btn-lg"
+                        className={`btn btn-lg ${
+                            optimisticSuccess 
+                                ? "btn-success" 
+                                : "btn-primary"
+                        }`}
                         onClick={handleSubmitBooking}
                         disabled={loading || !agreedToTerms}
                     >
-                        {loading ? (
+                        {optimisticSuccess ? (
+                            <>
+                                <i className="fas fa-check me-2" />
+                                Booking Created!
+                            </>
+                        ) : loading ? (
                             <>
                                 <span className="spinner-border spinner-border-sm me-2" />
-                                Processing...
+                                {optimisticSuccess ? "Finalizing..." : "Processing..."}
                             </>
                         ) : (
                             <>

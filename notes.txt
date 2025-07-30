@@ -89,3 +89,11 @@ stripe config --list
 const profilePicUrl = `${process.env.REACT_APP_API_URL}/storage/${user.profile_picture}`;
 
 <img src={profilePicUrl} alt="Profile" />
+
+
+php artisan queue:work   │
+│    --daemon" && echo "" && echo "For now, let's test by processing just one job:" && timeout 5 php artisan queue:work --once     │
+│   --timeout=5 || echo "No jobs in queue to process (this is expected)
+
+ # In a separate terminal:
+  php artisan queue:work --daemon --sleep=3 --tries=3 --timeout=90
