@@ -299,3 +299,53 @@ export const AppointmentsCard = ({ appointments = {}, loading = false }) => {
         </div>
     );
 };
+
+// Generic Stats Card (Default Export)
+const StatsCard = ({ 
+    title, 
+    value, 
+    icon, 
+    color = "primary", 
+    badge, 
+    subtitle, 
+    loading = false 
+}) => {
+    if (loading) return <StatCardSkeleton />;
+
+    return (
+        <div className="card border-0 shadow-sm">
+            <div className="card-body">
+                <div className="d-flex align-items-center">
+                    <div className="flex-grow-1">
+                        <h6 className="card-title text-muted mb-2 font-medium">
+                            {icon && <i className={`${icon} me-2`}></i>}
+                            <span>{title}</span>
+                        </h6>
+                        <h3 className={`text-${color} fw-bold mb-2`}>
+                            {typeof value === 'number' ? value.toLocaleString() : value}
+                        </h3>
+                        {(badge || subtitle) && (
+                            <div className="d-flex flex-wrap gap-2">
+                                {badge && (
+                                    <span className={`badge bg-${color} bg-opacity-10 text-${color} d-flex align-items-center gap-1`}>
+                                        {badge}
+                                    </span>
+                                )}
+                                {subtitle && (
+                                    <small className="text-muted">
+                                        {subtitle}
+                                    </small>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                    <div className={`ms-3 text-${color}`}>
+                        {icon && <i className={`${icon} fa-2x`}></i>}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default StatsCard;

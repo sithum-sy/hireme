@@ -6,6 +6,7 @@ use App\Http\Controllers\API\Staff\DashboardController;
 use App\Http\Controllers\API\Staff\ReportController;
 use App\Http\Controllers\API\Staff\UserController;
 use App\Http\Controllers\API\Staff\ServiceController;
+use App\Http\Controllers\API\Staff\AppointmentController;
 
 /*
 |--------------------------------------------------------------------------
@@ -63,6 +64,15 @@ Route::middleware(['auth:sanctum', 'staff'])->group(function () {
         Route::get('/{service}', [ServiceController::class, 'show']);
         Route::patch('/{service}/toggle-status', [ServiceController::class, 'toggleStatus']);
         Route::delete('/{service}', [ServiceController::class, 'destroy']);
+    });
+
+    // Appointment Management
+    Route::prefix('appointments')->group(function () {
+        Route::get('/', [AppointmentController::class, 'index']);
+        Route::get('/statistics', [AppointmentController::class, 'statistics']);
+        Route::get('/{appointment}', [AppointmentController::class, 'show']);
+        Route::patch('/{appointment}/status', [AppointmentController::class, 'updateStatus']);
+        Route::delete('/{appointment}', [AppointmentController::class, 'destroy']);
     });
 
     // Staff Reports & Analytics

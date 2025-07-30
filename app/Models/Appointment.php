@@ -75,6 +75,7 @@ class Appointment extends Model
     public const STATUS_CLOSED = 'closed';
     public const STATUS_CANCELLED_BY_CLIENT = 'cancelled_by_client';
     public const STATUS_CANCELLED_BY_PROVIDER = 'cancelled_by_provider';
+    public const STATUS_CANCELLED_BY_STAFF = 'cancelled_by_staff';
     public const STATUS_NO_SHOW = 'no_show';
     public const STATUS_DISPUTED = 'disputed';
     public const STATUS_EXPIRED = 'expired';
@@ -220,6 +221,7 @@ class Appointment extends Model
             self::STATUS_CLOSED => 'badge bg-secondary',
             self::STATUS_CANCELLED_BY_CLIENT => 'badge bg-danger',
             self::STATUS_CANCELLED_BY_PROVIDER => 'badge bg-danger',
+            self::STATUS_CANCELLED_BY_STAFF => 'badge bg-danger',
             self::STATUS_NO_SHOW => 'badge bg-dark',
             self::STATUS_DISPUTED => 'badge bg-warning',
             self::STATUS_EXPIRED => 'badge bg-dark'
@@ -242,6 +244,7 @@ class Appointment extends Model
             self::STATUS_CLOSED => 'Closed',
             self::STATUS_CANCELLED_BY_CLIENT => 'Cancelled by Client',
             self::STATUS_CANCELLED_BY_PROVIDER => 'Cancelled by Provider',
+            self::STATUS_CANCELLED_BY_STAFF => 'Cancelled by Staff',
             self::STATUS_NO_SHOW => 'No Show',
             self::STATUS_DISPUTED => 'Disputed',
             self::STATUS_EXPIRED => 'Expired'
@@ -270,7 +273,8 @@ class Appointment extends Model
     {
         return in_array($this->status, [
             self::STATUS_CANCELLED_BY_CLIENT,
-            self::STATUS_CANCELLED_BY_PROVIDER
+            self::STATUS_CANCELLED_BY_PROVIDER,
+            self::STATUS_CANCELLED_BY_STAFF
         ]);
     }
 
@@ -403,10 +407,16 @@ class Appointment extends Model
 
     public function cancel($cancelledBy = 'client', $reason = null)
     {
+
+        $status = match ($cancelledBy) {
+            'client' => self::STATUS_CANCELLED_BY_CLIENT,
+            'provider' => self::STATUS_CANCELLED_BY_PROVIDER,
+            'staff' => self::STATUS_CANCELLED_BY_STAFF,
+            default => self::STATUS_CANCELLED_BY_CLIENT
+        };
+
         $this->update([
-            'status' => $cancelledBy === 'client'
-                ? self::STATUS_CANCELLED_BY_CLIENT
-                : self::STATUS_CANCELLED_BY_PROVIDER,
+            'status' => $status,
             'cancelled_at' => now(),
             'cancellation_reason' => $reason
         ]);

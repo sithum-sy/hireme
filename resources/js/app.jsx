@@ -80,6 +80,7 @@ import EditCategory from "./pages/staff/categories/EditCategory";
 import CategoryDetails from "./pages/staff/categories/CategoryDetails";
 import UsersList from "./pages/staff/users/UsersList";
 import ServicesList from "./pages/staff/services/ServicesList";
+import StaffAppointmentsList from "./pages/staff/appointments/AppointmentsList";
 import StaffProfile from "./pages/staff/profile/StaffProfile";
 
 // Report Components
@@ -907,6 +908,26 @@ function App() {
                                                     />
                                                 }
                                             />
+
+                                            {/* Appointment Management */}
+                                            <Route
+                                                path="appointments"
+                                                element={<StaffAppointmentsList />}
+                                            />
+
+                                            <Route
+                                                path="appointments/:id"
+                                                element={
+                                                    <PlaceholderPage
+                                                        title="Appointment Details"
+                                                        subtitle="View detailed appointment information"
+                                                        icon="fas fa-calendar-check"
+                                                        description="View detailed information about a specific appointment."
+                                                        variant="info"
+                                                    />
+                                                }
+                                            />
+
                                             <Route
                                                 path="profile"
                                                 element={<StaffProfile />}
