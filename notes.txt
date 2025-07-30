@@ -53,6 +53,8 @@ php artisan hireme:create-admin \
 # See log files
 tail -f storage/logs/laravel.log
 
+php artisan cache:clear && php artisan config:clear && php artisan route:clear
+
 # xampp mysql error fix
 Important**:** do not delete the ibdata1 file. You could destroy all your databases.
 

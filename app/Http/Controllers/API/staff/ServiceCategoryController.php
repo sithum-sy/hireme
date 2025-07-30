@@ -109,36 +109,52 @@ class ServiceCategoryController extends Controller
             $inactiveServices = $totalServices - $activeServices;
 
             // Get recent services in this category
-            $recentServices = $category->services()
-                ->with(['provider:id,first_name,last_name', 'providerProfile:user_id,average_rating'])
-                ->latest()
-                ->take(5)
-                ->get()
-                ->map(function ($service) {
-                    return [
-                        'id' => $service->id,
-                        'title' => $service->title,
-                        'provider_name' => $service->provider->full_name,
-                        'provider_rating' => $service->providerProfile->average_rating ?? 0,
-                        'is_active' => $service->is_active,
-                        'created_at' => $service->created_at->format('Y-m-d H:i:s'),
-                    ];
-                });
+            // Get recent services in this category (with better error handling)
+            $recentServices = collect();
+            try {
+                $recentServices = $category->services()
+                    ->with(['provider:id,first_name,last_name'])
+                    ->latest()
+                    ->take(5)
+                    ->get()
+                    ->map(function ($service) {
+                        return [
+                            'id' => $service->id,
+                            'title' => $service->title,
+                            'description' => $service->description,
+                            'provider' => [
+                                'name' => $service->provider->first_name . ' ' . $service->provider->last_name,
+                            ],
+                            'is_active' => $service->is_active,
+                            'created_at' => $service->created_at->format('Y-m-d H:i:s'),
+                        ];
+                    });
+            } catch (\Exception $e) {
+                Log::error('Error loading recent services for category: ' . $e->getMessage());
+            }
 
-            // Get provider statistics for this category
-            $providerStats = $category->services()
-                ->selectRaw('provider_id, COUNT(*) as service_count')
-                ->groupBy('provider_id')
-                ->with('provider:id,first_name,last_name')
-                ->get()
-                ->map(function ($stat) {
-                    return [
-                        'provider_name' => $stat->provider->full_name,
-                        'service_count' => $stat->service_count,
-                    ];
-                })
-                ->sortByDesc('service_count')
-                ->take(10);
+            // Get provider statistics for this category (with better error handling)
+            $providerStats = collect();
+            try {
+                $providerStats = $category->services()
+                    ->selectRaw('provider_id, COUNT(*) as service_count')
+                    ->groupBy('provider_id')
+                    ->with('provider:id,first_name,last_name')
+                    ->get()
+                    ->map(function ($stat) {
+                        return [
+                            'id' => $stat->provider->id,
+                            'name' => $stat->provider->first_name . ' ' . $stat->provider->last_name,
+                            'services_count' => $stat->service_count,
+                            'is_active' => true, // Assume active for now
+                        ];
+                    })
+                    ->sortByDesc('services_count')
+                    ->take(10)
+                    ->values();
+            } catch (\Exception $e) {
+                Log::error('Error loading provider stats for category: ' . $e->getMessage());
+            }
 
             $categoryData = [
                 'id' => $category->id,
@@ -156,6 +172,8 @@ class ServiceCategoryController extends Controller
                 ],
                 'recent_services' => $recentServices,
                 'top_providers' => $providerStats,
+                'meta_title' => $category->meta_title,
+                'meta_description' => $category->meta_description,
                 'created_at' => $category->created_at->format('Y-m-d H:i:s'),
                 'updated_at' => $category->updated_at->format('Y-m-d H:i:s'),
             ];

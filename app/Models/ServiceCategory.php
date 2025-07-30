@@ -18,6 +18,8 @@ class ServiceCategory extends Model
         'color',
         'is_active',
         'sort_order',
+        'meta_title',
+        'meta_description',
         'created_by', // Track which staff member created this category
     ];
 

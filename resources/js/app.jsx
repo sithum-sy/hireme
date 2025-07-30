@@ -78,12 +78,15 @@ import CategoriesList from "./pages/staff/categories/CategoriesList";
 import CreateCategory from "./pages/staff/categories/CreateCategory";
 import EditCategory from "./pages/staff/categories/EditCategory";
 import CategoryDetails from "./pages/staff/categories/CategoryDetails";
+import UsersList from "./pages/staff/users/UsersList";
+import ServicesList from "./pages/staff/services/ServicesList";
 import StaffProfile from "./pages/staff/profile/StaffProfile";
 
 // Report Components
 import AdminReportsPage from "./components/admin/reports/ReportsPage";
 import ClientReportsPage from "./components/client/reports/ReportsPage";
 import ProviderReportsPage from "./components/provider/reports/ReportsPage";
+import StaffReportsPage from "./pages/staff/reports/StaffReportsPage";
 
 function App() {
     return (
@@ -881,27 +884,25 @@ function App() {
                                             />
 
                                             {/* Staff placeholder routes */}
+                                            {/* User Management */}
                                             <Route
                                                 path="users"
-                                                element={
-                                                    <PlaceholderPage
-                                                        title="User Management"
-                                                        subtitle="Assist with user support"
-                                                        icon="fas fa-users"
-                                                        description="Help manage users and provide customer support."
-                                                        variant="info"
-                                                    />
-                                                }
+                                                element={<UsersList />}
                                             />
 
                                             <Route
                                                 path="services"
+                                                element={<ServicesList />}
+                                            />
+
+                                            <Route
+                                                path="services/:id"
                                                 element={
                                                     <PlaceholderPage
-                                                        title="Service Review"
-                                                        subtitle="Review pending services"
-                                                        icon="fas fa-clipboard-check"
-                                                        description="Review and approve pending service submissions."
+                                                        title="Service Details"
+                                                        subtitle="View detailed service information"
+                                                        icon="fas fa-concierge-bell"
+                                                        description="View detailed information about a specific service."
                                                         variant="warning"
                                                     />
                                                 }
@@ -909,6 +910,12 @@ function App() {
                                             <Route
                                                 path="profile"
                                                 element={<StaffProfile />}
+                                            />
+
+                                            {/* Staff Reports Routes */}
+                                            <Route
+                                                path="reports"
+                                                element={<StaffReportsPage />}
                                             />
 
                                             <Route

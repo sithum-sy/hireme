@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Log;
 
 class GeocodingController extends Controller
 {
@@ -40,9 +41,8 @@ class GeocodingController extends Controller
             }
 
             return response()->json(['error' => 'External API request failed'], 500);
-
         } catch (\Exception $e) {
-            \Log::error('Geocoding search failed: ' . $e->getMessage());
+            Log::error('Geocoding search failed: ' . $e->getMessage());
             return response()->json(['error' => 'Service unavailable'], 503);
         }
     }
@@ -78,9 +78,8 @@ class GeocodingController extends Controller
             }
 
             return response()->json(['error' => 'External API request failed'], 500);
-
         } catch (\Exception $e) {
-            \Log::error('Reverse geocoding failed: ' . $e->getMessage());
+            Log::error('Reverse geocoding failed: ' . $e->getMessage());
             return response()->json(['error' => 'Service unavailable'], 503);
         }
     }

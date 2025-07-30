@@ -1454,6 +1454,67 @@ class ClientService {
         };
     }
 
+    // Dashboard APIs
+    async getDashboardStats() {
+        try {
+            const response = await axios.get(`${API_BASE}/dashboard/stats`);
+            
+            if (response.data && response.data.success) {
+                return {
+                    success: true,
+                    data: response.data.data,
+                    message: response.data.message || "Dashboard stats loaded successfully"
+                };
+            } else {
+                throw new Error(response.data.message || "Failed to load dashboard stats");
+            }
+        } catch (error) {
+            console.warn("Dashboard stats endpoint error:", error);
+            // Return fallback stats for development
+            return {
+                success: true,
+                data: {
+                    totalAppointments: 0,
+                    completedAppointments: 0,
+                    pendingAppointments: 0,
+                    averageRating: 0,
+                    services_viewed: 0,
+                    searches_performed: 0,
+                    total_spent: 0,
+                },
+                message: "Dashboard stats loaded (fallback mode)",
+                fallback: true
+            };
+        }
+    }
+
+    async getRecentActivity(limit = 10) {
+        try {
+            const response = await axios.get(`${API_BASE}/dashboard/recent-activity`, {
+                params: { limit }
+            });
+            
+            if (response.data && response.data.success) {
+                return {
+                    success: true,
+                    data: response.data.data,
+                    message: response.data.message || "Recent activity loaded successfully"
+                };
+            } else {
+                throw new Error(response.data.message || "Failed to load recent activity");
+            }
+        } catch (error) {
+            console.warn("Recent activity endpoint error:", error);
+            // Return empty activity for now
+            return {
+                success: true,
+                data: [],
+                message: "Recent activity loaded (fallback mode)",
+                fallback: true
+            };
+        }
+    }
+
     // Clear cache
     clearCache() {
         this.cache.clear();

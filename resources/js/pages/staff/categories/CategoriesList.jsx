@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useStaff } from "../../../context/StaffContext";
 import StaffLayout from "../../../components/layouts/StaffLayout";
-import CategoriesTable from "../../../components/staff/CategoriesTable";
+import CategoriesTable from "../../../components/staff/categories/CategoriesTable";
 
 const CategoriesList = () => {
     const {
@@ -22,7 +22,7 @@ const CategoriesList = () => {
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [categoryToDelete, setCategoryToDelete] = useState(null);
     const [localFilters, setLocalFilters] = useState(categoriesFilters);
-    const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'table'
+    const [viewMode, setViewMode] = useState("grid"); // 'grid' or 'table'
 
     useEffect(() => {
         loadCategories();
@@ -179,30 +179,43 @@ const CategoriesList = () => {
                     <div className="mb-3 mb-md-0">
                         <h1 className="page-title">Service Categories</h1>
                         <p className="page-subtitle">
-                            Manage and organize service categories for the platform
+                            Manage and organize service categories for the
+                            platform
                         </p>
                     </div>
                     <div className="d-flex flex-column flex-md-row align-items-start align-items-md-center gap-3">
                         {/* View Toggle */}
-                        <div className="btn-group" role="group" aria-label="View toggle">
+                        <div
+                            className="btn-group"
+                            role="group"
+                            aria-label="View toggle"
+                        >
                             <button
                                 type="button"
-                                className={`btn ${viewMode === 'grid' ? 'btn-primary' : 'btn-outline-primary'}`}
-                                onClick={() => setViewMode('grid')}
+                                className={`btn ${
+                                    viewMode === "grid"
+                                        ? "btn-primary"
+                                        : "btn-outline-primary"
+                                }`}
+                                onClick={() => setViewMode("grid")}
                                 title="Grid View"
                             >
                                 <i className="fas fa-th-large"></i>
                             </button>
                             <button
                                 type="button"
-                                className={`btn ${viewMode === 'table' ? 'btn-primary' : 'btn-outline-primary'}`}
-                                onClick={() => setViewMode('table')}
+                                className={`btn ${
+                                    viewMode === "table"
+                                        ? "btn-primary"
+                                        : "btn-outline-primary"
+                                }`}
+                                onClick={() => setViewMode("table")}
                                 title="Table View"
                             >
                                 <i className="fas fa-table"></i>
                             </button>
                         </div>
-                        
+
                         <button
                             className="btn btn-outline-primary btn-responsive"
                             onClick={() => loadCategories()}
@@ -253,7 +266,10 @@ const CategoriesList = () => {
                                     className="form-select"
                                     value={localFilters.status}
                                     onChange={(e) =>
-                                        handleFilterChange("status", e.target.value)
+                                        handleFilterChange(
+                                            "status",
+                                            e.target.value
+                                        )
                                     }
                                 >
                                     <option value="">All Status</option>
@@ -284,7 +300,9 @@ const CategoriesList = () => {
                                         Sort Order (Z-A)
                                     </option>
                                     <option value="name_asc">Name (A-Z)</option>
-                                    <option value="name_desc">Name (Z-A)</option>
+                                    <option value="name_desc">
+                                        Name (Z-A)
+                                    </option>
                                     <option value="created_at_desc">
                                         Newest First
                                     </option>
@@ -389,7 +407,7 @@ const CategoriesList = () => {
                 ) : categories.length > 0 ? (
                     <>
                         {/* Categories Display - Grid or Table */}
-                        {viewMode === 'grid' ? (
+                        {viewMode === "grid" ? (
                             /* Categories Grid */
                             <div className="row">
                                 {categories.map((category) => (
@@ -399,125 +417,130 @@ const CategoriesList = () => {
                                     >
                                         <div className="card border-0 shadow-sm h-100">
                                             <div className="card-body">
-                                            {/* Category Header */}
-                                            <div className="d-flex align-items-center mb-3">
-                                                <div className="form-check me-3">
-                                                    <input
-                                                        className="form-check-input"
-                                                        type="checkbox"
-                                                        checked={selectedCategories.includes(
-                                                            category.id
-                                                        )}
-                                                        onChange={() =>
-                                                            handleSelectCategory(
+                                                {/* Category Header */}
+                                                <div className="d-flex align-items-center mb-3">
+                                                    <div className="form-check me-3">
+                                                        <input
+                                                            className="form-check-input"
+                                                            type="checkbox"
+                                                            checked={selectedCategories.includes(
                                                                 category.id
+                                                            )}
+                                                            onChange={() =>
+                                                                handleSelectCategory(
+                                                                    category.id
+                                                                )
+                                                            }
+                                                        />
+                                                    </div>
+                                                    <div
+                                                        className="category-icon me-3 d-flex align-items-center justify-content-center rounded"
+                                                        style={{
+                                                            width: "40px",
+                                                            height: "40px",
+                                                            backgroundColor:
+                                                                category.color ||
+                                                                "#6c757d",
+                                                            color: "white",
+                                                        }}
+                                                    >
+                                                        <i
+                                                            className={
+                                                                category.icon ||
+                                                                "fas fa-folder"
+                                                            }
+                                                        ></i>
+                                                    </div>
+                                                    <div className="flex-grow-1">
+                                                        <h6 className="mb-1">
+                                                            {category.name}
+                                                        </h6>
+                                                        <small className="text-muted">
+                                                            {category.services_count ||
+                                                                0}{" "}
+                                                            services
+                                                        </small>
+                                                    </div>
+                                                    {getCategoryStatusBadge(
+                                                        category
+                                                    )}
+                                                </div>
+
+                                                {/* Category Description */}
+                                                <p className="text-muted small mb-3">
+                                                    {category.description ||
+                                                        "No description provided"}
+                                                </p>
+
+                                                {/* Category Meta */}
+                                                <div className="d-flex justify-content-between align-items-center text-muted small mb-3">
+                                                    <span>
+                                                        Order:{" "}
+                                                        {category.sort_order ||
+                                                            0}
+                                                    </span>
+                                                    <span>
+                                                        Created:{" "}
+                                                        {formatDate(
+                                                            category.created_at
+                                                        )}
+                                                    </span>
+                                                </div>
+
+                                                {/* Action Buttons */}
+                                                <div className="d-flex gap-2">
+                                                    <a
+                                                        href={`/staff/service-categories/${category.id}`}
+                                                        className="btn btn-sm btn-outline-primary flex-grow-1"
+                                                    >
+                                                        <i className="fas fa-eye me-1"></i>
+                                                        View
+                                                    </a>
+                                                    <a
+                                                        href={`/staff/service-categories/${category.id}/edit`}
+                                                        className="btn btn-sm btn-outline-secondary"
+                                                    >
+                                                        <i className="fas fa-edit"></i>
+                                                    </a>
+                                                    <button
+                                                        className={`btn btn-sm ${
+                                                            category.is_active
+                                                                ? "btn-outline-warning"
+                                                                : "btn-outline-success"
+                                                        }`}
+                                                        onClick={() =>
+                                                            handleToggleStatus(
+                                                                category
                                                             )
                                                         }
-                                                    />
-                                                </div>
-                                                <div
-                                                    className="category-icon me-3 d-flex align-items-center justify-content-center rounded"
-                                                    style={{
-                                                        width: "40px",
-                                                        height: "40px",
-                                                        backgroundColor:
-                                                            category.color ||
-                                                            "#6c757d",
-                                                        color: "white",
-                                                    }}
-                                                >
-                                                    <i
-                                                        className={
-                                                            category.icon ||
-                                                            "fas fa-folder"
-                                                        }
-                                                    ></i>
-                                                </div>
-                                                <div className="flex-grow-1">
-                                                    <h6 className="mb-1">
-                                                        {category.name}
-                                                    </h6>
-                                                    <small className="text-muted">
-                                                        {category.services_count ||
-                                                            0}{" "}
-                                                        services
-                                                    </small>
-                                                </div>
-                                                {getCategoryStatusBadge(category)}
-                                            </div>
-
-                                            {/* Category Description */}
-                                            <p className="text-muted small mb-3">
-                                                {category.description ||
-                                                    "No description provided"}
-                                            </p>
-
-                                            {/* Category Meta */}
-                                            <div className="d-flex justify-content-between align-items-center text-muted small mb-3">
-                                                <span>
-                                                    Order:{" "}
-                                                    {category.sort_order || 0}
-                                                </span>
-                                                <span>
-                                                    Created:{" "}
-                                                    {formatDate(
-                                                        category.created_at
-                                                    )}
-                                                </span>
-                                            </div>
-
-                                            {/* Action Buttons */}
-                                            <div className="d-flex gap-2">
-                                                <a
-                                                    href={`/staff/service-categories/${category.id}`}
-                                                    className="btn btn-sm btn-outline-primary flex-grow-1"
-                                                >
-                                                    <i className="fas fa-eye me-1"></i>
-                                                    View
-                                                </a>
-                                                <a
-                                                    href={`/staff/service-categories/${category.id}/edit`}
-                                                    className="btn btn-sm btn-outline-secondary"
-                                                >
-                                                    <i className="fas fa-edit"></i>
-                                                </a>
-                                                <button
-                                                    className={`btn btn-sm ${
-                                                        category.is_active
-                                                            ? "btn-outline-warning"
-                                                            : "btn-outline-success"
-                                                    }`}
-                                                    onClick={() =>
-                                                        handleToggleStatus(category)
-                                                    }
-                                                    disabled={isProcessing}
-                                                    title={
-                                                        category.is_active
-                                                            ? "Deactivate"
-                                                            : "Activate"
-                                                    }
-                                                >
-                                                    <i
-                                                        className={`fas fa-${
+                                                        disabled={isProcessing}
+                                                        title={
                                                             category.is_active
-                                                                ? "pause"
-                                                                : "play"
-                                                        }`}
-                                                    ></i>
-                                                </button>
-                                                <button
-                                                    className="btn btn-sm btn-outline-danger"
-                                                    onClick={() =>
-                                                        handleDeleteCategory(
-                                                            category
-                                                        )
-                                                    }
-                                                    disabled={isProcessing}
-                                                    title="Delete"
-                                                >
-                                                    <i className="fas fa-trash"></i>
-                                                </button>
-                                            </div>
+                                                                ? "Deactivate"
+                                                                : "Activate"
+                                                        }
+                                                    >
+                                                        <i
+                                                            className={`fas fa-${
+                                                                category.is_active
+                                                                    ? "pause"
+                                                                    : "play"
+                                                            }`}
+                                                        ></i>
+                                                    </button>
+                                                    <button
+                                                        className="btn btn-sm btn-outline-danger"
+                                                        onClick={() =>
+                                                            handleDeleteCategory(
+                                                                category
+                                                            )
+                                                        }
+                                                        disabled={isProcessing}
+                                                        title="Delete"
+                                                    >
+                                                        <i className="fas fa-trash"></i>
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -591,7 +614,9 @@ const CategoriesList = () => {
                                                     <button
                                                         className="page-link"
                                                         onClick={() =>
-                                                            handlePageChange(page)
+                                                            handlePageChange(
+                                                                page
+                                                            )
                                                         }
                                                     >
                                                         {page}
@@ -679,59 +704,68 @@ const CategoriesList = () => {
                         <div className="modal-dialog">
                             <div className="modal-content">
                                 <div className="modal-header">
-                                <h5 className="modal-title">
-                                    <i className="fas fa-exclamation-triangle text-warning me-2"></i>
-                                    Confirm Deletion
-                                </h5>
-                                <button
-                                    type="button"
-                                    className="btn-close"
-                                    onClick={() => setShowDeleteModal(false)}
-                                ></button>
-                            </div>
-                            <div className="modal-body">
-                                <p>
-                                    Are you sure you want to delete the category{" "}
-                                    <strong>"{categoryToDelete?.name}"</strong>?
-                                </p>
-                                <div className="alert alert-warning">
-                                    <i className="fas fa-exclamation-triangle me-2"></i>
-                                    This action cannot be undone. All services
-                                    in this category will need to be reassigned.
+                                    <h5 className="modal-title">
+                                        <i className="fas fa-exclamation-triangle text-warning me-2"></i>
+                                        Confirm Deletion
+                                    </h5>
+                                    <button
+                                        type="button"
+                                        className="btn-close"
+                                        onClick={() =>
+                                            setShowDeleteModal(false)
+                                        }
+                                    ></button>
+                                </div>
+                                <div className="modal-body">
+                                    <p>
+                                        Are you sure you want to delete the
+                                        category{" "}
+                                        <strong>
+                                            "{categoryToDelete?.name}"
+                                        </strong>
+                                        ?
+                                    </p>
+                                    <div className="alert alert-warning">
+                                        <i className="fas fa-exclamation-triangle me-2"></i>
+                                        This action cannot be undone. All
+                                        services in this category will need to
+                                        be reassigned.
+                                    </div>
+                                </div>
+                                <div className="modal-footer">
+                                    <button
+                                        type="button"
+                                        className="btn btn-secondary"
+                                        onClick={() =>
+                                            setShowDeleteModal(false)
+                                        }
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="btn btn-danger"
+                                        onClick={confirmDelete}
+                                        disabled={isProcessing}
+                                    >
+                                        {isProcessing ? (
+                                            <>
+                                                <span
+                                                    className="spinner-border spinner-border-sm me-2"
+                                                    role="status"
+                                                ></span>
+                                                Deleting...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <i className="fas fa-trash me-2"></i>
+                                                Delete Category
+                                            </>
+                                        )}
+                                    </button>
                                 </div>
                             </div>
-                            <div className="modal-footer">
-                                <button
-                                    type="button"
-                                    className="btn btn-secondary"
-                                    onClick={() => setShowDeleteModal(false)}
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    type="button"
-                                    className="btn btn-danger"
-                                    onClick={confirmDelete}
-                                    disabled={isProcessing}
-                                >
-                                    {isProcessing ? (
-                                        <>
-                                            <span
-                                                className="spinner-border spinner-border-sm me-2"
-                                                role="status"
-                                            ></span>
-                                            Deleting...
-                                        </>
-                                    ) : (
-                                        <>
-                                            <i className="fas fa-trash me-2"></i>
-                                            Delete Category
-                                        </>
-                                    )}
-                                </button>
-                            </div>
                         </div>
-                    </div>
                     </div>
                 )}
             </div>

@@ -799,7 +799,15 @@ class AppointmentController extends Controller
 
             // Apply status filter
             if ($request->status && $request->status !== 'all') {
-                $query->where('status', $request->status);
+                // Handle comma-separated status values
+                $statusValues = explode(',', $request->status);
+                $statusValues = array_map('trim', $statusValues);
+                
+                if (count($statusValues) > 1) {
+                    $query->whereIn('status', $statusValues);
+                } else {
+                    $query->where('status', $request->status);
+                }
             }
 
             // Apply date filters

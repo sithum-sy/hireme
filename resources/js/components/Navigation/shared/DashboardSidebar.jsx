@@ -210,10 +210,6 @@ const DashboardSidebar = ({
                     icon: "fas fa-users",
                     label: "Users",
                     path: "/staff/users",
-                    children: [
-                        { label: "Clients", path: "/staff/users/clients" },
-                        { label: "Providers", path: "/staff/users/providers" },
-                    ],
                 },
                 {
                     id: "services",
