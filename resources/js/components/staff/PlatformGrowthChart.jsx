@@ -24,21 +24,34 @@ const PlatformGrowthChart = ({
         }
     };
 
-    // Mock data for demonstration if no data provided
-    const mockData = [
-        { date: "2024-12-01", users: 120, services: 45, appointments: 30 },
-        { date: "2024-12-02", users: 135, services: 48, appointments: 35 },
-        { date: "2024-12-03", users: 150, services: 52, appointments: 40 },
-        { date: "2024-12-04", users: 165, services: 55, appointments: 42 },
-        { date: "2024-12-05", users: 180, services: 58, appointments: 45 },
-        { date: "2024-12-06", users: 195, services: 62, appointments: 48 },
-        { date: "2024-12-07", users: 210, services: 65, appointments: 52 },
-        { date: "2024-12-08", users: 225, services: 68, appointments: 55 },
-        { date: "2024-12-09", users: 240, services: 72, appointments: 58 },
-        { date: "2024-12-10", users: 255, services: 75, appointments: 62 },
-    ];
+    // Process real data from API
+    const processChartData = (rawData) => {
+        if (!rawData || !Array.isArray(rawData) || rawData.length === 0) {
+            return [];
+        }
 
-    const chartData = data.length > 0 ? data : mockData;
+        // Transform the API data structure to match our chart format
+        // Handle various possible API response structures
+        return rawData.map(item => {
+            // Handle different date formats
+            let dateValue = item.date;
+            if (!dateValue && item.created_at) {
+                dateValue = item.created_at.split('T')[0];
+            }
+            if (!dateValue) {
+                dateValue = new Date().toISOString().split('T')[0];
+            }
+
+            return {
+                date: dateValue,
+                users: Number(item.users || item.user_count || item.total_users || item.user_registrations || 0),
+                services: Number(item.services || item.service_count || item.total_services || item.services_created || 0),
+                appointments: Number(item.appointments || item.appointment_count || item.total_appointments || item.appointments_created || 0),
+            };
+        }).filter(item => item.date && item.date !== 'Invalid Date'); // Filter out items with invalid dates
+    };
+
+    const chartData = processChartData(data);
 
     // Calculate growth percentages
     const calculateGrowth = (data, key) => {
@@ -589,7 +602,7 @@ const PlatformGrowthChart = ({
                         {/* Chart Summary */}
                         <div className="row mt-4">
                             <div className="col-md-4">
-                                <div className="text-center p-3 bg-primary bg-opacity-10 rounded">
+                                <div className="text-center p-3 border border-success rounded">
                                     <div className="d-flex justify-content-between align-items-center mb-1">
                                         <h6 className="text-primary mb-0">
                                             {chartData.length > 0
@@ -619,7 +632,7 @@ const PlatformGrowthChart = ({
                                 </div>
                             </div>
                             <div className="col-md-4">
-                                <div className="text-center p-3 bg-success bg-opacity-10 rounded">
+                                <div className="text-center p-3 border border-success rounded">
                                     <div className="d-flex justify-content-between align-items-center mb-1">
                                         <h6 className="text-success mb-0">
                                             {chartData.length > 0
@@ -649,7 +662,7 @@ const PlatformGrowthChart = ({
                                 </div>
                             </div>
                             <div className="col-md-4">
-                                <div className="text-center p-3 bg-warning bg-opacity-10 rounded">
+                                <div className="text-center p-3 border border-warning rounded">
                                     <div className="d-flex justify-content-between align-items-center mb-1">
                                         <h6 className="text-warning mb-0">
                                             {chartData.length > 0
@@ -687,12 +700,20 @@ const PlatformGrowthChart = ({
                             <div className="text-center py-5">
                                 <i className="fas fa-chart-line fa-3x text-muted mb-3"></i>
                                 <h6 className="text-muted">
-                                    No Chart Data Available
+                                    No Growth Data Available
                                 </h6>
                                 <p className="text-muted small mb-0">
-                                    Chart data will appear here once platform
-                                    metrics are available.
+                                    {loading 
+                                        ? "Loading platform growth metrics..." 
+                                        : `Platform growth data for the last ${selectedPeriod} days will appear here once available.`
+                                    }
                                 </p>
+                                {!loading && (
+                                    <small className="text-muted d-block mt-2">
+                                        <i className="fas fa-info-circle me-1"></i>
+                                        Data updates every 15 minutes
+                                    </small>
+                                )}
                             </div>
                         )}
                     </>

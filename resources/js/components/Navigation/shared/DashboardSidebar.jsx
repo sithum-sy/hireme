@@ -39,22 +39,12 @@ const DashboardSidebar = ({
                     label: "Dashboard",
                     path: "/admin/dashboard",
                 },
-                {
-                    id: "users",
-                    icon: "fas fa-users",
-                    label: "User Management",
-                    path: "/admin/users",
-                    children: [
-                        { label: "All Users", path: "/admin/users" },
-                        { label: "Clients", path: "/admin/users/clients" },
-                        { label: "Providers", path: "/admin/users/providers" },
-                        {
-                            label: "Pending Approvals",
-                            path: "/admin/users/pending",
-                            badge: "5",
-                        },
-                    ],
-                },
+                // {
+                //     id: "users",
+                //     icon: "fas fa-users",
+                //     label: "User Management",
+                //     path: "/admin/users",
+                // },
                 {
                     id: "staff",
                     icon: "fas fa-user-tie",
@@ -63,134 +53,68 @@ const DashboardSidebar = ({
                     children: [
                         { label: "All Staff", path: "/admin/staff" },
                         { label: "Add Staff", path: "/admin/staff/create" },
-                        {
-                            label: "Roles & Permissions",
-                            path: "/admin/staff/roles",
-                        },
                     ],
                 },
-                {
-                    id: "categories",
-                    icon: "fas fa-tags",
-                    label: "Categories",
-                    path: "/admin/categories",
-                    badge: "12",
-                },
-                {
-                    id: "services",
-                    icon: "fas fa-concierge-bell",
-                    label: "Services",
-                    path: "/admin/services",
-                    children: [
-                        { label: "All Services", path: "/admin/services" },
-                        {
-                            label: "Pending Review",
-                            path: "/admin/services/pending",
-                            badge: "8",
-                        },
-                        {
-                            label: "Reported Services",
-                            path: "/admin/services/reported",
-                        },
-                    ],
-                },
-                {
-                    id: "appointments",
-                    icon: "fas fa-calendar-alt",
-                    label: "Appointments",
-                    path: "/admin/appointments",
-                    badge: "23",
-                },
-                {
-                    id: "payments",
-                    icon: "fas fa-credit-card",
-                    label: "Payments",
-                    path: "/admin/payments",
-                    children: [
-                        {
-                            label: "Transactions",
-                            path: "/admin/payments/transactions",
-                        },
-                        { label: "Refunds", path: "/admin/payments/refunds" },
-                        {
-                            label: "Disputes",
-                            path: "/admin/payments/disputes",
-                            badge: "3",
-                        },
-                    ],
-                },
-                {
-                    id: "reports",
-                    icon: "fas fa-chart-bar",
-                    label: "Reports & Analytics",
-                    path: "/admin/reports",
-                    children: [
-                        {
-                            label: "Platform Analytics",
-                            path: "/admin/reports",
-                        },
-                        {
-                            label: "User Management",
-                            path: "/admin/reports/user-management",
-                        },
-                        {
-                            label: "Financial Performance",
-                            path: "/admin/reports/financial-performance",
-                        },
-                        {
-                            label: "Service Analytics",
-                            path: "/admin/reports/service-analytics",
-                        },
-                        {
-                            label: "Provider Performance",
-                            path: "/admin/reports/provider-performance",
-                        },
-                    ],
-                },
+                // {
+                //     id: "categories",
+                //     icon: "fas fa-tags",
+                //     label: "Categories",
+                //     path: "/admin/categories",
+                // },
+                // {
+                //     id: "services",
+                //     icon: "fas fa-concierge-bell",
+                //     label: "Services",
+                //     path: "/admin/services",
+                // },
+                // {
+                //     id: "appointments",
+                //     icon: "fas fa-calendar-alt",
+                //     label: "Appointments",
+                //     path: "/admin/appointments",
+                // },
+                // {
+                //     id: "payments",
+                //     icon: "fas fa-credit-card",
+                //     label: "Payments",
+                //     path: "/admin/payments",
+                // },
+                // {
+                //     id: "reports",
+                //     icon: "fas fa-chart-bar",
+                //     label: "Reports & Analytics",
+                //     path: "/admin/reports",
+                // },
                 {
                     id: "profile",
                     icon: "fas fa-user",
                     label: "Admin Profile",
                     path: "/admin/profile",
-                    children: [
-                        {
-                            label: "Profile Overview",
-                            path: "/admin/profile",
-                        },
-                        {
-                            label: "Personal Information",
-                            path: "/admin/profile/personal",
-                        },
-                        {
-                            label: "Security Settings",
-                            path: "/admin/profile/security",
-                        },
-                    ],
                 },
-                {
-                    id: "settings",
-                    icon: "fas fa-cog",
-                    label: "System Settings",
-                    path: "/admin/settings",
-                    children: [
-                        {
-                            label: "General Settings",
-                            path: "/admin/settings/general",
-                        },
-                        {
-                            label: "Email Templates",
-                            path: "/admin/settings/emails",
-                        },
-                        {
-                            label: "Platform Fees",
-                            path: "/admin/settings/fees",
-                        },
-                        {
-                            label: "Backup & Security",
-                            path: "/admin/settings/security",
-                        },
-                    ],
-                },
+                // {
+                //     id: "settings",
+                //     icon: "fas fa-cog",
+                //     label: "System Settings",
+                //     path: "/admin/settings",
+                //     children: [
+                //         {
+                //             label: "General Settings",
+                //             path: "/admin/settings/general",
+                //         },
+                //         {
+                //             label: "Email Templates",
+                //             path: "/admin/settings/emails",
+                //         },
+                //         {
+                //             label: "Platform Fees",
+                //             path: "/admin/settings/fees",
+                //         },
+                //         {
+                //             label: "Backup & Security",
+                //             path: "/admin/settings/security",
+                //         },
+                //     ],
+                // },
             ],
             staff: [
                 {

@@ -121,6 +121,11 @@ const AppointmentsTable = ({
                 text: "Expired",
                 icon: "fa-hourglass-end",
             },
+            cancelled_by_staff: {
+                class: "status-cancelled",
+                text: "Cancelled by Staff",
+                icon: "fa-times-circle",
+            },
         };
 
         const statusInfo = statusMap[status] || {

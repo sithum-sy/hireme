@@ -22,6 +22,11 @@ const DashboardNavbar = memo(
         const [showSearchResults, setShowSearchResults] = useState(false);
         const [notifications, setNotifications] = useState([]);
         const [unreadCount, setUnreadCount] = useState(0);
+        const [loadingNotifications, setLoadingNotifications] = useState(false);
+        
+        // Rate limiting - use ref to persist across renders
+        const lastApiCallRef = useRef(0);
+        const RATE_LIMIT_MS = 30000; // 30 seconds minimum between API calls
 
         // Refs for click outside handling
         const notificationRef = useRef(null);
@@ -163,43 +168,51 @@ const DashboardNavbar = memo(
             return [...(roleSpecificItems[role] || []), ...commonItems];
         };
 
-        // Load notifications based on role
-        useEffect(() => {
-            loadNotifications();
-            // Set up polling for real-time updates every 30 seconds
-            const interval = setInterval(loadNotifications, 30000);
-            return () => clearInterval(interval);
-        }, [role]);
+        // Helper function to format time ago - memoized to prevent re-renders
+        const formatTimeAgo = useCallback((dateString) => {
+            const now = new Date();
+            const date = new Date(dateString);
+            const diffInSeconds = Math.floor((now - date) / 1000);
 
-        // Click outside handlers
-        useEffect(() => {
-            const handleClickOutside = (event) => {
-                if (
-                    notificationRef.current &&
-                    !notificationRef.current.contains(event.target)
-                ) {
-                    setShowNotifications(false);
-                }
-                if (
-                    profileRef.current &&
-                    !profileRef.current.contains(event.target)
-                ) {
-                    setShowProfileMenu(false);
-                }
-                if (
-                    searchRef.current &&
-                    !searchRef.current.contains(event.target)
-                ) {
-                    setShowSearchResults(false);
-                }
-            };
-
-            document.addEventListener("mousedown", handleClickOutside);
-            return () =>
-                document.removeEventListener("mousedown", handleClickOutside);
+            if (diffInSeconds < 60) {
+                return 'Just now';
+            }
+            
+            const diffInMinutes = Math.floor(diffInSeconds / 60);
+            if (diffInMinutes < 60) {
+                return `${diffInMinutes} min ago`;
+            }
+            
+            const diffInHours = Math.floor(diffInMinutes / 60);
+            if (diffInHours < 24) {
+                return `${diffInHours} hour${diffInHours > 1 ? 's' : ''} ago`;
+            }
+            
+            const diffInDays = Math.floor(diffInHours / 24);
+            if (diffInDays < 7) {
+                return `${diffInDays} day${diffInDays > 1 ? 's' : ''} ago`;
+            }
+            
+            return date.toLocaleDateString();
         }, []);
 
-        const loadNotifications = async () => {
+        // Load notifications based on role with aggressive rate limiting
+        const loadNotifications = useCallback(async () => {
+            const now = Date.now();
+            
+            // Aggressive rate limiting - check if enough time has passed
+            if (now - lastApiCallRef.current < RATE_LIMIT_MS) {
+                return;
+            }
+            
+            // Prevent concurrent API calls
+            if (loadingNotifications) {
+                return;
+            }
+            
+            lastApiCallRef.current = now;
+            setLoadingNotifications(true);
+            
             try {
                 // Fetch recent notifications from API
                 const [notificationsResponse, unreadCountResponse] = await Promise.all([
@@ -229,39 +242,59 @@ const DashboardNavbar = memo(
                 }
             } catch (error) {
                 console.error('Failed to load notifications:', error);
-                // Fallback to showing empty state
-                setNotifications([]);
-                setUnreadCount(0);
+                // Only reset notifications on non-429 errors to preserve existing data
+                if (error.response?.status !== 429) {
+                    setNotifications([]);
+                    setUnreadCount(0);
+                }
+            } finally {
+                setLoadingNotifications(false);
             }
-        };
+        }, [formatTimeAgo, loadingNotifications]);
 
-        // Helper function to format time ago
-        const formatTimeAgo = (dateString) => {
-            const now = new Date();
-            const date = new Date(dateString);
-            const diffInSeconds = Math.floor((now - date) / 1000);
+        // Load notifications based on role with rate limiting
+        useEffect(() => {
+            // Initial load with a small delay to avoid race conditions
+            const timer = setTimeout(() => {
+                loadNotifications();
+            }, 1000);
+            
+            // Set up polling with much longer interval to be safe
+            const interval = setInterval(loadNotifications, 90000); // 90 seconds
+            
+            return () => {
+                clearTimeout(timer);
+                clearInterval(interval);
+            };
+        }, [role, loadNotifications]);
 
-            if (diffInSeconds < 60) {
-                return 'Just now';
-            }
-            
-            const diffInMinutes = Math.floor(diffInSeconds / 60);
-            if (diffInMinutes < 60) {
-                return `${diffInMinutes} min ago`;
-            }
-            
-            const diffInHours = Math.floor(diffInMinutes / 60);
-            if (diffInHours < 24) {
-                return `${diffInHours} hour${diffInHours > 1 ? 's' : ''} ago`;
-            }
-            
-            const diffInDays = Math.floor(diffInHours / 24);
-            if (diffInDays < 7) {
-                return `${diffInDays} day${diffInDays > 1 ? 's' : ''} ago`;
-            }
-            
-            return date.toLocaleDateString();
-        };
+        // Click outside handlers
+        useEffect(() => {
+            const handleClickOutside = (event) => {
+                if (
+                    notificationRef.current &&
+                    !notificationRef.current.contains(event.target)
+                ) {
+                    setShowNotifications(false);
+                }
+                if (
+                    profileRef.current &&
+                    !profileRef.current.contains(event.target)
+                ) {
+                    setShowProfileMenu(false);
+                }
+                if (
+                    searchRef.current &&
+                    !searchRef.current.contains(event.target)
+                ) {
+                    setShowSearchResults(false);
+                }
+            };
+
+            document.addEventListener("mousedown", handleClickOutside);
+            return () =>
+                document.removeEventListener("mousedown", handleClickOutside);
+        }, []);
 
         const handleSearch = useCallback(
             (e) => {

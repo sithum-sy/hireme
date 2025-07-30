@@ -333,21 +333,50 @@ const formatTargetType = (targetType) => {
 
 const formatDate = (dateString) => {
     if (!dateString) return "Recently";
-    const date = new Date(dateString);
-    return date.toLocaleDateString();
+    try {
+        const date = new Date(dateString);
+        // Check if date is valid
+        if (isNaN(date.getTime())) {
+            return "Recently";
+        }
+        return date.toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "short",
+            day: "numeric"
+        });
+    } catch (error) {
+        console.warn("Invalid date format:", dateString);
+        return "Recently";
+    }
 };
 
 const formatTimeAgo = (dateString) => {
     if (!dateString) return "Recently";
-    const date = new Date(dateString);
-    const now = new Date();
-    const diff = now - date;
-    const minutes = Math.floor(diff / (1000 * 60));
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    try {
+        const date = new Date(dateString);
+        // Check if date is valid
+        if (isNaN(date.getTime())) {
+            return "Recently";
+        }
+        
+        const now = new Date();
+        const diff = now - date;
+        const minutes = Math.floor(diff / (1000 * 60));
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
 
-    if (minutes < 1) return "Just now";
-    if (minutes < 60) return `${minutes}m ago`;
-    if (hours < 24) return `${hours}h ago`;
-    return `${days}d ago`;
+        if (minutes < 1) return "Just now";
+        if (minutes < 60) return `${minutes}m ago`;
+        if (hours < 24) return `${hours}h ago`;
+        if (days < 30) return `${days}d ago`;
+        
+        // For older dates, show formatted date
+        return date.toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric"
+        });
+    } catch (error) {
+        console.warn("Invalid date format:", dateString);
+        return "Recently";
+    }
 };
