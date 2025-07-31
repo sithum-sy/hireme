@@ -1,6 +1,6 @@
 // components/landing/HeroSection.jsx
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const HeroSection = () => {
     const [activeTab, setActiveTab] = useState("client");
@@ -104,6 +104,16 @@ const HeroSection = () => {
                                             </button>
                                         ))}
                                 </div>
+                                {/* Action Buttons */}
+                                <div className="hero-actions pt-5">
+                                    <Link
+                                        to="/register"
+                                        className="btn-primary-large"
+                                    >
+                                        <i className="fas fa-rocket"></i>
+                                        Get Started Free
+                                    </Link>
+                                </div>
                             </div>
                         )}
 
@@ -133,28 +143,16 @@ const HeroSection = () => {
                                         <i className="fas fa-user-plus"></i>
                                         Start Earning Today
                                     </Link>
-                                    <Link
+                                    {/* <Link
                                         to="/provider-info"
                                         className="btn-secondary-outline"
                                     >
                                         <i className="fas fa-info-circle"></i>
                                         Learn More
-                                    </Link>
+                                    </Link> */}
                                 </div>
                             </div>
                         )}
-
-                        {/* Action Buttons */}
-                        <div className="hero-actions">
-                            <Link to="/register" className="btn-primary-large">
-                                <i className="fas fa-rocket"></i>
-                                Get Started Free
-                            </Link>
-                            <Link to="/about" className="btn-secondary-outline">
-                                <i className="fas fa-play-circle"></i>
-                                Watch Demo
-                            </Link>
-                        </div>
 
                         {/* Trust Indicators */}
                         <div className="trust-indicators">

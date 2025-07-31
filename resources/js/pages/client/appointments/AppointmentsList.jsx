@@ -115,6 +115,11 @@ const AppointmentsList = () => {
         loadCategories();
     }, []);
 
+    // Scroll to top when component mounts
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, []);
+
     const loadCategories = async () => {
         try {
             // Use the public service categories endpoint with high per_page to get all categories

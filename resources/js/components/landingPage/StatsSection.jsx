@@ -14,8 +14,9 @@ const StatsSection = () => {
         const fetchStats = async () => {
             try {
                 setLoading(true);
-                const platformStats = await landingPageService.getPlatformStats();
-                
+                const platformStats =
+                    await landingPageService.getPlatformStats();
+
                 // Transform API data to component format
                 const transformedStats = [
                     {
@@ -67,7 +68,7 @@ const StatsSection = () => {
                         color: "secondary",
                     },
                 ];
-                
+
                 setStats(transformedStats);
             } catch (error) {
                 console.error("Error fetching platform stats:", error);
@@ -85,15 +86,15 @@ const StatsSection = () => {
     const getMockStats = () => [
         {
             icon: "fas fa-users",
-            number: 25000,
+            number: 2500,
             suffix: "+",
-            title: "Happy Customers", 
+            title: "Happy Customers",
             description: "Satisfied clients across Sri Lanka",
             color: "primary",
         },
         {
             icon: "fas fa-user-tie",
-            number: 10000,
+            number: 1000,
             suffix: "+",
             title: "Verified Providers",
             description: "Skilled professionals ready to serve",
@@ -126,7 +127,7 @@ const StatsSection = () => {
 
     useEffect(() => {
         if (loading) return; // Don't start animation until data is loaded
-        
+
         const observer = new IntersectionObserver(
             ([entry]) => {
                 if (entry.isIntersecting) {
@@ -191,17 +192,17 @@ const StatsSection = () => {
             <div className="container-custom">
                 {/* Section Header */}
                 <div className="section-header">
-                    <div className="section-badge">
+                    <div className="section-badge mt-3 mx-2">
                         <span>📊 Our Impact</span>
                     </div>
-                    <h2 className="section-title" style={{ color: "white" }}>
+                    <h2 className="section-title" style={{ color: "#4a90e2" }}>
                         Trusted by{" "}
                         <span className="text-gradient">Thousands</span> Across
                         Sri Lanka
                     </h2>
                     <p
                         className="section-subtitle"
-                        style={{ color: "rgba(255, 255, 255, 0.9)" }}
+                        style={{ color: "#4a90e2" }}
                     >
                         See how HireMe is transforming the service industry and
                         creating opportunities for both clients and service
@@ -219,27 +220,31 @@ const StatsSection = () => {
                     </div>
                 ) : (
                     <div className="stats-grid">
-                    {stats.map((stat, index) => (
-                        <div key={index} className="stat-card">
-                            <div className={`stat-icon ${stat.color}`}>
-                                <i className={stat.icon}></i>
-                            </div>
-
-                            <div className="stat-content">
-                                <div className="stat-number-container">
-                                    <AnimatedNumber
-                                        number={stat.number}
-                                        suffix={stat.suffix}
-                                        inView={inView}
-                                    />
+                        {stats.map((stat, index) => (
+                            <div key={index} className="stat-card card-modern">
+                                <div
+                                    className={
+                                        "stat-icon bg-info " + stat.color
+                                    }
+                                >
+                                    <i className={stat.icon}></i>
                                 </div>
-                                <h3 className="stat-title">{stat.title}</h3>
-                                <p className="stat-description">
-                                    {stat.description}
-                                </p>
+
+                                <div className="stat-content">
+                                    <div className="stat-number-container">
+                                        <AnimatedNumber
+                                            number={stat.number}
+                                            suffix={stat.suffix}
+                                            inView={inView}
+                                        />
+                                    </div>
+                                    <h3 className="stat-title">{stat.title}</h3>
+                                    {/* <p className="stat-description">
+                                        {stat.description}
+                                    </p> */}
+                                </div>
                             </div>
-                        </div>
-                    ))}
+                        ))}
                     </div>
                 )}
 

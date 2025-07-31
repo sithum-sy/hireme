@@ -44,6 +44,7 @@ class AuthController extends Controller
         try {
             DB::beginTransaction();
 
+            // Validate and sanitize user input
             $userData = $request->validated();
 
             // Hash password for secure storage
@@ -87,15 +88,13 @@ class AuthController extends Controller
 
                 // Associate with service categories if provided
                 if (isset($userData['service_categories'])) {
-                    // This will be used later when we implement services
-                    // For now, we just validate that categories exist
                     ServiceCategory::whereIn('id', $userData['service_categories'])->get();
                 }
             }
 
             // Generate secure email verification token with user email and timestamp
             $token = hash('sha256', Str::random(60) . $user->email . time());
-            
+
             // Store verification token in database for validation
             DB::table('email_verification_tokens')->insert([
                 'email' => $user->email,
@@ -160,7 +159,7 @@ class AuthController extends Controller
     {
         try {
             $credentials = $request->validated();
-            
+
             // Extract remember me option and remove it from credentials
             $rememberMe = $request->boolean('remember', false);
             unset($credentials['remember']);
@@ -177,7 +176,7 @@ class AuthController extends Controller
             // CRITICAL: Check if email is verified FIRST - security requirement
             if (!$user->hasVerifiedEmail()) {
                 Auth::logout(); // Logout the user immediately
-                
+
                 return response()->json([
                     'success' => false,
                     'message' => 'Please verify your email address before logging in. Check your inbox for the verification link.',
@@ -207,7 +206,7 @@ class AuthController extends Controller
             // Create new token with different expiration based on remember me preference
             $tokenName = $rememberMe ? 'long-term-token' : 'session-token';
             $expiresAt = $rememberMe ? now()->addDays(30) : now()->addHours(2);
-            
+
             $token = $user->createToken($tokenName, ['*'], $expiresAt)->plainTextToken;
 
             // Prepare response data
@@ -223,7 +222,6 @@ class AuthController extends Controller
                     'contact_number' => $user->contact_number,
                     'date_of_birth' => $user->date_of_birth?->format('Y-m-d'),
                     'age' => $user->age,
-                    // 'profile_picture' => $user->profile_picture ? Storage::url($user->profile_picture) : null,
                     'profile_picture' => $user->profile_picture ? asset($user->profile_picture) : null,
                     'is_active' => $user->is_active,
                     'last_login_at' => $user->last_login_at?->format('Y-m-d H:i:s'),
@@ -279,28 +277,6 @@ class AuthController extends Controller
             ], 500);
         }
     }
-
-    // public function logout(Request $request)
-    // {
-    //     try {
-    //         $user = $request->user();
-    //         if ($user) {
-    //             // Delete the current access token for the user (Sanctum)
-    //             $user->tokens()->where('id', $user->currentAccessToken()->id)->delete();
-    //         }
-
-    //         return response()->json([
-    //             'success' => true,
-    //             'message' => 'Logout successful'
-    //         ], 200);
-    //     } catch (\Exception $e) {
-    //         return response()->json([
-    //             'success' => false,
-    //             'message' => 'Logout failed',
-    //             'error' => $e->getMessage()
-    //         ], 500);
-    //     }
-    // }
 
     /**
      * Logout user and revoke authentication tokens
@@ -481,7 +457,7 @@ class AuthController extends Controller
                     ->where('email', $request->email)
                     ->where('token', $request->token)
                     ->delete();
-                    
+
                 return response()->json([
                     'success' => false,
                     'message' => 'Verification token has expired. Please request a new verification email.',
@@ -495,7 +471,7 @@ class AuthController extends Controller
 
             // Find user and verify email
             $user = User::where('email', $request->email)->first();
-            
+
             if (!$user) {
                 return response()->json([
                     'success' => false,
@@ -529,7 +505,6 @@ class AuthController extends Controller
                     'can_login' => true
                 ]
             ]);
-            
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -580,7 +555,7 @@ class AuthController extends Controller
 
             // Generate new token
             $token = hash('sha256', Str::random(60) . $user->email . time());
-            
+
             DB::table('email_verification_tokens')->insert([
                 'email' => $user->email,
                 'token' => $token,
@@ -598,7 +573,6 @@ class AuthController extends Controller
                     'expires_in_minutes' => 60
                 ]
             ]);
-            
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -637,7 +611,7 @@ class AuthController extends Controller
             // Generate reset token
             $token = Str::random(60);
             $hashedToken = hash('sha256', $token);
-            
+
             // Delete old tokens for this email
             DB::table('password_reset_tokens')
                 ->where('email', $user->email)
@@ -661,7 +635,6 @@ class AuthController extends Controller
                     'expires_in_minutes' => 60
                 ]
             ]);
-            
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -705,7 +678,7 @@ class AuthController extends Controller
                     ->where('email', $request->email)
                     ->where('token', $hashedToken)
                     ->delete();
-                    
+
                 return response()->json([
                     'success' => false,
                     'message' => 'Reset token has expired. Please request a new password reset.',
@@ -738,7 +711,6 @@ class AuthController extends Controller
                     'tokens_revoked' => true
                 ]
             ]);
-            
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -793,7 +765,6 @@ class AuthController extends Controller
                     'expires_at' => Carbon::parse($resetToken->created_at)->addMinutes(60)->toDateTimeString()
                 ]
             ]);
-            
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -810,7 +781,7 @@ class AuthController extends Controller
     {
         // Regenerate the session to get a fresh CSRF token
         $request->session()->regenerateToken();
-        
+
         return response()->json([
             'success' => true,
             'message' => 'CSRF token refreshed',

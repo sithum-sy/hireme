@@ -179,6 +179,20 @@ const RegisterForm = () => {
             }
             if (!formData.date_of_birth) {
                 newErrors.date_of_birth = "Date of birth is required";
+            } else {
+                // Check if user is at least 18 years old
+                const birthDate = new Date(formData.date_of_birth);
+                const today = new Date();
+                let age = today.getFullYear() - birthDate.getFullYear();
+                const monthDiff = today.getMonth() - birthDate.getMonth();
+                
+                if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                    age--;
+                }
+                
+                if (age < 18) {
+                    newErrors.date_of_birth = "You must be at least 18 years old to register";
+                }
             }
         }
 

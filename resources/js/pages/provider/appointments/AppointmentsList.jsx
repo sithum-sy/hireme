@@ -175,24 +175,24 @@ const AppointmentsList = () => {
 
                 case "status":
                     // Sort by status priority with date consideration
-                    const now = new Date();
+                    const nowStatus = new Date();
                     const dateA3 = createSafeDate(a.appointment_date, a.appointment_time);
                     const dateB3 = createSafeDate(b.appointment_date, b.appointment_time);
                     
-                    const aIsFuture = dateA3 >= now;
-                    const bIsFuture = dateB3 >= now;
+                    const aIsFutureStatus = dateA3 >= nowStatus;
+                    const bIsFutureStatus = dateB3 >= nowStatus;
                     
                     const statusPriority = {
                         // Future active appointments (highest priority)
-                        pending: aIsFuture ? 1 : 7,
-                        confirmed: aIsFuture ? 2 : 8,
-                        in_progress: aIsFuture ? 3 : 9,
+                        pending: aIsFutureStatus ? 1 : 7,
+                        confirmed: aIsFutureStatus ? 2 : 8,
+                        in_progress: aIsFutureStatus ? 3 : 9,
                         // Completed appointments
-                        completed: aIsFuture ? 4 : 5,
+                        completed: aIsFutureStatus ? 4 : 5,
                         // Cancelled appointments (lowest priority)
-                        cancelled_by_client: aIsFuture ? 10 : 11,
-                        cancelled_by_provider: aIsFuture ? 10 : 11,
-                        no_show: aIsFuture ? 12 : 13,
+                        cancelled_by_client: aIsFutureStatus ? 10 : 11,
+                        cancelled_by_provider: aIsFutureStatus ? 10 : 11,
+                        no_show: aIsFutureStatus ? 12 : 13,
                     };
                     
                     const aPriority = statusPriority[a.status] || 14;

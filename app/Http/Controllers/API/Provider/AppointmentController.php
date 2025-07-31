@@ -39,6 +39,8 @@ class AppointmentController extends Controller
             'status' => 'nullable|string',
             'date_from' => 'nullable|date',
             'date_to' => 'nullable|date|after_or_equal:date_from',
+            'client_name' => 'nullable|string|max:255',
+            'service_type' => 'nullable|string|max:255',
             'per_page' => 'nullable|integer|min:1|max:50'
         ]);
 
@@ -60,7 +62,7 @@ class AppointmentController extends Controller
 
         try {
             $user = Auth::user();
-            $filters = $request->only(['status', 'date_from', 'date_to']);
+            $filters = $request->only(['status', 'date_from', 'date_to', 'client_name', 'service_type']);
 
             $query = $this->appointmentService->getAppointments($user, $filters);
 
@@ -116,7 +118,6 @@ class AppointmentController extends Controller
 
             $appointments = Appointment::where('provider_id', $user->id)
                 ->where('appointment_date', $today)
-                ->whereIn('status', ['pending', 'confirmed', 'in_progress'])
                 ->with(['client', 'service', 'pendingRescheduleRequest'])
                 ->orderBy('appointment_time', 'asc') // Earliest time first
                 ->get();
@@ -494,7 +495,6 @@ class AppointmentController extends Controller
 
             $appointments = Appointment::where('provider_id', $user->id)
                 ->where('appointment_date', $today)
-                ->whereIn('status', ['pending', 'confirmed', 'in_progress'])
                 ->with(['client', 'service'])
                 ->orderBy('appointment_time')
                 ->limit(5)

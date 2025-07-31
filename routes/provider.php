@@ -4,7 +4,10 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\provider\ServiceController;
 use App\Http\Controllers\API\AvailabilityController;
 use App\Http\Controllers\API\ProfileController;
-use App\Http\Controllers\API\AppointmentController;
+use App\Http\Controllers\API\Provider\AppointmentController;
+use App\Http\Controllers\API\Provider\QuoteController;
+use App\Http\Controllers\API\Provider\DashboardController;
+use App\Http\Controllers\API\Provider\ReportController;
 use App\Http\Controllers\API\staff\ServiceCategoryController;
 use App\Http\Controllers\API\Provider\InvoiceController;
 
@@ -57,34 +60,34 @@ Route::prefix('profile')->group(function () {
 
 // Appointment Management
 Route::prefix('appointments')->group(function () {
-    Route::get('/', [App\Http\Controllers\API\Provider\AppointmentController::class, 'index']);
-    Route::get('/today', [App\Http\Controllers\API\Provider\AppointmentController::class, 'today']);
-    Route::get('/{appointment}', [App\Http\Controllers\API\Provider\AppointmentController::class, 'show']);
-    Route::patch('/{appointment}/status', [App\Http\Controllers\API\Provider\AppointmentController::class, 'updateStatus']);
-    Route::post('/{appointment}/complete', [App\Http\Controllers\API\Provider\AppointmentController::class, 'completeService']); // Add this
-    Route::post('/{appointment}/start', [App\Http\Controllers\API\Provider\AppointmentController::class, 'startService']);
-    Route::post('/{appointment}/cancel', [App\Http\Controllers\API\Provider\AppointmentController::class, 'cancelAppointment']);
-    
+    Route::get('/', [AppointmentController::class, 'index']);
+    Route::get('/today', [AppointmentController::class, 'today']);
+    Route::get('/{appointment}', [AppointmentController::class, 'show']);
+    Route::patch('/{appointment}/status', [AppointmentController::class, 'updateStatus']);
+    Route::post('/{appointment}/complete', [AppointmentController::class, 'completeService']); // Add this
+    Route::post('/{appointment}/start', [AppointmentController::class, 'startService']);
+    Route::post('/{appointment}/cancel', [AppointmentController::class, 'cancelAppointment']);
+
     // Reschedule request management
-    Route::post('/{appointment}/reschedule-request/approve', [App\Http\Controllers\API\Provider\AppointmentController::class, 'approveReschedule']);
-    Route::post('/{appointment}/reschedule-request/decline', [App\Http\Controllers\API\Provider\AppointmentController::class, 'declineReschedule']);
-    
-    Route::get('/dashboard/today', [App\Http\Controllers\API\Provider\AppointmentController::class, 'todayForDashboard']);
-    Route::get('/dashboard/upcoming', [App\Http\Controllers\API\Provider\AppointmentController::class, 'upcomingForDashboard']);
-    Route::get('/dashboard/past', [App\Http\Controllers\API\Provider\AppointmentController::class, 'pastForDashboard']);
-    Route::get('/dashboard/cancelled', [App\Http\Controllers\API\Provider\AppointmentController::class, 'cancelledForDashboard']);
-    Route::get('/dashboard/stats', [App\Http\Controllers\API\Provider\AppointmentController::class, 'dashboardStats']);
+    Route::post('/{appointment}/reschedule-request/approve', [AppointmentController::class, 'approveReschedule']);
+    Route::post('/{appointment}/reschedule-request/decline', [AppointmentController::class, 'declineReschedule']);
+
+    Route::get('/dashboard/today', [AppointmentController::class, 'todayForDashboard']);
+    Route::get('/dashboard/upcoming', [AppointmentController::class, 'upcomingForDashboard']);
+    Route::get('/dashboard/past', [AppointmentController::class, 'pastForDashboard']);
+    Route::get('/dashboard/cancelled', [AppointmentController::class, 'cancelledForDashboard']);
+    Route::get('/dashboard/stats', [AppointmentController::class, 'dashboardStats']);
 });
 
 // Quote Management
 Route::prefix('quotes')->group(function () {
-    Route::get('/', [App\Http\Controllers\API\Provider\QuoteController::class, 'index']);
-    Route::get('/available', [App\Http\Controllers\API\Provider\QuoteController::class, 'getAvailableRequests']); // Changed from /requests/available
-    Route::get('/service-categories', [App\Http\Controllers\API\Provider\QuoteController::class, 'getServiceCategories']);
-    Route::get('/{quote}', [App\Http\Controllers\API\Provider\QuoteController::class, 'show']);
-    Route::patch('/{quote}', [App\Http\Controllers\API\Provider\QuoteController::class, 'update']);
-    Route::delete('/{quote}', [App\Http\Controllers\API\Provider\QuoteController::class, 'withdraw']);
-    Route::patch('/{quote}/send', [App\Http\Controllers\API\Provider\QuoteController::class, 'send']);
+    Route::get('/', [QuoteController::class, 'index']);
+    Route::get('/available', [QuoteController::class, 'getAvailableRequests']);
+    Route::get('/service-categories', [QuoteController::class, 'getServiceCategories']);
+    Route::get('/{quote}', [QuoteController::class, 'show']);
+    Route::patch('/{quote}', [QuoteController::class, 'update']);
+    Route::delete('/{quote}', [QuoteController::class, 'withdraw']);
+    Route::patch('/{quote}/send', [QuoteController::class, 'send']);
 });
 
 
@@ -103,9 +106,9 @@ Route::prefix('invoices')->group(function () {
 
 // Provider Dashboard & Analytics
 Route::prefix('dashboard')->group(function () {
-    Route::get('/business-statistics', [App\Http\Controllers\API\Provider\DashboardController::class, 'getBusinessStatistics']);
-    Route::get('/metrics', [App\Http\Controllers\API\Provider\DashboardController::class, 'getDashboardMetrics']);
-    Route::get('/earnings', [App\Http\Controllers\API\Provider\DashboardController::class, 'getEarningsData']);
+    Route::get('/business-statistics', [DashboardController::class, 'getBusinessStatistics']);
+    Route::get('/metrics', [DashboardController::class, 'getDashboardMetrics']);
+    Route::get('/earnings', [DashboardController::class, 'getEarningsData']);
 });
 
 Route::get('/dashboard/stats', [ProfileController::class, 'getProviderDashboardStats']);
@@ -114,5 +117,5 @@ Route::get('/analytics/performance', [ProfileController::class, 'getPerformanceA
 
 // Provider Reports
 Route::prefix('reports')->group(function () {
-    Route::get('/analytics', [\App\Http\Controllers\API\Provider\ReportController::class, 'analytics']);
+    Route::get('/analytics', [ReportController::class, 'analytics']);
 });

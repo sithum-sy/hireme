@@ -361,7 +361,14 @@ class AppointmentService
 
         // Apply filters
         if (isset($filters['status']) && $filters['status'] !== 'all') {
-            $query->where('status', $filters['status']);
+            if (strpos($filters['status'], ',') !== false) {
+                // Handle comma-separated status values
+                $statusValues = array_map('trim', explode(',', $filters['status']));
+                $query->whereIn('status', $statusValues);
+            } else {
+                // Handle single status value
+                $query->where('status', $filters['status']);
+            }
         }
 
         if (isset($filters['date_from']) && $filters['date_from']) {
@@ -370,6 +377,20 @@ class AppointmentService
 
         if (isset($filters['date_to']) && $filters['date_to']) {
             $query->whereDate('appointment_date', '<=', $filters['date_to']);
+        }
+
+        // Filter by client name (search in client's name)
+        if (isset($filters['client_name']) && !empty($filters['client_name'])) {
+            $query->whereHas('client', function($q) use ($filters) {
+                $q->where('name', 'LIKE', '%' . $filters['client_name'] . '%');
+            });
+        }
+
+        // Filter by service type (search in service title)
+        if (isset($filters['service_type']) && !empty($filters['service_type'])) {
+            $query->whereHas('service', function($q) use ($filters) {
+                $q->where('title', 'LIKE', '%' . $filters['service_type'] . '%');
+            });
         }
 
         // Smart sorting: Active appointments first, then by date/time

@@ -224,10 +224,10 @@ const FeaturesSection = () => {
                                 <i className="fas fa-rocket"></i>
                                 <span>Get Started Now</span>
                             </Link>
-                            <Link to="/demo" className="btn-secondary-outline">
+                            {/* <Link to="/demo" className="btn-secondary-outline">
                                 <i className="fas fa-play-circle"></i>
                                 <span>Watch Demo</span>
-                            </Link>
+                            </Link> */}
                         </div>
                     </div>
                 </div>

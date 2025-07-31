@@ -1864,8 +1864,12 @@
 }
 
 @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 /* ============ CONTACT SECTION ============ */
@@ -2027,28 +2031,28 @@
         grid-template-columns: 1fr;
         gap: 1rem;
     }
-    
+
     .contact-method {
         padding: 1.25rem;
         text-align: left;
     }
-    
+
     .contact-content h3 {
         font-size: 1.5rem;
     }
-    
+
     .contact-content p {
         font-size: 1rem;
     }
-    
+
     .service-card {
         padding: 1.5rem;
     }
-    
+
     .loading-spinner-large {
         min-height: 150px;
     }
-    
+
     .loading-spinner-large i {
         font-size: 1.5rem;
     }
@@ -2059,19 +2063,19 @@
         padding: 2rem 1.5rem;
         margin-top: 2rem;
     }
-    
+
     .contact-method {
         flex-direction: column;
         text-align: center;
         gap: 0.75rem;
     }
-    
+
     .contact-method i {
         width: 40px;
         height: 40px;
         font-size: 1rem;
     }
-    
+
     .service-card {
         padding: 1.25rem;
     }
