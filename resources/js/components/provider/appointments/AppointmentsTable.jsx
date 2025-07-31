@@ -210,11 +210,26 @@ const AppointmentsTable = ({
                 <table className="appointments-table">
                     <thead>
                         <tr>
-                            <th className="sortable-header">Date & Time</th>
-                            <th className="sortable-header">Service</th>
-                            <th className="sortable-header">Client</th>
-                            <th className="sortable-header">Status</th>
-                            <th className="sortable-header">Price</th>
+                            <th className="sortable-header" onClick={() => handleSort('date')}>
+                                Date & Time
+                                <i className={getSortIcon('date')}></i>
+                            </th>
+                            <th className="sortable-header" onClick={() => handleSort('service')}>
+                                Service
+                                <i className={getSortIcon('service')}></i>
+                            </th>
+                            <th className="sortable-header" onClick={() => handleSort('client')}>
+                                Client
+                                <i className={getSortIcon('client')}></i>
+                            </th>
+                            <th className="sortable-header" onClick={() => handleSort('status')}>
+                                Status
+                                <i className={getSortIcon('status')}></i>
+                            </th>
+                            <th className="sortable-header" onClick={() => handleSort('price')}>
+                                Price
+                                <i className={getSortIcon('price')}></i>
+                            </th>
                             <th>Location</th>
                             <th className="actions-column">Actions</th>
                         </tr>

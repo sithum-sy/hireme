@@ -146,15 +146,19 @@ const AppointmentsList = () => {
         return [...appointmentsList].sort((a, b) => {
             switch (sortBy) {
                 case "date_asc":
-                    // Closest date/time first
-                    const dateA = createSafeDate(
-                        a.appointment_date,
-                        a.appointment_time
-                    );
-                    const dateB = createSafeDate(
-                        b.appointment_date,
-                        b.appointment_time
-                    );
+                    // Smart sorting: future dates ascending (closest first), past dates descending (recent first)
+                    const dateA = createSafeDate(a.appointment_date, a.appointment_time);
+                    const dateB = createSafeDate(b.appointment_date, b.appointment_time);
+                    const now = new Date();
+                    
+                    const aIsFuture = dateA >= now;
+                    const bIsFuture = dateB >= now;
+                    
+                    // Future appointments come first
+                    if (aIsFuture && !bIsFuture) return -1;
+                    if (!aIsFuture && bIsFuture) return 1;
+                    
+                    // Both future or both past - sort by date
                     return dateA - dateB;
 
                 case "date_desc":
@@ -170,29 +174,33 @@ const AppointmentsList = () => {
                     return dateB2 - dateA2;
 
                 case "status":
-                    // Sort by status priority
+                    // Sort by status priority with date consideration
+                    const now = new Date();
+                    const dateA3 = createSafeDate(a.appointment_date, a.appointment_time);
+                    const dateB3 = createSafeDate(b.appointment_date, b.appointment_time);
+                    
+                    const aIsFuture = dateA3 >= now;
+                    const bIsFuture = dateB3 >= now;
+                    
                     const statusPriority = {
-                        pending: 1,
-                        confirmed: 2,
-                        in_progress: 3,
-                        completed: 4,
-                        cancelled_by_client: 5,
-                        cancelled_by_provider: 6,
-                        no_show: 7,
+                        // Future active appointments (highest priority)
+                        pending: aIsFuture ? 1 : 7,
+                        confirmed: aIsFuture ? 2 : 8,
+                        in_progress: aIsFuture ? 3 : 9,
+                        // Completed appointments
+                        completed: aIsFuture ? 4 : 5,
+                        // Cancelled appointments (lowest priority)
+                        cancelled_by_client: aIsFuture ? 10 : 11,
+                        cancelled_by_provider: aIsFuture ? 10 : 11,
+                        no_show: aIsFuture ? 12 : 13,
                     };
-                    const priorityDiff =
-                        (statusPriority[a.status] || 8) -
-                        (statusPriority[b.status] || 8);
+                    
+                    const aPriority = statusPriority[a.status] || 14;
+                    const bPriority = statusPriority[b.status] || 14;
+                    const priorityDiff = aPriority - bPriority;
+                    
                     if (priorityDiff === 0) {
-                        // If same status, sort by date
-                        const dateA3 = createSafeDate(
-                            a.appointment_date,
-                            a.appointment_time
-                        );
-                        const dateB3 = createSafeDate(
-                            b.appointment_date,
-                            b.appointment_time
-                        );
+                        // If same priority, sort by date (closest first)
                         return dateA3 - dateB3;
                     }
                     return priorityDiff;
@@ -232,13 +240,14 @@ const AppointmentsList = () => {
                     );
                 }
 
-                // Apply client-side sorting for additional control
-                const sortedAppointments = sortAppointments(
-                    appointmentsList,
-                    filters.sort_by
-                );
+                // Use backend sorting (already correctly sorted by closest date first)
+                // Only apply client-side sorting if a specific sort is requested
+                let finalAppointments = appointmentsList;
+                if (filters.sort_by && filters.sort_by !== "date_asc") {
+                    finalAppointments = sortAppointments(appointmentsList, filters.sort_by);
+                }
 
-                setAppointments(sortedAppointments);
+                setAppointments(finalAppointments);
 
                 if (result.data.data) {
                     setPagination((prev) => ({

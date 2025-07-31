@@ -244,7 +244,7 @@ const InvoiceSection = ({ appointment, onPaymentClick, canBePaid }) => {
                                 <div className="text-center p-3 bg-light bg-opacity-10 rounded">
                                     <i className="fas fa-check-circle fa-2x text-success mb-2"></i>
                                     <h6 className="fw-bold text-success mb-1">
-                                        Payment Received
+                                        Payment Completed
                                     </h6>
                                     <p className="text-muted small mb-2">
                                         Method: {invoice.payment_method}
