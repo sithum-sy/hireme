@@ -64,15 +64,24 @@ class AppointmentController extends Controller
 
             $query = $this->appointmentService->getAppointments($user, $filters);
 
-            // Enhanced sorting: closest date/time first, but completed ones at the end
+            // Enhanced sorting: closest future dates first, then past dates at bottom
+            $today = now()->toDateString();
             $query->orderByRaw("
-            CASE 
-                WHEN status = 'completed' THEN 2 
-                WHEN status IN ('cancelled_by_client', 'cancelled_by_provider', 'no_show') THEN 3
-                ELSE 1 
-            END
-        ")
-                ->orderBy('appointment_date', 'asc')
+                CASE 
+                    WHEN appointment_date >= '{$today}' AND status IN ('pending', 'confirmed', 'in_progress') THEN 1
+                    WHEN appointment_date >= '{$today}' AND status = 'completed' THEN 2
+                    WHEN appointment_date >= '{$today}' AND status IN ('cancelled_by_client', 'cancelled_by_provider', 'no_show') THEN 3
+                    WHEN appointment_date < '{$today}' AND status = 'completed' THEN 4
+                    WHEN appointment_date < '{$today}' AND status IN ('cancelled_by_client', 'cancelled_by_provider', 'no_show') THEN 5
+                    ELSE 6
+                END
+            ")
+                ->orderByRaw("
+                    CASE 
+                        WHEN appointment_date >= '{$today}' THEN appointment_date
+                        ELSE DATE('9999-12-31') - INTERVAL (DATEDIFF('{$today}', appointment_date)) DAY
+                    END ASC
+                ")
                 ->orderBy('appointment_time', 'asc');
 
             $perPage = $request->get('per_page', 15);
@@ -844,7 +853,7 @@ class AppointmentController extends Controller
             'client_phone' => $appointment->client_phone,
             'client_email' => $appointment->client_email,
             'service_title' => $appointment->service->title,
-            'appointment_date' => $appointment->appointment_date,
+            'appointment_date' => $appointment->appointment_date->format('Y-m-d'),
             'appointment_time' => $appointment->appointment_time,
             'duration_hours' => $appointment->duration_hours,
             'total_price' => $appointment->total_price,

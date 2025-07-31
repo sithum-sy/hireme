@@ -185,6 +185,7 @@ const StatsSection = () => {
     return (
         <section
             className="section-modern stats-section gradient-section"
+            id="stats"
             ref={sectionRef}
         >
             <div className="container-custom">

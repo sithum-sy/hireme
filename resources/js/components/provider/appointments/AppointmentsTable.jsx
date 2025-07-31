@@ -10,12 +10,34 @@ const AppointmentsTable = ({
     onAppointmentAction,
 }) => {
     const formatDate = (dateString) => {
-        const date = new Date(dateString);
-        return date.toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-            year: "numeric",
-        });
+        if (!dateString) return "Date not set";
+        
+        try {
+            let dateObj;
+            if (typeof dateString === "string" && dateString.includes("-")) {
+                const [year, month, day] = dateString.split("-");
+                dateObj = new Date(
+                    parseInt(year),
+                    parseInt(month) - 1, // Month is 0-indexed
+                    parseInt(day)
+                );
+            } else {
+                dateObj = new Date(dateString);
+            }
+
+            if (isNaN(dateObj.getTime())) {
+                throw new Error("Invalid date");
+            }
+
+            return dateObj.toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+            });
+        } catch (error) {
+            console.warn("Date formatting error:", error, { dateString });
+            return dateString ? dateString.toString() : "Invalid date";
+        }
     };
 
     const formatTime = (dateString, timeString) => {

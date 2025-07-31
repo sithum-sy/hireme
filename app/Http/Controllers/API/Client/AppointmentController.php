@@ -922,9 +922,13 @@ class AppointmentController extends Controller
                 $appointment->invoice->markAsViewed();
             }
 
+            // Format the appointment data similar to index method to avoid timezone issues
+            $appointmentArray = $appointment->toArray();
+            $appointmentArray['appointment_date'] = $appointment->appointment_date->format('Y-m-d');
+
             return response()->json([
                 'success' => true,
-                'data' => $appointment,
+                'data' => $appointmentArray,
                 'message' => 'Appointment details retrieved successfully'
             ]);
         } catch (\Exception $e) {

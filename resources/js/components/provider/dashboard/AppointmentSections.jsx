@@ -126,8 +126,31 @@ const AppointmentSections = () => {
 
     const stats = appointmentData.stats;
 
+    const getTodaysDate = () => {
+        const today = new Date();
+        return today.toLocaleDateString("en-US", {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+        });
+    };
+
     return (
         <div className="appointment-sections">
+            {/* Today's Date Header */}
+            <div className="today-date-header mb-4">
+                <div className="card border-0 shadow-sm bg-primary text-white">
+                    <div className="card-body text-center py-3">
+                        <h4 className="mb-0">
+                            <i className="fas fa-calendar-day me-2"></i>
+                            {getTodaysDate()}
+                        </h4>
+                        <small className="opacity-75">Today's Schedule Overview</small>
+                    </div>
+                </div>
+            </div>
+
             {/* Stats Overview */}
             <div className="row mb-4">
                 <div className="col-md-3 col-6 mb-3">

@@ -311,7 +311,7 @@ const ProviderLayout = ({ children }) => {
                         )}
 
                         {/* Business Stats (Dashboard only) */}
-                        {location.pathname === "/provider/dashboard" && (
+                        {/* {location.pathname === "/provider/dashboard" && (
                             <div className="dashboard-grid dashboard-grid-4 mb-4">
                                 <div className="stats-card">
                                     <div className="stats-value">
@@ -365,7 +365,7 @@ const ProviderLayout = ({ children }) => {
                                     </div>
                                 </div>
                             </div>
-                        )}
+                        )} */}
 
                         {/* Loading Indicator */}
                         {providerLoading && (

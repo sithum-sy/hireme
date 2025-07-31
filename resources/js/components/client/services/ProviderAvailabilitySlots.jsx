@@ -84,30 +84,32 @@ const ProviderAvailabilitySlots = ({
             const [hours, minutes] = startTime.split(":");
             const startHour = parseInt(hours);
             const startMinutes = parseInt(minutes);
-            
+
             // Calculate end time
             const endHour = startHour + Math.floor(durationHours);
-            const endMinutes = startMinutes + ((durationHours % 1) * 60);
-            
+            const endMinutes = startMinutes + (durationHours % 1) * 60;
+
             // Format start time
             const startAmPm = startHour >= 12 ? "PM" : "AM";
             const displayStartHour = startHour % 12 || 12;
             const formattedStartTime = `${displayStartHour}.${minutes}${startAmPm}`;
-            
+
             // Format end time
             let finalEndHour = endHour;
             let finalEndMinutes = endMinutes;
-            
+
             if (finalEndMinutes >= 60) {
                 finalEndHour += Math.floor(finalEndMinutes / 60);
                 finalEndMinutes = finalEndMinutes % 60;
             }
-            
+
             const endAmPm = finalEndHour >= 12 ? "PM" : "AM";
             const displayEndHour = finalEndHour % 12 || 12;
-            const formattedEndMinutes = finalEndMinutes.toString().padStart(2, '0');
+            const formattedEndMinutes = finalEndMinutes
+                .toString()
+                .padStart(2, "0");
             const formattedEndTime = `${displayEndHour}.${formattedEndMinutes}${endAmPm}`;
-            
+
             return `${formattedStartTime} - ${formattedEndTime}`;
         } catch (error) {
             console.error("Error formatting time range:", error);
@@ -287,7 +289,7 @@ const ProviderAvailabilitySlots = ({
                                             {date.getDate()}
                                         </div>
                                         {isToday && (
-                                            <div className="badge bg-primary bg-opacity-10 text-primary small">
+                                            <div className="badge bg-primary bg-opacity-10 text-light small">
                                                 Today
                                             </div>
                                         )}
@@ -353,7 +355,9 @@ const ProviderAvailabilitySlots = ({
                                                     <div className="slot-time fw-semibold">
                                                         {formatTimeRange(
                                                             slot.time,
-                                                            service.default_duration || service.duration_hours || 1
+                                                            service.default_duration ||
+                                                                service.duration_hours ||
+                                                                1
                                                         )}
                                                     </div>
                                                     {/* {slot.is_popular && (

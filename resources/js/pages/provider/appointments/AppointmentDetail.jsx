@@ -162,10 +162,10 @@ const AppointmentDetail = () => {
         }
 
         setActionLoading(true);
-        
+
         // Optimistic UI update - show new status immediately
         setOptimisticStatus(status);
-        
+
         // Set timer to show optimistic status for at least 1 second for better UX
         const timer = setTimeout(() => {
             setOptimisticStatus(null);
@@ -278,10 +278,10 @@ const AppointmentDetail = () => {
     const getCurrentStatusText = () => {
         if (optimisticStatus) {
             const statusTexts = {
-                'confirmed': 'Confirmed',
-                'in_progress': 'In Progress', 
-                'completed': 'Completed',
-                'cancelled_by_provider': 'Cancelled'
+                confirmed: "Confirmed",
+                in_progress: "In Progress",
+                completed: "Completed",
+                cancelled_by_provider: "Cancelled",
             };
             return statusTexts[optimisticStatus] || optimisticStatus;
         }
@@ -419,10 +419,25 @@ const AppointmentDetail = () => {
                         const day = parseInt(dateParts[2]);
                         appointmentDate = new Date(year, month, day);
                     } else {
-                        appointmentDate = new Date(dateString);
+                        // Fallback: try to parse as simple date string
+                        if (dateString.includes("-")) {
+                            let datePart = dateString;
+                            if (dateString.includes("T")) {
+                                datePart = dateString.split("T")[0]; // Extract just the date part
+                            }
+                            const [year, month, day] = datePart.split("-");
+                            appointmentDate = new Date(
+                                parseInt(year),
+                                parseInt(month) - 1,
+                                parseInt(day)
+                            );
+                        } else {
+                            appointmentDate = new Date(dateString);
+                        }
                     }
                 }
             } else {
+                // Final fallback for non-string dates
                 appointmentDate = new Date(dateString);
             }
 
@@ -461,7 +476,7 @@ const AppointmentDetail = () => {
                 throw new Error("Invalid date");
             }
 
-            return {
+            const result = {
                 fullDate: appointmentDate.toLocaleDateString("en-US", {
                     weekday: "long",
                     year: "numeric",
@@ -475,6 +490,8 @@ const AppointmentDetail = () => {
                     year: "numeric",
                 }),
             };
+
+            return result;
         } catch (error) {
             console.warn("Date formatting error:", error, {
                 dateString,
@@ -748,7 +765,9 @@ const AppointmentDetail = () => {
                             <span
                                 className={`badge ${getStatusBadge(
                                     getCurrentStatus()
-                                )} px-3 py-2 ${optimisticStatus ? 'optimistic-status' : ''}`}
+                                )} px-3 py-2 ${
+                                    optimisticStatus ? "optimistic-status" : ""
+                                }`}
                             >
                                 {getCurrentStatusText()}
                                 {optimisticStatus && (

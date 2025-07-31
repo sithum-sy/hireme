@@ -362,6 +362,25 @@ const AppointmentsList = () => {
                 const data = await response.json();
                 let appointmentsData = data.data?.data || data.data || [];
 
+                console.log(
+                    "🔍 AppointmentsList - RAW APPOINTMENTS DATA from fallback API:",
+                    appointmentsData
+                );
+                if (appointmentsData.length > 0) {
+                    console.log(
+                        "🔍 AppointmentsList - FIRST APPOINTMENT:",
+                        appointmentsData[0]
+                    );
+                    console.log(
+                        "🔍 AppointmentsList - appointment_date:",
+                        appointmentsData[0].appointment_date
+                    );
+                    console.log(
+                        "🔍 AppointmentsList - appointment_time:",
+                        appointmentsData[0].appointment_time
+                    );
+                }
+
                 // Apply client-side filtering for cancelled appointments
                 if (filters.status === "cancelled") {
                     appointmentsData = appointmentsData.filter((apt) =>

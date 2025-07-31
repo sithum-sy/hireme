@@ -23,23 +23,70 @@ const AppointmentsList = () => {
     const [sortField, setSortField] = useState("appointment_date");
     const [sortDirection, setSortDirection] = useState("asc");
     const [viewMode, setViewMode] = useState("table"); // 'table' or 'cards'
-    
+
+    // Helper function for safe date parsing (avoid timezone issues)
+    const createSafeDate = (dateString, timeString = null) => {
+        try {
+            if (!dateString) return new Date();
+
+            if (typeof dateString === "string" && dateString.includes("-")) {
+                // Handle both "YYYY-MM-DD" and "YYYY-MM-DDTHH:MM:SS.sssZ" formats
+                let datePart = dateString;
+                if (dateString.includes("T")) {
+                    datePart = dateString.split("T")[0]; // Extract just the date part
+                }
+                const [year, month, day] = datePart.split("-");
+                let date;
+
+                if (timeString) {
+                    const [hours, minutes] = timeString.split(":");
+                    date = new Date(
+                        parseInt(year),
+                        parseInt(month) - 1,
+                        parseInt(day),
+                        parseInt(hours),
+                        parseInt(minutes)
+                    );
+                } else {
+                    date = new Date(
+                        parseInt(year),
+                        parseInt(month) - 1,
+                        parseInt(day)
+                    );
+                }
+
+                return date;
+            } else {
+                // Fallback for non-standard formats
+                const date = new Date(dateString);
+                console.log(
+                    "🔧 PROVIDER createSafeDate - FALLBACK OUTPUT:",
+                    date
+                );
+                return date;
+            }
+        } catch (error) {
+            console.error("🔧 PROVIDER createSafeDate - ERROR:", error);
+            return new Date();
+        }
+    };
+
     // Cancellation modal state
     const [showCancelModal, setShowCancelModal] = useState(false);
     const [cancelReason, setCancelReason] = useState("");
     const [appointmentToCancel, setAppointmentToCancel] = useState(null);
     const [cancelLoading, setCancelLoading] = useState(false);
-    
+
     // Reschedule decline modal state
     const [showDeclineModal, setShowDeclineModal] = useState(false);
     const [declineReason, setDeclineReason] = useState("");
     const [appointmentToDecline, setAppointmentToDecline] = useState(null);
     const [declineLoading, setDeclineLoading] = useState(false);
-    
+
     // Create invoice modal state
     const [showCreateInvoiceModal, setShowCreateInvoiceModal] = useState(false);
     const [appointmentToComplete, setAppointmentToComplete] = useState(null);
-    
+
     // Refresh trigger for TodaysSchedule component
     const [todaysScheduleRefresh, setTodaysScheduleRefresh] = useState(0);
     const [filters, setFilters] = useState({
@@ -100,21 +147,25 @@ const AppointmentsList = () => {
             switch (sortBy) {
                 case "date_asc":
                     // Closest date/time first
-                    const dateA = new Date(
-                        `${a.appointment_date}T${a.appointment_time}`
+                    const dateA = createSafeDate(
+                        a.appointment_date,
+                        a.appointment_time
                     );
-                    const dateB = new Date(
-                        `${b.appointment_date}T${b.appointment_time}`
+                    const dateB = createSafeDate(
+                        b.appointment_date,
+                        b.appointment_time
                     );
                     return dateA - dateB;
 
                 case "date_desc":
                     // Latest date/time first
-                    const dateA2 = new Date(
-                        `${a.appointment_date}T${a.appointment_time}`
+                    const dateA2 = createSafeDate(
+                        a.appointment_date,
+                        a.appointment_time
                     );
-                    const dateB2 = new Date(
-                        `${b.appointment_date}T${b.appointment_time}`
+                    const dateB2 = createSafeDate(
+                        b.appointment_date,
+                        b.appointment_time
                     );
                     return dateB2 - dateA2;
 
@@ -134,11 +185,13 @@ const AppointmentsList = () => {
                         (statusPriority[b.status] || 8);
                     if (priorityDiff === 0) {
                         // If same status, sort by date
-                        const dateA3 = new Date(
-                            `${a.appointment_date}T${a.appointment_time}`
+                        const dateA3 = createSafeDate(
+                            a.appointment_date,
+                            a.appointment_time
                         );
-                        const dateB3 = new Date(
-                            `${b.appointment_date}T${b.appointment_time}`
+                        const dateB3 = createSafeDate(
+                            b.appointment_date,
+                            b.appointment_time
                         );
                         return dateA3 - dateB3;
                     }
@@ -230,8 +283,8 @@ const AppointmentsList = () => {
                         confirmed: appointments.filter(
                             (apt) => apt.status === "confirmed"
                         ).length,
-                        completed: appointments.filter(
-                            (apt) => ["completed", "closed"].includes(apt.status)
+                        completed: appointments.filter((apt) =>
+                            ["completed", "closed"].includes(apt.status)
                         ).length,
                         reschedule_requests: appointments.filter(
                             (apt) => apt.has_pending_reschedule === true
@@ -252,7 +305,7 @@ const AppointmentsList = () => {
                     });
                 }
 
-                console.log("Loaded stats from dashboard:", statsData);
+                // console.log("Loaded stats from dashboard:", statsData);
             }
         } catch (error) {
             console.error("Error loading stats:", error);
@@ -287,12 +340,14 @@ const AppointmentsList = () => {
         );
         // Reload stats to reflect the status change
         loadStats();
-        
+
         // Trigger refresh of TodaysSchedule if the updated appointment is for today
-        const appointmentDate = new Date(updatedAppointment.appointment_date);
+        const appointmentDate = createSafeDate(
+            updatedAppointment.appointment_date
+        );
         const today = new Date();
         if (appointmentDate.toDateString() === today.toDateString()) {
-            setTodaysScheduleRefresh(prev => prev + 1);
+            setTodaysScheduleRefresh((prev) => prev + 1);
         }
     };
 
@@ -411,14 +466,14 @@ const AppointmentsList = () => {
                 appointmentToCancel.id,
                 cancelReason
             );
-            
+
             if (result.success) {
                 handleStatusUpdate(result.data);
                 setShowCancelModal(false);
                 setCancelReason("");
                 setAppointmentToCancel(null);
                 // Trigger additional refresh for today's schedule
-                setTodaysScheduleRefresh(prev => prev + 1);
+                setTodaysScheduleRefresh((prev) => prev + 1);
             }
         } catch (error) {
             console.error("Failed to cancel appointment:", error);
@@ -442,18 +497,19 @@ const AppointmentsList = () => {
 
         setDeclineLoading(true);
         try {
-            const result = await providerAppointmentService.declineRescheduleRequest(
-                appointmentToDecline.id,
-                declineReason
-            );
-            
+            const result =
+                await providerAppointmentService.declineRescheduleRequest(
+                    appointmentToDecline.id,
+                    declineReason
+                );
+
             if (result.success) {
                 handleStatusUpdate(result.data);
                 setShowDeclineModal(false);
                 setDeclineReason("");
                 setAppointmentToDecline(null);
                 // Trigger additional refresh for today's schedule
-                setTodaysScheduleRefresh(prev => prev + 1);
+                setTodaysScheduleRefresh((prev) => prev + 1);
             }
         } catch (error) {
             console.error("Failed to decline reschedule:", error);
@@ -479,31 +535,36 @@ const AppointmentsList = () => {
                 appointmentToComplete.id,
                 {
                     notes: formData.notes,
-                    create_invoice: false // Don't auto-create since we're creating manually
+                    create_invoice: false, // Don't auto-create since we're creating manually
                 }
             );
-            
+
             if (result.success) {
                 handleStatusUpdate(result.data);
-                setTodaysScheduleRefresh(prev => prev + 1);
-                
+                setTodaysScheduleRefresh((prev) => prev + 1);
+
                 // Now create the invoice using the completed appointment
                 const invoiceResult = await invoiceService.createInvoice({
                     ...formData,
-                    appointment_id: appointmentToComplete.id
+                    appointment_id: appointmentToComplete.id,
                 });
-                
+
                 setShowCreateInvoiceModal(false);
                 setAppointmentToComplete(null);
-                
+
                 if (invoiceResult.success) {
                     setTimeout(() => {
-                        alert(`Service completed! Invoice #${invoiceResult.data.invoice_number} has been created.`);
+                        alert(
+                            `Service completed! Invoice #${invoiceResult.data.invoice_number} has been created.`
+                        );
                         navigate(`/provider/invoices/${invoiceResult.data.id}`);
                     }, 100);
                 } else {
                     setTimeout(() => {
-                        alert("Service completed but failed to create invoice: " + (invoiceResult.message || "Unknown error"));
+                        alert(
+                            "Service completed but failed to create invoice: " +
+                                (invoiceResult.message || "Unknown error")
+                        );
                     }, 100);
                 }
             }
@@ -535,7 +596,7 @@ const AppointmentsList = () => {
                         );
                     if (result.success) {
                         handleStatusUpdate(result.data);
-                        setTodaysScheduleRefresh(prev => prev + 1);
+                        setTodaysScheduleRefresh((prev) => prev + 1);
                     }
                     break;
                 case "start":
@@ -544,7 +605,7 @@ const AppointmentsList = () => {
                     );
                     if (result.success) {
                         handleStatusUpdate(result.data);
-                        setTodaysScheduleRefresh(prev => prev + 1);
+                        setTodaysScheduleRefresh((prev) => prev + 1);
                     }
                     break;
                 case "complete":
@@ -562,7 +623,7 @@ const AppointmentsList = () => {
                         );
                     if (result.success) {
                         handleStatusUpdate(result.data);
-                        setTodaysScheduleRefresh(prev => prev + 1);
+                        setTodaysScheduleRefresh((prev) => prev + 1);
                     }
                     break;
                 case "decline_reschedule":
@@ -682,8 +743,12 @@ const AppointmentsList = () => {
                                         In Progress
                                     </option>
                                     <option value="completed">Completed</option>
-                                    <option value="invoice_sent">Invoice Sent</option>
-                                    <option value="payment_pending">Payment Pending</option>
+                                    <option value="invoice_sent">
+                                        Invoice Sent
+                                    </option>
+                                    <option value="payment_pending">
+                                        Payment Pending
+                                    </option>
                                     <option value="paid">Paid</option>
                                     <option value="reviewed">Reviewed</option>
                                     <option value="closed">Closed</option>
@@ -1010,46 +1075,80 @@ const AppointmentsList = () => {
                                                 </h6>
                                                 <div className="row">
                                                     <div className="col-sm-6">
-                                                        <small className="text-muted">Client:</small>
-                                                        <div className="fw-bold">{appointmentToCancel.client_name}</div>
+                                                        <small className="text-muted">
+                                                            Client:
+                                                        </small>
+                                                        <div className="fw-bold">
+                                                            {
+                                                                appointmentToCancel.client_name
+                                                            }
+                                                        </div>
                                                     </div>
                                                     <div className="col-sm-6">
-                                                        <small className="text-muted">Service:</small>
-                                                        <div className="fw-bold">{appointmentToCancel.service_title}</div>
-                                                    </div>
-                                                    <div className="col-sm-6 mt-2">
-                                                        <small className="text-muted">Date:</small>
+                                                        <small className="text-muted">
+                                                            Service:
+                                                        </small>
                                                         <div className="fw-bold">
-                                                            {new Date(appointmentToCancel.appointment_date).toLocaleDateString()}
+                                                            {
+                                                                appointmentToCancel.service_title
+                                                            }
                                                         </div>
                                                     </div>
                                                     <div className="col-sm-6 mt-2">
-                                                        <small className="text-muted">Time:</small>
-                                                        <div className="fw-bold">{appointmentToCancel.appointment_time}</div>
+                                                        <small className="text-muted">
+                                                            Date:
+                                                        </small>
+                                                        <div className="fw-bold">
+                                                            {createSafeDate(
+                                                                appointmentToCancel.appointment_date
+                                                            ).toLocaleDateString()}
+                                                        </div>
+                                                    </div>
+                                                    <div className="col-sm-6 mt-2">
+                                                        <small className="text-muted">
+                                                            Time:
+                                                        </small>
+                                                        <div className="fw-bold">
+                                                            {
+                                                                appointmentToCancel.appointment_time
+                                                            }
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
                                         )}
-                                        
+
                                         <div className="alert alert-warning">
                                             <i className="fas fa-exclamation-triangle me-2"></i>
-                                            <strong>Warning:</strong> This action cannot be undone. The client will be notified of the cancellation.
+                                            <strong>Warning:</strong> This
+                                            action cannot be undone. The client
+                                            will be notified of the
+                                            cancellation.
                                         </div>
 
                                         <div className="mb-3">
                                             <label className="form-label">
-                                                <strong>Reason for Cancellation *</strong>
+                                                <strong>
+                                                    Reason for Cancellation *
+                                                </strong>
                                             </label>
                                             <textarea
                                                 className="form-control"
                                                 rows="4"
                                                 value={cancelReason}
-                                                onChange={(e) => setCancelReason(e.target.value)}
+                                                onChange={(e) =>
+                                                    setCancelReason(
+                                                        e.target.value
+                                                    )
+                                                }
                                                 placeholder="Please provide a clear reason for the cancellation. This will be shared with the client."
                                                 disabled={cancelLoading}
                                             ></textarea>
                                             <div className="form-text">
-                                                A cancellation reason is required to help the client understand why their appointment was cancelled.
+                                                A cancellation reason is
+                                                required to help the client
+                                                understand why their appointment
+                                                was cancelled.
                                             </div>
                                         </div>
                                     </div>
@@ -1067,12 +1166,20 @@ const AppointmentsList = () => {
                                             type="button"
                                             className="btn btn-danger"
                                             onClick={handleCancelConfirm}
-                                            disabled={cancelLoading || !cancelReason.trim()}
+                                            disabled={
+                                                cancelLoading ||
+                                                !cancelReason.trim()
+                                            }
                                         >
                                             {cancelLoading ? (
                                                 <>
-                                                    <div className="spinner-border spinner-border-sm me-2" role="status">
-                                                        <span className="visually-hidden">Loading...</span>
+                                                    <div
+                                                        className="spinner-border spinner-border-sm me-2"
+                                                        role="status"
+                                                    >
+                                                        <span className="visually-hidden">
+                                                            Loading...
+                                                        </span>
                                                     </div>
                                                     Cancelling...
                                                 </>
@@ -1118,46 +1225,80 @@ const AppointmentsList = () => {
                                                 </h6>
                                                 <div className="row">
                                                     <div className="col-sm-6">
-                                                        <small className="text-muted">Client:</small>
-                                                        <div className="fw-bold">{appointmentToDecline.client_name}</div>
+                                                        <small className="text-muted">
+                                                            Client:
+                                                        </small>
+                                                        <div className="fw-bold">
+                                                            {
+                                                                appointmentToDecline.client_name
+                                                            }
+                                                        </div>
                                                     </div>
                                                     <div className="col-sm-6">
-                                                        <small className="text-muted">Service:</small>
-                                                        <div className="fw-bold">{appointmentToDecline.service_title}</div>
-                                                    </div>
-                                                    <div className="col-sm-6 mt-2">
-                                                        <small className="text-muted">Current Date:</small>
+                                                        <small className="text-muted">
+                                                            Service:
+                                                        </small>
                                                         <div className="fw-bold">
-                                                            {new Date(appointmentToDecline.appointment_date).toLocaleDateString()}
+                                                            {
+                                                                appointmentToDecline.service_title
+                                                            }
                                                         </div>
                                                     </div>
                                                     <div className="col-sm-6 mt-2">
-                                                        <small className="text-muted">Current Time:</small>
-                                                        <div className="fw-bold">{appointmentToDecline.appointment_time}</div>
+                                                        <small className="text-muted">
+                                                            Current Date:
+                                                        </small>
+                                                        <div className="fw-bold">
+                                                            {createSafeDate(
+                                                                appointmentToDecline.appointment_date
+                                                            ).toLocaleDateString()}
+                                                        </div>
+                                                    </div>
+                                                    <div className="col-sm-6 mt-2">
+                                                        <small className="text-muted">
+                                                            Current Time:
+                                                        </small>
+                                                        <div className="fw-bold">
+                                                            {
+                                                                appointmentToDecline.appointment_time
+                                                            }
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
                                         )}
-                                        
+
                                         <div className="alert alert-info">
                                             <i className="fas fa-info-circle me-2"></i>
-                                            <strong>Note:</strong> The client will be notified that their reschedule request has been declined and the original appointment time will remain.
+                                            <strong>Note:</strong> The client
+                                            will be notified that their
+                                            reschedule request has been declined
+                                            and the original appointment time
+                                            will remain.
                                         </div>
 
                                         <div className="mb-3">
                                             <label className="form-label">
-                                                <strong>Reason for Declining *</strong>
+                                                <strong>
+                                                    Reason for Declining *
+                                                </strong>
                                             </label>
                                             <textarea
                                                 className="form-control"
                                                 rows="4"
                                                 value={declineReason}
-                                                onChange={(e) => setDeclineReason(e.target.value)}
+                                                onChange={(e) =>
+                                                    setDeclineReason(
+                                                        e.target.value
+                                                    )
+                                                }
                                                 placeholder="Please explain why you cannot accommodate the reschedule request. This will help the client understand your decision."
                                                 disabled={declineLoading}
                                             ></textarea>
                                             <div className="form-text">
-                                                A clear reason helps maintain good client relationships and professionalism.
+                                                A clear reason helps maintain
+                                                good client relationships and
+                                                professionalism.
                                             </div>
                                         </div>
                                     </div>
@@ -1175,12 +1316,20 @@ const AppointmentsList = () => {
                                             type="button"
                                             className="btn btn-warning"
                                             onClick={handleDeclineConfirm}
-                                            disabled={declineLoading || !declineReason.trim()}
+                                            disabled={
+                                                declineLoading ||
+                                                !declineReason.trim()
+                                            }
                                         >
                                             {declineLoading ? (
                                                 <>
-                                                    <div className="spinner-border spinner-border-sm me-2" role="status">
-                                                        <span className="visually-hidden">Loading...</span>
+                                                    <div
+                                                        className="spinner-border spinner-border-sm me-2"
+                                                        role="status"
+                                                    >
+                                                        <span className="visually-hidden">
+                                                            Loading...
+                                                        </span>
                                                     </div>
                                                     Declining...
                                                 </>

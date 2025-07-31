@@ -1831,3 +1831,294 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* ============ LOADING STATES ============ */
+.services-loading,
+.stats-loading,
+.testimonials-loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 200px;
+    padding: 3rem 0;
+}
+
+.loading-spinner-large {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    color: var(--text-secondary);
+}
+
+.loading-spinner-large i {
+    font-size: 2rem;
+    color: var(--primary-color);
+    animation: spin 1s linear infinite;
+}
+
+.loading-spinner-large p {
+    font-size: 1rem;
+    font-weight: 500;
+    margin: 0;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* ============ CONTACT SECTION ============ */
+.contact-section {
+    background: var(--bg-white);
+    border-radius: var(--border-radius-xl);
+    padding: 3rem 2rem;
+    margin-top: 3rem;
+    text-align: center;
+    border: 2px solid var(--border-color);
+}
+
+.contact-content h3 {
+    font-size: 1.875rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+}
+
+.contact-content p {
+    font-size: 1.125rem;
+    color: var(--text-secondary);
+    margin-bottom: 2.5rem;
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.contact-methods {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.contact-method {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.5rem;
+    background: var(--bg-light);
+    border-radius: var(--border-radius);
+    transition: var(--transition);
+    border: 1px solid transparent;
+}
+
+.contact-method:hover {
+    background: white;
+    border-color: var(--primary-color);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+}
+
+.contact-method i {
+    width: 50px;
+    height: 50px;
+    background: var(--primary-gradient);
+    border-radius: var(--border-radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+
+.contact-method div h4 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 0.25rem 0;
+}
+
+.contact-method div p {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+/* ============ SERVICE CARD FIXES ============ */
+.service-card {
+    background: var(--bg-white);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-lg);
+    padding: 2rem;
+    position: relative;
+    transition: var(--transition);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.service-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--primary-color);
+}
+
+.service-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.service-actions {
+    margin-top: auto;
+    padding-top: 1rem;
+}
+
+/* ============ EMPTY STATES ============ */
+.no-testimonials {
+    text-align: center;
+    padding: 3rem 2rem;
+    color: var(--text-secondary);
+}
+
+.no-testimonials p {
+    font-size: 1.125rem;
+    margin: 0;
+}
+
+/* ============ BUTTON CONSISTENCY FIXES ============ */
+.btn-primary-large,
+.btn-secondary-outline {
+    background: rgba(255, 255, 255, 0.2) !important;
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(255, 255, 255, 0.3) !important;
+    color: white !important;
+}
+
+.btn-primary-large:hover,
+.btn-secondary-outline:hover {
+    background: rgba(255, 255, 255, 0.3) !important;
+    border-color: rgba(255, 255, 255, 0.5) !important;
+    color: white !important;
+}
+
+/* Override for white backgrounds */
+.cta-section .btn-primary-large,
+.categories-preview .btn-primary-large,
+.contact-section .btn-primary-large {
+    background: var(--primary-gradient) !important;
+    border-color: var(--primary-color) !important;
+    color: white !important;
+}
+
+.cta-section .btn-primary-large:hover,
+.categories-preview .btn-primary-large:hover,
+.contact-section .btn-primary-large:hover {
+    background: var(--primary-hover) !important;
+    border-color: var(--primary-hover) !important;
+    color: white !important;
+}
+
+/* ============ RESPONSIVE FIXES ============ */
+@media (max-width: 768px) {
+    .contact-methods {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .contact-method {
+        padding: 1.25rem;
+        text-align: left;
+    }
+    
+    .contact-content h3 {
+        font-size: 1.5rem;
+    }
+    
+    .contact-content p {
+        font-size: 1rem;
+    }
+    
+    .service-card {
+        padding: 1.5rem;
+    }
+    
+    .loading-spinner-large {
+        min-height: 150px;
+    }
+    
+    .loading-spinner-large i {
+        font-size: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .contact-section {
+        padding: 2rem 1.5rem;
+        margin-top: 2rem;
+    }
+    
+    .contact-method {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.75rem;
+    }
+    
+    .contact-method i {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+    }
+    
+    .service-card {
+        padding: 1.25rem;
+    }
+}
+
+/* ============ LANDING PAGE LAYOUT FIXES ============ */
+.landing-page {
+    position: relative;
+    z-index: 1;
+}
+
+.landing-page .section-modern:first-child {
+    padding-top: 0;
+}
+
+/* Ensure proper spacing between sections */
+.landing-page .section-modern + .section-modern {
+    position: relative;
+}
+
+/* Fix for sections with different backgrounds */
+.landing-page .section-modern[style*="background"] {
+    position: relative;
+    z-index: 1;
+}
+
+/* Smooth transitions between sections */
+.landing-page .gradient-section + .section-modern:not(.gradient-section) {
+    margin-top: -1px;
+}
+
+/* Better visual separation */
+.landing-page .section-modern:not(.gradient-section) + .gradient-section {
+    box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.1);
+}
+
+/* Ensure CTA section buttons work on all backgrounds */
+.cta-section .btn,
+.final-cta .btn,
+.features-cta .btn,
+.stats-cta .btn {
+    position: relative;
+    z-index: 2;
+}
+
+/* Fix for hero section overlap with navbar */
+.hero-section {
+    position: relative;
+    z-index: 1;
+}

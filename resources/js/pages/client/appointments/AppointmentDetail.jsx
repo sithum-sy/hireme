@@ -132,7 +132,22 @@ const AppointmentDetail = () => {
                     parseInt(minutes)
                 );
             } else {
-                dateObj = new Date(`${dateStr}T${timeStr}`);
+                // Fallback: try to parse dateStr properly first
+                if (dateStr.includes("-")) {
+                    const [year, month, day] = dateStr.split("-");
+                    const [hours, minutes] = timeStr
+                        ? timeStr.split(":")
+                        : [0, 0];
+                    dateObj = new Date(
+                        parseInt(year),
+                        parseInt(month) - 1,
+                        parseInt(day),
+                        parseInt(hours),
+                        parseInt(minutes)
+                    );
+                } else {
+                    dateObj = new Date(`${dateStr}T${timeStr}`);
+                }
             }
 
             if (isNaN(dateObj.getTime())) {
@@ -163,14 +178,33 @@ const AppointmentDetail = () => {
             if (date instanceof Date) {
                 dateObj = date;
             } else if (typeof date === "string" && date.includes("-")) {
-                const [year, month, day] = date.split("-");
+                // Handle both "YYYY-MM-DD" and "YYYY-MM-DDTHH:MM:SS.sssZ" formats
+                let datePart = date;
+                if (date.includes("T")) {
+                    datePart = date.split("T")[0]; // Extract just the date part
+                }
+                const [year, month, day] = datePart.split("-");
                 dateObj = new Date(
                     parseInt(year),
                     parseInt(month) - 1,
                     parseInt(day)
                 );
             } else {
-                dateObj = new Date(date);
+                // Fallback: try to parse date string properly
+                if (typeof date === "string" && date.includes("-")) {
+                    let datePart = date;
+                    if (date.includes("T")) {
+                        datePart = date.split("T")[0]; // Extract just the date part
+                    }
+                    const [year, month, day] = datePart.split("-");
+                    dateObj = new Date(
+                        parseInt(year),
+                        parseInt(month) - 1,
+                        parseInt(day)
+                    );
+                } else {
+                    dateObj = new Date(date);
+                }
             }
 
             if (isNaN(dateObj.getTime())) {
@@ -193,7 +227,7 @@ const AppointmentDetail = () => {
                 }
             }
 
-            return {
+            const result = {
                 fullDate: dateObj.toLocaleDateString("en-US", {
                     weekday: "long",
                     year: "numeric",
@@ -207,6 +241,8 @@ const AppointmentDetail = () => {
                     year: "numeric",
                 }),
             };
+
+            return result;
         } catch (error) {
             console.warn("Date formatting error:", error, { date, time });
             return {
@@ -236,7 +272,8 @@ const AppointmentDetail = () => {
     };
 
     const handleUpdateSuccess = (updatedAppointment) => {
-        setAppointment(updatedAppointment);
+        // Force a new object reference to ensure React re-renders
+        setAppointment({ ...updatedAppointment });
         setShowUpdateModal(false);
     };
 
@@ -442,6 +479,21 @@ const AppointmentDetail = () => {
                     <div className="col-lg-4">
                         {/* Appointment Summary - Enhanced with better context */}
                         <AppointmentSummaryCard
+                            key={`${appointment.id}-${
+                                appointment.appointment_date
+                            }-${appointment.appointment_time}-${
+                                appointment.total_price
+                            }-${appointment.status}-${
+                                appointment.location_type
+                            }-${appointment.custom_address || ""}-${
+                                appointment.custom_city || ""
+                            }-${appointment.location_instructions || ""}-${
+                                appointment.client_phone || ""
+                            }-${appointment.client_email || ""}-${
+                                appointment.payment_method || ""
+                            }-${
+                                appointment.duration_hours || ""
+                            }-${JSON.stringify(appointment.invoice || {})}`}
                             appointment={appointment}
                             formatDateTime={formatDateTime}
                         />
@@ -512,6 +564,8 @@ const AppointmentDetail = () => {
                 show={showUpdateModal}
                 onHide={() => setShowUpdateModal(false)}
                 appointment={appointment}
+                service={appointment?.service}
+                provider={appointment?.provider}
                 mode={updateMode}
                 onUpdateSuccess={handleUpdateSuccess}
             />
