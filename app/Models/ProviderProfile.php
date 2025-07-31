@@ -6,6 +6,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
 
+/**
+ * ProviderProfile Model - Extended profile information for service providers
+ * 
+ * Stores additional business information, verification status, and professional
+ * details that supplement the base User model for service providers.
+ */
 class ProviderProfile extends Model
 {
     use HasFactory;

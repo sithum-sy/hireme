@@ -1,5 +1,4 @@
 <?php
-// app/Services/AvailabilityService.php
 
 namespace App\Services;
 
@@ -11,6 +10,14 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
+/**
+ * AvailabilityService - Complex scheduling and availability management system
+ * 
+ * Handles provider scheduling logic including weekly availability patterns, 
+ * blocked time periods, real-time slot availability checking, and appointment 
+ * conflict detection. Implements sophisticated algorithms for time overlap 
+ * detection and provides detailed availability analysis for booking systems.
+ */
 class AvailabilityService
 {
     /**
@@ -257,7 +264,8 @@ class AvailabilityService
     // Add these methods to your existing App/Services/AvailabilityService.php:
 
     /**
-     * Get available time slots for a specific date with proper conflict checking
+     * Generate available time slots for booking with comprehensive conflict detection
+     * Implements interval overlap algorithms and considers multiple constraint types
      */
     public function getAvailableSlots(User $provider, $date, $serviceDuration = 1): array
     {
@@ -356,7 +364,8 @@ class AvailabilityService
     }
 
     /**
-     * Check if a time slot is blocked
+     * Check if a time slot is blocked using interval overlap detection
+     * Implements the classic interval overlap algorithm: (start < blocked_end AND end > blocked_start)
      */
     private function isTimeSlotBlocked($startTime, $endTime, $blockedTimes, $date)
     {
@@ -371,11 +380,11 @@ class AvailabilityService
                 return true;
             }
 
-            // Check for time overlap
+            // Check for time overlap using standard interval overlap formula
             $blockedStart = is_string($blocked->start_time) ? Carbon::parse($blocked->start_time) : $blocked->start_time;
             $blockedEnd = is_string($blocked->end_time) ? Carbon::parse($blocked->end_time) : $blocked->end_time;
 
-            // Times overlap if: start < blocked_end AND end > blocked_start
+            // Mathematical interval overlap: start < blocked_end AND end > blocked_start
             $overlaps = $startTime->lt($blockedEnd) && $endTime->gt($blockedStart);
 
             if ($overlaps) {

@@ -6,6 +6,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
 
+/**
+ * Quote Model - Manages the quote request/response workflow between clients and providers
+ * 
+ * Handles the complete quote lifecycle from initial client request through provider response,
+ * client acceptance/rejection, and conversion to appointments. Includes complex business logic
+ * for quote expiration, pricing calculations, and status transitions.
+ */
 class Quote extends Model
 {
     use HasFactory;
@@ -72,14 +79,14 @@ class Quote extends Model
         'expires_at'
     ];
 
-    // Status constants
-    public const STATUS_PENDING = 'pending';
-    public const STATUS_QUOTED = 'quoted';
-    public const STATUS_ACCEPTED = 'accepted';
-    public const STATUS_REJECTED = 'rejected';
-    public const STATUS_EXPIRED = 'expired';
-    public const STATUS_WITHDRAWN = 'withdrawn';
-    public const STATUS_CONVERTED = 'converted';
+    // Quote lifecycle status constants
+    public const STATUS_PENDING = 'pending';        // Awaiting provider response
+    public const STATUS_QUOTED = 'quoted';          // Provider has quoted, awaiting client response
+    public const STATUS_ACCEPTED = 'accepted';      // Client accepted quote
+    public const STATUS_REJECTED = 'rejected';      // Client rejected quote
+    public const STATUS_EXPIRED = 'expired';        // Quote validity period expired
+    public const STATUS_WITHDRAWN = 'withdrawn';    // Provider withdrew quote
+    public const STATUS_CONVERTED = 'converted';    // Successfully converted to appointment
 
     // Relationships
     public function client()
@@ -300,6 +307,10 @@ class Quote extends Model
         return $badges[$this->status] ?? 'badge bg-secondary';
     }
 
+    /**
+     * Calculate time remaining for quote expiration with smart formatting
+     * Returns user-friendly time remaining or expiration status
+     */
     public function getTimeRemainingAttribute()
     {
         if ($this->status !== self::STATUS_QUOTED || !$this->valid_until) {
@@ -355,7 +366,13 @@ class Quote extends Model
             !$this->appointment_id;
     }
 
-    // Action methods
+    /**
+     * Quote workflow action methods - Handle state transitions with business rules
+     */
+    
+    /**
+     * Provider submits quote response with pricing and validity period
+     */
     public function markAsQuoted($quotedPrice, $duration, $details = null, $validDays = 7)
     {
         $this->update([

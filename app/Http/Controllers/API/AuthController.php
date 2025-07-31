@@ -19,6 +19,13 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
+/**
+ * AuthController - Handles user authentication and account management
+ * 
+ * Manages user registration, login, logout, email verification, and password reset
+ * functionality for the HireMe service marketplace. Implements secure authentication
+ * flow with email verification requirements and Sanctum token-based API authentication.
+ */
 class AuthController extends Controller
 {
     protected $providerProfileService;
@@ -28,32 +35,21 @@ class AuthController extends Controller
         $this->providerProfileService = $providerProfileService;
     }
 
+    /**
+     * Register new user with email verification requirement
+     * Creates user account but keeps it inactive until email is verified
+     */
     public function register(RegisterRequest $request)
     {
         try {
-            // Debug logging
-            // Log::info('Registration request received', [
-            //     'has_profile_picture' => $request->hasFile('profile_picture'),
-            //     'profile_picture_info' => $request->hasFile('profile_picture') ? [
-            //         'original_name' => $request->file('profile_picture')->getClientOriginalName(),
-            //         'mime_type' => $request->file('profile_picture')->getMimeType(),
-            //         'size' => $request->file('profile_picture')->getSize(),
-            //         'is_valid' => $request->file('profile_picture')->isValid(),
-            //         'error' => $request->file('profile_picture')->getError(),
-            //     ] : null,
-            //     'content_type' => $request->header('Content-Type'),
-            //     'all_request_data' => $request->all(),
-            // ]);
-
             DB::beginTransaction();
 
             $userData = $request->validated();
 
-            // Hash password
+            // Hash password for secure storage
             $userData['password'] = Hash::make($userData['password']);
 
-            // Handle profile picture upload
-            // Handle profile picture upload
+            // Handle profile picture upload with UUID naming for uniqueness
             if ($request->hasFile('profile_picture')) {
                 $file = $request->file('profile_picture');
                 $filename = 'profile_' . Str::uuid() . '.' . $file->getClientOriginalExtension();
@@ -69,7 +65,7 @@ class AuthController extends Controller
                 $userData['profile_picture'] = 'images/profile_pictures/' . $filename;
             }
 
-            // Create user - NOT ACTIVE until email verified
+            // Create user - IMPORTANT: NOT ACTIVE until email verified
             $user = User::create([
                 'first_name' => $userData['first_name'],
                 'last_name' => $userData['last_name'],
@@ -97,17 +93,17 @@ class AuthController extends Controller
                 }
             }
 
-            // Generate email verification token
+            // Generate secure email verification token with user email and timestamp
             $token = hash('sha256', Str::random(60) . $user->email . time());
             
-            // Store verification token
+            // Store verification token in database for validation
             DB::table('email_verification_tokens')->insert([
                 'email' => $user->email,
                 'token' => $token,
                 'created_at' => now(),
             ]);
 
-            // Send verification email
+            // Send verification email to user
             $user->notify(new VerifyEmailNotification($token));
 
             // Prepare response data (no auth token until email verified)
@@ -156,6 +152,10 @@ class AuthController extends Controller
         }
     }
 
+    /**
+     * Authenticate user with strict email verification and account status checks
+     * Implements "remember me" functionality with different token expiration times
+     */
     public function login(LoginRequest $request)
     {
         try {
@@ -174,7 +174,7 @@ class AuthController extends Controller
 
             $user = Auth::user();
 
-            // CRITICAL: Check if email is verified FIRST
+            // CRITICAL: Check if email is verified FIRST - security requirement
             if (!$user->hasVerifiedEmail()) {
                 Auth::logout(); // Logout the user immediately
                 
@@ -189,7 +189,7 @@ class AuthController extends Controller
                 ], 403);
             }
 
-            // Check if user is active
+            // Check if user account is active (admin can deactivate accounts)
             if (!$user->is_active) {
                 Auth::logout();
                 return response()->json([
@@ -198,13 +198,13 @@ class AuthController extends Controller
                 ], 403);
             }
 
-            // Revoke all existing tokens
+            // Revoke all existing tokens for security (prevent multiple concurrent sessions)
             $user->tokens()->delete();
 
-            // Update last login timestamp
+            // Update last login timestamp for activity tracking
             $user->updateLastLogin();
 
-            // Create new token with different expiration based on remember me
+            // Create new token with different expiration based on remember me preference
             $tokenName = $rememberMe ? 'long-term-token' : 'session-token';
             $expiresAt = $rememberMe ? now()->addDays(30) : now()->addHours(2);
             
@@ -302,18 +302,21 @@ class AuthController extends Controller
     //     }
     // }
 
+    /**
+     * Logout user and revoke authentication tokens
+     * Handles different Sanctum token types (PersonalAccessToken vs TransientToken)
+     */
     public function logout(Request $request)
     {
         try {
             $user = $request->user();
-
 
             if ($user) {
                 // Get the current token
                 $currentToken = $user->currentAccessToken();
 
                 if ($currentToken) {
-                    // Only delete if it's not a TransientToken
+                    // Handle different token types - Sanctum can use different token implementations
                     if (!($currentToken instanceof \Laravel\Sanctum\TransientToken)) {
                         if ($currentToken instanceof \Laravel\Sanctum\PersonalAccessToken) {
                             $currentToken->delete();
@@ -446,7 +449,8 @@ class AuthController extends Controller
     }
 
     /**
-     * Verify user email address
+     * Verify user email address using token from verification email
+     * Activates user account after successful email verification
      */
     public function verifyEmail(Request $request)
     {
@@ -456,7 +460,7 @@ class AuthController extends Controller
         ]);
 
         try {
-            // Find the verification token
+            // Find the verification token in database
             $verificationToken = DB::table('email_verification_tokens')
                 ->where('email', $request->email)
                 ->where('token', $request->token)
@@ -470,9 +474,9 @@ class AuthController extends Controller
                 ], 400);
             }
 
-            // Check if token is expired (60 minutes)
+            // Check if token is expired (60 minutes expiration policy)
             if (Carbon::parse($verificationToken->created_at)->addMinutes(60)->isPast()) {
-                // Delete expired token
+                // Delete expired token for security
                 DB::table('email_verification_tokens')
                     ->where('email', $request->email)
                     ->where('token', $request->token)
@@ -507,11 +511,11 @@ class AuthController extends Controller
                 ], 400);
             }
 
-            // Mark email as verified and activate user
+            // Mark email as verified and activate user account
             $user->markEmailAsVerified();
             $user->update(['is_active' => true]);
 
-            // Delete the used token
+            // Delete the used token for security (one-time use)
             DB::table('email_verification_tokens')
                 ->where('email', $request->email)
                 ->where('token', $request->token)

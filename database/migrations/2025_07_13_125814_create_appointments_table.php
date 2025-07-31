@@ -4,15 +4,25 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
+/**
+ * CreateAppointmentsTable Migration - Core appointments system database structure
+ * 
+ * Creates the main appointments table that handles service bookings between 
+ * clients and providers. Includes comprehensive fields for location, pricing,
+ * status tracking, and performance optimization through strategic indexing.
+ */
 return new class extends Migration
 {
     public function up(): void
     {
         Schema::create('appointments', function (Blueprint $table) {
             $table->id();
+            // Foreign key relationships with cascade delete for data integrity
             $table->foreignId('client_id')->constrained('users')->onDelete('cascade');
             $table->foreignId('provider_id')->constrained('users')->onDelete('cascade');
             $table->foreignId('service_id')->constrained('services')->onDelete('cascade');
+            
+            // Core appointment scheduling fields
             $table->date('appointment_date');
             $table->time('appointment_time');
             $table->decimal('duration_hours', 4, 2);
@@ -34,9 +44,9 @@ return new class extends Migration
             $table->string('booking_source', 50)->default('web_app');
             $table->text('cancellation_reason')->nullable();
 
-            // Status enum matching model expectations
+            // Comprehensive status enum covering complete appointment lifecycle
             $table->enum('status', [
-                'pending',                    // Match model scopes
+                'pending',                    // Initial state awaiting provider confirmation
                 'confirmed',
                 'in_progress',
                 'completed',
@@ -44,7 +54,7 @@ return new class extends Migration
                 'cancelled_by_provider',
                 'no_show',
                 'disputed'
-            ])->default('pending');          // Change default to 'pending'
+            ])->default('pending');
 
             // Review and rating fields
             $table->text('provider_notes')->nullable();
@@ -61,10 +71,10 @@ return new class extends Migration
             $table->timestamp('cancelled_at')->nullable();
             $table->timestamps();
 
-            // Add indexes for better performance
-            $table->index(['client_id', 'appointment_date']);
-            $table->index(['provider_id', 'appointment_date']);
-            $table->index(['status']);
+            // Strategic database indexes for query performance optimization
+            $table->index(['client_id', 'appointment_date']); // Client appointment lookups
+            $table->index(['provider_id', 'appointment_date']); // Provider schedule queries
+            $table->index(['status']); // Status-based filtering and reporting
         });
     }
 

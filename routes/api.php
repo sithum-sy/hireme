@@ -17,43 +17,51 @@ use App\Http\Controllers\GeocodingController;
 
 /*
 |--------------------------------------------------------------------------
-| API Routes
+| API Routes - HireMe Service Marketplace
 |--------------------------------------------------------------------------
+| 
+| Defines the complete API structure for the service marketplace application.
+| Routes are organized by access level (public/authenticated) and user roles
+| (client, provider, admin, staff) with appropriate middleware protection.
+|
 */
 
-// Public routes
+// ============================================================================
+// PUBLIC ROUTES - No authentication required
+// ============================================================================
+
+// Authentication endpoints
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
-// Email verification routes (public)
+// Email verification system (public access required for email links)
 Route::post('/verify-email', [AuthController::class, 'verifyEmail']);
 Route::post('/resend-verification', [AuthController::class, 'resendVerification']);
 
-// Password reset routes (public)  
+// Password recovery system (public access required)  
 Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
 Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 
-// CSRF token refresh route (public)
+// CSRF token refresh for security
 Route::post('/csrf-refresh', [AuthController::class, 'refreshCSRF']);
 
-// Public geocoding routes (no auth required)
+// Geocoding services for location features
 Route::prefix('geocoding')->group(function () {
     Route::get('/search', [GeocodingController::class, 'search']);
     Route::get('/reverse', [GeocodingController::class, 'reverse']);
 });
 
-// Public service routes
+// Public marketplace browsing (no login required for service discovery)
 Route::get('/service-categories', [ServiceCategoryController::class, 'index']);
 Route::get('/services', [ServiceController::class, 'index']);
 Route::get('/services/{service}', [ServiceController::class, 'show']);
 
-// Public provider routes
-// Route::get('/providers/{providerId}/availability/check', [AvailabilityController::class, 'checkAvailability']);
-// Route::get('/providers/{providerId}/availability/slots', [AvailabilityController::class, 'getAvailableSlots']);
+// Public provider information for marketplace browsing
 Route::get('/providers/{providerId}/public-profile', [ProfileController::class, 'getPublicProviderProfile']);
 
-
-// Protected routes
+// ============================================================================
+// AUTHENTICATED ROUTES - Require authentication via Sanctum
+// ============================================================================
 Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
     // Authentication
     Route::post('/logout', [AuthController::class, 'logout']);
@@ -123,22 +131,26 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
         Route::put('/preferences', [NotificationController::class, 'updatePreferences']);
     });
 
-    // Service Provider Routes
+    // ========================================================================
+    // ROLE-BASED ROUTE GROUPS - Separated by user roles with middleware protection
+    // ========================================================================
+    
+    // Service Provider Routes - Business logic for service providers
     Route::prefix('provider')->middleware(['auth:sanctum', 'role:service_provider'])->group(function () {
         require __DIR__ . '/provider.php';
     });
 
-    // Client-specific routes
+    // Client Routes - Consumer-facing booking and service discovery features
     Route::prefix('client')->middleware(['auth:sanctum', 'role:client'])->group(function () {
         require __DIR__ . '/client.php';
     });
 
-    // Admin routes
+    // Admin Routes - Full system administration and management
     Route::prefix('admin')->middleware(['auth:sanctum', 'role:admin'])->group(function () {
         require __DIR__ . '/admin.php';
     });
 
-    // Staff routes
+    // Staff Routes - Content management and moderation features
     Route::prefix('staff')->middleware(['auth:sanctum', 'role:staff'])->group(function () {
         require __DIR__ . '/staff.php';
     });

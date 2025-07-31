@@ -7,6 +7,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Review;
 
+/**
+ * Service Model - Represents services offered by providers
+ * 
+ * Manages service listings with location-based features, pricing models,
+ * and comprehensive service information for the marketplace.
+ */
 class Service extends Model
 {
     use HasFactory;

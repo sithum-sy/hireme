@@ -7,6 +7,13 @@ use Illuminate\Http\Request;
 use App\Services\ActivityService;
 use App\Models\StaffActivity;
 
+/**
+ * LogStaffActivity Middleware - Audit trail for staff actions
+ * 
+ * Automatically logs all successful actions performed by staff members for 
+ * compliance and monitoring purposes. Captures HTTP method, path, and 
+ * sanitized request data while excluding sensitive information.
+ */
 class LogStaffActivity
 {
     protected $activityService;
@@ -97,11 +104,15 @@ class LogStaffActivity
         return "Performed {$method} request on {$path}";
     }
 
+    /**
+     * Sanitize request data by removing sensitive information
+     * Ensures passwords and security tokens are not logged in audit trail
+     */
     private function sanitizeRequestData(Request $request)
     {
         $data = $request->all();
 
-        // Remove sensitive data
+        // Remove sensitive data from audit logs for security
         unset($data['password'], $data['password_confirmation'], $data['_token']);
 
         return $data;

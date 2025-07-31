@@ -11,6 +11,12 @@ use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
+/**
+ * User Model - Core user entity for the HireMe service marketplace
+ * 
+ * Handles multi-role user system (Client, Provider, Admin, Staff) with authentication,
+ * profile management, and relationships with appointments, payments, and reviews.
+ */
 class User extends Authenticatable implements MustVerifyEmail
 {
     use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
@@ -73,13 +79,13 @@ class User extends Authenticatable implements MustVerifyEmail
         'updated_at'
     ];
 
-    // Role constants
+    // System role constants for user type identification
     const ROLE_CLIENT = 'client';
     const ROLE_SERVICE_PROVIDER = 'service_provider';
     const ROLE_ADMIN = 'admin';
     const ROLE_STAFF = 'staff';
 
-    // Accessors
+    // Accessor for full name with fallback handling
     public function getFullNameAttribute()
     {
         // Handle cases where first_name and last_name might not exist
@@ -87,7 +93,7 @@ class User extends Authenticatable implements MustVerifyEmail
             return trim($this->first_name . ' ' . $this->last_name);
         }
 
-        // Fallback to name field
+        // Fallback to name field for legacy data
         return $this->name ?? 'Unknown User';
     }
 
@@ -96,6 +102,10 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->date_of_birth ? $this->date_of_birth->age : null;
     }
 
+    /**
+     * Complex profile image URL accessor with multiple storage location support
+     * Handles legacy storage paths and ensures proper URL generation
+     */
     public function getProfileImageUrlAttribute()
     {
         if (!$this->profile_picture) {
@@ -123,7 +133,7 @@ class User extends Authenticatable implements MustVerifyEmail
             return asset($profilePicturePath);
         }
 
-        // Legacy support - check old storage location
+        // Legacy support - check old storage location for backward compatibility
         if (file_exists(public_path('storage/' . $this->profile_picture))) {
             return asset('storage/' . $this->profile_picture);
         }
@@ -185,7 +195,8 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Get all appointments for this user (both as provider and client)
+     * Dynamic appointment relationship based on user role
+     * Returns appropriate appointments (provider or client) depending on user's role
      */
     public function appointments()
     {
@@ -199,7 +210,7 @@ class User extends Authenticatable implements MustVerifyEmail
             return $this->clientAppointments();
         }
 
-        // For other roles, return empty relationship
+        // For other roles (admin/staff), return empty relationship
         return $this->hasMany(Appointment::class, 'provider_id')->whereRaw('1 = 0');
     }
 
@@ -220,7 +231,8 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Get all payments for this user (both as provider and client)
+     * Dynamic payment relationship based on user role
+     * Returns appropriate payments (received or made) depending on user's role
      */
     public function payments()
     {
@@ -234,7 +246,7 @@ class User extends Authenticatable implements MustVerifyEmail
             return $this->clientPayments();
         }
 
-        // For other roles, return empty relationship
+        // For other roles (admin/staff), return empty relationship
         return $this->hasMany(Payment::class, 'provider_id')->whereRaw('1 = 0');
     }
 
@@ -289,7 +301,8 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Get all reviews for this user (role-appropriate)
+     * Dynamic review relationship based on user role
+     * Providers get reviews they received, clients get reviews they gave
      */
     public function reviews()
     {
@@ -303,6 +316,7 @@ class User extends Authenticatable implements MustVerifyEmail
             return $this->reviewsGiven();
         }
 
+        // For other roles, return empty relationship
         return $this->hasMany(Review::class, 'reviewee_id')->whereRaw('1 = 0');
     }
 
@@ -355,7 +369,8 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Get human-readable last login time
+     * Get human-readable last login time with error handling
+     * Returns relative time format (e.g., "2 hours ago", "Never logged in")
      */
     public function getLastLoginHumanAttribute()
     {
@@ -364,7 +379,7 @@ class User extends Authenticatable implements MustVerifyEmail
         }
 
         try {
-            // Ensure we have a valid Carbon instance
+            // Ensure we have a valid Carbon instance for date formatting
             $lastLogin = $this->last_login_at instanceof \Carbon\Carbon
                 ? $this->last_login_at
                 : \Carbon\Carbon::parse($this->last_login_at);
@@ -443,7 +458,10 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->providerReviews()->count();
     }
 
-    // Update provider profile ratings (if you have provider profiles)
+    /**
+     * Update provider profile with calculated rating statistics
+     * Only applies to service provider users with existing provider profiles
+     */
     public function updateProviderRating()
     {
         if ($this->role === 'service_provider' && $this->providerProfile) {

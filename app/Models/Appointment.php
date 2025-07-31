@@ -6,6 +6,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
 
+/**
+ * Appointment Model - Manages service bookings between clients and providers
+ * 
+ * Handles the complete appointment lifecycle from booking to completion,
+ * including status management, payment tracking, and review coordination.
+ */
 class Appointment extends Model
 {
     use HasFactory;
@@ -64,7 +70,7 @@ class Appointment extends Model
         'auto_expired' => 'boolean'
     ];
 
-    // Status constants to match migration
+    // Appointment status constants defining the complete lifecycle workflow
     public const STATUS_PENDING = 'pending';
     public const STATUS_CONFIRMED = 'confirmed';
     public const STATUS_IN_PROGRESS = 'in_progress';
@@ -188,7 +194,7 @@ class Appointment extends Model
         return $query->whereIn('status', ['pending_confirmation', 'confirmed', 'in_progress']);
     }
 
-    // Accessors
+    // Date/time formatting accessors for display purposes
     public function getFullAppointmentDateTimeAttribute()
     {
         return Carbon::parse($this->appointment_date->format('Y-m-d') . ' ' . $this->appointment_time);
@@ -208,6 +214,10 @@ class Appointment extends Model
         return $start->format('g:i A') . ' - ' . $end->format('g:i A');
     }
 
+    /**
+     * Get Bootstrap badge class for status display
+     * Maps appointment statuses to appropriate Bootstrap badge colors
+     */
     public function getStatusBadgeAttribute()
     {
         $badges = [
@@ -406,9 +416,12 @@ class Appointment extends Model
         ]);
     }
 
+    /**
+     * Cancel appointment with appropriate status based on who initiated cancellation
+     * Uses PHP 8 match expression for cleaner status determination
+     */
     public function cancel($cancelledBy = 'client', $reason = null)
     {
-
         $status = match ($cancelledBy) {
             'client' => self::STATUS_CANCELLED_BY_CLIENT,
             'provider' => self::STATUS_CANCELLED_BY_PROVIDER,
@@ -434,7 +447,10 @@ class Appointment extends Model
         return $this->invoices()->exists();
     }
 
-    // Validation rules for different operations
+    /**
+     * Get validation rules for appointment operations
+     * Provides different rule sets for create/update operations
+     */
     public static function getValidationRules($operation = 'create')
     {
         $baseRules = [
@@ -525,7 +541,8 @@ class Appointment extends Model
     }
 
     /**
-     * Check if appointment is expired (past 24 hours without response)
+     * Check if appointment should be auto-expired
+     * Business rule: appointments expire after 24 hours without provider response
      */
     public function isExpired()
     {
@@ -534,7 +551,7 @@ class Appointment extends Model
     }
 
     /**
-     * Mark appointment as expired
+     * Mark appointment as expired with automatic system reason
      */
     public function markAsExpired($reason = 'Auto-expired due to provider non-response after 24 hours')
     {

@@ -12,6 +12,13 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
+/**
+ * Provider AppointmentController - Provider-side appointment management
+ * 
+ * Handles provider-specific appointment operations including appointment confirmation,
+ * status updates, schedule management, and invoice generation. Implements the provider
+ * workflow for responding to client bookings and managing their service schedule.
+ */
 class AppointmentController extends Controller
 {
     protected $appointmentService;

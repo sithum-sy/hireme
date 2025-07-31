@@ -1,5 +1,4 @@
 <?php
-// app/Http/Controllers/API/Client/AppointmentController.php
 
 namespace App\Http\Controllers\API\Client;
 
@@ -21,6 +20,14 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
+/**
+ * Client AppointmentController - Client-side appointment management
+ * 
+ * Handles all client-facing appointment operations including booking creation,
+ * updates, cancellations, and quote interactions. Integrates with multiple
+ * services for notifications, invoicing, and reviews to provide complete
+ * appointment lifecycle management from the client perspective.
+ */
 class AppointmentController extends Controller
 {
     protected $invoiceService;

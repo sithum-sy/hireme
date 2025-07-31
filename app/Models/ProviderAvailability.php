@@ -6,6 +6,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
 
+/**
+ * ProviderAvailability Model - Manages weekly recurring availability schedules for providers
+ * 
+ * Defines when service providers are available for appointments on a day-of-week basis.
+ * Supports flexible scheduling with start/end times and availability toggles for each day.
+ * Used by the booking system to determine valid appointment slots.
+ */
 class ProviderAvailability extends Model
 {
     use HasFactory;

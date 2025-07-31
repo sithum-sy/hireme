@@ -8,6 +8,13 @@ use App\Models\Appointment;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 
+/**
+ * NotificationService - Multi-channel notification system with user preferences
+ * 
+ * Manages in-app notifications, email notifications, and user notification preferences.
+ * Implements notification throttling, preference checking, and multiple delivery channels
+ * to ensure users receive appropriate notifications based on their settings.
+ */
 class NotificationService
 {
     /**

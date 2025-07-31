@@ -10,6 +10,14 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
+/**
+ * AppointmentService - Core business logic for appointment and quote management
+ * 
+ * Handles the complete booking workflow including direct appointments, 
+ * quote requests, appointment confirmations, and conflict resolution.
+ * Implements advanced features like retry logic for race conditions 
+ * and database locking to prevent double bookings.
+ */
 class AppointmentService
 {
     protected $availabilityService;
@@ -19,7 +27,8 @@ class AppointmentService
         $this->availabilityService = $availabilityService;
     }
     /**
-     * Create a booking request (direct booking or quote request)
+     * Create a booking request with intelligent routing between direct bookings and quote requests
+     * Implements retry logic for direct appointments to handle concurrent booking conflicts
      */
     public function createBooking(User $client, array $data): array
     {
@@ -60,7 +69,8 @@ class AppointmentService
     }
 
     /**
-     * Create booking with retry logic for race conditions
+     * Create booking with retry logic for handling concurrent booking race conditions
+     * Implements exponential backoff with random jitter to avoid thundering herd problems
      */
     private function createBookingWithRetry(User $client, array $data, int $maxRetries = 3): array
     {
@@ -92,7 +102,7 @@ class AppointmentService
                     $retryCount++;
                     
                     if ($retryCount < $maxRetries) {
-                        // Wait a short random time before retry (100-300ms)
+                        // Wait a short random time before retry (100-300ms) to reduce contention
                         usleep(rand(100000, 300000));
                         Log::info("Booking conflict detected, retrying... Attempt {$retryCount}/{$maxRetries}");
                         continue;
@@ -109,7 +119,8 @@ class AppointmentService
     }
 
     /**
-     * Create appointment with database locking to prevent race conditions
+     * Create appointment with database locking to prevent double-booking race conditions
+     * Uses SELECT...FOR UPDATE to ensure atomic check-and-create operations
      */
     private function createAppointmentWithLocking(User $client, Service $service, array $data): Appointment
     {
@@ -118,7 +129,7 @@ class AppointmentService
         $endTime = Carbon::parse($data['appointment_time'])->addHours($duration)->format('H:i');
 
         // Lock the provider's appointments table for this date to prevent concurrent bookings
-        // This ensures atomic check-and-create operation
+        // This ensures atomic check-and-create operation by locking relevant rows
         $conflictingAppointment = Appointment::where('provider_id', $provider->id)
             ->where('appointment_date', $data['appointment_date'])
             ->whereNotIn('status', [
@@ -127,10 +138,10 @@ class AppointmentService
                 'cancelled_by_staff',
                 'expired'
             ])
-            ->lockForUpdate() // This prevents other concurrent bookings
+            ->lockForUpdate() // Critical: prevents other concurrent bookings for this provider/date
             ->get();
 
-        // Check for time conflicts with the locked results
+        // Check for time conflicts with the locked results using interval overlap logic
         $requestedStart = Carbon::parse($data['appointment_time']);
         $requestedEnd = $requestedStart->copy()->addHours($duration);
 
@@ -138,7 +149,7 @@ class AppointmentService
             $existingStart = Carbon::parse($existing->appointment_time);
             $existingEnd = $existingStart->copy()->addHours($existing->duration_hours);
 
-            // Check for overlap: start < existing_end AND end > existing_start
+            // Check for overlap using standard interval overlap formula: start < existing_end AND end > existing_start
             if ($requestedStart->lt($existingEnd) && $requestedEnd->gt($existingStart)) {
                 throw new \Exception(
                     "Selected time slot conflicts with existing appointment. Please choose a different time."

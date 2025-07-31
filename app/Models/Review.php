@@ -5,6 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * Review Model - Manages the bidirectional review system between clients and providers
+ * 
+ * Handles detailed review functionality including multi-dimensional ratings (quality, 
+ * punctuality, communication, value), provider responses, moderation features, and 
+ * helpfulness tracking. Supports both client-to-provider and provider-to-client reviews.
+ */
 class Review extends Model
 {
     use HasFactory;
@@ -44,15 +51,15 @@ class Review extends Model
         'flagged_at' => 'datetime'
     ];
 
-    // Constants
+    // Review type constants for bidirectional review system
     public const TYPE_CLIENT_TO_PROVIDER = 'client_to_provider';
     public const TYPE_PROVIDER_TO_CLIENT = 'provider_to_client';
 
-    // Status constants   Added
-    public const STATUS_DRAFT = 'draft';
-    public const STATUS_PUBLISHED = 'published';
-    public const STATUS_HIDDEN = 'hidden';
-    public const STATUS_FLAGGED = 'flagged';
+    // Review status constants for moderation and visibility control
+    public const STATUS_DRAFT = 'draft';         // Review being written
+    public const STATUS_PUBLISHED = 'published'; // Live and visible
+    public const STATUS_HIDDEN = 'hidden';       // Hidden by admin/staff
+    public const STATUS_FLAGGED = 'flagged';     // Flagged for review
 
     // Relationships
     public function appointment()
