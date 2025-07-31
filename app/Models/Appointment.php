@@ -47,7 +47,8 @@ class Appointment extends Model
         'payment_received_at',
         'reviews_completed_at',
         'expires_at',
-        'auto_expired'
+        'auto_expired',
+        'reminder_24h_sent_at'
     ];
 
     protected $casts = [
@@ -67,7 +68,8 @@ class Appointment extends Model
         'payment_received_at' => 'datetime',
         'reviews_completed_at' => 'datetime',
         'expires_at' => 'datetime',
-        'auto_expired' => 'boolean'
+        'auto_expired' => 'boolean',
+        'reminder_24h_sent_at' => 'datetime'
     ];
 
     // Appointment status constants defining the complete lifecycle workflow
@@ -606,6 +608,38 @@ class Appointment extends Model
                 $q->whereNull('auto_expired')
                     ->orWhere('auto_expired', false);
             });
+    }
+
+    /**
+     * Scope for confirmed appointments needing 24-hour reminders
+     */
+    public function scopeNeedingReminders($query)
+    {
+        $targetStart = now()->addHours(23);
+        $targetEnd = now()->addHours(25);
+        
+        return $query->where('status', self::STATUS_CONFIRMED)
+            ->whereNull('reminder_24h_sent_at')
+            ->whereBetween('appointment_date', [
+                $targetStart->toDateString(),
+                $targetEnd->toDateString()
+            ]);
+    }
+
+    /**
+     * Check if appointment needs a 24-hour reminder
+     */
+    public function needsReminder(): bool
+    {
+        if ($this->status !== self::STATUS_CONFIRMED || $this->reminder_24h_sent_at) {
+            return false;
+        }
+
+        $appointmentDateTime = Carbon::parse($this->appointment_date->format('Y-m-d') . ' ' . $this->appointment_time);
+        $targetStart = now()->addHours(23);
+        $targetEnd = now()->addHours(25);
+
+        return $appointmentDateTime->between($targetStart, $targetEnd);
     }
 
 }

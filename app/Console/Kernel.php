@@ -23,6 +23,12 @@ class Kernel extends ConsoleKernel
             ->everyThirtyMinutes()
             ->withoutOverlapping()
             ->runInBackground();
+            
+        // Send 24-hour appointment reminders every hour
+        $schedule->command('appointments:send-reminders')
+            ->hourly()
+            ->withoutOverlapping()
+            ->runInBackground();
     }
 
     /**

@@ -415,6 +415,10 @@ class NotificationService
             'review_received' => [
                 'default' => \App\Mail\ReviewReceivedMail::class,
             ],
+            'appointment_reminder_24h' => [
+                'client' => \App\Mail\AppointmentReminderMail::class,
+                'service_provider' => \App\Mail\AppointmentReminderMail::class,
+            ],
         ];
     }
 
@@ -589,6 +593,21 @@ class NotificationService
                     'message' => 'Your service "{service_title}" has been permanently deleted.',
                     'type' => 'error',
                     'category' => 'general',
+                ],
+            ],
+
+            'appointment_reminder_24h' => [
+                'client' => [
+                    'title' => 'Appointment Reminder',
+                    'message' => 'Reminder: Your {service_name} appointment is tomorrow at {appointment_time}.',
+                    'type' => 'info',
+                    'category' => 'appointment',
+                ],
+                'service_provider' => [
+                    'title' => 'Appointment Reminder',
+                    'message' => 'Reminder: You have an appointment with {client_name} tomorrow at {appointment_time}.',
+                    'type' => 'info',
+                    'category' => 'appointment',
                 ],
             ],
         ];

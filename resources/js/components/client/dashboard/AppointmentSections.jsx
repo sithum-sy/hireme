@@ -26,7 +26,7 @@ const AppointmentSections = () => {
             const nextWeek = new Date();
             nextWeek.setDate(new Date().getDate() + 7);
             const nextWeekStr = nextWeek.toISOString().split("T")[0];
-            
+
             const lastWeek = new Date();
             lastWeek.setDate(new Date().getDate() - 7);
             const lastWeekStr = lastWeek.toISOString().split("T")[0];
@@ -35,42 +35,50 @@ const AppointmentSections = () => {
             const todayResult = await clientAppointmentService.getAppointments({
                 date_from: today,
                 date_to: today,
-                per_page: 10
+                per_page: 10,
             });
 
             // Load upcoming appointments (tomorrow onwards)
             const tomorrow = new Date();
             tomorrow.setDate(new Date().getDate() + 1);
             const tomorrowStr = tomorrow.toISOString().split("T")[0];
-            
-            const upcomingResult = await clientAppointmentService.getAppointments({
-                status: "confirmed,pending",
-                date_from: tomorrowStr,
-                date_to: nextWeekStr,
-                per_page: 10
-            });
+
+            const upcomingResult =
+                await clientAppointmentService.getAppointments({
+                    status: "confirmed,pending",
+                    date_from: tomorrowStr,
+                    date_to: nextWeekStr,
+                    per_page: 10,
+                });
 
             // Load recent completed appointments
             const pastResult = await clientAppointmentService.getAppointments({
                 status: "completed,paid,reviewed,closed",
                 date_from: lastWeekStr,
                 date_to: today,
-                per_page: 10
+                per_page: 10,
             });
 
             // Load cancelled appointments
-            const cancelledResult = await clientAppointmentService.getAppointments({
-                status: "cancelled_by_client,cancelled_by_provider",
-                date_from: lastWeekStr,
-                per_page: 10
-            });
+            const cancelledResult =
+                await clientAppointmentService.getAppointments({
+                    status: "cancelled_by_client,cancelled_by_provider",
+                    date_from: lastWeekStr,
+                    per_page: 10,
+                });
 
             // Get all appointments for stats
             const allResult = await clientAppointmentService.getAppointments({
-                per_page: 50
+                per_page: 50,
             });
 
-            if (todayResult.success && upcomingResult.success && pastResult.success && cancelledResult.success && allResult.success) {
+            if (
+                todayResult.success &&
+                upcomingResult.success &&
+                pastResult.success &&
+                cancelledResult.success &&
+                allResult.success
+            ) {
                 const todayAppointments = todayResult.data?.data || [];
                 const upcomingAppointments = upcomingResult.data?.data || [];
                 const pastAppointments = pastResult.data?.data || [];
@@ -79,21 +87,32 @@ const AppointmentSections = () => {
 
                 // Debug logging
                 console.log("Appointment Data Loading:", {
-                    today: { date: today, count: todayAppointments.length, appointments: todayAppointments },
-                    upcoming: { count: upcomingAppointments.length, appointments: upcomingAppointments },
+                    today: {
+                        date: today,
+                        count: todayAppointments.length,
+                        appointments: todayAppointments,
+                    },
+                    upcoming: {
+                        count: upcomingAppointments.length,
+                        appointments: upcomingAppointments,
+                    },
                     past: { count: pastAppointments.length },
                     cancelled: { count: cancelledAppointments.length },
-                    total: { count: allAppointments.length }
+                    total: { count: allAppointments.length },
                 });
 
                 // Calculate stats
                 const stats = {
                     today_total: todayAppointments.length,
                     upcoming_count: upcomingAppointments.length,
-                    this_week_completed: pastAppointments.filter(apt => 
-                        apt.status === 'completed' || apt.status === 'paid' || apt.status === 'reviewed' || apt.status === 'closed'
+                    this_week_completed: pastAppointments.filter(
+                        (apt) =>
+                            apt.status === "completed" ||
+                            apt.status === "paid" ||
+                            apt.status === "reviewed" ||
+                            apt.status === "closed"
                     ).length,
-                    total_appointments: allAppointments.length
+                    total_appointments: allAppointments.length,
                 };
 
                 setAppointmentData({
@@ -101,7 +120,7 @@ const AppointmentSections = () => {
                     upcoming: upcomingAppointments,
                     past: pastAppointments,
                     cancelled: cancelledAppointments,
-                    stats: stats
+                    stats: stats,
                 });
             }
         } catch (error) {
@@ -112,7 +131,12 @@ const AppointmentSections = () => {
                 upcoming: [],
                 past: [],
                 cancelled: [],
-                stats: { today_total: 0, upcoming_count: 0, this_week_completed: 0, total_appointments: 0 }
+                stats: {
+                    today_total: 0,
+                    upcoming_count: 0,
+                    this_week_completed: 0,
+                    total_appointments: 0,
+                },
             });
         } finally {
             setLoading(false);
@@ -193,7 +217,8 @@ const AppointmentSections = () => {
                         {appointment.service?.title || "Service Title"}
                     </div>
                     <div className="text-muted small mb-1">
-                        with {appointment.provider?.first_name} {appointment.provider?.last_name}
+                        with {appointment.provider?.first_name}{" "}
+                        {appointment.provider?.last_name}
                     </div>
                     <div className="d-flex align-items-center gap-2">
                         {showDate && (
@@ -206,7 +231,9 @@ const AppointmentSections = () => {
                             {formatTime(appointment.appointment_time)}
                         </span>
                         <span
-                            className={`badge ${getStatusBadge(appointment.status)}`}
+                            className={`badge ${getStatusBadge(
+                                appointment.status
+                            )}`}
                         >
                             {getStatusText(appointment.status)}
                         </span>

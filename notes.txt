@@ -97,3 +97,13 @@ php artisan queue:work   │
 
  # In a separate terminal:
   php artisan queue:work --daemon --sleep=3 --tries=3 --timeout=90
+
+# Notification before 24h
+  # Manual execution
+  php artisan appointments:send-reminders
+
+  # Test mode
+  php artisan appointments:send-reminders --dry-run
+
+  # View scheduled tasks
+  php artisan schedule:list

@@ -37,29 +37,33 @@ const ClientDashboard = () => {
         setActionItemsLoading(true);
         try {
             // Load appointments pending payment
-            const paymentResult = await clientAppointmentService.getAppointments({
-                status: "completed,invoice_sent,payment_pending",
-                per_page: 10
-            });
+            const paymentResult =
+                await clientAppointmentService.getAppointments({
+                    status: "completed,invoice_sent,payment_pending",
+                    per_page: 10,
+                });
 
-            // Load appointments pending review  
-            const reviewResult = await clientAppointmentService.getAppointments({
-                status: "paid",
-                per_page: 10
-            });
+            // Load appointments pending review
+            const reviewResult = await clientAppointmentService.getAppointments(
+                {
+                    status: "paid",
+                    per_page: 10,
+                }
+            );
 
             if (paymentResult.success) {
                 // Filter for appointments that actually need payment
-                const needsPayment = (paymentResult.data?.data || []).filter(apt => 
-                    apt.invoice && apt.invoice.payment_status === 'pending'
+                const needsPayment = (paymentResult.data?.data || []).filter(
+                    (apt) =>
+                        apt.invoice && apt.invoice.payment_status === "pending"
                 );
                 setPendingPayments(needsPayment);
             }
 
             if (reviewResult.success) {
                 // Filter for appointments that don't have client reviews yet
-                const needsReview = (reviewResult.data?.data || []).filter(apt => 
-                    !apt.client_review
+                const needsReview = (reviewResult.data?.data || []).filter(
+                    (apt) => !apt.client_review
                 );
                 setPendingReviews(needsReview);
             }
@@ -143,34 +147,56 @@ const ClientDashboard = () => {
                                         </div>
                                     ) : pendingPayments.length > 0 ? (
                                         <>
-                                            {pendingPayments.slice(0, 3).map((appointment) => (
-                                                <div key={appointment.id} className="d-flex justify-content-between align-items-center border-bottom pb-2 mb-2 last:border-0">
-                                                    <div className="flex-grow-1">
-                                                        <div className="fw-semibold small">
-                                                            {appointment.service?.title}
-                                                        </div>
-                                                        <div className="text-muted small">
-                                                            with {appointment.provider?.first_name} {appointment.provider?.last_name}
-                                                        </div>
-                                                        <div className="text-primary fw-bold small">
-                                                            Rs. {appointment.total_price?.toLocaleString()}
-                                                        </div>
-                                                    </div>
-                                                    <Link
-                                                        to={`/client/appointments/${appointment.id}`}
-                                                        className="btn btn-warning btn-sm"
+                                            {pendingPayments
+                                                .slice(0, 3)
+                                                .map((appointment) => (
+                                                    <div
+                                                        key={appointment.id}
+                                                        className="d-flex justify-content-between align-items-center border-bottom pb-2 mb-2 last:border-0"
                                                     >
-                                                        Pay Now
-                                                    </Link>
-                                                </div>
-                                            ))}
+                                                        <div className="flex-grow-1">
+                                                            <div className="fw-semibold small">
+                                                                {
+                                                                    appointment
+                                                                        .service
+                                                                        ?.title
+                                                                }
+                                                            </div>
+                                                            <div className="text-muted small">
+                                                                with{" "}
+                                                                {
+                                                                    appointment
+                                                                        .provider
+                                                                        ?.first_name
+                                                                }{" "}
+                                                                {
+                                                                    appointment
+                                                                        .provider
+                                                                        ?.last_name
+                                                                }
+                                                            </div>
+                                                            <div className="text-primary fw-bold small">
+                                                                Rs.{" "}
+                                                                {appointment.total_price?.toLocaleString()}
+                                                            </div>
+                                                        </div>
+                                                        <Link
+                                                            to={`/client/appointments/${appointment.id}`}
+                                                            className="btn btn-warning btn-sm"
+                                                        >
+                                                            Pay Now
+                                                        </Link>
+                                                    </div>
+                                                ))}
                                             {pendingPayments.length > 3 && (
                                                 <div className="text-center mt-3">
                                                     <Link
                                                         to="/client/appointments?status=payment_pending"
                                                         className="btn btn-outline-warning btn-sm"
                                                     >
-                                                        View All ({pendingPayments.length})
+                                                        View All (
+                                                        {pendingPayments.length}
+                                                        )
                                                     </Link>
                                                 </div>
                                             )}
@@ -208,34 +234,56 @@ const ClientDashboard = () => {
                                         </div>
                                     ) : pendingReviews.length > 0 ? (
                                         <>
-                                            {pendingReviews.slice(0, 3).map((appointment) => (
-                                                <div key={appointment.id} className="d-flex justify-content-between align-items-center border-bottom pb-2 mb-2 last:border-0">
-                                                    <div className="flex-grow-1">
-                                                        <div className="fw-semibold small">
-                                                            {appointment.service?.title}
-                                                        </div>
-                                                        <div className="text-muted small">
-                                                            with {appointment.provider?.first_name} {appointment.provider?.last_name}
-                                                        </div>
-                                                        <div className="text-muted small">
-                                                            {new Date(appointment.appointment_date).toLocaleDateString()}
-                                                        </div>
-                                                    </div>
-                                                    <Link
-                                                        to={`/client/appointments/${appointment.id}`}
-                                                        className="btn btn-info btn-sm"
+                                            {pendingReviews
+                                                .slice(0, 3)
+                                                .map((appointment) => (
+                                                    <div
+                                                        key={appointment.id}
+                                                        className="d-flex justify-content-between align-items-center border-bottom pb-2 mb-2 last:border-0"
                                                     >
-                                                        Review
-                                                    </Link>
-                                                </div>
-                                            ))}
+                                                        <div className="flex-grow-1">
+                                                            <div className="fw-semibold small">
+                                                                {
+                                                                    appointment
+                                                                        .service
+                                                                        ?.title
+                                                                }
+                                                            </div>
+                                                            <div className="text-muted small">
+                                                                with{" "}
+                                                                {
+                                                                    appointment
+                                                                        .provider
+                                                                        ?.first_name
+                                                                }{" "}
+                                                                {
+                                                                    appointment
+                                                                        .provider
+                                                                        ?.last_name
+                                                                }
+                                                            </div>
+                                                            <div className="text-muted small">
+                                                                {new Date(
+                                                                    appointment.appointment_date
+                                                                ).toLocaleDateString()}
+                                                            </div>
+                                                        </div>
+                                                        <Link
+                                                            to={`/client/appointments/${appointment.id}`}
+                                                            className="btn btn-info btn-sm"
+                                                        >
+                                                            Review
+                                                        </Link>
+                                                    </div>
+                                                ))}
                                             {pendingReviews.length > 3 && (
                                                 <div className="text-center mt-3">
                                                     <Link
                                                         to="/client/appointments?status=paid"
                                                         className="btn btn-outline-info btn-sm"
                                                     >
-                                                        View All ({pendingReviews.length})
+                                                        View All (
+                                                        {pendingReviews.length})
                                                     </Link>
                                                 </div>
                                             )}

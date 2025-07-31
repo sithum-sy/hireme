@@ -268,7 +268,7 @@ const ClientLayout = ({ children }) => {
                         )}
 
                         {/* Quick Stats (Dashboard only) */}
-                        {location.pathname === "/client/dashboard" && (
+                        {/* {location.pathname === "/client/dashboard" && (
                             <div className="dashboard-grid dashboard-grid-4 mb-4">
                                 <div className="stats-card">
                                     <div className="stats-value">
@@ -319,7 +319,7 @@ const ClientLayout = ({ children }) => {
                                     </div>
                                 </div>
                             </div>
-                        )}
+                        )} */}
 
                         {/* Main Page Content */}
                         <div className="page-content">{children}</div>
