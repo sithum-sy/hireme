@@ -17,9 +17,10 @@ const ServiceDetail = () => {
     const navigate = useNavigate();
     const routerLocation = useLocation();
     const { location } = useClient();
-    
-    // Get custom location from navigation state
+
+    // Get custom location and search params from navigation state
     const customLocationFromBrowse = routerLocation.state?.customLocation;
+    const preservedSearchParams = routerLocation.state?.searchParams;
 
     // Add debugging
     // console.log("ServiceDetail render:", { id, clientLocation, locationLoading, loading });
@@ -41,7 +42,10 @@ const ServiceDetail = () => {
     useEffect(() => {
         // First, check if we have a custom location from browse page
         if (customLocationFromBrowse) {
-            console.log("Using custom location from browse page:", customLocationFromBrowse);
+            console.log(
+                "Using custom location from browse page:",
+                customLocationFromBrowse
+            );
             setClientLocation(customLocationFromBrowse);
             setLocationLoading(false);
             return;
@@ -261,61 +265,42 @@ const ServiceDetail = () => {
         return R * c;
     };
 
-    // useEffect(() => {
-    //     // console.log("=== DEBUG INFO ===");
-    //     // console.log("Service ID:", id);
-    //     // console.log("Current URL:", window.location.href);
+    // Helper function to construct back URL with preserved state
+    const constructBackToServicesUrl = () => {
+        const params = new URLSearchParams();
 
-    //     // Test the API call directly
-    //     const testAPICall = async () => {
-    //         try {
-    //             const response = await fetch(`/api/client/services/${id}`, {
-    //                 headers: {
-    //                     Authorization: `Bearer ${localStorage.getItem(
-    //                         "token"
-    //                     )}`,
-    //                     "Content-Type": "application/json",
-    //                 },
-    //             });
-    //             const data = await response.json();
-    //             // console.log("Direct API call result:", data);
-    //             // console.log("Response status:", response.status);
-    //             // console.log("Response headers:", response.headers);
-    //         } catch (error) {
-    //             console.log("Direct API call error:", error);
-    //         }
-    //     };
+        // Add preserved search parameters
+        if (preservedSearchParams) {
+            Object.entries(preservedSearchParams).forEach(([key, value]) => {
+                if (value && value !== "" && value !== "false") {
+                    params.set(key, value);
+                }
+            });
+        }
 
-    //     // testAPICall();
+        // Add custom location parameters if available
+        if (customLocationFromBrowse) {
+            params.set("lat", customLocationFromBrowse.lat.toString());
+            params.set("lng", customLocationFromBrowse.lng.toString());
+            params.set("city", customLocationFromBrowse.city || "");
+            params.set("address", customLocationFromBrowse.address || "");
+            if (customLocationFromBrowse.province) {
+                params.set("province", customLocationFromBrowse.province);
+            }
+            if (customLocationFromBrowse.radius) {
+                params.set(
+                    "radius",
+                    customLocationFromBrowse.radius.toString()
+                );
+            }
+        }
 
-    //     if (id) {
-    //         loadServiceDetail();
-    //     } else {
-    //         console.error("No service ID provided");
-    //         navigate("/client/services", { replace: true });
-    //     }
-    // }, [id]);
+        const queryString = params.toString();
+        return queryString
+            ? `/client/services?${queryString}`
+            : "/client/services";
+    };
 
-    // const loadServiceDetail = async () => {
-    //     setLoading(true);
-
-    //     try {
-    //         const response = await clientService.getServiceDetail(id);
-
-    //         if (response.success) {
-    //             setService(response.data.service);
-    //             setProvider(response.data.provider);
-    //             setIsFavorite(response.data.is_favorite || false);
-    //         } else {
-    //             navigate("/client/services", { replace: true });
-    //         }
-    //     } catch (error) {
-    //         console.error("Failed to load service:", error);
-    //         navigate("/client/services", { replace: true });
-    //     } finally {
-    //         setLoading(false);
-    //     }
-    // };
     const loadServiceDetail = async () => {
         // console.log("loadServiceDetail called with:", { id, clientLocation });
         setLoading(true);
@@ -472,27 +457,9 @@ const ServiceDetail = () => {
                     <p className="text-muted">
                         The service you're looking for doesn't exist.
                     </p>
-                    <button 
+                    <button
                         className="btn btn-primary"
-                        onClick={() => {
-                            if (customLocationFromBrowse) {
-                                // Navigate back with custom location preserved in URL
-                                const params = new URLSearchParams();
-                                params.set("lat", customLocationFromBrowse.lat.toString());
-                                params.set("lng", customLocationFromBrowse.lng.toString());
-                                params.set("city", customLocationFromBrowse.city || "");
-                                params.set("address", customLocationFromBrowse.address || "");
-                                if (customLocationFromBrowse.province) {
-                                    params.set("province", customLocationFromBrowse.province);
-                                }
-                                if (customLocationFromBrowse.radius) {
-                                    params.set("radius", customLocationFromBrowse.radius.toString());
-                                }
-                                navigate(`/client/services?${params.toString()}`);
-                            } else {
-                                navigate("/client/services");
-                            }
-                        }}
+                        onClick={() => navigate(constructBackToServicesUrl())}
                     >
                         Browse Services
                     </button>
@@ -506,33 +473,15 @@ const ServiceDetail = () => {
             <div className="service-detail-page">
                 {/* Back Navigation */}
                 <div className="mb-3">
-                    <button 
+                    <button
                         className="btn btn-outline-secondary btn-sm"
-                        onClick={() => {
-                            if (customLocationFromBrowse) {
-                                // Navigate back with custom location preserved in URL
-                                const params = new URLSearchParams();
-                                params.set("lat", customLocationFromBrowse.lat.toString());
-                                params.set("lng", customLocationFromBrowse.lng.toString());
-                                params.set("city", customLocationFromBrowse.city || "");
-                                params.set("address", customLocationFromBrowse.address || "");
-                                if (customLocationFromBrowse.province) {
-                                    params.set("province", customLocationFromBrowse.province);
-                                }
-                                if (customLocationFromBrowse.radius) {
-                                    params.set("radius", customLocationFromBrowse.radius.toString());
-                                }
-                                navigate(`/client/services?${params.toString()}`);
-                            } else {
-                                navigate("/client/services");
-                            }
-                        }}
+                        onClick={() => navigate(constructBackToServicesUrl())}
                     >
                         <i className="fas fa-arrow-left me-2"></i>
                         Back to Services
                     </button>
                 </div>
-                
+
                 <div className="row">
                     {/* Main Content */}
                     <div className="col-lg-8">
@@ -560,77 +509,65 @@ const ServiceDetail = () => {
 
                                         <div className="rating">
                                             <div className="stars me-2">
-                                                {[1, 2, 3, 4, 5].map((star) => (
-                                                    <i
-                                                        key={star}
-                                                        className={`fas fa-star ${
-                                                            star <=
-                                                            (service.average_rating ||
-                                                                0)
-                                                                ? "text-warning"
-                                                                : "text-muted"
-                                                        }`}
-                                                    ></i>
-                                                ))}
+                                                {[1, 2, 3, 4, 5].map((star) => {
+                                                    const rating = Number(
+                                                        service.average_rating ||
+                                                            0
+                                                    );
+                                                    const difference =
+                                                        rating - star + 1;
+
+                                                    let starClass =
+                                                        "far fa-star text-muted"; // Empty star
+
+                                                    if (difference >= 1) {
+                                                        // Full star
+                                                        starClass =
+                                                            "fas fa-star text-warning";
+                                                    } else if (
+                                                        difference >= 0.5
+                                                    ) {
+                                                        // Half star
+                                                        starClass =
+                                                            "fas fa-star-half-alt text-warning";
+                                                    }
+
+                                                    return (
+                                                        <i
+                                                            key={star}
+                                                            className={
+                                                                starClass
+                                                            }
+                                                        ></i>
+                                                    );
+                                                })}
                                             </div>
                                             <span className="fw-semibold">
-                                                {service.average_rating || 0}
+                                                {Number(
+                                                    service.average_rating || 0
+                                                ).toFixed(1)}
                                             </span>
                                             <span className="text-muted">
                                                 ({service.reviews_count || 0}{" "}
-                                                reviews)
+                                                {service.reviews_count === 1
+                                                    ? "review"
+                                                    : "reviews"}
+                                                )
                                             </span>
                                         </div>
 
-                                        {/* Show distance only if user's location is available and service.distance is provided */}
-                                        {/* {location && service.distance && (
-                                            <div className="distance">
-                                                <i className="fas fa-map-marker-alt text-muted me-1"></i>
-                                                <span className="text-muted">
-                                                    {service.distance} km away
-                                                </span>
-                                            </div>
-                                        )} */}
-
-                                        {service?.distance != null && (
-                                            <div className="distance">
-                                                <i className="fas fa-map-marker-alt text-muted me-1"></i>
-                                                <span className="text-muted">
-                                                    {service.distance} km away
-                                                </span>
-                                            </div>
-                                        )}
+                                        {service?.distance != null &&
+                                            service.distance > 0 && (
+                                                <div className="distance ">
+                                                    <i className="fas fa-map-marker-alt text-muted me-1"></i>
+                                                    <span className="text-muted">
+                                                        The provider is{" "}
+                                                        {service.distance} km
+                                                        away from you
+                                                    </span>
+                                                </div>
+                                            )}
                                     </div>
-                                </div>
-
-                                <div className="service-actions d-flex gap-2">
-                                    {/* <button
-                                        className={`btn ${
-                                            isFavorite
-                                                ? "btn-danger"
-                                                : "btn-outline-danger"
-                                        }`}
-                                        onClick={handleToggleFavorite}
-                                    >
-                                        <i
-                                            className={`${
-                                                isFavorite ? "fas" : "far"
-                                            } fa-heart`}
-                                        ></i>
-                                    </button> */}
-
-                                    <button
-                                        className="btn btn-outline-secondary"
-                                        onClick={() =>
-                                            navigator.share &&
-                                            navigator.share({
-                                                title: service.title,
-                                                url: window.location.href,
-                                            })
-                                        }
-                                    >
-                                        <i className="fas fa-share-alt"></i>
-                                    </button>
                                 </div>
                             </div>
 
@@ -909,35 +846,70 @@ const ServiceDetail = () => {
                                                                     ].map(
                                                                         (
                                                                             star
-                                                                        ) => (
-                                                                            <i
-                                                                                key={
-                                                                                    star
-                                                                                }
-                                                                                className={`fas fa-star ${
-                                                                                    star <=
-                                                                                    (provider.average_rating ||
-                                                                                        0)
-                                                                                        ? "text-warning"
-                                                                                        : "text-muted"
-                                                                                }`}
-                                                                                style={{
-                                                                                    fontSize:
-                                                                                        "0.9rem",
-                                                                                }}
-                                                                            ></i>
-                                                                        )
+                                                                        ) => {
+                                                                            const rating =
+                                                                                Number(
+                                                                                    provider.average_rating ||
+                                                                                        0
+                                                                                );
+                                                                            const difference =
+                                                                                rating -
+                                                                                star +
+                                                                                1;
+
+                                                                            let starClass =
+                                                                                "far fa-star text-muted"; // Empty star
+
+                                                                            if (
+                                                                                difference >=
+                                                                                1
+                                                                            ) {
+                                                                                // Full star
+                                                                                starClass =
+                                                                                    "fas fa-star text-warning";
+                                                                            } else if (
+                                                                                difference >=
+                                                                                0.5
+                                                                            ) {
+                                                                                // Half star
+                                                                                starClass =
+                                                                                    "fas fa-star-half-alt text-warning";
+                                                                            }
+
+                                                                            return (
+                                                                                <i
+                                                                                    key={
+                                                                                        star
+                                                                                    }
+                                                                                    className={
+                                                                                        starClass
+                                                                                    }
+                                                                                    style={{
+                                                                                        fontSize:
+                                                                                            "0.9rem",
+                                                                                    }}
+                                                                                ></i>
+                                                                            );
+                                                                        }
                                                                     )}
                                                                 </div>
                                                                 <span className="fw-semibold me-1">
-                                                                    {provider.average_rating ||
-                                                                        0}
+                                                                    {Number(
+                                                                        provider.average_rating ||
+                                                                            0
+                                                                    ).toFixed(
+                                                                        1
+                                                                    )}
                                                                 </span>
                                                                 <span className="text-muted">
                                                                     (
                                                                     {provider.reviews_count ||
                                                                         0}{" "}
-                                                                    reviews)
+                                                                    {provider.reviews_count ===
+                                                                    1
+                                                                        ? "review"
+                                                                        : "reviews"}
+                                                                    )
                                                                 </span>
                                                             </div>
                                                         </div>
@@ -1150,32 +1122,6 @@ const ServiceDetail = () => {
                                                         </div>
                                                     </div>
                                                 )}
-
-                                            {/* Contact Actions */}
-                                            {/* <div className="provider-actions mt-4 pt-3 border-top">
-                                                <div className="row g-2">
-                                                    <div className="col-md-6">
-                                                        <button
-                                                            className="btn btn-outline-primary w-100"
-                                                            onClick={
-                                                                handleContactProvider
-                                                            }
-                                                        >
-                                                            <i className="fas fa-comments me-2"></i>
-                                                            Contact Provider
-                                                        </button>
-                                                    </div>
-                                                    <div className="col-md-6">
-                                                        <Link
-                                                            to={`/client/providers/${provider.id}`}
-                                                            className="btn btn-primary w-100"
-                                                        >
-                                                            <i className="fas fa-user me-2"></i>
-                                                            View Profile
-                                                        </Link>
-                                                    </div>
-                                                </div>
-                                            </div> */}
                                         </div>
                                     </div>
                                 </div>
@@ -1240,55 +1186,6 @@ const ServiceDetail = () => {
                                                     </span>
                                                 </div>
                                             )}
-
-                                        {/* Availability Status */}
-                                        {/* <div className="availability-status mt-3">
-                                            <div
-                                                className={`status-indicator d-flex align-items-center ${
-                                                    service.availability_status ===
-                                                    "available"
-                                                        ? "text-success"
-                                                        : service.availability_status ===
-                                                          "busy"
-                                                        ? "text-warning"
-                                                        : "text-danger"
-                                                }`}
-                                            >
-                                                <div
-                                                    className={`status-dot me-2 ${
-                                                        service.availability_status ===
-                                                        "available"
-                                                            ? "bg-success"
-                                                            : service.availability_status ===
-                                                              "busy"
-                                                            ? "bg-warning"
-                                                            : "bg-danger"
-                                                    }`}
-                                                    style={{
-                                                        width: "8px",
-                                                        height: "8px",
-                                                        borderRadius: "50%",
-                                                    }}
-                                                ></div>
-                                                <span className="fw-semibold">
-                                                    {service.availability_status ===
-                                                        "available" &&
-                                                        "Available Now"}
-                                                    {service.availability_status ===
-                                                        "busy" &&
-                                                        "Limited Availability"}
-                                                    {service.availability_status ===
-                                                        "unavailable" &&
-                                                        "Fully Booked"}
-                                                </span>
-                                            </div>
-                                            {service.next_available && (
-                                                <small className="text-muted">
-                                                    Next available:{" "}
-                                                    {service.next_available}
-                                                </small>
-                                            )}
-                                        </div> */}
                                     </div>
 
                                     {/* Booking Tabs */}

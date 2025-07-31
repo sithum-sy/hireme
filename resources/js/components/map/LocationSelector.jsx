@@ -1004,13 +1004,13 @@ const LocationSelector = ({ value, onChange, error, radius = 5 }) => {
                 <div className="mb-3">
                     <button
                         type="button"
-                        className="btn btn-outline-info btn-sm"
+                        className="btn btn-info btn-lg w-100 justify-content-center "
                         onClick={handleAdvancedMapToggle}
                     >
                         <i className="fas fa-map me-2"></i>
                         {useAdvancedMap
-                            ? "Use Simple Location"
-                            : "Use Advanced Map"}
+                            ? "Select From Locations"
+                            : "Select From Map"}
                     </button>
                 </div>
             )}
@@ -1027,7 +1027,7 @@ const LocationSelector = ({ value, onChange, error, radius = 5 }) => {
                 </div>
             )}
 
-            {/* Current Location Display -   ENHANCED: Better formatting */}
+            {/* Current Location Display */}
             {currentLocation &&
                 locationState === "confirmed" &&
                 !useAdvancedMap && (
@@ -1103,7 +1103,7 @@ const LocationSelector = ({ value, onChange, error, radius = 5 }) => {
                                 </span>
 
                                 {/* Visual accuracy badge */}
-                                {currentLocation.accuracy_level && (
+                                {/* {currentLocation.accuracy_level && (
                                     <span
                                         className={`badge bg-${getAccuracyColor(
                                             currentLocation.accuracy_level
@@ -1118,10 +1118,10 @@ const LocationSelector = ({ value, onChange, error, radius = 5 }) => {
                                             )}
                                         </span>
                                     </span>
-                                )}
+                                )} */}
 
                                 {/* ENHANCED: GPS accuracy badge */}
-                                {currentLocation.gps_accuracy && (
+                                {/* {currentLocation.gps_accuracy && (
                                     <span
                                         className={`badge ${getGpsAccuracyBadgeClass(
                                             currentLocation.gps_accuracy
@@ -1134,7 +1134,7 @@ const LocationSelector = ({ value, onChange, error, radius = 5 }) => {
                                         )}
                                         m
                                     </span>
-                                )}
+                                )} */}
 
                                 {/* Show coordinates only for low accuracy */}
                                 {["gps_fallback", "city"].includes(
@@ -1161,7 +1161,7 @@ const LocationSelector = ({ value, onChange, error, radius = 5 }) => {
                         onClick={handleResetLocation}
                     >
                         <i className="fas fa-redo me-2"></i>
-                        Change Location
+                        Select From Locations
                     </button>
                 </div>
             )}

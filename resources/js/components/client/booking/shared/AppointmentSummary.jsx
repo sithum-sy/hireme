@@ -194,8 +194,10 @@ const AppointmentSummary = ({
                                 {provider?.average_rating && (
                                     <div className="text-muted small">
                                         <i className="fas fa-star text-warning me-1" />
-                                        {provider.average_rating} (
-                                        {provider.reviews_count || 0})
+                                        {Number(
+                                            provider.average_rating
+                                        ).toFixed(1)}{" "}
+                                        ({provider.reviews_count || 0})
                                     </div>
                                 )}
                             </div>

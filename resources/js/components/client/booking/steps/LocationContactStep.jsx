@@ -423,7 +423,7 @@ const LocationContactStep = ({
 
                                                     <button
                                                         type="button"
-                                                        className="btn btn-outline-info btn-sm"
+                                                        className="btn btn-info btn-md"
                                                         onClick={() =>
                                                             setShowMapSelector(
                                                                 !showMapSelector

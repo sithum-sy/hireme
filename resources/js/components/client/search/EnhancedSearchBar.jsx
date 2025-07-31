@@ -6,12 +6,20 @@ const EnhancedSearchBar = ({
     placeholder = "Search services, categories, or providers...",
     showFilters = false,
     location = null,
+    initialValue = "",
 }) => {
-    const [searchQuery, setSearchQuery] = useState("");
+    const [searchQuery, setSearchQuery] = useState(initialValue);
     const [suggestions, setSuggestions] = useState([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [loading, setLoading] = useState(false);
     const [selectedIndex, setSelectedIndex] = useState(-1);
+
+    // Update search query when initialValue changes
+    useEffect(() => {
+        if (initialValue !== searchQuery) {
+            setSearchQuery(initialValue);
+        }
+    }, [initialValue]);
 
     const searchInputRef = useRef(null);
     const suggestionsRef = useRef(null);

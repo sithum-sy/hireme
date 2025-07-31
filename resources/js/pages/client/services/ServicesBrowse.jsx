@@ -47,7 +47,7 @@ const ServicesBrowse = () => {
         const urlLng = searchParams.get("lng");
         const urlCity = searchParams.get("city");
         const urlAddress = searchParams.get("address");
-        
+
         if (urlLat && urlLng) {
             // Restore location from URL parameters
             const restoredLocation = {
@@ -57,10 +57,13 @@ const ServicesBrowse = () => {
                 province: searchParams.get("province") || "Sri Lanka",
                 address: urlAddress || `${urlLat}, ${urlLng}`,
                 radius: filters.radius || 5,
-                isCustomLocation: true
+                isCustomLocation: true,
             };
-            
-            console.log("✅ Restored custom location from URL:", restoredLocation);
+
+            console.log(
+                "✅ Restored custom location from URL:",
+                restoredLocation
+            );
             setCurrentLocation(restoredLocation);
             return;
         }
@@ -361,18 +364,24 @@ const ServicesBrowse = () => {
                         newSearchParams.set(key, value);
                     }
                 });
-                
+
                 // Add location parameters to URL if it's a custom location
                 if (currentLocation && currentLocation.isCustomLocation) {
                     newSearchParams.set("lat", currentLocation.lat.toString());
                     newSearchParams.set("lng", currentLocation.lng.toString());
                     newSearchParams.set("city", currentLocation.city || "");
-                    newSearchParams.set("address", currentLocation.address || "");
+                    newSearchParams.set(
+                        "address",
+                        currentLocation.address || ""
+                    );
                     if (currentLocation.province) {
-                        newSearchParams.set("province", currentLocation.province);
+                        newSearchParams.set(
+                            "province",
+                            currentLocation.province
+                        );
                     }
                 }
-                
+
                 setSearchParams(newSearchParams, { replace: true });
             }
         } catch (error) {
@@ -467,10 +476,10 @@ const ServicesBrowse = () => {
             radius: 5,
         };
         setFilters(clearedFilters);
-        
+
         // Also clear the custom location and reset to GPS location
         setCurrentLocation(null);
-        
+
         // Clear all URL parameters including location
         setSearchParams({}, { replace: true });
     };
@@ -550,7 +559,7 @@ const ServicesBrowse = () => {
                 </div>
 
                 <div className="row">
-                    {/* Filters Sidebar - KEPT! */}
+                    {/* Filters Sidebar */}
                     <div
                         className={`col-lg-3 mb-4 ${
                             showFilters ? "d-block" : "d-none d-lg-block"
@@ -811,7 +820,9 @@ const ServicesBrowse = () => {
                                                     >
                                                         <ServiceCard
                                                             service={service}
-                                                            customLocation={currentLocation}
+                                                            customLocation={
+                                                                currentLocation
+                                                            }
                                                         />
                                                     </div>
                                                 ))}
@@ -934,12 +945,6 @@ const ServicesBrowse = () => {
                                             >
                                                 Clear Filters
                                             </button>
-                                            <Link
-                                                to="/client/services/search"
-                                                className="btn btn-primary"
-                                            >
-                                                Advanced Search
-                                            </Link>
                                         </div>
                                     </div>
                                 )}

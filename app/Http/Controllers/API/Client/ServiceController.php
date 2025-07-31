@@ -47,7 +47,7 @@ class ServiceController extends Controller
             'per_page' => 'nullable|integer|min:1|max:50'
         ]);
 
-        $query = Service::with(['category', 'provider.providerProfile'])
+        $query = Service::with(['category', 'provider.providerProfile', 'provider'])
             ->where('is_active', true);
 
         // Text search filter
@@ -205,6 +205,7 @@ class ServiceController extends Controller
             $service->load([
                 'category',
                 'provider.providerProfile',
+                'provider',
             ]);
 
             $distance = null;
@@ -376,7 +377,7 @@ class ServiceController extends Controller
 
         // Cache for 5 minutes
         $services = Cache::remember($cacheKey, 300, function () use ($request) {
-            $query = Service::with(['category', 'provider.providerProfile'])
+            $query = Service::with(['category', 'provider.providerProfile', 'provider'])
                 ->popular($request->get('limit', 10));
 
             // Apply location filter if provided
@@ -423,7 +424,7 @@ class ServiceController extends Controller
             $days = $request->get('days', 30);
             $limit = $request->get('limit', 10);
 
-            $query = Service::with(['category', 'provider.providerProfile'])
+            $query = Service::with(['category', 'provider.providerProfile', 'provider'])
                 ->recent($days)
                 ->limit($limit);
 
@@ -508,7 +509,7 @@ class ServiceController extends Controller
 
         $limit = $request->get('limit', 5);
 
-        $query = Service::with(['category', 'provider.providerProfile'])
+        $query = Service::with(['category', 'provider.providerProfile', 'provider'])
             ->where('category_id', $service->category_id)
             ->where('id', '!=', $service->id)
             ->where('is_active', true)
@@ -614,7 +615,7 @@ class ServiceController extends Controller
             'is_active' => true,
         ]);
 
-        $query = Service::with(['category', 'provider.providerProfile'])
+        $query = Service::with(['category', 'provider.providerProfile', 'provider'])
             ->advancedSearch($filters);
 
         // Location-based filtering
@@ -878,6 +879,8 @@ class ServiceController extends Controller
                 'average_rating' => $service->provider->providerProfile?->average_rating ?? 0,
                 'total_reviews' => $service->provider->providerProfile?->total_reviews ?? 0,
                 'verified' => $service->provider->providerProfile?->isVerified() ?? false,
+                'profile_picture' => $service->provider->profile_picture,
+                'profile_image_url' => $service->provider->profile_image_url,
             ],
             'pricing_type' => $service->pricing_type,
             'base_price' => $service->base_price,

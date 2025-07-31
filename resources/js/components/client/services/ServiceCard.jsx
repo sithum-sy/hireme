@@ -1,6 +1,9 @@
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useServicePrimaryImage } from "../../../hooks/useServiceImages";
+import {
+    useServicePrimaryImage,
+    constructProfileImageUrl,
+} from "../../../hooks/useServiceImages";
 
 import { useState } from "react";
 
@@ -104,37 +107,51 @@ const ServiceCard = ({
 
                         {/* Provider Info */}
                         <div className="provider-info d-flex align-items-center mb-2">
-                            <div className="provider-avatar me-2">
+                            <div className="me-2">
                                 {(() => {
-                                    // Construct proper profile image URL
-                                    let profileImageUrl =
-                                        service.provider?.profile_image_url;
+                                    // Try multiple possible profile image fields
+                                    // User model uses 'profile_picture' field with 'profile_image_url' accessor
+                                    const possibleProfileUrls = [
+                                        service.provider?.profile_image_url, // User accessor
+                                        service.provider?.profile_picture, // User raw field
+                                        service.provider_profile_image_url, // API flattened
+                                        service.provider_profile_picture, // API flattened raw
+                                        service.profile_image_url, // Direct on service
+                                        service.profile_picture, // Direct raw field
+                                        service.provider?.user
+                                            ?.profile_image_url, // Nested user
+                                        service.provider?.user?.profile_picture, // Nested user raw
+                                        service.provider?.avatar, // Alternative field
+                                        service.provider_avatar, // API flattened alternative
+                                    ];
 
-                                    if (profileImageUrl) {
-                                        // If it's a relative path, construct full URL
-                                        if (
-                                            !profileImageUrl.startsWith(
-                                                "http"
-                                            ) &&
-                                            !profileImageUrl.startsWith("/")
-                                        ) {
-                                            profileImageUrl = `/images/profiles/${profileImageUrl}`;
-                                        }
-                                        // If it already starts with /images/profiles/, keep as is
-                                        else if (
-                                            profileImageUrl.startsWith(
-                                                "images/profiles/"
-                                            )
-                                        ) {
-                                            profileImageUrl =
-                                                "/" + profileImageUrl;
-                                        }
+                                    // Find the first available profile image URL
+                                    const rawProfileUrl =
+                                        possibleProfileUrls.find(
+                                            (url) => url != null && url !== ""
+                                        );
+                                    const profileImageUrl =
+                                        constructProfileImageUrl(rawProfileUrl);
+
+                                    // Debug logging
+                                    {
+                                        /* console.log('ServiceCard profile image debug:', {
+                                        service_id: service.id,
+                                        provider_id: service.provider?.id,
+                                        found_raw_url: rawProfileUrl,
+                                        constructed_url: profileImageUrl,
+                                        provider_profile_picture: service.provider?.profile_picture,
+                                        provider_profile_image_url: service.provider?.profile_image_url
+                                    }); */
                                     }
 
                                     return profileImageUrl ? (
                                         <img
                                             src={profileImageUrl}
-                                            alt={service.provider.name}
+                                            alt={
+                                                service.provider?.name ||
+                                                "Provider"
+                                            }
                                             className="rounded-circle"
                                             style={{
                                                 width: "24px",
@@ -142,6 +159,16 @@ const ServiceCard = ({
                                                 objectFit: "cover",
                                             }}
                                             onError={(e) => {
+                                                console.error(
+                                                    "ServiceCard profile image failed to load:",
+                                                    {
+                                                        src: profileImageUrl,
+                                                        provider_id:
+                                                            service.provider
+                                                                ?.id,
+                                                        error: e,
+                                                    }
+                                                );
                                                 // Hide failed image and show fallback
                                                 e.target.style.display = "none";
                                                 const fallback =
@@ -151,24 +178,26 @@ const ServiceCard = ({
                                                         "flex";
                                                 }
                                             }}
+                                            // onLoad={() => {
+                                            //     console.log(
+                                            //         "ServiceCard profile image loaded successfully:",
+                                            //         profileImageUrl
+                                            //     );
+                                            // }}
                                         />
-                                    ) : null;
+                                    ) : (
+                                        // Fallback avatar when no profile image URL
+                                        <div
+                                            className="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center"
+                                            style={{
+                                                width: "24px",
+                                                height: "24px",
+                                            }}
+                                        >
+                                            <i className="fas fa-user fa-xs"></i>
+                                        </div>
+                                    );
                                 })()}
-
-                                {/* Fallback avatar */}
-                                <div
-                                    className="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center"
-                                    style={{
-                                        width: "24px",
-                                        height: "24px",
-                                        display: service.provider
-                                            ?.profile_image_url
-                                            ? "none"
-                                            : "flex",
-                                    }}
-                                >
-                                    <i className="fas fa-user fa-xs"></i>
-                                </div>
                             </div>
                             <small className="text-muted">
                                 {service.business_name ||
@@ -180,22 +209,36 @@ const ServiceCard = ({
                         {/* Rating and Reviews */}
                         <div className="rating-info d-flex align-items-center mb-2">
                             <div className="stars me-2">
-                                {[1, 2, 3, 4, 5].map((star) => (
-                                    <i
-                                        key={star}
-                                        className={`fas fa-star ${
-                                            star <=
-                                            (service.average_rating || 0)
-                                                ? "text-warning"
-                                                : "text-muted"
-                                        }`}
-                                        style={{ fontSize: "0.8rem" }}
-                                    ></i>
-                                ))}
+                                {[1, 2, 3, 4, 5].map((star) => {
+                                    const rating = Number(service.average_rating || 0);
+                                    const difference = rating - star + 1;
+                                    
+                                    let starClass = "far fa-star text-muted"; // Empty star
+                                    
+                                    if (difference >= 1) {
+                                        // Full star
+                                        starClass = "fas fa-star text-warning";
+                                    } else if (difference >= 0.5) {
+                                        // Half star
+                                        starClass = "fas fa-star-half-alt text-warning";
+                                    }
+                                    
+                                    return (
+                                        <i
+                                            key={star}
+                                            className={starClass}
+                                            style={{ fontSize: "0.8rem" }}
+                                        ></i>
+                                    );
+                                })}
                             </div>
                             <small className="text-muted">
-                                {service.average_rating || 0} (
-                                {service.reviews_count || 0} reviews)
+                                {Number(service.average_rating || 0).toFixed(1)} (
+                                {service.reviews_count || 0}{" "}
+                                {service.reviews_count === 1
+                                    ? "review"
+                                    : "reviews"}
+                                )
                             </small>
                         </div>
 

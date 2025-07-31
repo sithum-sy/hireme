@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import clientService from "../../../services/clientService";
 import LoadingSpinner from "../../LoadingSpinner";
+import { constructProfileImageUrl } from "../../../hooks/useServiceImages";
 
 const ServiceReviews = ({ serviceId }) => {
     const [reviews, setReviews] = useState([]);
@@ -127,26 +128,36 @@ const ServiceReviews = ({ serviceId }) => {
                                         <div className="review-header d-flex justify-content-between align-items-start mb-3">
                                             <div className="reviewer-info d-flex align-items-center">
                                                 <div className="reviewer-avatar me-3">
-                                                    {review.client
-                                                        .profile_image_url ? (
-                                                        <img
-                                                            src={
-                                                                review.client
-                                                                    .profile_image_url
-                                                            }
-                                                            alt={
-                                                                review.client
-                                                                    .name
-                                                            }
-                                                            className="rounded-circle"
-                                                            style={{
-                                                                width: "40px",
-                                                                height: "40px",
-                                                                objectFit:
-                                                                    "cover",
-                                                            }}
-                                                        />
-                                                    ) : (
+                                                    {(() => {
+                                                        // Use the dedicated profile image URL constructor
+                                                        const profileImageUrl = constructProfileImageUrl(
+                                                            review.client.profile_image_url
+                                                        );
+
+                                                        return profileImageUrl ? (
+                                                            <img
+                                                                src={profileImageUrl}
+                                                                alt={review.client.name}
+                                                                className="rounded-circle"
+                                                                style={{
+                                                                    width: "40px",
+                                                                    height: "40px",
+                                                                    objectFit: "cover",
+                                                                }}
+                                                                onError={(e) => {
+                                                                    // Hide failed image and show fallback
+                                                                    e.target.style.display = "none";
+                                                                    const fallback = e.target.nextSibling;
+                                                                    if (fallback) {
+                                                                        fallback.style.display = "flex";
+                                                                    }
+                                                                }}
+                                                            />
+                                                        ) : null;
+                                                    })()}
+
+                                                    {/* Fallback avatar */}
+                                                    {!constructProfileImageUrl(review.client.profile_image_url) && (
                                                         <div
                                                             className="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center"
                                                             style={{
