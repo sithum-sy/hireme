@@ -33,7 +33,7 @@ const CTASection = () => {
     ];
 
     return (
-        <section className="cta-section">
+        <section className="cta-section" id="about">
             <div className="container-custom">
                 {/* Main CTA */}
                 <div className="main-cta gradient-section">
@@ -79,7 +79,7 @@ const CTASection = () => {
                                         <span>Sign Up as Client</span>
                                     </Link>
                                     <Link
-                                        to="/services"
+                                        to="/client/services"
                                         className="btn-secondary-outline"
                                     >
                                         <i className="fas fa-search"></i>
@@ -162,7 +162,7 @@ const CTASection = () => {
                         {serviceCategories.map((category, index) => (
                             <Link
                                 key={index}
-                                to={`/services/${category.name
+                                to={`/client/services?category=${category.name
                                     .toLowerCase()
                                     .replace(/\s+/g, "-")}`}
                                 className="category-card"
@@ -181,7 +181,7 @@ const CTASection = () => {
                     </div>
 
                     <div className="categories-footer">
-                        <Link to="/services" className="view-all-categories">
+                        <Link to="/client/services" className="view-all-categories">
                             <span>View All Service Categories</span>
                             <i className="fas fa-arrow-right"></i>
                         </Link>
@@ -204,6 +204,39 @@ const CTASection = () => {
                                 <i className="fas fa-rocket"></i>
                                 <span>Get Started Now</span>
                             </Link>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Contact Section */}
+                <div className="contact-section" id="contact">
+                    <div className="contact-content">
+                        <h3>Need Help? We're Here for You</h3>
+                        <p>
+                            Have questions or need assistance? Our support team is ready to help you 24/7.
+                        </p>
+                        <div className="contact-methods">
+                            <div className="contact-method">
+                                <i className="fas fa-envelope"></i>
+                                <div>
+                                    <h4>Email Support</h4>
+                                    <p>support@hireme.lk</p>
+                                </div>
+                            </div>
+                            <div className="contact-method">
+                                <i className="fas fa-phone"></i>
+                                <div>
+                                    <h4>Phone Support</h4>
+                                    <p>+94 11 234 5678</p>
+                                </div>
+                            </div>
+                            <div className="contact-method">
+                                <i className="fas fa-comments"></i>
+                                <div>
+                                    <h4>Live Chat</h4>
+                                    <p>Available 24/7</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

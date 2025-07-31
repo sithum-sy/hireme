@@ -1,20 +1,42 @@
 // components/landingPage/TestimonialsSection.jsx
 import React, { useState, useEffect } from "react";
+import landingPageService from "../../services/landingPageService";
 
 const TestimonialsSection = () => {
     const [currentSlide, setCurrentSlide] = useState(0);
     const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+    const [testimonials, setTestimonials] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-    const testimonials = [
+    // Fetch testimonials on component mount
+    useEffect(() => {
+        const fetchTestimonials = async () => {
+            try {
+                setLoading(true);
+                const testimonialData = await landingPageService.getTestimonials();
+                setTestimonials(testimonialData);
+            } catch (error) {
+                console.error("Error fetching testimonials:", error);
+                // Keep fallback mock data
+                setTestimonials(getMockTestimonials());
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchTestimonials();
+    }, []);
+
+    // Fallback mock data
+    const getMockTestimonials = () => [
         {
             id: 1,
             name: "Priya Wickramasinghe",
             role: "Client",
-            location: "Colombo",
+            location: "Colombo", 
             service: "Electrical Work",
             rating: 5,
-            comment:
-                "Found an excellent electrician through HireMe within 15 minutes! The location-based search made it so easy to find someone nearby. Professional service and fair pricing.",
+            comment: "Found an excellent electrician through HireMe within 15 minutes!",
             avatar: "PW",
             verified: true,
             serviceProvider: "Kamal Fernando",
@@ -24,64 +46,24 @@ const TestimonialsSection = () => {
             name: "Chaminda Perera",
             role: "Service Provider",
             location: "Galle",
-            service: "Tutoring",
+            service: "Tutoring", 
             rating: 5,
-            comment:
-                "As a math tutor, HireMe has completely transformed my business. I get consistent bookings, and the payment system is secure and transparent. Highly recommend for fellow educators!",
+            comment: "HireMe has completely transformed my business. Highly recommend!",
             avatar: "CP",
             verified: true,
             clientsServed: "50+",
         },
-        {
-            id: 3,
-            name: "Sanduni Silva",
-            role: "Client",
-            location: "Kandy",
-            service: "Home Cleaning",
-            rating: 5,
-            comment:
-                "The cleaning service I found through HireMe was exceptional. The provider was verified, professional, and punctual. The app made booking and payment seamless.",
-            avatar: "SS",
-            verified: true,
-            serviceProvider: "Clean Pro Services",
-        },
-        {
-            id: 4,
-            name: "Ruwan Jayawardena",
-            role: "Service Provider",
-            location: "Negombo",
-            service: "Plumbing",
-            rating: 5,
-            comment:
-                "HireMe gave me a platform to showcase my plumbing skills and connect with clients who really need my services. The verification process built trust with customers.",
-            avatar: "RJ",
-            verified: true,
-            clientsServed: "75+",
-        },
-        {
-            id: 5,
-            name: "Nishadi Fernando",
-            role: "Client",
-            location: "Matara",
-            service: "Caregiving",
-            rating: 5,
-            comment:
-                "When I needed a caregiver for my elderly mother, HireMe connected me with a compassionate and qualified professional. The peace of mind is invaluable.",
-            avatar: "NF",
-            verified: true,
-            serviceProvider: "CareHeart Lanka",
-        },
     ];
 
     useEffect(() => {
-        if (!isAutoPlaying) return;
+        if (!isAutoPlaying || loading || testimonials.length === 0) return;
 
         const timer = setInterval(() => {
             setCurrentSlide((prev) => (prev + 1) % testimonials.length);
         }, 5000);
 
         return () => clearInterval(timer);
-    }, [isAutoPlaying, testimonials.length]);
+    }, [isAutoPlaying, loading, testimonials.length]);
 
     const goToSlide = (index) => {
         setCurrentSlide(index);
@@ -115,7 +97,7 @@ const TestimonialsSection = () => {
     };
 
     return (
-        <section className="section-modern testimonials-section">
+        <section className="section-modern testimonials-section" id="testimonials">
             <div className="container-custom">
                 {/* Section Header */}
                 <div className="section-header">
@@ -134,7 +116,15 @@ const TestimonialsSection = () => {
                 </div>
 
                 {/* Testimonials Carousel */}
-                <div className="testimonials-carousel">
+                {loading ? (
+                    <div className="testimonials-loading">
+                        <div className="loading-spinner-large">
+                            <i className="fas fa-spinner fa-spin"></i>
+                            <p>Loading testimonials...</p>
+                        </div>
+                    </div>
+                ) : testimonials.length > 0 ? (
+                    <div className="testimonials-carousel">
                     <div className="carousel-container">
                         <button
                             className="carousel-nav prev"
@@ -250,7 +240,12 @@ const TestimonialsSection = () => {
                             />
                         ))}
                     </div>
-                </div>
+                    </div>
+                ) : (
+                    <div className="no-testimonials">
+                        <p>No testimonials available at the moment.</p>
+                    </div>
+                )}
 
                 {/* Trust Metrics */}
                 <div className="trust-metrics">

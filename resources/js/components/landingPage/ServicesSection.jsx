@@ -1,112 +1,97 @@
 // components/landing/ServicesSection.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import landingPageService from "../../services/landingPageService";
 
 const ServicesSection = () => {
     const [activeFilter, setActiveFilter] = useState("all");
+    const [serviceCategories, setServiceCategories] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-    const serviceCategories = [
+    // Fetch real service categories on component mount
+    useEffect(() => {
+        const fetchServiceCategories = async () => {
+            try {
+                setLoading(true);
+                const categories =
+                    await landingPageService.getServiceCategories();
+
+                // Transform API data to match component expectations
+                const safeCategories = Array.isArray(categories)
+                    ? categories
+                    : [];
+                const transformedCategories = safeCategories.map(
+                    (category, index) => ({
+                        id:
+                            category.slug ||
+                            category.name.toLowerCase().replace(/\s+/g, "-"),
+                        title: category.name,
+                        description:
+                            category.description ||
+                            `Professional ${category.name.toLowerCase()} services`,
+                        icon: category.icon || "fas fa-concierge-bell",
+                        color: getColorByIndex(index),
+                        providers: `${Math.floor(Math.random() * 200) + 50}+`, // Mock for now
+                        avgRating: (4.5 + Math.random() * 0.4).toFixed(1), // Mock between 4.5-4.9
+                        popular: index < 4, // First 4 categories are popular
+                        examples: category.subcategories || [
+                            "General Services",
+                            "Professional Help",
+                        ],
+                    })
+                );
+
+                setServiceCategories(transformedCategories);
+            } catch (error) {
+                console.error("Error fetching service categories:", error);
+                // Keep original mock data as fallback if API fails
+                setServiceCategories(getMockCategories());
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchServiceCategories();
+    }, []);
+
+    // Helper function to get color by index
+    const getColorByIndex = (index) => {
+        const colors = [
+            "primary",
+            "success",
+            "info",
+            "warning",
+            "danger",
+            "secondary",
+        ];
+        return colors[index % colors.length];
+    };
+
+    // Fallback mock data
+    const getMockCategories = () => [
         {
             id: "electrical",
             title: "Electrical Work",
             description:
-                "Licensed electricians for installations, repairs, and power issues across Sri Lanka",
+                "Licensed electricians for installations, repairs, and power issues",
             icon: "fas fa-bolt",
             color: "warning",
             providers: "250+",
             avgRating: "4.9",
             popular: true,
-            examples: [
-                "Wiring & Installations",
-                "Lighting Solutions",
-                "Power Troubleshooting",
-                "Electrical Repairs",
-            ],
+            examples: ["Wiring & Installations", "Lighting Solutions"],
         },
         {
             id: "tutoring",
             title: "Tutoring & Education",
             description:
-                "Expert tutors for academic subjects, test preparation, and skill development",
+                "Expert tutors for academic subjects and skill development",
             icon: "fas fa-graduation-cap",
             color: "primary",
             providers: "180+",
             avgRating: "4.8",
             popular: true,
-            examples: [
-                "Mathematics",
-                "Science Subjects",
-                "Language Learning",
-                "Exam Preparation",
-            ],
-        },
-        {
-            id: "cleaning",
-            title: "Home Cleaning",
-            description:
-                "Professional cleaning services for homes, offices, and commercial spaces",
-            icon: "fas fa-broom",
-            color: "success",
-            providers: "320+",
-            avgRating: "4.7",
-            popular: true,
-            examples: [
-                "House Cleaning",
-                "Office Cleaning",
-                "Deep Cleaning",
-                "Move-in/out Cleaning",
-            ],
-        },
-        {
-            id: "caregiving",
-            title: "Caregiving Services",
-            description:
-                "Compassionate care for elderly, children, and healthcare assistance",
-            icon: "fas fa-heart",
-            color: "danger",
-            providers: "150+",
-            avgRating: "4.9",
-            popular: true,
-            examples: [
-                "Elder Care",
-                "Child Care",
-                "Medical Assistance",
-                "Companion Services",
-            ],
-        },
-        {
-            id: "computer",
-            title: "Computer & IT Support",
-            description:
-                "Technical support, repairs, and IT solutions for all your technology needs",
-            icon: "fas fa-laptop",
-            color: "info",
-            providers: "200+",
-            avgRating: "4.6",
-            popular: false,
-            examples: [
-                "Computer Repair",
-                "Software Installation",
-                "Network Setup",
-                "Data Recovery",
-            ],
-        },
-        {
-            id: "plumbing",
-            title: "Plumbing Services",
-            description:
-                "Professional plumbers for installations, repairs, and maintenance",
-            icon: "fas fa-wrench",
-            color: "secondary",
-            providers: "180+",
-            avgRating: "4.8",
-            popular: false,
-            examples: [
-                "Pipe Repairs",
-                "Leak Detection",
-                "Bathroom Fixes",
-                "Installation Services",
-            ],
+            examples: ["Mathematics", "Science Subjects"],
         },
     ];
 
@@ -164,77 +149,88 @@ const ServicesSection = () => {
                 </div>
 
                 {/* Services Grid */}
-                <div className="services-grid">
-                    {filteredServices.map((service) => (
-                        <div key={service.id} className="service-card">
-                            {service.popular && (
-                                <div className="popularity-badge">
-                                    <i className="fas fa-star"></i>
-                                    <span>Popular</span>
-                                </div>
-                            )}
-
-                            <div className="service-header">
-                                <div
-                                    className={`service-icon ${service.color}`}
-                                >
-                                    <i className={service.icon}></i>
-                                </div>
-                                <div className="service-meta">
-                                    <div className="service-providers">
-                                        <span className="provider-count">
-                                            {service.providers}
-                                        </span>
-                                        <span className="provider-label">
-                                            providers
-                                        </span>
-                                    </div>
-                                    <div className="service-rating">
-                                        <i className="fas fa-star"></i>
-                                        <span>{service.avgRating}</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="service-content">
-                                <h3 className="service-title">
-                                    {service.title}
-                                </h3>
-                                <p className="service-description">
-                                    {service.description}
-                                </p>
-
-                                <div className="service-examples">
-                                    <h6>Popular services include:</h6>
-                                    <ul className="examples-list">
-                                        {service.examples.map(
-                                            (example, index) => (
-                                                <li key={index}>{example}</li>
-                                            )
-                                        )}
-                                    </ul>
-                                </div>
-                            </div>
-
-                            <div className="service-actions">
-                                <Link
-                                    to={`/services/${service.id}`}
-                                    className="btn btn-primary"
-                                >
-                                    <i className="fas fa-search"></i>
-                                    <span>Find Providers</span>
-                                </Link>
-                                <Link
-                                    to={`/services/${service.id}/info`}
-                                    className="btn-secondary"
-                                >
-                                    <i className="fas fa-info-circle"></i>
-                                    <span>Learn More</span>
-                                </Link>
-                            </div>
+                {loading ? (
+                    <div className="services-loading">
+                        <div className="loading-spinner-large">
+                            <i className="fas fa-spinner fa-spin"></i>
+                            <p>Loading services...</p>
                         </div>
-                    ))}
-                </div>
+                    </div>
+                ) : (
+                    <div className="services-grid">
+                        {filteredServices.map((service) => (
+                            <div key={service.id} className="service-card">
+                                {service.popular && (
+                                    <div className="popularity-badge">
+                                        <i className="fas fa-star"></i>
+                                        <span>Popular</span>
+                                    </div>
+                                )}
+
+                                <div className="service-header">
+                                    <div
+                                        className={`service-icon ${service.color}`}
+                                    >
+                                        <i className={service.icon}></i>
+                                    </div>
+                                    <div className="service-meta">
+                                        <div className="service-providers">
+                                            <span className="provider-count">
+                                                {service.providers}
+                                            </span>
+                                            <span className="provider-label">
+                                                providers
+                                            </span>
+                                        </div>
+                                        <div className="service-rating">
+                                            <i className="fas fa-star"></i>
+                                            <span>{service.avgRating}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="service-content">
+                                    <h3 className="service-title">
+                                        {service.title}
+                                    </h3>
+                                    <p className="service-description">
+                                        {service.description}
+                                    </p>
+
+                                    <div className="service-examples">
+                                        <h6>Popular services include:</h6>
+                                        <ul className="examples-list">
+                                            {service.examples.map(
+                                                (example, index) => (
+                                                    <li key={index}>
+                                                        {example}
+                                                    </li>
+                                                )
+                                            )}
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <div className="service-actions">
+                                    <Link
+                                        to={`/client/services?category=${service.id}`}
+                                        className="btn btn-primary"
+                                    >
+                                        <i className="fas fa-search"></i>
+                                        <span>Find Providers</span>
+                                    </Link>
+                                    <Link
+                                        to="/client/services"
+                                        className="btn-secondary"
+                                    >
+                                        <i className="fas fa-info-circle"></i>
+                                        <span>Learn More</span>
+                                    </Link>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
 
                 {/* Call to Action */}
                 <div

@@ -1,17 +1,93 @@
 // components/landingPage/StatsSection.jsx
 import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
+import landingPageService from "../../services/landingPageService";
 
 const StatsSection = () => {
     const [inView, setInView] = useState(false);
+    const [stats, setStats] = useState([]);
+    const [loading, setLoading] = useState(true);
     const sectionRef = useRef(null);
 
-    const stats = [
+    // Fetch real platform statistics on component mount
+    useEffect(() => {
+        const fetchStats = async () => {
+            try {
+                setLoading(true);
+                const platformStats = await landingPageService.getPlatformStats();
+                
+                // Transform API data to component format
+                const transformedStats = [
+                    {
+                        icon: "fas fa-users",
+                        number: platformStats.totalClients || 500,
+                        suffix: "+",
+                        title: "Happy Customers",
+                        description: "Satisfied clients across Sri Lanka",
+                        color: "primary",
+                    },
+                    {
+                        icon: "fas fa-user-tie",
+                        number: platformStats.totalProviders || 100,
+                        suffix: "+",
+                        title: "Verified Providers",
+                        description: "Skilled professionals ready to serve",
+                        color: "success",
+                    },
+                    {
+                        icon: "fas fa-concierge-bell",
+                        number: platformStats.totalServices || 150,
+                        suffix: "+",
+                        title: "Available Services",
+                        description: "Diverse services to choose from",
+                        color: "info",
+                    },
+                    {
+                        icon: "fas fa-th-large",
+                        number: platformStats.totalCategories || 12,
+                        suffix: "+",
+                        title: "Service Categories",
+                        description: "Comprehensive service offerings",
+                        color: "warning",
+                    },
+                    {
+                        icon: "fas fa-star",
+                        number: platformStats.averageRating || 4.9,
+                        suffix: "/5",
+                        title: "Average Rating",
+                        description: "Exceptional customer satisfaction",
+                        color: "danger",
+                    },
+                    {
+                        icon: "fas fa-calendar-check",
+                        number: platformStats.completedAppointments || 1500,
+                        suffix: "+",
+                        title: "Services Completed",
+                        description: "Successfully finished appointments",
+                        color: "secondary",
+                    },
+                ];
+                
+                setStats(transformedStats);
+            } catch (error) {
+                console.error("Error fetching platform stats:", error);
+                // Keep fallback mock data
+                setStats(getMockStats());
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchStats();
+    }, []);
+
+    // Fallback mock data
+    const getMockStats = () => [
         {
             icon: "fas fa-users",
             number: 25000,
             suffix: "+",
-            title: "Happy Customers",
+            title: "Happy Customers", 
             description: "Satisfied clients across Sri Lanka",
             color: "primary",
         },
@@ -22,38 +98,6 @@ const StatsSection = () => {
             title: "Verified Providers",
             description: "Skilled professionals ready to serve",
             color: "success",
-        },
-        {
-            icon: "fas fa-calendar-check",
-            number: 150000,
-            suffix: "+",
-            title: "Services Completed",
-            description: "Successfully finished appointments",
-            color: "info",
-        },
-        {
-            icon: "fas fa-map-marker-alt",
-            number: 25,
-            suffix: "+",
-            title: "Cities Covered",
-            description: "Expanding across Sri Lanka",
-            color: "warning",
-        },
-        {
-            icon: "fas fa-star",
-            number: 4.9,
-            suffix: "/5",
-            title: "Average Rating",
-            description: "Exceptional customer satisfaction",
-            color: "danger",
-        },
-        {
-            icon: "fas fa-clock",
-            number: 15,
-            suffix: " min",
-            title: "Average Response",
-            description: "Quick connection to providers",
-            color: "secondary",
         },
     ];
 
@@ -81,6 +125,8 @@ const StatsSection = () => {
     ];
 
     useEffect(() => {
+        if (loading) return; // Don't start animation until data is loaded
+        
         const observer = new IntersectionObserver(
             ([entry]) => {
                 if (entry.isIntersecting) {
@@ -96,7 +142,7 @@ const StatsSection = () => {
         }
 
         return () => observer.disconnect();
-    }, []);
+    }, [loading]);
 
     const AnimatedNumber = ({ number, suffix, inView }) => {
         const [currentNumber, setCurrentNumber] = useState(0);
@@ -163,7 +209,15 @@ const StatsSection = () => {
                 </div>
 
                 {/* Stats Grid */}
-                <div className="stats-grid">
+                {loading ? (
+                    <div className="stats-loading">
+                        <div className="loading-spinner-large">
+                            <i className="fas fa-spinner fa-spin"></i>
+                            <p>Loading statistics...</p>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="stats-grid">
                     {stats.map((stat, index) => (
                         <div key={index} className="stat-card">
                             <div className={`stat-icon ${stat.color}`}>
@@ -185,7 +239,8 @@ const StatsSection = () => {
                             </div>
                         </div>
                     ))}
-                </div>
+                    </div>
+                )}
 
                 {/* Achievements Section */}
                 <div className="achievements-section">

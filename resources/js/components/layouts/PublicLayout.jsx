@@ -49,28 +49,32 @@ const PublicLayout = ({
     const publicNavItems = [
         {
             label: "Services",
-            path: "/services",
+            path: "/client/services",
             icon: "fas fa-concierge-bell",
         },
         {
             label: "Features",
-            path: "/features",
+            path: "/#features",
             icon: "fas fa-star",
+            scrollTo: true,
         },
         {
             label: "About",
-            path: "/about",
+            path: "/#about",
             icon: "fas fa-info-circle",
+            scrollTo: true,
         },
         {
             label: "Reviews",
-            path: "/reviews",
+            path: "/#testimonials",
             icon: "fas fa-heart",
+            scrollTo: true,
         },
         {
             label: "Contact",
-            path: "/contact",
+            path: "/#contact",
             icon: "fas fa-envelope",
+            scrollTo: true,
         },
     ];
 
@@ -143,6 +147,18 @@ const PublicLayout = ({
         }, 300);
     };
 
+    // Handle navigation with scroll
+    const handleNavClick = (item, e) => {
+        if (item.scrollTo && location.pathname === "/") {
+            e.preventDefault();
+            const targetId = item.path.split("#")[1];
+            const targetElement = document.getElementById(targetId);
+            if (targetElement) {
+                targetElement.scrollIntoView({ behavior: "smooth", block: "start" });
+            }
+        }
+    };
+
     // Get navbar classes
     const getNavbarClasses = () => {
         const baseClasses = "modern-navbar";
@@ -196,6 +212,7 @@ const PublicLayout = ({
                                             key={index}
                                             to={item.path}
                                             className="nav-link"
+                                            onClick={(e) => handleNavClick(item, e)}
                                         >
                                             <i
                                                 className={`${item.icon} nav-icon`}
@@ -373,9 +390,10 @@ const PublicLayout = ({
                                         key={index}
                                         to={item.path}
                                         className="mobile-link"
-                                        onClick={() =>
-                                            setIsMobileMenuOpen(false)
-                                        }
+                                        onClick={(e) => {
+                                            handleNavClick(item, e);
+                                            setIsMobileMenuOpen(false);
+                                        }}
                                     >
                                         <i className={item.icon}></i>
                                         <span>{item.label}</span>
