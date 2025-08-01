@@ -112,4 +112,24 @@ return [
 
     'password_timeout' => 10800,
 
+    /* Email Verification Configuration */
+    // 'emails' => [
+    //     'users' => [
+    //         'provider' => 'users',
+    //         'table' => 'email_verification_tokens',
+    //         'expire' => 60,
+    //         'throttle' => 60,
+    //     ],
+    // ],
+
+    'email_verification' => [
+        'expire' => 60, // minutes
+
+    ],
+
+    'remember_me' => [
+        'long_term_days' => env('AUTH_REMEMBER_ME_DAYS', 30),
+        'session_hours' => env('AUTH_SESSION_HOURS', 2),
+    ],
+
 ];

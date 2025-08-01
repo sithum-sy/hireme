@@ -2,13 +2,15 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Foundation\Auth\EmailVerificationRequest;
+
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\Staff\ServiceCategoryController;
 use App\Http\Controllers\API\Provider\ServiceController;
-use App\Http\Controllers\API\AvailabilityController;
+// use App\Http\Controllers\API\AvailabilityController;
 use App\Http\Controllers\API\ProfileController;
 use App\Http\Controllers\API\ProviderProfileController;
-use App\Http\Controllers\API\AppointmentController;
+// use App\Http\Controllers\API\AppointmentController;
 use App\Http\Controllers\API\LocationController;
 use App\Http\Controllers\API\PaymentController;
 use App\Http\Controllers\API\ReviewController;
@@ -94,23 +96,6 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
         Route::delete('/documents', [ProviderProfileController::class, 'deleteDocument'])->name('documents.delete');
     });
 
-    // Appointment Management (all authenticated users)
-    // Route::prefix('appointments')->group(function () {
-    //     Route::get('/', [AppointmentController::class, 'getAppointments']);
-    //     Route::post('/check-availability', [AppointmentController::class, 'checkAvailability']);
-    //     Route::get('/upcoming', [AppointmentController::class, 'getUpcomingAppointments']);
-    //     Route::get('/statistics', [AppointmentController::class, 'getStatistics']);
-    //     Route::get('/{appointment}', [AppointmentController::class, 'getAppointment']);
-    //     Route::post('/{appointment}/review', [AppointmentController::class, 'addReview']);
-    //     Route::post('/{appointment}/cancel', [AppointmentController::class, 'cancelAppointment']);
-    // });
-
-    // Quote Management (all authenticated users)
-    // Route::prefix('quotes')->group(function () {
-    //     Route::get('/', [AppointmentController::class, 'getQuotes']);
-    //     Route::get('/{quote}', [AppointmentController::class, 'getQuote']);
-    // });
-
     // Review Management
     Route::prefix('appointments/{appointment}')->group(function () {
         Route::post('review', [ReviewController::class, 'submitReview']);
@@ -125,7 +110,7 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
         Route::post('/mark-all-read', [NotificationController::class, 'markAllAsRead']);
         Route::post('/{notification}/mark-read', [NotificationController::class, 'markAsRead']);
         Route::delete('/{notification}', [NotificationController::class, 'destroy']);
-        
+
         // Notification preferences
         Route::get('/preferences', [NotificationController::class, 'getPreferences']);
         Route::put('/preferences', [NotificationController::class, 'updatePreferences']);
@@ -134,7 +119,7 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
     // ========================================================================
     // ROLE-BASED ROUTE GROUPS - Separated by user roles with middleware protection
     // ========================================================================
-    
+
     // Service Provider Routes - Business logic for service providers
     Route::prefix('provider')->middleware(['auth:sanctum', 'role:service_provider'])->group(function () {
         require __DIR__ . '/provider.php';
@@ -155,20 +140,10 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
         require __DIR__ . '/staff.php';
     });
 
-
-
     Route::prefix('location')->group(function () {
         Route::get('/service-areas', [LocationController::class, 'getAllServiceAreas']);
         Route::post('/nearby-areas', [LocationController::class, 'getNearbyServiceAreas']);
     });
 
     Route::post('/create-payment-intent', [PaymentController::class, 'createPaymentIntent']);
-
-    // Test route to verify auth is working
-    // Route::get('/test-auth', function () {
-    //     return response()->json(['message' => 'Authentication working', 'user' => auth()->user()]);
-    // });
-
-    // Utility routes
-    // Route::post('/quotes/mark-expired', [AppointmentController::class, 'markExpiredQuotes']);
 });

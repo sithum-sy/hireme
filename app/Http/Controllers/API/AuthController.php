@@ -205,9 +205,16 @@ class AuthController extends Controller
 
             // Create new token with different expiration based on remember me preference
             $tokenName = $rememberMe ? 'long-term-token' : 'session-token';
-            $expiresAt = $rememberMe ? now()->addDays(30) : now()->addHours(2);
+
+            $expiresAt = $rememberMe
+                ? now()->addDays(config('auth.remember_me.long_term_days'))
+                : now()->addHours(config('auth.remember_me.session_hours'));
 
             $token = $user->createToken($tokenName, ['*'], $expiresAt)->plainTextToken;
+            // $tokenName = $rememberMe ? 'long-term-token' : 'session-token';
+            // $expiresAt = $rememberMe ? now()->addDays(30) : now()->addHours(2);
+
+            // $token = $user->createToken($tokenName, ['*'], $expiresAt)->plainTextToken;
 
             // Prepare response data
             $responseData = [
@@ -450,8 +457,10 @@ class AuthController extends Controller
                 ], 400);
             }
 
-            // Check if token is expired (60 minutes expiration policy)
-            if (Carbon::parse($verificationToken->created_at)->addMinutes(60)->isPast()) {
+            $expiry = config('auth.email_verification.expire');
+
+            // Check if token is expired
+            if (Carbon::parse($verificationToken->created_at)->addMinutes($expiry)->isPast()) {
                 // Delete expired token for security
                 DB::table('email_verification_tokens')
                     ->where('email', $request->email)

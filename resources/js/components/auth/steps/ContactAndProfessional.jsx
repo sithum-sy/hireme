@@ -69,11 +69,11 @@ const ContactAndProfessional = ({
                         />
 
                         <div className="profile-picture-section half-width">
-                            <FormField
+                            {/* <FormField
                                 label="Profile Picture (Optional)"
                                 name="profile_picture"
                                 error={errors.profile_picture}
-                                helpText="Max 2MB, JPEG/PNG only"
+                                helpText="Max 2MB, JPG/JPEG/PNG only"
                             >
                                 <FileUpload
                                     name="profile_picture"
@@ -81,6 +81,46 @@ const ContactAndProfessional = ({
                                     onFileSelect={(files) =>
                                         onFileChange(files[0])
                                     }
+                                />
+                            </FormField> */}
+
+                            <FormField
+                                label="Profile Picture (Optional)"
+                                name="profile_picture"
+                                error={errors.profile_picture}
+                                helpText="Max 2MB, JPEG/PNG/GIF/WebP only"
+                            >
+                                <FileUpload
+                                    name="profile_picture"
+                                    accept="image/jpeg, image/png, image/gif, image/webp"
+                                    onFileSelect={(files) => {
+                                        const file = files[0];
+                                        const allowedTypes = [
+                                            "image/jpeg",
+                                            "image/png",
+                                            "image/gif",
+                                            "image/webp",
+                                        ];
+                                        const maxSizeInBytes = 2 * 1024 * 1024;
+
+                                        if (!file) return;
+
+                                        if (!allowedTypes.includes(file.type)) {
+                                            alert(
+                                                "Only JPEG, PNG, GIF, or WebP images are allowed."
+                                            );
+                                            return;
+                                        }
+
+                                        if (file.size > maxSizeInBytes) {
+                                            alert(
+                                                "File size must be under 2MB."
+                                            );
+                                            return;
+                                        }
+
+                                        onFileChange(file);
+                                    }}
                                 />
                             </FormField>
 
