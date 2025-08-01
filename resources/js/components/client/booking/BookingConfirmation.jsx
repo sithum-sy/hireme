@@ -569,57 +569,6 @@ const BookingConfirmation = ({
                                             </label>
                                         </div>
                                     </div>
-
-                                    <div className="payment-option">
-                                        <div className="form-check">
-                                            <input
-                                                className="form-check-input"
-                                                type="radio"
-                                                name="payment_method"
-                                                id="payment_bank"
-                                                value="bank_transfer"
-                                                checked={
-                                                    paymentMethod ===
-                                                    "bank_transfer"
-                                                }
-                                                onChange={(e) =>
-                                                    setPaymentMethod(
-                                                        e.target.value
-                                                    )
-                                                }
-                                                disabled
-                                            />
-                                            <label
-                                                className="form-check-label w-100"
-                                                htmlFor="payment_bank"
-                                            >
-                                                <div className="payment-card card border">
-                                                    <div className="card-body">
-                                                        <div className="d-flex align-items-center">
-                                                            <div className="payment-icon me-3">
-                                                                <i className="fas fa-university fa-lg text-info"></i>
-                                                            </div>
-                                                            <div>
-                                                                <div className="fw-semibold">
-                                                                    Bank
-                                                                    Transfer
-                                                                </div>
-                                                                <div className="text-muted small">
-                                                                    Direct bank
-                                                                    payment
-                                                                </div>
-                                                            </div>
-                                                            <div className="ms-auto">
-                                                                <span className="badge bg-warning bg-opacity-10 text-warning">
-                                                                    Coming Soon
-                                                                </span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </label>
-                                        </div>
-                                    </div>
                                 </div>
 
                                 <div className="payment-note mt-3 p-3 bg-light rounded">
@@ -629,8 +578,6 @@ const BookingConfirmation = ({
                                             "Payment will be collected by the provider at the time of service completion."}
                                         {paymentMethod === "card" &&
                                             "Secure payment processing with encryption and fraud protection."}
-                                        {paymentMethod === "bank_transfer" &&
-                                            "Bank transfer details will be provided after booking confirmation."}
                                     </small>
                                 </div>
                             </div>

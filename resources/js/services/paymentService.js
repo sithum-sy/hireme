@@ -261,7 +261,6 @@ class PaymentService {
         const methodNames = {
             stripe: "Credit/Debit Card",
             cash: "Cash Payment",
-            bank_transfer: "Bank Transfer",
         };
 
         return methodNames[method] || method;

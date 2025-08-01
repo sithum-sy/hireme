@@ -101,17 +101,83 @@ class QuoteController extends Controller
      */
     public function index(Request $request)
     {
+        // Validate request parameters
+        $request->validate([
+            'status' => 'nullable|in:pending,quoted,accepted,declined,expired',
+            'per_page' => 'nullable|integer|min:1|max:50',
+            'page' => 'nullable|integer|min:1',
+            'date_from' => 'nullable|date',
+            'date_to' => 'nullable|date',
+            'provider' => 'nullable|string|max:255',
+            'service_category' => 'nullable|string|max:255',
+            'price_min' => 'nullable|numeric|min:0',
+            'price_max' => 'nullable|numeric|min:0',
+            'sort_field' => 'nullable|in:created_at,quoted_price,status,requested_date,provider_name,service_title',
+            'sort_direction' => 'nullable|in:asc,desc',
+        ]);
+
         try {
             $user = auth()->user();
 
             // Build query - load the correct relationships
             $query = Quote::where('client_id', $user->id)
-                ->with(['service.category', 'provider']) // Load service with category and provider as User
-                ->orderBy('created_at', 'desc');
+                ->with(['service.category', 'provider']); // Load service with category and provider as User
 
-            // Filter by status if provided
+            // Apply filters
             if ($request->has('status') && $request->status !== 'all') {
                 $query->where('status', $request->status);
+            }
+
+            if ($request->date_from) {
+                $query->whereDate('created_at', '>=', $request->date_from);
+            }
+
+            if ($request->date_to) {
+                $query->whereDate('created_at', '<=', $request->date_to);
+            }
+
+            // Provider name filter
+            if ($request->provider) {
+                $query->whereHas('provider', function($q) use ($request) {
+                    $q->where('first_name', 'like', '%' . $request->provider . '%')
+                      ->orWhere('last_name', 'like', '%' . $request->provider . '%')
+                      ->orWhere('business_name', 'like', '%' . $request->provider . '%')
+                      ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ['%' . $request->provider . '%']);
+                });
+            }
+
+            // Service category filter
+            if ($request->service_category && $request->service_category !== 'all') {
+                $query->whereHas('service.category', function($q) use ($request) {
+                    $q->where('slug', $request->service_category)
+                      ->orWhere('name', 'like', '%' . $request->service_category . '%');
+                });
+            }
+
+            // Price range filters
+            if ($request->price_min) {
+                $query->where('quoted_price', '>=', $request->price_min);
+            }
+
+            if ($request->price_max) {
+                $query->where('quoted_price', '<=', $request->price_max);
+            }
+
+            // Sorting
+            $sortField = $request->get('sort_field', 'created_at');
+            $sortDirection = $request->get('sort_direction', 'desc');
+            
+            // Handle special sort fields
+            if ($sortField === 'provider_name') {
+                $query->leftJoin('users as providers', 'quotes.provider_id', '=', 'providers.id')
+                      ->orderByRaw("COALESCE(providers.business_name, CONCAT(providers.first_name, ' ', providers.last_name)) {$sortDirection}")
+                      ->select('quotes.*'); // Make sure we only select quote columns
+            } elseif ($sortField === 'service_title') {
+                $query->leftJoin('services', 'quotes.service_id', '=', 'services.id')
+                      ->orderBy('services.title', $sortDirection)
+                      ->select('quotes.*');
+            } else {
+                $query->orderBy($sortField, $sortDirection);
             }
 
             // Handle count_only requests
@@ -125,12 +191,25 @@ class QuoteController extends Controller
                 ]);
             }
 
-            $quotes = $query->get();
+            // Handle pagination
+            if ($request->per_page) {
+                $quotes = $query->paginate($request->per_page);
+                $quotesData = $quotes->items();
+                $meta = [
+                    'current_page' => $quotes->currentPage(),
+                    'last_page' => $quotes->lastPage(),
+                    'per_page' => $quotes->perPage(),
+                    'total' => $quotes->total(),
+                ];
+            } else {
+                $quotesData = $query->get();
+                $meta = null;
+            }
 
-            // Log::info("Found {$quotes->count()} quotes for user {$user->id}");
+            // Log::info("Found {$quotesData->count()} quotes for user {$user->id}");
 
             // Transform the data to match frontend expectations
-            $transformedQuotes = $quotes->map(function ($quote) {
+            $transformedQuotes = collect($quotesData)->map(function ($quote) {
                 // Get provider profile if it exists
                 $providerProfile = null;
                 if ($quote->provider) {
@@ -200,12 +279,20 @@ class QuoteController extends Controller
                 ];
             });
 
-            return response()->json([
+            $response = [
                 'success' => true,
                 'data' => $transformedQuotes,
-                'total' => $quotes->count(),
                 'message' => 'Quotes retrieved successfully'
-            ]);
+            ];
+
+            // Add pagination meta if applicable
+            if ($meta) {
+                $response['meta'] = $meta;
+            } else {
+                $response['total'] = $transformedQuotes->count();
+            }
+
+            return response()->json($response);
         } catch (\Exception $e) {
             Log::error('Error fetching quotes: ' . $e->getMessage());
             Log::error('Stack trace: ' . $e->getTraceAsString());

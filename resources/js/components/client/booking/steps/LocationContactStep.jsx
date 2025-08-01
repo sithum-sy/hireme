@@ -38,6 +38,7 @@ const LocationContactStep = ({
         bookingData.travel_fee || 0
     );
     const [showMapSelector, setShowMapSelector] = useState(false);
+    const [mapSelectorKey, setMapSelectorKey] = useState(0);
 
     // Auto-fill location data when clientLocation changes
     useEffect(() => {
@@ -160,8 +161,10 @@ const LocationContactStep = ({
             // client_postal_code: location.postal_code || "",
         }));
 
-        // Hide map selector
-        setShowMapSelector(false);
+        // Hide map selector with a slight delay to ensure location is processed
+        setTimeout(() => {
+            setShowMapSelector(false);
+        }, 100);
 
         // Clear any previous address errors
         if (errors.client_address || errors.client_city) {
@@ -170,6 +173,18 @@ const LocationContactStep = ({
                 client_address: null,
                 client_city: null,
             }));
+        }
+    };
+
+    // Handle map toggle with proper key regeneration to prevent state conflicts
+    const handleMapToggle = () => {
+        if (showMapSelector) {
+            // Closing the map
+            setShowMapSelector(false);
+        } else {
+            // Opening the map - increment key to force fresh mount
+            setMapSelectorKey(prev => prev + 1);
+            setShowMapSelector(true);
         }
     };
 
@@ -424,15 +439,11 @@ const LocationContactStep = ({
                                                     <button
                                                         type="button"
                                                         className="btn btn-info btn-md"
-                                                        onClick={() =>
-                                                            setShowMapSelector(
-                                                                !showMapSelector
-                                                            )
-                                                        }
+                                                        onClick={handleMapToggle}
                                                     >
                                                         <i className="fas fa-map me-2" />
                                                         {showMapSelector
-                                                            ? "Hide Map"
+                                                            ? "Hide Map"  
                                                             : "Use Map"}
                                                     </button>
                                                 </div>
@@ -445,6 +456,7 @@ const LocationContactStep = ({
                                                             Map
                                                         </h6>
                                                         <LocationSelector
+                                                            key={mapSelectorKey}
                                                             value={
                                                                 clientLocation
                                                             }

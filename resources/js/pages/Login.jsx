@@ -17,14 +17,14 @@ const Login = () => {
     const [errors, setErrors] = useState({});
     const [showPassword, setShowPassword] = useState(false);
     const [showResendVerification, setShowResendVerification] = useState(false);
-    const [unverifiedEmail, setUnverifiedEmail] = useState('');
+    const [unverifiedEmail, setUnverifiedEmail] = useState("");
     const [resendingVerification, setResendingVerification] = useState(false);
-    const [successMessage, setSuccessMessage] = useState('');
+    const [successMessage, setSuccessMessage] = useState("");
 
     // Handle success message from registration
     useEffect(() => {
         if (location.state?.message) {
-            if (location.state.type === 'success') {
+            if (location.state.type === "success") {
                 setSuccessMessage(location.state.message);
                 if (location.state.email) {
                     setUnverifiedEmail(location.state.email);
@@ -34,7 +34,6 @@ const Login = () => {
             navigate(location.pathname, { replace: true, state: {} });
         }
     }, [location, navigate]);
-
 
     // Redirect if already authenticated
     useEffect(() => {
@@ -84,11 +83,11 @@ const Login = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
+
         // Clear only general errors, keep field errors for validation
-        setErrors(prev => ({ ...prev, general: undefined }));
+        setErrors((prev) => ({ ...prev, general: undefined }));
         setShowResendVerification(false);
-        setSuccessMessage('');
+        setSuccessMessage("");
 
         const formErrors = validateForm();
         if (Object.keys(formErrors).length > 0) {
@@ -117,7 +116,7 @@ const Login = () => {
                 navigate(from || defaultPath, { replace: true });
             } else {
                 // Handle email verification error
-                if (result.error_code === 'EMAIL_NOT_VERIFIED') {
+                if (result.error_code === "EMAIL_NOT_VERIFIED") {
                     setShowResendVerification(true);
                     setUnverifiedEmail(result.data?.email || formData.email);
                     setErrors({ general: result.message });
@@ -148,22 +147,30 @@ const Login = () => {
     const handleResendVerification = async () => {
         try {
             setResendingVerification(true);
-            
+
             // Use axios to ensure proper CSRF token handling
-            const response = await axios.post('/api/resend-verification', {
-                email: unverifiedEmail
+            const response = await axios.post("/api/resend-verification", {
+                email: unverifiedEmail,
             });
-            
+
             if (response.data.success) {
-                setSuccessMessage('Verification email sent! Please check your inbox.');
+                setSuccessMessage(
+                    "Verification email sent! Please check your inbox."
+                );
                 setShowResendVerification(false);
                 setErrors({});
             } else {
-                setErrors({ general: response.data.message || 'Failed to send verification email.' });
+                setErrors({
+                    general:
+                        response.data.message ||
+                        "Failed to send verification email.",
+                });
             }
         } catch (error) {
-            console.error('Resend verification error:', error);
-            const errorMessage = error.response?.data?.message || 'Failed to send verification email. Please try again.';
+            console.error("Resend verification error:", error);
+            const errorMessage =
+                error.response?.data?.message ||
+                "Failed to send verification email. Please try again.";
             setErrors({ general: errorMessage });
         } finally {
             setResendingVerification(false);
@@ -271,12 +278,15 @@ const Login = () => {
 
                             {/* Email Verification Resend */}
                             {showResendVerification && (
-                                <div className="auth-alert" style={{ 
-                                    background: '#fefbf3', 
-                                    border: '1px solid #fed7aa', 
-                                    color: '#c2410c' 
-                                }}>
-                                    <div style={{ marginBottom: '0.75rem' }}>
+                                <div
+                                    className="auth-alert"
+                                    style={{
+                                        background: "#fefbf3",
+                                        border: "1px solid #fed7aa",
+                                        color: "#c2410c",
+                                    }}
+                                >
+                                    <div style={{ marginBottom: "0.75rem" }}>
                                         <i className="fas fa-envelope"></i>
                                         Your email address is not verified.
                                     </div>
@@ -285,15 +295,20 @@ const Login = () => {
                                         onClick={handleResendVerification}
                                         className="btn btn-sm btn-outline-primary"
                                         disabled={resendingVerification}
-                                        style={{ fontSize: '0.875rem' }}
+                                        style={{ fontSize: "0.875rem" }}
                                     >
                                         {resendingVerification ? (
                                             <>
-                                                <span className="spinner-border spinner-border-sm" style={{ marginRight: '0.5rem' }}></span>
+                                                <span
+                                                    className="spinner-border spinner-border-sm"
+                                                    style={{
+                                                        marginRight: "0.5rem",
+                                                    }}
+                                                ></span>
                                                 Sending...
                                             </>
                                         ) : (
-                                            'Resend Verification Email'
+                                            "Resend Verification Email"
                                         )}
                                     </button>
                                 </div>
@@ -445,7 +460,7 @@ const Login = () => {
                         </div>
 
                         {/* Demo Section */}
-                        <div className="demo-section">
+                        {/* <div className="demo-section">
                             <div className="demo-header">
                                 <i className="fas fa-play-circle me-2"></i>
                                 Try Demo Accounts
@@ -496,7 +511,7 @@ const Login = () => {
                                     </div>
                                 </button>
                             </div>
-                        </div>
+                        </div> */}
                     </div>
                 </div>
             </div>

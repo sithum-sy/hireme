@@ -360,13 +360,6 @@ const AppointmentSummary = ({
                                             Card
                                         </>
                                     )}
-                                    {bookingData.payment_method ===
-                                        "bank_transfer" && (
-                                        <>
-                                            <i className="fas fa-university text-info me-1" />
-                                            Bank Transfer
-                                        </>
-                                    )}
                                 </span>
                             </div>
                         </div>

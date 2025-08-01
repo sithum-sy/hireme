@@ -84,7 +84,6 @@ const AppointmentsTable = ({
         const methods = {
             cash: { class: "bg-success", icon: "fas fa-money-bill" },
             card: { class: "bg-info", icon: "fas fa-credit-card" },
-            bank_transfer: { class: "bg-primary", icon: "fas fa-university" },
             online: { class: "bg-warning", icon: "fas fa-globe" },
         };
 

@@ -336,21 +336,6 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    // const logout = async () => {
-    //     try {
-    //         if (token) {
-    //             await axios.post("/api/logout");
-    //         }
-    //     } catch (error) {
-    //         console.error("Logout error:", error);
-    //     } finally {
-    //         setUser(null);
-    //         setToken(null);
-    //         localStorage.removeItem("auth_token");
-    //         delete axios.defaults.headers.common["Authorization"];
-    //     }
-    // };
-
     const logout = async () => {
         try {
             // Only attempt API logout if we have a valid token

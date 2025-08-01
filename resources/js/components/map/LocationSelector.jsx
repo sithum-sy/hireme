@@ -23,6 +23,7 @@ const LocationSelector = ({ value, onChange, error, radius = 5 }) => {
     const [useAdvancedMap, setUseAdvancedMap] = useState(false);
     const [hasInitialized, setHasInitialized] = useState(false);
     const isUserInteraction = useRef(false);
+    const mountedRef = useRef(true);
 
     // Centralized reverse geocoding using Laravel backend
     const reverseGeocode = useCallback(
@@ -478,7 +479,7 @@ const LocationSelector = ({ value, onChange, error, radius = 5 }) => {
         //     timestamp: new Date().toISOString(),
         // });
 
-        if (!hasInitialized) {
+        if (!hasInitialized && mountedRef.current) {
             // console.log("LocationSelector: First time initialization");
             setHasInitialized(true);
 
@@ -496,6 +497,13 @@ const LocationSelector = ({ value, onChange, error, radius = 5 }) => {
             }
         }
     }, [hasInitialized, value, detectLocation]);
+
+    // Cleanup on unmount
+    useEffect(() => {
+        return () => {
+            mountedRef.current = false;
+        };
+    }, []);
 
     // Handle value changes from parent
     useEffect(() => {
@@ -518,7 +526,8 @@ const LocationSelector = ({ value, onChange, error, radius = 5 }) => {
             currentLocation &&
             onChange &&
             isUserInteraction.current &&
-            hasInitialized
+            hasInitialized &&
+            mountedRef.current
         ) {
             const locationData = {
                 lat: currentLocation.lat,
@@ -548,7 +557,9 @@ const LocationSelector = ({ value, onChange, error, radius = 5 }) => {
             isUserInteraction.current = false;
 
             const timeoutId = setTimeout(() => {
-                onChange(locationData);
+                if (mountedRef.current) {
+                    onChange(locationData);
+                }
             }, 100);
 
             return () => clearTimeout(timeoutId);
@@ -624,10 +635,12 @@ const LocationSelector = ({ value, onChange, error, radius = 5 }) => {
     };
 
     const handleAdvancedMapToggle = () => {
-        // console.log("LocationSelector: Advanced map toggle", {
-        //     currentState: useAdvancedMap,
-        //     newState: !useAdvancedMap,
-        // });
+        console.log("LocationSelector: Advanced map toggle", {
+            currentState: useAdvancedMap,
+            newState: !useAdvancedMap,
+            currentLocation: currentLocation ? `${currentLocation.city}, ${currentLocation.province}` : 'null',
+            locationState
+        });
         setUseAdvancedMap(!useAdvancedMap);
     };
 

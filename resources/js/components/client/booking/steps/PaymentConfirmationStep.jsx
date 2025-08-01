@@ -26,7 +26,8 @@ const PaymentConfirmationStep = ({
     const handleSubmitBooking = async () => {
         // Prevent double-clicking/rapid submission
         const now = Date.now();
-        if (now - lastSubmitTime < 2000) { // 2 second debounce
+        if (now - lastSubmitTime < 2000) {
+            // 2 second debounce
             return;
         }
         setLastSubmitTime(now);
@@ -46,7 +47,7 @@ const PaymentConfirmationStep = ({
         }
 
         setLoading(true);
-        
+
         // Optimistic update - show success immediately for better UX
         setTimeout(() => {
             if (loading) {
@@ -282,12 +283,16 @@ const PaymentConfirmationStep = ({
                                                 </div>
                                                 <div className="text-muted small">
                                                     <i className="fas fa-star text-warning me-1" />
-                                                    {provider?.average_rating ||
-                                                        0}{" "}
+                                                    {Number(
+                                                        provider?.average_rating
+                                                    ).toFixed(1) || 0}{" "}
                                                     (
                                                     {provider?.reviews_count ||
                                                         0}{" "}
-                                                    reviews)
+                                                    {provider?.reviews_count ===
+                                                    1
+                                                        ? "review"
+                                                        : "reviews"}
                                                 </div>
                                                 {provider?.is_verified && (
                                                     <span className="badge bg-success bg-opacity-10 text-success">
@@ -512,59 +517,6 @@ const PaymentConfirmationStep = ({
                                                 </label>
                                             </div>
                                         </div>
-
-                                        <div className="payment-option">
-                                            <div className="form-check">
-                                                <input
-                                                    className="form-check-input"
-                                                    type="radio"
-                                                    name="payment_method"
-                                                    id="payment_bank"
-                                                    value="bank_transfer"
-                                                    checked={
-                                                        paymentMethod ===
-                                                        "bank_transfer"
-                                                    }
-                                                    onChange={(e) =>
-                                                        setPaymentMethod(
-                                                            e.target.value
-                                                        )
-                                                    }
-                                                    disabled
-                                                />
-                                                <label
-                                                    className="form-check-label w-100"
-                                                    htmlFor="payment_bank"
-                                                >
-                                                    <div className="payment-card card border">
-                                                        <div className="card-body">
-                                                            <div className="d-flex align-items-center">
-                                                                <div className="payment-icon me-3">
-                                                                    <i className="fas fa-university fa-lg text-info" />
-                                                                </div>
-                                                                <div>
-                                                                    <div className="fw-semibold">
-                                                                        Bank
-                                                                        Transfer
-                                                                    </div>
-                                                                    <div className="text-muted small">
-                                                                        Direct
-                                                                        bank
-                                                                        payment
-                                                                    </div>
-                                                                </div>
-                                                                <div className="ms-auto">
-                                                                    <span className="badge bg-warning bg-opacity-10 text-warning">
-                                                                        Coming
-                                                                        Soon
-                                                                    </span>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </label>
-                                            </div>
-                                        </div>
                                     </div>
 
                                     <div className="payment-note mt-3 p-3 bg-light rounded">
@@ -574,9 +526,6 @@ const PaymentConfirmationStep = ({
                                                 "Payment will be collected by the provider at the time of service completion."}
                                             {paymentMethod === "card" &&
                                                 "Secure payment processing with encryption and fraud protection."}
-                                            {paymentMethod ===
-                                                "bank_transfer" &&
-                                                "Bank transfer details will be provided after booking confirmation."}
                                         </small>
                                     </div>
                                 </div>
@@ -695,9 +644,7 @@ const PaymentConfirmationStep = ({
 
                     <button
                         className={`btn btn-lg ${
-                            optimisticSuccess 
-                                ? "btn-success" 
-                                : "btn-primary"
+                            optimisticSuccess ? "btn-success" : "btn-primary"
                         }`}
                         onClick={handleSubmitBooking}
                         disabled={loading || !agreedToTerms}
@@ -710,7 +657,9 @@ const PaymentConfirmationStep = ({
                         ) : loading ? (
                             <>
                                 <span className="spinner-border spinner-border-sm me-2" />
-                                {optimisticSuccess ? "Finalizing..." : "Processing..."}
+                                {optimisticSuccess
+                                    ? "Finalizing..."
+                                    : "Processing..."}
                             </>
                         ) : (
                             <>

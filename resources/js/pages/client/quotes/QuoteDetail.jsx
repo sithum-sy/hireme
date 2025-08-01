@@ -21,10 +21,99 @@ const QuoteDetail = () => {
     const [showAcceptModal, setShowAcceptModal] = useState(false);
     const [showDeclineModal, setShowDeclineModal] = useState(false);
     const [showBookingModal, setShowBookingModal] = useState(false);
+    const [clientLocation, setClientLocation] = useState(null);
+    const [locationLoading, setLocationLoading] = useState(true);
 
     useEffect(() => {
         loadQuoteDetail();
     }, [id]);
+
+    // Initialize client location similar to ServiceDetail
+    useEffect(() => {
+        if (navigator.geolocation && !clientLocation) {
+            navigator.geolocation.getCurrentPosition(
+                async (position) => {
+                    const { latitude, longitude } = position.coords;
+
+                    try {
+                        // Use Laravel backend proxy for geocoding
+                        const response = await fetch(
+                            `/api/geocoding/reverse?lat=${latitude}&lon=${longitude}`
+                        );
+
+                        if (response.ok) {
+                            const data = await response.json();
+                            const address = data.address || {};
+
+                            const city =
+                                address.city ||
+                                address.town ||
+                                address.village ||
+                                address.municipality ||
+                                address.county ||
+                                "Unknown City";
+                            const province =
+                                address.state ||
+                                address.province ||
+                                address.state_district ||
+                                "Sri Lanka";
+
+                            let readableAddress = "";
+                            if (address.house_number && address.road) {
+                                readableAddress = `${address.house_number} ${address.road}, ${city}`;
+                            } else if (address.road) {
+                                readableAddress = `${address.road}, ${city}`;
+                            } else {
+                                readableAddress = `${city}, ${province}`;
+                            }
+
+                            const locationData = {
+                                lat: latitude,
+                                lng: longitude,
+                                address: readableAddress,
+                                neighborhood:
+                                    address.suburb ||
+                                    address.neighbourhood ||
+                                    "",
+                                city: city,
+                                province: province,
+                                country: "Sri Lanka",
+                                radius: 15,
+                                accuracy: "nominatim_geocoded",
+                            };
+
+                            setClientLocation(locationData);
+                            setLocationLoading(false);
+                        } else {
+                            throw new Error("Geocoding failed");
+                        }
+                    } catch (error) {
+                        console.error("Geocoding failed:", error);
+                        // Fallback to basic location
+                        const fallbackLocation = {
+                            lat: latitude,
+                            lng: longitude,
+                            city: "Current Location",
+                            address: "Your Current Location",
+                            province: "Sri Lanka",
+                            radius: 15,
+                            accuracy: "gps_fallback",
+                        };
+                        setClientLocation(fallbackLocation);
+                        setLocationLoading(false);
+                    }
+                },
+                (error) => {
+                    console.error("Geolocation error:", error);
+                    setClientLocation(null);
+                    setLocationLoading(false);
+                }
+            );
+        } else {
+            // Set location loading to false if geolocation is not available
+            setLocationLoading(false);
+        }
+    }, []);
 
     const loadQuoteDetail = async () => {
         setLoading(true);
@@ -634,7 +723,7 @@ const QuoteDetail = () => {
                     service={serviceForBooking}
                     provider={providerForBooking}
                     selectedSlot={selectedSlot}
-                    clientLocation={null} // Will be detected by BookingModal
+                    clientLocation={clientLocation} // Pass detected client location
                     quoteId={quote.id} // Pass quote ID for acceptance tracking
                     onQuoteAccepted={(updatedQuote) => {
                         // Update the quote state when it's accepted

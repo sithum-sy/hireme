@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
     MapContainer,
     TileLayer,
@@ -219,21 +219,166 @@ const EnhancedLocationSelector = ({ value, onChange, error }) => {
     const [searchResults, setSearchResults] = useState([]);
     const [isSearching, setIsSearching] = useState(false);
     const [mapKey, setMapKey] = useState(0);
+    const [mapLoading, setMapLoading] = useState(true);
+    const [containerVisible, setContainerVisible] = useState(false);
+    const mapContainerRef = useRef(null);
+    
+    console.log("EnhancedLocationSelector render:", {
+        hasValue: !!value,
+        valueDetails: value ? `${value.city}, ${value.province}` : 'null',
+        position: position ? `[${position[0]}, ${position[1]}]` : 'null',
+        mapKey,
+        mapLoading,
+        containerVisible
+    });
 
     // Initialize with existing value
     useEffect(() => {
+        console.log("EnhancedLocationSelector useEffect[value]:", {
+            value: value ? `${value.city} (${value.lat}, ${value.lng})` : 'null',
+            hasValidCoords: value && value.lat && value.lng,
+            position: position ? `[${position[0]}, ${position[1]}]` : 'null'
+        });
+        
         if (value && value.lat && value.lng) {
             // Ensure lat and lng are valid numbers
             const lat = parseFloat(value.lat);
             const lng = parseFloat(value.lng);
             
+            console.log("EnhancedLocationSelector coordinates:", { lat, lng, isValidLat: !isNaN(lat), isValidLng: !isNaN(lng) });
+            
             if (!isNaN(lat) && !isNaN(lng)) {
+                console.log("EnhancedLocationSelector setting position:", [lat, lng]);
                 setPosition([lat, lng]);
                 setRadius(value.radius || 15);
                 setMapKey((prev) => prev + 1);
+                setMapLoading(true); // Reset loading when coordinates change
             }
+        } else if (!value) {
+            // If no value is provided, reset to default state
+            console.log("EnhancedLocationSelector: No value provided, resetting to default");
+            setPosition(null);
+            setMapKey((prev) => prev + 1);
+            setMapLoading(true);
         }
     }, [value]);
+
+    // Force map invalidate size when component becomes visible
+    useEffect(() => {
+        // Check if we're in a modal context
+        const isInModal = document.querySelector('.modal.show') !== null;
+        const delay = isInModal ? 500 : 200; // Longer delay for modal context
+        
+        console.log("EnhancedLocationSelector: Setting up resize timer", { isInModal, delay });
+        
+        const timer = setTimeout(() => {
+            // Find any Leaflet map instance and force it to resize
+            const leafletContainers = document.querySelectorAll('.leaflet-container');
+            console.log("EnhancedLocationSelector: Found", leafletContainers.length, "leaflet containers");
+            
+            leafletContainers.forEach((container, index) => {
+                if (container._leaflet_map) {
+                    console.log(`EnhancedLocationSelector: Invalidating map size for container ${index}`);
+                    container._leaflet_map.invalidateSize();
+                    
+                    // Additional force refresh for modal context
+                    if (isInModal) {
+                        setTimeout(() => {
+                            container._leaflet_map.invalidateSize();
+                            console.log(`EnhancedLocationSelector: Second invalidation for modal context ${index}`);
+                        }, 200);
+                    }
+                }
+            });
+        }, delay);
+
+        return () => clearTimeout(timer);
+    }, []); // Run once on mount
+
+    // Also invalidate size when mapKey changes
+    useEffect(() => {
+        if (mapKey > 0) {
+            const timer = setTimeout(() => {
+                const leafletContainers = document.querySelectorAll('.leaflet-container');
+                leafletContainers.forEach(container => {
+                    if (container._leaflet_map) {
+                        console.log("EnhancedLocationSelector: Invalidating map size after key change");
+                        container._leaflet_map.invalidateSize();
+                    }
+                });
+            }, 300);
+
+            return () => clearTimeout(timer);
+        }
+    }, [mapKey]);
+
+    // Watch for modal transitions and resize map accordingly
+    useEffect(() => {
+        const handleModalShown = () => {
+            console.log("EnhancedLocationSelector: Modal shown event detected");
+            setTimeout(() => {
+                const leafletContainers = document.querySelectorAll('.leaflet-container');
+                leafletContainers.forEach(container => {
+                    if (container._leaflet_map) {
+                        console.log("EnhancedLocationSelector: Invalidating on modal shown");
+                        container._leaflet_map.invalidateSize();
+                    }
+                });
+            }, 300);
+        };
+
+        // Listen for Bootstrap modal events
+        document.addEventListener('shown.bs.modal', handleModalShown);
+        
+        return () => {
+            document.removeEventListener('shown.bs.modal', handleModalShown);
+        };
+    }, []);
+
+    // Use intersection observer to detect when map container is visible
+    useEffect(() => {
+        if (!mapContainerRef.current) return;
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((entry) => {
+                    console.log("EnhancedLocationSelector: Intersection observer", {
+                        isIntersecting: entry.isIntersecting,
+                        intersectionRatio: entry.intersectionRatio
+                    });
+                    
+                    if (entry.isIntersecting && entry.intersectionRatio > 0.1) {
+                        setContainerVisible(true);
+                        
+                        // Force map resize when container becomes visible
+                        setTimeout(() => {
+                            const leafletContainers = document.querySelectorAll('.leaflet-container');
+                            leafletContainers.forEach(container => {
+                                if (container._leaflet_map) {
+                                    console.log("EnhancedLocationSelector: Invalidating on intersection");
+                                    container._leaflet_map.invalidateSize();
+                                }
+                            });
+                        }, 100);
+                    } else if (!entry.isIntersecting) {
+                        setContainerVisible(false);
+                    }
+                });
+            },
+            {
+                threshold: [0, 0.1, 0.5, 1],
+                rootMargin: '50px'
+            }
+        );
+
+        observer.observe(mapContainerRef.current);
+
+        return () => {
+            if (mapContainerRef.current) {
+                observer.unobserve(mapContainerRef.current);
+            }
+        };
+    }, []);
 
     const handleLocationSelect = (locationData) => {
         if (onChange) {
@@ -368,19 +513,28 @@ const EnhancedLocationSelector = ({ value, onChange, error }) => {
             </div>
 
             {/* Map Container - FIXED */}
-            <div className="map-container mb-3">
+            <div className="map-container mb-3" ref={mapContainerRef}>
                 <div
                     className="map-wrapper"
                     style={{
                         height: "400px",
                         width: "100%",
                         position: "relative",
-                        border: "1px solid #ddd",
+                        border: "2px solid #007bff",
                         borderRadius: "8px",
                         overflow: "hidden",
+                        backgroundColor: "#f8f9fa"
                     }}
                 >
-                    <MapContainer
+                    {mapLoading && (
+                        <div className="position-absolute top-50 start-50 translate-middle">
+                            <div className="spinner-border text-primary" role="status">
+                                <span className="visually-hidden">Loading map...</span>
+                            </div>
+                        </div>
+                    )}
+                    {containerVisible !== false && (
+                        <MapContainer
                         key={mapKey}
                         center={position || [6.9271, 79.8612]} // Default to Colombo
                         zoom={position ? 13 : 8}
@@ -392,6 +546,21 @@ const EnhancedLocationSelector = ({ value, onChange, error }) => {
                         scrollWheelZoom={true}
                         attributionControl={true}
                         zoomControl={true}
+                        whenReady={() => {
+                            console.log("EnhancedLocationSelector: Map is ready");
+                            setMapLoading(false);
+                        }}
+                        whenCreated={(mapInstance) => {
+                            console.log("EnhancedLocationSelector: Map created", mapInstance);
+                            console.log("Map container size:", mapInstance.getContainer().getBoundingClientRect());
+                            console.log("Map size:", mapInstance.getSize());
+                            
+                            // Force map to invalidate size after creation
+                            setTimeout(() => {
+                                mapInstance.invalidateSize();
+                                console.log("Map size after invalidate:", mapInstance.getSize());
+                            }, 100);
+                        }}
                     >
                         <TileLayer
                             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -405,6 +574,7 @@ const EnhancedLocationSelector = ({ value, onChange, error }) => {
                             onLocationSelect={handleLocationSelect}
                         />
                     </MapContainer>
+                    )}
                 </div>
             </div>
 
@@ -471,6 +641,53 @@ const EnhancedLocationSelector = ({ value, onChange, error }) => {
                 .map-container .leaflet-container {
                     height: 400px !important;
                     width: 100% !important;
+                    z-index: 1 !important;
+                }
+                
+                /* Ensure map renders properly in modal context */
+                .modal .enhanced-location-selector .leaflet-container {
+                    height: 400px !important;
+                    width: 100% !important;
+                    position: relative !important;
+                    z-index: 1 !important;
+                }
+                
+                .modal .map-wrapper .leaflet-container {
+                    height: 100% !important;
+                    width: 100% !important;
+                    border-radius: 6px;
+                }
+                
+                /* Force proper rendering in bootstrap modal */
+                .modal-body .leaflet-container {
+                    height: 400px !important;
+                    max-width: 100% !important;
+                }
+                
+                /* Additional modal-specific fixes */
+                .modal .enhanced-location-selector .map-container {
+                    position: relative !important;
+                    overflow: visible !important;
+                }
+                
+                .modal .enhanced-location-selector .map-wrapper {
+                    position: relative !important;
+                    overflow: hidden !important;
+                    display: block !important;
+                }
+                
+                /* Ensure tiles load properly in modal */
+                .modal .leaflet-tile-container {
+                    transform: none !important;
+                }
+                
+                /* Fix potential z-index issues */
+                .modal .leaflet-map-pane {
+                    z-index: auto !important;
+                }
+                
+                .modal .leaflet-tile-pane {
+                    z-index: auto !important;
                 }
 
                 .leaflet-popup-content-wrapper {

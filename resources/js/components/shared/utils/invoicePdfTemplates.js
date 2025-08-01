@@ -429,7 +429,7 @@ export const generatePaymentTerms = (invoice, config = {}) => {
     const {
         paymentTerms = "Payment is due within 30 days of invoice date.",
         lateFeesPolicy = "Late fees may apply after due date.",
-        paymentMethods = "We accept cash, bank transfer, and online payments.",
+        paymentMethods = "We accept cash and card payments.",
     } = config;
 
     return `

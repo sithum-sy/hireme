@@ -122,9 +122,6 @@ const MarkPaidModal = ({ invoice, isOpen, onClose, onSuccess }) => {
                                         <option value="card">
                                             Credit/Debit Card
                                         </option>
-                                        <option value="bank_transfer">
-                                            Bank Transfer
-                                        </option>
                                         <option value="check">Check</option>
                                         <option value="online">
                                             Online Payment

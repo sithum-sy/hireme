@@ -23,6 +23,7 @@ const QuotesList = () => {
     const [activeFilter, setActiveFilter] = useState(searchParams.get("status") || "all");
     const [sortField, setSortField] = useState("created_at");
     const [sortDirection, setSortDirection] = useState("desc");
+    const [serviceCategories, setServiceCategories] = useState([]);
     
     // Filters state
     const [filters, setFilters] = useState({
@@ -62,6 +63,11 @@ const QuotesList = () => {
     useEffect(() => {
         loadQuotes();
     }, [filters, pagination.current_page, sortField, sortDirection]);
+
+    // Load initial data
+    useEffect(() => {
+        loadServiceCategories();
+    }, []);
 
     // Show success message if navigated from quote request
     useEffect(() => {
@@ -141,6 +147,18 @@ const QuotesList = () => {
         }
     };
 
+    // Load service categories
+    const loadServiceCategories = async () => {
+        try {
+            const response = await clientService.getServiceCategories();
+            if (response.success) {
+                setServiceCategories(response.data || []);
+            }
+        } catch (error) {
+            console.error("Failed to load service categories:", error);
+        }
+    };
+
     // Handle quick filter changes
     const handleQuickFilterChange = (filterType) => {
         setActiveFilter(filterType);
@@ -185,6 +203,9 @@ const QuotesList = () => {
     const applyFilters = () => {
         setFilters(pendingFilters);
         
+        // Update active filter if status changed
+        setActiveFilter(pendingFilters.status);
+        
         // Update URL parameters
         const newParams = new URLSearchParams();
         Object.entries(pendingFilters).forEach(([k, v]) => {
@@ -215,7 +236,13 @@ const QuotesList = () => {
         setFilters(clearedFilters);
         setPendingFilters(clearedFilters);
         setActiveFilter("all");
-        setSearchParams({ view: viewMode });
+        
+        // Update URL parameters
+        const newParams = new URLSearchParams();
+        if (viewMode !== "card") newParams.set("view", viewMode);
+        setSearchParams(newParams);
+        
+        setPagination(prev => ({ ...prev, current_page: 1 }));
     };
 
     // Handle quote actions
@@ -404,6 +431,21 @@ const QuotesList = () => {
                     <div className="collapse" id="advancedFilters">
                         <div className="row g-3 align-items-end">
                             <div className="col-md-3 col-sm-6">
+                                <label className="form-label font-medium">Status</label>
+                                <select
+                                    className="form-select"
+                                    value={pendingFilters.status}
+                                    onChange={(e) => handlePendingFilterChange("status", e.target.value)}
+                                >
+                                    <option value="all">All Statuses</option>
+                                    <option value="pending">Pending</option>
+                                    <option value="quoted">Received</option>
+                                    <option value="accepted">Accepted</option>
+                                    <option value="declined">Declined</option>
+                                    <option value="expired">Expired</option>
+                                </select>
+                            </div>
+                            <div className="col-md-3 col-sm-6">
                                 <label className="form-label font-medium">Date From</label>
                                 <input
                                     type="date"
@@ -439,11 +481,11 @@ const QuotesList = () => {
                                     onChange={(e) => handlePendingFilterChange("service_category", e.target.value)}
                                 >
                                     <option value="all">All Categories</option>
-                                    <option value="cleaning">Cleaning</option>
-                                    <option value="gardening">Gardening</option>
-                                    <option value="plumbing">Plumbing</option>
-                                    <option value="electrical">Electrical</option>
-                                    <option value="painting">Painting</option>
+                                    {serviceCategories.map((category) => (
+                                        <option key={category.id} value={category.slug || category.name}>
+                                            {category.name}
+                                        </option>
+                                    ))}
                                 </select>
                             </div>
                             <div className="col-md-3 col-sm-6">
