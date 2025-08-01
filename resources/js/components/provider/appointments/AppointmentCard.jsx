@@ -382,6 +382,58 @@ const AppointmentCard = ({ appointment, onStatusUpdate }) => {
         handleStatusUpdate("in_progress");
     };
 
+    // Handle approve reschedule
+    const handleApproveReschedule = async () => {
+        setActionLoading(true);
+        try {
+            const result = await providerAppointmentService.acceptRescheduleRequest(
+                appointment.id
+            );
+
+            if (result.success && onStatusUpdate) {
+                onStatusUpdate(result.data);
+                alert("Reschedule request approved successfully!");
+            } else {
+                console.error("Approve reschedule failed:", result);
+                alert(result.message || "Failed to approve reschedule request. Please check browser console for details.");
+            }
+        } catch (error) {
+            console.error("Failed to approve reschedule:", error);
+            alert("Failed to approve reschedule request. Please check browser console for details and try again.");
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
+    // Handle decline reschedule
+    const handleDeclineReschedule = async () => {
+        const reason = prompt("Please provide a reason for declining the reschedule request:");
+        if (!reason || !reason.trim()) {
+            return; // User cancelled or didn't provide a reason
+        }
+
+        setActionLoading(true);
+        try {
+            const result = await providerAppointmentService.declineRescheduleRequest(
+                appointment.id,
+                reason
+            );
+
+            if (result.success && onStatusUpdate) {
+                onStatusUpdate(result.data);
+                alert("Reschedule request declined successfully!");
+            } else {
+                console.error("Decline reschedule failed:", result);
+                alert(result.message || "Failed to decline reschedule request. Please check browser console for details.");
+            }
+        } catch (error) {
+            console.error("Failed to decline reschedule:", error);
+            alert("Failed to decline reschedule request. Please check browser console for details and try again.");
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
     const dateTime = formatDateTime(
         appointment.appointment_date,
         appointment.appointment_time
@@ -538,90 +590,115 @@ const AppointmentCard = ({ appointment, onStatusUpdate }) => {
                                 View
                             </Link>
 
-                            {appointment.status === "pending" && (
+                            {hasPendingReschedule() ? (
+                                // Show only approve/decline buttons for reschedule requests
                                 <>
                                     <button
                                         className="btn btn-success btn-sm"
-                                        onClick={() =>
-                                            handleStatusUpdate("confirmed")
-                                        }
+                                        onClick={() => handleApproveReschedule()}
                                         disabled={actionLoading}
                                     >
                                         <i className="fas fa-check me-1"></i>
-                                        {actionLoading
-                                            ? "Loading..."
-                                            : "Accept"}
+                                        {actionLoading ? "Approving..." : "Approve"}
                                     </button>
                                     <button
-                                        className="btn btn-outline-danger btn-sm"
-                                        onClick={() =>
-                                            handleStatusUpdate(
-                                                "cancelled_by_provider",
-                                                "Provider cancelled"
-                                            )
-                                        }
+                                        className="btn btn-outline-warning btn-sm"
+                                        onClick={() => handleDeclineReschedule()}
                                         disabled={actionLoading}
                                     >
                                         <i className="fas fa-times me-1"></i>
-                                        Decline
+                                        {actionLoading ? "Declining..." : "Decline"}
                                     </button>
                                 </>
-                            )}
-
-                            {appointment.status === "confirmed" && (
-                                <div className="position-relative">
-                                    <button
-                                        className={`btn btn-primary btn-sm ${
-                                            !canStart ? "position-relative" : ""
-                                        }`}
-                                        onClick={handleStartService}
-                                        disabled={actionLoading}
-                                        title={
-                                            !canStart && timeUntilStart
-                                                ? `Available in ${timeUntilStart}`
-                                                : ""
-                                        }
-                                    >
-                                        <i className="fas fa-play me-1"></i>
-                                        {actionLoading
-                                            ? "Starting..."
-                                            : "Start"}
-                                    </button>
-                                    {!canStart && (
-                                        <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning text-dark">
-                                            <i className="fas fa-clock"></i>
-                                        </span>
+                            ) : (
+                                // Show status-based buttons only when no reschedule request
+                                <>
+                                    {appointment.status === "pending" && (
+                                        <>
+                                            <button
+                                                className="btn btn-success btn-sm"
+                                                onClick={() =>
+                                                    handleStatusUpdate("confirmed")
+                                                }
+                                                disabled={actionLoading}
+                                            >
+                                                <i className="fas fa-check me-1"></i>
+                                                {actionLoading
+                                                    ? "Loading..."
+                                                    : "Accept"}
+                                            </button>
+                                            <button
+                                                className="btn btn-outline-danger btn-sm"
+                                                onClick={() =>
+                                                    handleStatusUpdate(
+                                                        "cancelled_by_provider",
+                                                        "Provider cancelled"
+                                                    )
+                                                }
+                                                disabled={actionLoading}
+                                            >
+                                                <i className="fas fa-times me-1"></i>
+                                                Decline
+                                            </button>
+                                        </>
                                     )}
-                                </div>
-                            )}
 
-                            {appointment.status === "in_progress" && (
-                                <button
-                                    className="btn btn-success btn-sm"
-                                    onClick={() => setShowCompleteModal(true)}
-                                    disabled={loading}
-                                >
-                                    <i className="fas fa-check me-1"></i>
-                                    {loading
-                                        ? "Processing..."
-                                        : "Complete Service"}
-                                </button>
-                            )}
+                                    {appointment.status === "confirmed" && (
+                                        <div className="position-relative">
+                                            <button
+                                                className={`btn btn-primary btn-sm ${
+                                                    !canStart ? "position-relative" : ""
+                                                }`}
+                                                onClick={handleStartService}
+                                                disabled={actionLoading}
+                                                title={
+                                                    !canStart && timeUntilStart
+                                                        ? `Available in ${timeUntilStart}`
+                                                        : ""
+                                                }
+                                            >
+                                                <i className="fas fa-play me-1"></i>
+                                                {actionLoading
+                                                    ? "Starting..."
+                                                    : "Start"}
+                                            </button>
+                                            {!canStart && (
+                                                <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning text-dark">
+                                                    <i className="fas fa-clock"></i>
+                                                </span>
+                                            )}
+                                        </div>
+                                    )}
 
-                            {appointment.status === "paid" && (
-                                <div className="review-section mt-2 pt-2 border-top">
-                                    <div className="d-flex justify-content-between align-items-center">
-                                        <small className="text-muted">
-                                            <i className="fas fa-star me-1"></i>
-                                            Service completed - Please review
-                                            your client
-                                        </small>
-                                        <ReviewButton
-                                            appointment={appointment}
-                                            userType="provider" // ✅ Provider reviews client
-                                        />
-                                    </div>
-                                </div>
+                                    {appointment.status === "in_progress" && (
+                                        <button
+                                            className="btn btn-success btn-sm"
+                                            onClick={() => setShowCompleteModal(true)}
+                                            disabled={loading}
+                                        >
+                                            <i className="fas fa-check me-1"></i>
+                                            {loading
+                                                ? "Processing..."
+                                                : "Complete Service"}
+                                        </button>
+                                    )}
+
+                                    {appointment.status === "paid" && (
+                                        <div className="review-section mt-2 pt-2 border-top">
+                                            <div className="d-flex justify-content-between align-items-center">
+                                                <small className="text-muted">
+                                                    <i className="fas fa-star me-1"></i>
+                                                    Service completed - Please review
+                                                    your client
+                                                </small>
+                                                <ReviewButton
+                                                    appointment={appointment}
+                                                    userType="provider" // ✅ Provider reviews client
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
+                                </>
                             )}
                         </div>
                     </div>

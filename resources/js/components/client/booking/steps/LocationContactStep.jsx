@@ -11,6 +11,11 @@ const LocationContactStep = ({
     onPrevious,
     clientLocation,
     selectedSlot,
+    // Context props for different flows
+    isRescheduling = false,
+    mode = null, // 'reschedule', 'edit', or null for new appointments
+    buttonText = null, // Custom button text override
+    nextStepName = null, // What comes after this step
 }) => {
     const { user, isAuthenticated } = useAuth();
 
@@ -213,6 +218,20 @@ const LocationContactStep = ({
         };
 
         onStepComplete(stepData);
+    };
+
+    // Dynamic button text and icon based on context
+    const getButtonText = () => {
+        if (buttonText) return buttonText; // Custom override
+        if (isRescheduling || mode === 'reschedule') return 'Confirm Reschedule';
+        if (mode === 'edit') return 'Update Details';
+        return 'Continue to Payment'; // Default for new appointments
+    };
+
+    const getButtonIcon = () => {
+        if (isRescheduling || mode === 'reschedule') return 'fas fa-calendar-check';
+        if (mode === 'edit') return 'fas fa-save';
+        return 'fas fa-arrow-right'; // Default
     };
 
     const isAutoFilled = (field) => {
@@ -747,8 +766,8 @@ const LocationContactStep = ({
                             className="btn btn-primary"
                             onClick={handleContinue}
                         >
-                            Continue to Payment
-                            <i className="fas fa-arrow-right ms-2" />
+                            {getButtonText()}
+                            <i className={`${getButtonIcon()} ms-2`} />
                         </button>
                     </div>
                 </div>

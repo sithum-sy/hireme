@@ -361,6 +361,155 @@ const AppointmentDetail = () => {
                             </div>
                         )}
 
+                        {/* Reschedule Status Display */}
+                        {(appointment.has_pending_reschedule || appointment.latest_reschedule_request) && (
+                            <div className="card border-0 shadow-sm mb-4">
+                                <div className="card-header bg-white border-bottom">
+                                    <h5 className="fw-bold mb-0">
+                                        <i className="fas fa-calendar-alt me-2 text-warning"></i>
+                                        Reschedule Request Status
+                                    </h5>
+                                </div>
+                                <div className="card-body">
+                                    {appointment.has_pending_reschedule && (
+                                        <div className="alert alert-warning d-flex align-items-center mb-3">
+                                            <i className="fas fa-clock me-2"></i>
+                                            <div>
+                                                <strong>Reschedule Request Pending</strong>
+                                                <div className="small mt-1">
+                                                    Your reschedule request is waiting for provider response
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {appointment.latest_reschedule_request && (
+                                        <div className="reschedule-info">
+                                            <div className="row mb-3">
+                                                <div className="col-md-6">
+                                                    <div className="info-group">
+                                                        <label className="form-label fw-semibold text-muted small">
+                                                            Original Date & Time:
+                                                        </label>
+                                                        <div>
+                                                            {new Date(appointment.latest_reschedule_request.original_date).toLocaleDateString("en-US", {
+                                                                weekday: "long",
+                                                                year: "numeric",
+                                                                month: "long",
+                                                                day: "numeric",
+                                                            })}{" "}
+                                                            at{" "}
+                                                            {new Date(`1970-01-01T${appointment.latest_reschedule_request.original_time}`).toLocaleTimeString("en-US", {
+                                                                hour: "numeric",
+                                                                minute: "2-digit",
+                                                                hour12: true,
+                                                            })}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="col-md-6">
+                                                    <div className="info-group">
+                                                        <label className="form-label fw-semibold text-muted small">
+                                                            Requested Date & Time:
+                                                        </label>  
+                                                        <div className="text-primary fw-bold">
+                                                            {new Date(appointment.latest_reschedule_request.requested_date).toLocaleDateString("en-US", {
+                                                                weekday: "long", 
+                                                                year: "numeric",
+                                                                month: "long",
+                                                                day: "numeric",
+                                                            })}{" "}
+                                                            at{" "}
+                                                            {new Date(`1970-01-01T${appointment.latest_reschedule_request.requested_time}`).toLocaleTimeString("en-US", {
+                                                                hour: "numeric",
+                                                                minute: "2-digit", 
+                                                                hour12: true,
+                                                            })}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {appointment.latest_reschedule_request.reason && (
+                                                <div className="info-group mb-3">
+                                                    <label className="form-label fw-semibold text-muted small">
+                                                        Your Reason:
+                                                    </label>
+                                                    <div className="bg-light rounded p-3">
+                                                        {appointment.latest_reschedule_request.reason}
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            <div className="row">
+                                                <div className="col-md-6">
+                                                    <div className="info-group mb-3">
+                                                        <label className="form-label fw-semibold text-muted small">
+                                                            Provider Response:
+                                                        </label>
+                                                        <div>
+                                                            {appointment.latest_reschedule_request.status === "approved" && (
+                                                                <span className="badge bg-success px-3 py-2">
+                                                                    <i className="fas fa-check me-1"></i>
+                                                                    Approved by Provider
+                                                                </span>
+                                                            )}
+                                                            {appointment.latest_reschedule_request.status === "declined" && (
+                                                                <span className="badge bg-danger px-3 py-2">
+                                                                    <i className="fas fa-times me-1"></i>
+                                                                    Declined by Provider
+                                                                </span>
+                                                            )}
+                                                            {appointment.latest_reschedule_request.status === "pending" && (
+                                                                <span className="badge bg-warning text-dark px-3 py-2">
+                                                                    <i className="fas fa-clock me-1"></i>
+                                                                    Awaiting Response
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                {appointment.latest_reschedule_request.responded_at && (  
+                                                    <div className="col-md-6">
+                                                        <div className="info-group mb-3">
+                                                            <label className="form-label fw-semibold text-muted small">
+                                                                Response Date:
+                                                            </label>
+                                                            <div className="small">
+                                                                {new Date(appointment.latest_reschedule_request.responded_at).toLocaleString()}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {appointment.latest_reschedule_request.response_notes && (
+                                                <div className="info-group">
+                                                    <label className="form-label fw-semibold text-muted small">
+                                                        Provider's Message:
+                                                    </label>
+                                                    <div className={`rounded p-3 ${
+                                                        appointment.latest_reschedule_request.status === "approved"
+                                                            ? "bg-success bg-opacity-10 border border-success border-opacity-25"
+                                                            : "bg-danger bg-opacity-10 border border-danger border-opacity-25"
+                                                    }`}>
+                                                        <div className="d-flex align-items-start">
+                                                            <i className={`fas ${
+                                                                appointment.latest_reschedule_request.status === "approved" 
+                                                                    ? "fa-check-circle text-success" 
+                                                                    : "fa-exclamation-circle text-danger"
+                                                            } me-2 mt-1`}></i>
+                                                            <div>{appointment.latest_reschedule_request.response_notes}</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
                         {/* NEW: Invoice Section */}
                         {appointment.invoice && (
                             <InvoiceSection

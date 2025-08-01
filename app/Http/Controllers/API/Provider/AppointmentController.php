@@ -749,7 +749,7 @@ class AppointmentController extends Controller
         }
 
         // Get the pending reschedule request
-        $rescheduleRequest = $appointment->pendingRescheduleRequest;
+        $rescheduleRequest = $appointment->pendingRescheduleRequest()->first();
         if (!$rescheduleRequest) {
             return response()->json([
                 'success' => false,
@@ -806,7 +806,7 @@ class AppointmentController extends Controller
         }
 
         // Get the pending reschedule request
-        $rescheduleRequest = $appointment->pendingRescheduleRequest;
+        $rescheduleRequest = $appointment->pendingRescheduleRequest()->first();
         if (!$rescheduleRequest) {
             return response()->json([
                 'success' => false,

@@ -508,6 +508,8 @@ const AppointmentUpdateModal = ({
                                         city: bookingData.client_city,
                                         address: bookingData.client_address,
                                     }}
+                                    isRescheduling={mode === 'reschedule'}
+                                    mode={mode}
                                 />
                             )}
 

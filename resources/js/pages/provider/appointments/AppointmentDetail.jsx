@@ -356,6 +356,62 @@ const AppointmentDetail = () => {
         setShowCreateInvoiceModal(false);
     };
 
+    // Handle approve reschedule
+    const handleApproveReschedule = async () => {
+        setActionLoading(true);
+        try {
+            const result = await providerAppointmentService.acceptRescheduleRequest(
+                appointment.id
+            );
+
+            if (result.success) {
+                setAppointment(result.data);
+                alert("Reschedule request approved successfully!");
+                // Reload appointment details to get updated data
+                await loadAppointmentDetail();
+            } else {
+                console.error("Approve reschedule failed:", result);
+                alert(result.message || "Failed to approve reschedule request. Please check browser console for details.");
+            }
+        } catch (error) {
+            console.error("Failed to approve reschedule:", error);
+            alert("Failed to approve reschedule request. Please check browser console for details and try again.");
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
+    // Handle decline reschedule
+    const handleDeclineReschedule = async () => {
+        const reason = prompt("Please provide a reason for declining the reschedule request:");
+        if (!reason || !reason.trim()) {
+            return; // User cancelled or didn't provide a reason
+        }
+
+        setActionLoading(true);
+        try {
+            const result = await providerAppointmentService.declineRescheduleRequest(
+                appointment.id,
+                reason
+            );
+
+            if (result.success) {
+                setAppointment(result.data);
+                alert("Reschedule request declined successfully!");
+                // Reload appointment details to get updated data
+                await loadAppointmentDetail();
+            } else {
+                console.error("Decline reschedule failed:", result);
+                alert(result.message || "Failed to decline reschedule request. Please check browser console for details.");
+            }
+        } catch (error) {
+            console.error("Failed to decline reschedule:", error);
+            alert("Failed to decline reschedule request. Please check browser console for details and try again.");
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
     const confirmNotesAction = () => {
         if (pendingAction) {
             handleStatusUpdate(pendingAction, false);
@@ -799,87 +855,127 @@ const AppointmentDetail = () => {
 
                     {/* Action Buttons */}
                     <div className="action-buttons">
-                        {getCurrentStatus() === "pending" && (
-                            <div className="d-flex gap-2">
-                                <button
-                                    className="btn btn-success"
-                                    onClick={() =>
-                                        handleStatusUpdate("confirmed")
-                                    }
-                                    disabled={actionLoading}
-                                >
-                                    <i className="fas fa-check me-2"></i>
-                                    Accept Appointment
-                                </button>
-                                <button
-                                    className="btn btn-outline-danger"
-                                    onClick={() =>
-                                        handleStatusUpdate(
-                                            "cancelled_by_provider",
-                                            true
-                                        )
-                                    }
-                                    disabled={actionLoading}
-                                >
-                                    <i className="fas fa-times me-2"></i>
-                                    Decline
-                                </button>
+                        {/* Show reschedule approve/decline buttons if there's a pending reschedule request */}
+                        {appointment?.has_pending_reschedule && (
+                            <div className="d-flex gap-2 mb-3">
+                                <div className="alert alert-warning d-flex align-items-center justify-content-between w-100 mb-2">
+                                    <div>
+                                        <i className="fas fa-calendar-alt me-2"></i>
+                                        <strong>Reschedule Request Pending</strong>
+                                        {appointment.reschedule_request && (
+                                            <div className="small mt-1">
+                                                New time: {appointment.reschedule_request.requested_date} at {appointment.reschedule_request.requested_time}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                                <div className="d-flex gap-2 w-100">
+                                    <button
+                                        className="btn btn-success"
+                                        onClick={() => handleApproveReschedule()}
+                                        disabled={actionLoading}
+                                    >
+                                        <i className="fas fa-check me-2"></i>
+                                        {actionLoading ? "Approving..." : "Approve Reschedule"}
+                                    </button>
+                                    <button
+                                        className="btn btn-outline-warning"
+                                        onClick={() => handleDeclineReschedule()}
+                                        disabled={actionLoading}
+                                    >
+                                        <i className="fas fa-times me-2"></i>
+                                        {actionLoading ? "Declining..." : "Decline Reschedule"}
+                                    </button>
+                                </div>
                             </div>
                         )}
 
-                        {getCurrentStatus() === "confirmed" && (
-                            <div className="d-flex gap-2">
-                                <button
-                                    className="btn btn-primary"
-                                    onClick={() =>
-                                        handleStatusUpdate("in_progress")
-                                    }
-                                    disabled={actionLoading}
-                                >
-                                    <i className="fas fa-play me-2"></i>
-                                    Start Service
-                                </button>
-                                <button
-                                    className="btn btn-outline-danger"
-                                    onClick={() =>
-                                        handleStatusUpdate(
-                                            "cancelled_by_provider",
-                                            true
-                                        )
-                                    }
-                                    disabled={actionLoading}
-                                >
-                                    <i className="fas fa-times me-2"></i>
-                                    Cancel
-                                </button>
-                            </div>
-                        )}
+                        {/* Show regular status-based buttons only when no reschedule request */}
+                        {!appointment?.has_pending_reschedule && (
+                            <>
+                                {getCurrentStatus() === "pending" && (
+                                    <div className="d-flex gap-2">
+                                        <button
+                                            className="btn btn-success"
+                                            onClick={() =>
+                                                handleStatusUpdate("confirmed")
+                                            }
+                                            disabled={actionLoading}
+                                        >
+                                            <i className="fas fa-check me-2"></i>
+                                            Accept Appointment
+                                        </button>
+                                        <button
+                                            className="btn btn-outline-danger"
+                                            onClick={() =>
+                                                handleStatusUpdate(
+                                                    "cancelled_by_provider",
+                                                    true
+                                                )
+                                            }
+                                            disabled={actionLoading}
+                                        >
+                                            <i className="fas fa-times me-2"></i>
+                                            Decline
+                                        </button>
+                                    </div>
+                                )}
 
-                        {getCurrentStatus() === "in_progress" && (
-                            <div className="d-flex gap-2">
-                                <button
-                                    className="btn btn-success"
-                                    onClick={() =>
-                                        setShowCreateInvoiceModal(true)
-                                    }
-                                    disabled={actionLoading}
-                                >
-                                    <i className="fas fa-check-double me-2"></i>
-                                    {actionLoading
-                                        ? "Processing..."
-                                        : "Complete Service"}
-                                </button>
-                                {/* <button
-                                    className="btn btn-outline-secondary"
-                                    onClick={() =>
-                                        handleStatusUpdate("no_show", true)
-                                    }
-                                    disabled={actionLoading}
-                                >
-                                    <i className="fas fa-user-times me-2"></i>
-                                    No Show
-                                </button> */}
-                            </div>
+                                {getCurrentStatus() === "confirmed" && (
+                                    <div className="d-flex gap-2">
+                                        <button
+                                            className="btn btn-primary"
+                                            onClick={() =>
+                                                handleStatusUpdate("in_progress")
+                                            }
+                                            disabled={actionLoading}
+                                        >
+                                            <i className="fas fa-play me-2"></i>
+                                            Start Service
+                                        </button>
+                                        <button
+                                            className="btn btn-outline-danger"
+                                            onClick={() =>
+                                                handleStatusUpdate(
+                                                    "cancelled_by_provider",
+                                                    true
+                                                )
+                                            }
+                                            disabled={actionLoading}
+                                        >
+                                            <i className="fas fa-times me-2"></i>
+                                            Cancel
+                                        </button>
+                                    </div>
+                                )}
+
+                                {getCurrentStatus() === "in_progress" && (
+                                    <div className="d-flex gap-2">
+                                        <button
+                                            className="btn btn-success"
+                                            onClick={() =>
+                                                setShowCreateInvoiceModal(true)
+                                            }
+                                            disabled={actionLoading}
+                                        >
+                                            <i className="fas fa-check-double me-2"></i>
+                                            {actionLoading
+                                                ? "Processing..."
+                                                : "Complete Service"}
+                                        </button>
+                                        {/* <button
+                                            className="btn btn-outline-secondary"
+                                            onClick={() =>
+                                                handleStatusUpdate("no_show", true)
+                                            }
+                                            disabled={actionLoading}
+                                        >
+                                            <i className="fas fa-user-times me-2"></i>
+                                            No Show
+                                        </button> */}
+                                    </div>
+                                )}
+                            </>
                         )}
 
                         {/* PDF Download Button - Available for all statuses */}

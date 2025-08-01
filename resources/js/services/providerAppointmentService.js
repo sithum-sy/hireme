@@ -198,29 +198,6 @@ class ProviderAppointmentService {
         }
     }
 
-    /**
-     * Respond to reschedule request
-     */
-    async respondToRescheduleRequest(appointmentId, action, reason = "") {
-        try {
-            const response = await axios.post(
-                `${API_BASE}/appointments/${appointmentId}/reschedule-response`,
-                { action, reason } // 'accept' or 'decline'
-            );
-            return {
-                success: true,
-                data: response.data.data,
-                message:
-                    response.data.message ||
-                    "Reschedule request processed successfully",
-            };
-        } catch (error) {
-            return this.handleError(
-                error,
-                "Failed to respond to reschedule request"
-            );
-        }
-    }
 
     /**
      * Accept reschedule request

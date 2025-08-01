@@ -372,94 +372,11 @@ const AppointmentsTable = ({
                                             View
                                         </button>
 
-                                        {appointment.status === "pending" && (
+                                        {appointment.has_pending_reschedule ? (
+                                            // Show only approve/decline buttons for reschedule requests
                                             <>
                                                 <button
                                                     className="btn btn-sm btn-outline-success"
-                                                    onClick={() =>
-                                                        onAppointmentAction &&
-                                                        onAppointmentAction(
-                                                            "confirm",
-                                                            appointment
-                                                        )
-                                                    }
-                                                    title="Confirm Appointment"
-                                                >
-                                                    <i className="fas fa-check me-1"></i>
-                                                    Confirm
-                                                </button>
-                                                <button
-                                                    className="btn btn-sm btn-outline-danger"
-                                                    onClick={() =>
-                                                        onAppointmentAction &&
-                                                        onAppointmentAction(
-                                                            "cancel",
-                                                            appointment
-                                                        )
-                                                    }
-                                                    title="Cancel"
-                                                >
-                                                    <i className="fas fa-times me-1"></i>
-                                                    Cancel
-                                                </button>
-                                            </>
-                                        )}
-
-                                        {appointment.status === "confirmed" && (
-                                            <>
-                                                <button
-                                                    className="btn btn-sm btn-outline-warning"
-                                                    onClick={() =>
-                                                        onAppointmentAction &&
-                                                        onAppointmentAction(
-                                                            "start",
-                                                            appointment
-                                                        )
-                                                    }
-                                                    title="Start Service"
-                                                >
-                                                    <i className="fas fa-play me-1"></i>
-                                                    Start
-                                                </button>
-                                                <button
-                                                    className="btn btn-sm btn-outline-danger"
-                                                    onClick={() =>
-                                                        onAppointmentAction &&
-                                                        onAppointmentAction(
-                                                            "cancel",
-                                                            appointment
-                                                        )
-                                                    }
-                                                    title="Cancel"
-                                                >
-                                                    <i className="fas fa-times me-1"></i>
-                                                    Cancel
-                                                </button>
-                                            </>
-                                        )}
-
-                                        {appointment.status ===
-                                            "in_progress" && (
-                                            <button
-                                                className="btn btn-sm btn-outline-success"
-                                                onClick={() =>
-                                                    onAppointmentAction &&
-                                                    onAppointmentAction(
-                                                        "complete",
-                                                        appointment
-                                                    )
-                                                }
-                                                title="Complete Service"
-                                            >
-                                                <i className="fas fa-check me-1"></i>
-                                                Complete
-                                            </button>
-                                        )}
-
-                                        {appointment.has_pending_reschedule && (
-                                            <>
-                                                <button
-                                                    className="btn btn-sm btn-outline-info"
                                                     onClick={() =>
                                                         onAppointmentAction &&
                                                         onAppointmentAction(
@@ -486,6 +403,92 @@ const AppointmentsTable = ({
                                                     <i className="fas fa-times me-1"></i>
                                                     Decline
                                                 </button>
+                                            </>
+                                        ) : (
+                                            // Show status-based buttons only when no reschedule request
+                                            <>
+                                                {appointment.status === "pending" && (
+                                                    <>
+                                                        <button
+                                                            className="btn btn-sm btn-outline-success"
+                                                            onClick={() =>
+                                                                onAppointmentAction &&
+                                                                onAppointmentAction(
+                                                                    "confirm",
+                                                                    appointment
+                                                                )
+                                                            }
+                                                            title="Confirm Appointment"
+                                                        >
+                                                            <i className="fas fa-check me-1"></i>
+                                                            Confirm
+                                                        </button>
+                                                        <button
+                                                            className="btn btn-sm btn-outline-danger"
+                                                            onClick={() =>
+                                                                onAppointmentAction &&
+                                                                onAppointmentAction(
+                                                                    "cancel",
+                                                                    appointment
+                                                                )
+                                                            }
+                                                            title="Cancel"
+                                                        >
+                                                            <i className="fas fa-times me-1"></i>
+                                                            Cancel
+                                                        </button>
+                                                    </>
+                                                )}
+
+                                                {appointment.status === "confirmed" && (
+                                                    <>
+                                                        <button
+                                                            className="btn btn-sm btn-outline-warning"
+                                                            onClick={() =>
+                                                                onAppointmentAction &&
+                                                                onAppointmentAction(
+                                                                    "start",
+                                                                    appointment
+                                                                )
+                                                            }
+                                                            title="Start Service"
+                                                        >
+                                                            <i className="fas fa-play me-1"></i>
+                                                            Start
+                                                        </button>
+                                                        <button
+                                                            className="btn btn-sm btn-outline-danger"
+                                                            onClick={() =>
+                                                                onAppointmentAction &&
+                                                                onAppointmentAction(
+                                                                    "cancel",
+                                                                    appointment
+                                                                )
+                                                            }
+                                                            title="Cancel"
+                                                        >
+                                                            <i className="fas fa-times me-1"></i>
+                                                            Cancel
+                                                        </button>
+                                                    </>
+                                                )}
+
+                                                {appointment.status === "in_progress" && (
+                                                    <button
+                                                        className="btn btn-sm btn-outline-success"
+                                                        onClick={() =>
+                                                            onAppointmentAction &&
+                                                            onAppointmentAction(
+                                                                "complete",
+                                                                appointment
+                                                            )
+                                                        }
+                                                        title="Complete Service"
+                                                    >
+                                                        <i className="fas fa-check me-1"></i>
+                                                        Complete
+                                                    </button>
+                                                )}
                                             </>
                                         )}
                                     </div>
