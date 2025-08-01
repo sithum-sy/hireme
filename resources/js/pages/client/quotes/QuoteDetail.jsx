@@ -50,50 +50,61 @@ const QuoteDetail = () => {
     };
 
     // Create service and provider objects for BookingModal
-    const serviceForBooking = quote ? {
-        id: quote.service_id,
-        title: quote.service_title,
-        description: quote.service_description || quote.message,
-        base_price: quote.quoted_price,
-        price: quote.quoted_price,
-        duration_hours: quote.estimated_duration || 1,
-        category: quote.service_category || {
-            name: "Service",
-            color: "primary",
-            icon: "fas fa-cog",
-        },
-        first_image_url: quote.service_images,
-        pricing_type: "fixed",
-    } : null;
+    const serviceForBooking = quote
+        ? {
+              id: quote.service_id,
+              title: quote.service_title,
+              description: quote.service_description || quote.message,
+              base_price: quote.quoted_price,
+              price: quote.quoted_price,
+              duration_hours: quote.estimated_duration || 1,
+              category: quote.service_category || {
+                  name: "Service",
+                  color: "primary",
+                  icon: "fas fa-cog",
+              },
+              first_image_url: quote.service_images,
+              pricing_type: "fixed",
+          }
+        : null;
 
-    const providerForBooking = quote ? {
-        id: quote.provider_id,
-        name: quote.provider_business_name || quote.provider_name,
-        profile_image_url: quote.provider_image,
-        average_rating: quote.provider_rating || 0,
-        reviews_count: quote.provider_reviews || 0,
-        is_verified: true,
-        business_name: quote.provider_business_name,
-    } : null;
+    const providerForBooking = quote
+        ? {
+              id: quote.provider_id,
+              name: quote.provider_business_name || quote.provider_name,
+              profile_image_url: quote.provider_image,
+              average_rating: quote.provider_rating || 0,
+              reviews_count: quote.provider_reviews || 0,
+              is_verified: true,
+              business_name: quote.provider_business_name,
+          }
+        : null;
 
     // Create pre-selected slot from quote data
-    const selectedSlot = quote ? {
-        date: quote.requested_date,
-        time: quote.requested_time,
-        formatted_date: quote.requested_date ? new Date(quote.requested_date).toLocaleDateString("en-US", {
-            weekday: "long",
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-        }) : "",
-        formatted_time: quote.requested_time ? (() => {
-            const [hours, minutes] = quote.requested_time.split(":");
-            const hour = parseInt(hours);
-            const ampm = hour >= 12 ? "PM" : "AM";
-            const displayHour = hour % 12 || 12;
-            return `${displayHour}:${minutes} ${ampm}`;
-        })() : "",
-    } : null;
+    const selectedSlot = quote
+        ? {
+              date: quote.requested_date,
+              time: quote.requested_time,
+              formatted_date: quote.requested_date
+                  ? new Date(quote.requested_date).toLocaleDateString("en-US", {
+                        weekday: "long",
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                    })
+                  : "",
+              formatted_time: quote.requested_time
+                  ? (() => {
+                        const [hours, minutes] =
+                            quote.requested_time.split(":");
+                        const hour = parseInt(hours);
+                        const ampm = hour >= 12 ? "PM" : "AM";
+                        const displayHour = hour % 12 || 12;
+                        return `${displayHour}:${minutes} ${ampm}`;
+                    })()
+                  : "",
+          }
+        : null;
 
     const handleDeclineQuote = () => {
         setShowDeclineModal(true);
@@ -134,9 +145,9 @@ const QuoteDetail = () => {
 
     return (
         <ClientLayout>
-            <div className="quote-detail-page">
+            <div className="page-content">
                 {/* Header */}
-                <div className="page-header d-flex justify-content-between align-items-start mb-4">
+                <div className="page-header d-flex justify-content-between align-items-start">
                     <div>
                         <h2 className="fw-bold mb-2">{quote.service_title}</h2>
                         <div className="d-flex align-items-center gap-3">
@@ -176,7 +187,7 @@ const QuoteDetail = () => {
                                 </button>
                             </>
                         )}
-                        
+
                         {/* PDF Download Button - Always available */}
                         <QuotesPDFDownloader
                             quote={quote}
@@ -191,8 +202,8 @@ const QuoteDetail = () => {
                     {/* Main Content */}
                     <div className="col-lg-8">
                         {/* Quote Details Card */}
-                        <div className="card border-0 shadow-sm mb-4">
-                            <div className="card-header bg-white border-bottom">
+                        <div className="dashboard-card mb-4">
+                            <div className="card-header">
                                 <h5 className="fw-bold mb-0">
                                     <i className="fas fa-quote-left me-2 text-primary"></i>
                                     Quote Details
@@ -212,9 +223,26 @@ const QuoteDetail = () => {
                                                 </h6>
                                                 {quote.service_category && (
                                                     <div className="mb-2">
-                                                        <span className={`badge bg-${quote.service_category.color || 'primary'} me-2`}>
-                                                            <i className={`${quote.service_category.icon || 'fas fa-cog'} me-1`}></i>
-                                                            {quote.service_category.name || quote.service_category}
+                                                        <span
+                                                            className={`badge bg-${
+                                                                quote
+                                                                    .service_category
+                                                                    .color ||
+                                                                "primary"
+                                                            } me-2`}
+                                                        >
+                                                            <i
+                                                                className={`${
+                                                                    quote
+                                                                        .service_category
+                                                                        .icon ||
+                                                                    "fas fa-cog"
+                                                                } me-1`}
+                                                            ></i>
+                                                            {quote
+                                                                .service_category
+                                                                .name ||
+                                                                quote.service_category}
                                                         </span>
                                                     </div>
                                                 )}
@@ -318,7 +346,8 @@ const QuoteDetail = () => {
                                     )}
 
                                 {/* Terms and Conditions - Show if quote has terms */}
-                                {(quote.status === "quoted" || quote.status === "accepted") &&
+                                {(quote.status === "quoted" ||
+                                    quote.status === "accepted") &&
                                     quote.terms_conditions && (
                                         <div className="terms-conditions mb-4">
                                             <h6 className="fw-bold mb-2">
@@ -336,10 +365,10 @@ const QuoteDetail = () => {
                         </div>
 
                         {/* Timeline */}
-                        <div className="card border-0 shadow-sm">
-                            <div className="card-header bg-white border-bottom">
-                                <h5 className="fw-bold mb-0">
-                                    <i className="fas fa-history me-2 text-primary"></i>
+                        <div className="dashboard-card">
+                            <div className="card-header">
+                                <h5 className="card-title">
+                                    <i className="fas fa-history text-primary"></i>
                                     Quote Timeline
                                 </h5>
                             </div>
@@ -352,12 +381,12 @@ const QuoteDetail = () => {
                     {/* Sidebar */}
                     <div className="col-lg-4">
                         {/* Provider Info */}
-                        <div className="card border-0 shadow-sm mb-4">
-                            <div className="card-header bg-primary text-white">
-                                <h6 className="fw-bold mb-0">
-                                    <i className="fas fa-user me-2"></i>
+                        <div className="dashboard-card mb-4">
+                            <div className="card-header">
+                                <h5 className="card-title">
+                                    <i className="fas fa-user text-primary"></i>
                                     Service Provider
-                                </h6>
+                                </h5>
                             </div>
                             <div className="card-body">
                                 <div className="provider-info">
@@ -422,8 +451,10 @@ const QuoteDetail = () => {
                                             </h6>
                                             <div className="text-muted small">
                                                 <i className="fas fa-star text-warning me-1"></i>
-                                                {quote.provider_rating || 0} (
-                                                {quote.provider_reviews || 0}{" "}
+                                                {Number(
+                                                    quote.provider_rating
+                                                ).toFixed(1) || 0}{" "}
+                                                ({quote.provider_reviews || 0}{" "}
                                                 reviews)
                                             </div>
                                         </div>
@@ -443,70 +474,93 @@ const QuoteDetail = () => {
                         </div>
 
                         {/* Pricing Summary - Show if quoted or accepted */}
-                        {(quote.status === "quoted" || quote.status === "accepted") && quote.quoted_price && (
-                            <div className="card border-0 shadow-sm mb-4">
-                                <div className={`card-header text-white ${quote.status === "accepted" ? "bg-info" : "bg-success"}`}>
-                                    <h6 className="fw-bold mb-0">
-                                        <i className={`fas ${quote.status === "accepted" ? "fa-check-circle" : "fa-dollar-sign"} me-2`}></i>
-                                        {quote.status === "accepted" ? "Accepted Quote Summary" : "Quote Summary"}
-                                    </h6>
-                                </div>
-                                <div className="card-body">
-                                    <div className="pricing-breakdown">
-                                        <div className="d-flex justify-content-between mb-2">
-                                            <span>Service Fee</span>
-                                            <span>
-                                                Rs. {quote.quoted_price}
-                                            </span>
-                                        </div>
-
-                                        {quote.estimated_duration && (
-                                            <div className="d-flex justify-content-between mb-2 text-muted small">
-                                                <span>Estimated Duration</span>
+                        {(quote.status === "quoted" ||
+                            quote.status === "accepted") &&
+                            quote.quoted_price && (
+                                <div className="card border-0 shadow-sm mb-4">
+                                    <div
+                                        className={`card-header text-white ${
+                                            quote.status === "accepted"
+                                                ? "bg-info"
+                                                : "bg-success"
+                                        }`}
+                                    >
+                                        <h6 className="fw-bold mb-0">
+                                            <i
+                                                className={`fas ${
+                                                    quote.status === "accepted"
+                                                        ? "fa-check-circle"
+                                                        : "fa-dollar-sign"
+                                                } me-2`}
+                                            ></i>
+                                            {quote.status === "accepted"
+                                                ? "Accepted Quote Summary"
+                                                : "Quote Summary"}
+                                        </h6>
+                                    </div>
+                                    <div className="card-body">
+                                        <div className="pricing-breakdown">
+                                            <div className="d-flex justify-content-between mb-2">
+                                                <span>Service Fee</span>
                                                 <span>
-                                                    {quote.estimated_duration}{" "}
-                                                    hours
+                                                    Rs. {quote.quoted_price}
                                                 </span>
                                             </div>
-                                        )}
 
-                                        {quote.travel_fee &&
-                                            quote.travel_fee > 0 && (
-                                                <div className="d-flex justify-content-between mb-2">
-                                                    <span className="text-warning">
-                                                        Travel Fee
+                                            {quote.estimated_duration && (
+                                                <div className="d-flex justify-content-between mb-2 text-muted small">
+                                                    <span>
+                                                        Estimated Duration
                                                     </span>
-                                                    <span className="text-warning">
-                                                        Rs. {quote.travel_fee}
+                                                    <span>
+                                                        {
+                                                            quote.estimated_duration
+                                                        }{" "}
+                                                        hours
                                                     </span>
                                                 </div>
                                             )}
 
-                                        <hr />
+                                            {quote.travel_fee &&
+                                                quote.travel_fee > 0 && (
+                                                    <div className="d-flex justify-content-between mb-2">
+                                                        <span className="text-warning">
+                                                            Travel Fee
+                                                        </span>
+                                                        <span className="text-warning">
+                                                            Rs.{" "}
+                                                            {quote.travel_fee}
+                                                        </span>
+                                                    </div>
+                                                )}
 
-                                        <div className="d-flex justify-content-between fw-bold">
-                                            <span>Total Quoted Price</span>
-                                            <span className="text-success h5 mb-0">
-                                                Rs.{" "}
-                                                {parseFloat(
-                                                    quote.quoted_price
-                                                ) +
-                                                    parseFloat(
-                                                        quote.travel_fee || 0
-                                                    )}
-                                            </span>
-                                        </div>
+                                            <hr />
 
-                                        {quote.validity_days && (
-                                            <div className="text-muted small mt-2 text-center">
-                                                Valid for {quote.validity_days}{" "}
-                                                days from quote date
+                                            <div className="d-flex justify-content-between fw-bold">
+                                                <span>Total Quoted Price</span>
+                                                <span className="text-success h5 mb-0">
+                                                    Rs.{" "}
+                                                    {parseFloat(
+                                                        quote.quoted_price
+                                                    ) +
+                                                        parseFloat(
+                                                            quote.travel_fee ||
+                                                                0
+                                                        )}
+                                                </span>
                                             </div>
-                                        )}
+
+                                            {quote.validity_days && (
+                                                <div className="text-muted small mt-2 text-center">
+                                                    Valid for{" "}
+                                                    {quote.validity_days} days
+                                                    from quote date
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        )}
+                            )}
 
                         {/* Important Info */}
                         <div className="card border-0 shadow-sm">

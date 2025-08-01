@@ -277,7 +277,7 @@ const QuoteDetail = () => {
                                 onClick={() => downloadQuotePDF(quote)}
                             >
                                 <i className="fas fa-print me-2"></i>
-                                Print PDF
+                                Print Quote
                             </button>
                         </div>
                     </div>
@@ -374,19 +374,41 @@ const QuoteDetail = () => {
                                             <div className="bg-light rounded p-3">
                                                 {quote.message && (
                                                     <div className="mb-2">
-                                                        <strong>Description:</strong>
-                                                        <div className="mt-1">{quote.message}</div>
+                                                        <strong>
+                                                            Description:
+                                                        </strong>
+                                                        <div className="mt-1">
+                                                            {quote.message}
+                                                        </div>
                                                     </div>
                                                 )}
                                                 {quote.client_requirements && (
-                                                    <div className={quote.message ? "mt-3" : ""}>
-                                                        <strong>Special Requirements:</strong>
-                                                        <div className="mt-1">{quote.client_requirements}</div>
+                                                    <div
+                                                        className={
+                                                            quote.message
+                                                                ? "mt-3"
+                                                                : ""
+                                                        }
+                                                    >
+                                                        <strong>
+                                                            Special
+                                                            Requirements:
+                                                        </strong>
+                                                        <div className="mt-1">
+                                                            {
+                                                                quote.client_requirements
+                                                            }
+                                                        </div>
                                                     </div>
                                                 )}
-                                                {!quote.message && !quote.client_requirements && (
-                                                    <em className="text-muted">No specific requirements provided</em>
-                                                )}
+                                                {!quote.message &&
+                                                    !quote.client_requirements && (
+                                                        <em className="text-muted">
+                                                            No specific
+                                                            requirements
+                                                            provided
+                                                        </em>
+                                                    )}
                                             </div>
                                         </div>
                                     </div>

@@ -524,7 +524,7 @@
     transition: var(--transition);
     display: flex;
     flex-direction: column;
-    height: 100%;
+    /* height: 100%; */
 }
 
 .dashboard-card:hover {

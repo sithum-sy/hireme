@@ -1,4 +1,3 @@
-// This component will now show pending quotes instead of quote requests
 import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import ProviderLayout from "../../../components/layouts/ProviderLayout";
@@ -192,30 +191,25 @@ const CreateQuote = () => {
 
     return (
         <ProviderLayout>
-            <div className="create-quote-page">
-                <div className="page-header mb-4">
-                    <h2 className="fw-bold mb-1">Respond to Quote Request</h2>
-                    <p className="text-muted mb-0">
+            <div className="container-custom">
+                <div className="page-header">
+                    <h2 className="text-gradient mb-2">
+                        Respond to Quote Request
+                    </h2>
+                    <p className="text-secondary mb-0">
                         Respond to a client's quote request with your pricing
                         and details
                     </p>
-                    {/* Debug info - remove in production */}
-                    <div className="small text-muted mt-2">
-                        Debug: quoteId={quoteId}, quote_id={quoteData.quote_id},
-                        selectedQuote={selectedQuote ? "loaded" : "null"},
-                        loading={loading.toString()}, quoteLoading=
-                        {quoteLoading.toString()}
-                    </div>
                 </div>
 
                 <form onSubmit={handleSubmitQuote}>
-                    <div className="row">
+                    <div className="row g-4">
                         <div className="col-lg-8">
                             {/* Quote Request Selection */}
-                            <div className="card-modern mb-4">
+                            <div className="dashboard-card mb-4">
                                 <div className="card-header">
-                                    <h5 className="fw-bold mb-0">
-                                        <i className="fas fa-search me-2 text-primary"></i>
+                                    <h5 className="card-title">
+                                        <i className="fas fa-search text-primary"></i>
                                         Select Quote Request
                                     </h5>
                                 </div>
@@ -288,8 +282,8 @@ const CreateQuote = () => {
 
                                     {/* Selected Request Details */}
                                     {selectedQuote && !quoteLoading && (
-                                        <div className="selected-request bg-light rounded p-3">
-                                            <div className="d-flex justify-content-between align-items-start mb-3">
+                                        <div className="info-card">
+                                            <div className="d-flex justify-content-between align-items-start mb-2">
                                                 <h6 className="fw-bold">
                                                     {selectedQuote.service
                                                         ?.title ||
@@ -408,11 +402,11 @@ const CreateQuote = () => {
                                                 </div>
                                             </div>
 
-                                            <div className="mt-3 pt-3 border-top">
+                                            <div className="mt-2 pt-2 border-top">
                                                 <strong>
                                                     What the client needs:
                                                 </strong>
-                                                <div className="mt-2 p-2 bg-white rounded border-start border-primary border-3">
+                                                <div className="mt-1 p-2 bg-white rounded border-start border-primary border-3">
                                                     <p className="mb-0 text-primary">
                                                         "
                                                         {selectedQuote.client_requirements ||
@@ -441,7 +435,7 @@ const CreateQuote = () => {
                                                 </div>
                                             )}
 
-                                            <div className="mt-3 pt-2 border-top">
+                                            <div className="mt-2 pt-2 border-top">
                                                 <small className="text-muted">
                                                     <i className="fas fa-clock me-1"></i>
                                                     Request submitted:{" "}
@@ -466,16 +460,16 @@ const CreateQuote = () => {
                             {/* Quote Response Form */}
                             {selectedQuote && !quoteLoading && (
                                 <>
-                                    <div className="card-modern mb-4">
+                                    <div className="dashboard-card mb-4">
                                         <div className="card-header">
-                                            <h5 className="mb-0">
-                                                <i className="fas fa-edit me-2 text-primary"></i>
+                                            <h5 className="card-title">
+                                                <i className="fas fa-edit text-primary"></i>
                                                 Your Quote Response
                                             </h5>
                                         </div>
                                         <div className="card-body">
                                             <div className="row">
-                                                <div className="col-md-6 mb-3">
+                                                <div className="col-md-6 mb-2">
                                                     <label className="form-label">
                                                         Quoted Price (Rs.) *
                                                     </label>
@@ -507,7 +501,7 @@ const CreateQuote = () => {
                                                         </div>
                                                     )}
                                                 </div>
-                                                <div className="col-md-6 mb-3">
+                                                <div className="col-md-6 mb-2">
                                                     <label className="form-label">
                                                         Estimated Duration
                                                         (hours) *
@@ -543,7 +537,7 @@ const CreateQuote = () => {
                                                 </div>
                                             </div>
 
-                                            <div className="mb-3">
+                                            <div className="mb-2">
                                                 <label className="form-label">
                                                     Quote Description *
                                                 </label>
@@ -593,7 +587,7 @@ const CreateQuote = () => {
                                             </div>
 
                                             <div className="row">
-                                                <div className="col-md-6 mb-3">
+                                                <div className="col-md-6 mb-2">
                                                     <label className="form-label">
                                                         Quote Validity (days)
                                                     </label>
@@ -624,32 +618,32 @@ const CreateQuote = () => {
                                                     </select>
                                                 </div>
                                                 {/* <div className="col-md-6 mb-3">
-                                                    <label className="form-label">
-                                                        Travel Charges (Rs.)
-                                                    </label>
-                                                    <input
-                                                        type="number"
-                                                        className="form-control"
-                                                        value={
-                                                            quoteData.travel_charges
-                                                        }
-                                                        onChange={(e) =>
-                                                            handleInputChange(
-                                                                "travel_charges",
-                                                                e.target.value
-                                                            )
-                                                        }
-                                                        placeholder="0"
-                                                        min="0"
-                                                    />
-                                                    <small className="text-muted">
-                                                        Leave blank if no travel
-                                                        charges
-                                                    </small>
-                                                </div> */}
+                                                <label className="form-label">
+                                                    Travel Charges (Rs.)
+                                                </label>
+                                                <input
+                                                    type="number"
+                                                    className="form-control"
+                                                    value={
+                                                        quoteData.travel_charges
+                                                    }
+                                                    onChange={(e) =>
+                                                        handleInputChange(
+                                                            "travel_charges",
+                                                            e.target.value
+                                                        )
+                                                    }
+                                                    placeholder="0"
+                                                    min="0"
+                                                />
+                                                <small className="text-muted">
+                                                    Leave blank if no travel
+                                                    charges
+                                                </small>
+                                            </div> */}
                                             </div>
 
-                                            <div className="mb-3">
+                                            <div className="mb-2">
                                                 <div className="form-check">
                                                     <input
                                                         className="form-check-input"
@@ -676,30 +670,30 @@ const CreateQuote = () => {
                                             </div>
 
                                             {/* <div className="mb-3">
-                                                <label className="form-label">Additional Notes</label>
-                                                <textarea
-                                                    className="form-control"
-                                                    rows="2"
-                                                    value={quoteData.additional_notes}
-                                                    onChange={(e) => handleInputChange("additional_notes", e.target.value)}
-                                                    placeholder="Any additional information or special conditions..."
-                                                    maxLength="500"
-                                                ></textarea>
-                                                <small className="text-muted">{quoteData.additional_notes.length}/500</small>
-                                            </div> */}
+                                            <label className="form-label">Additional Notes</label>
+                                            <textarea
+                                                className="form-control"
+                                                rows="2"
+                                                value={quoteData.additional_notes}
+                                                onChange={(e) => handleInputChange("additional_notes", e.target.value)}
+                                                placeholder="Any additional information or special conditions..."
+                                                maxLength="500"
+                                            ></textarea>
+                                            <small className="text-muted">{quoteData.additional_notes.length}/500</small>
+                                        </div> */}
                                         </div>
                                     </div>
 
                                     {/* Terms & Conditions */}
-                                    <div className="card-modern mb-4">
+                                    <div className="dashboard-card mb-4">
                                         <div className="card-header">
-                                            <h5 className="mb-0">
-                                                <i className="fas fa-file-contract me-2 text-primary"></i>
+                                            <h5 className="card-title">
+                                                <i className="fas fa-file-contract text-primary"></i>
                                                 Terms & Conditions
                                             </h5>
                                         </div>
                                         <div className="card-body">
-                                            <div className="mb-3">
+                                            <div className="mb-2">
                                                 <textarea
                                                     className="form-control"
                                                     rows="4"
@@ -727,21 +721,22 @@ const CreateQuote = () => {
                             )}
                         </div>
 
-                        {/* Sidebar */}
                         <div className="col-lg-4">
+                            {/* Sidebar */}
+
                             {/* Pricing Suggestions */}
-                            {pricingSuggestions && (
-                                <div className="card-modern mb-4">
+                            {/* {pricingSuggestions && (
+                                <div className="dashboard-card mb-4">
                                     <div className="card-header">
-                                        <h6 className="fw-bold mb-0">
-                                            <i className="fas fa-lightbulb me-2 text-warning"></i>
+                                        <h5 className="card-title">
+                                            <i className="fas fa-lightbulb text-warning"></i>
                                             Pricing Suggestions
-                                        </h6>
+                                        </h5>
                                     </div>
                                     <div className="card-body">
-                                        <div className="pricing-options">
+                                        <div className="d-grid gap-3">
                                             <div
-                                                className="pricing-option mb-2 p-3 rounded border cursor-pointer hover-shadow"
+                                                className="action-card cursor-pointer"
                                                 onClick={() =>
                                                     handleInputChange(
                                                         "quoted_price",
@@ -749,22 +744,22 @@ const CreateQuote = () => {
                                                     )
                                                 }
                                             >
-                                                <div className="d-flex justify-content-between">
-                                                    <span className="fw-semibold text-success">
-                                                        Competitive
-                                                    </span>
-                                                    <span>
-                                                        Rs.{" "}
-                                                        {pricingSuggestions.competitive.toLocaleString()}
-                                                    </span>
+                                                <div className="d-flex justify-content-between align-items-center">
+                                                    <div>
+                                                        <div className="action-title text-success">
+                                                            Competitive
+                                                        </div>
+                                                        <div className="action-description">
+                                                            Recommended for winning quotes
+                                                        </div>
+                                                    </div>
+                                                    <div className="stats-value text-success" style={{fontSize: "1.25rem"}}>
+                                                        Rs. {pricingSuggestions.competitive.toLocaleString()}
+                                                    </div>
                                                 </div>
-                                                <small className="text-muted">
-                                                    Recommended for winning
-                                                    quotes
-                                                </small>
                                             </div>
                                             <div
-                                                className="pricing-option mb-2 p-3 rounded border cursor-pointer hover-shadow"
+                                                className="action-card cursor-pointer"
                                                 onClick={() =>
                                                     handleInputChange(
                                                         "quoted_price",
@@ -772,21 +767,22 @@ const CreateQuote = () => {
                                                     )
                                                 }
                                             >
-                                                <div className="d-flex justify-content-between">
-                                                    <span className="fw-semibold text-primary">
-                                                        Market Rate
-                                                    </span>
-                                                    <span>
-                                                        Rs.{" "}
-                                                        {pricingSuggestions.suggested.toLocaleString()}
-                                                    </span>
+                                                <div className="d-flex justify-content-between align-items-center">
+                                                    <div>
+                                                        <div className="action-title text-primary">
+                                                            Market Rate
+                                                        </div>
+                                                        <div className="action-description">
+                                                            Average market pricing
+                                                        </div>
+                                                    </div>
+                                                    <div className="stats-value text-primary" style={{fontSize: "1.25rem"}}>
+                                                        Rs. {pricingSuggestions.suggested.toLocaleString()}
+                                                    </div>
                                                 </div>
-                                                <small className="text-muted">
-                                                    Average market pricing
-                                                </small>
                                             </div>
                                             <div
-                                                className="pricing-option mb-2 p-3 rounded border cursor-pointer hover-shadow"
+                                                className="action-card cursor-pointer"
                                                 onClick={() =>
                                                     handleInputChange(
                                                         "quoted_price",
@@ -794,38 +790,45 @@ const CreateQuote = () => {
                                                     )
                                                 }
                                             >
-                                                <div className="d-flex justify-content-between">
-                                                    <span className="fw-semibold text-warning">
-                                                        Premium
-                                                    </span>
-                                                    <span>
-                                                        Rs.{" "}
-                                                        {pricingSuggestions.premium.toLocaleString()}
-                                                    </span>
+                                                <div className="d-flex justify-content-between align-items-center">
+                                                    <div>
+                                                        <div className="action-title text-warning">
+                                                            Premium
+                                                        </div>
+                                                        <div className="action-description">
+                                                            For premium service quality
+                                                        </div>
+                                                    </div>
+                                                    <div className="stats-value text-warning" style={{fontSize: "1.25rem"}}>
+                                                        Rs. {pricingSuggestions.premium.toLocaleString()}
+                                                    </div>
                                                 </div>
-                                                <small className="text-muted">
-                                                    For premium service quality
-                                                </small>
                                             </div>
                                         </div>
-                                        <small className="text-muted">
-                                            Click on any option to use that
-                                            price
+                                        <small className="text-muted mt-3 d-block text-center">
+                                            Click on any option to use that price
                                         </small>
                                     </div>
                                 </div>
-                            )}
+                            )} */}
 
                             {/* Quote Summary */}
-                            <div className="card-modern mb-4">
-                                <div className="card-header bg-primary text-white">
-                                    <h6 className="fw-bold mb-0">
-                                        <i className="fas fa-calculator me-2"></i>
-                                        Quote Summary
-                                    </h6>
+                            <div className="stats-card mb-4">
+                                <div className="stats-label">
+                                    <i className="fas fa-calculator me-2"></i>
+                                    Quote Summary
                                 </div>
-                                <div className="card-body">
-                                    <div className="summary-item d-flex justify-content-between mb-2">
+                                <div className="stats-value text-success">
+                                    Rs.{" "}
+                                    {(
+                                        (parseInt(quoteData.quoted_price) ||
+                                            0) +
+                                        (parseInt(quoteData.travel_charges) ||
+                                            0)
+                                    ).toLocaleString()}
+                                </div>
+                                <div className="stats-change neutral">
+                                    <div className="d-flex justify-content-between w-100 mb-2">
                                         <span>Service Price:</span>
                                         <span>
                                             Rs.{" "}
@@ -836,7 +839,7 @@ const CreateQuote = () => {
                                     </div>
                                     {quoteData.travel_charges &&
                                         quoteData.travel_charges > 0 && (
-                                            <div className="summary-item d-flex justify-content-between mb-2">
+                                            <div className="d-flex justify-content-between w-100 mb-2">
                                                 <span>Travel Charges:</span>
                                                 <span>
                                                     Rs.{" "}
@@ -846,77 +849,61 @@ const CreateQuote = () => {
                                                 </span>
                                             </div>
                                         )}
-                                    <hr />
-                                    <div className="summary-total d-flex justify-content-between fw-bold">
-                                        <span>Total Quote:</span>
-                                        <span className="text-success h5 mb-0">
-                                            Rs.{" "}
-                                            {(
-                                                (parseInt(
-                                                    quoteData.quoted_price
-                                                ) || 0) +
-                                                (parseInt(
-                                                    quoteData.travel_charges
-                                                ) || 0)
-                                            ).toLocaleString()}
-                                        </span>
-                                    </div>
                                     {quoteData.estimated_duration && (
-                                        <div className="mt-2 text-muted small">
-                                            <i className="fas fa-clock me-1"></i>
-                                            Duration:{" "}
-                                            {quoteData.estimated_duration}{" "}
-                                            hour(s)
+                                        <div className="d-flex justify-content-between w-100 mb-1 text-muted small">
+                                            <span>
+                                                <i className="fas fa-clock me-1"></i>
+                                                Duration:
+                                            </span>
+                                            <span>
+                                                {quoteData.estimated_duration}{" "}
+                                                hour(s)
+                                            </span>
                                         </div>
                                     )}
                                     {quoteData.validity_days && (
-                                        <div className="text-muted small">
-                                            <i className="fas fa-calendar me-1"></i>
-                                            Valid for: {quoteData.validity_days}{" "}
-                                            days
+                                        <div className="d-flex justify-content-between w-100 text-muted small">
+                                            <span>
+                                                <i className="fas fa-calendar me-1"></i>
+                                                Valid for:
+                                            </span>
+                                            <span>
+                                                {quoteData.validity_days} days
+                                            </span>
                                         </div>
                                     )}
                                 </div>
                             </div>
 
                             {/* Quote Tips */}
-                            <div className="card-modern">
-                                <div className="card-header">
-                                    <h6 className="fw-bold mb-0">
-                                        <i className="fas fa-tips me-2 text-info"></i>
-                                        Quote Tips
-                                    </h6>
-                                </div>
-                                <div className="card-body">
-                                    <div className="tip-item mb-3">
-                                        <i className="fas fa-edit text-primary me-2"></i>
-                                        <small>
-                                            Be detailed about what's included
-                                        </small>
-                                    </div>
-                                    <div className="tip-item mb-3">
-                                        <i className="fas fa-dollar-sign text-success me-2"></i>
-                                        <small>
-                                            Price competitively but fairly
-                                        </small>
-                                    </div>
-                                    <div className="tip-item">
-                                        <i className="fas fa-star text-warning me-2"></i>
-                                        <small>Highlight your experience</small>
-                                    </div>
-                                </div>
+                            <div className="tip-card">
+                                <h6>
+                                    <i className="fas fa-lightbulb text-info"></i>
+                                    Quote Tips
+                                </h6>
+                                <p>
+                                    <i className="fas fa-edit text-primary me-2"></i>
+                                    Be detailed about what's included
+                                    <br />
+                                    <i className="fas fa-dollar-sign text-success me-2"></i>
+                                    Price competitively but fairly
+                                    <br />
+                                    <i className="fas fa-star text-warning me-2"></i>
+                                    Highlight your experience
+                                </p>
                             </div>
                         </div>
                     </div>
 
                     {/* Submit Buttons */}
-                    <div className="submit-actions d-flex gap-3 mt-4">
+                    <div className="d-flex gap-3 justify-content-end mt-6">
                         <button
                             type="button"
                             className="btn btn-outline-secondary"
                             onClick={() => navigate("/provider/quotes")}
                             disabled={submitLoading}
                         >
+                            <i className="fas fa-times me-2"></i>
                             Cancel
                         </button>
                         <button
@@ -938,78 +925,6 @@ const CreateQuote = () => {
                         </button>
                     </div>
                 </form>
-
-                {/* Custom Styles using app.css design system */}
-                <style>{`
-                    .card-modern {
-                        background: var(--bg-white);
-                        border-radius: var(--border-radius-lg);
-                        box-shadow: var(--shadow-sm);
-                        border: 1px solid var(--border-color);
-                        transition: var(--transition);
-                        overflow: hidden;
-                    }
-
-                    .card-modern:hover {
-                        transform: translateY(-2px);
-                        box-shadow: var(--shadow-md);
-                    }
-
-                    .card-header {
-                        background: var(--bg-light);
-                        border-bottom: 1px solid var(--border-color);
-                        padding: var(--space-4);
-                        font-weight: var(--font-semibold);
-                    }
-
-                    .card-body {
-                        padding: var(--space-4);
-                    }
-
-                    .page-header {
-                        margin-bottom: var(--space-6);
-                    }
-
-                    .pricing-option:hover {
-                        background-color: var(--bg-light);
-                        border-color: var(--primary-color);
-                    }
-
-                    .cursor-pointer {
-                        cursor: pointer;
-                    }
-
-                    .hover-shadow:hover {
-                        box-shadow: var(--shadow-sm);
-                    }
-
-                    .summary-item {
-                        font-size: var(--text-sm);
-                    }
-
-                    .summary-total {
-                        font-size: var(--text-lg);
-                    }
-
-                    .tip-item {
-                        display: flex;
-                        align-items: center;
-                    }
-
-                    @media (max-width: 768px) {
-                        .card-body {
-                            padding: var(--space-3);
-                        }
-                        
-                        .submit-actions {
-                            flex-direction: column;
-                        }
-                        
-                        .submit-actions .btn {
-                            width: 100%;
-                        }
-                    }
-                `}</style>
             </div>
         </ProviderLayout>
     );
