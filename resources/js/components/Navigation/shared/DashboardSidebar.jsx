@@ -152,6 +152,10 @@ const DashboardSidebar = ({
                     icon: "fas fa-chart-line",
                     label: "Reports & Analytics",
                     path: "/staff/reports",
+                    children: [
+                        { label: "Dashboard Reports", path: "/staff/reports" },
+                        { label: "Custom Reports", path: "/staff/reports/custom" },
+                    ],
                 },
                 {
                     id: "profile",

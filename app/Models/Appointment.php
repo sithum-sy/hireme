@@ -339,7 +339,7 @@ class Appointment extends Model
 
     public function getPendingRescheduleRequestAttribute()
     {
-        return $this->pendingRescheduleRequest;
+        return $this->pendingRescheduleRequest()->first();
     }
 
     public function applyReschedule(RescheduleRequest $rescheduleRequest)

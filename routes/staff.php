@@ -78,5 +78,9 @@ Route::middleware(['auth:sanctum', 'staff'])->group(function () {
     // Staff Reports & Analytics
     Route::prefix('reports')->group(function () {
         Route::get('/analytics', [ReportController::class, 'analytics']);
+        Route::get('/data-sources', [ReportController::class, 'getDataSources']);
+        Route::get('/field-options', [ReportController::class, 'getFieldOptions']);
+        Route::get('/test', [ReportController::class, 'testSimpleReport']);
+        Route::post('/custom', [ReportController::class, 'generateCustomReport']);
     });
 });

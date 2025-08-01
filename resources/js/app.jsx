@@ -88,6 +88,7 @@ import AdminReportsPage from "./components/admin/reports/ReportsPage";
 import ClientReportsPage from "./components/client/reports/ReportsPage";
 import ProviderReportsPage from "./components/provider/reports/ReportsPage";
 import StaffReportsPage from "./pages/staff/reports/StaffReportsPage";
+import CustomReportsPage from "./pages/staff/reports/CustomReportsPage";
 
 function App() {
     return (
@@ -937,6 +938,10 @@ function App() {
                                             <Route
                                                 path="reports"
                                                 element={<StaffReportsPage />}
+                                            />
+                                            <Route
+                                                path="reports/custom"
+                                                element={<CustomReportsPage />}
                                             />
 
                                             <Route

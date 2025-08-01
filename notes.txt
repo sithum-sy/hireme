@@ -107,3 +107,6 @@ php artisan queue:work   │
 
   # View scheduled tasks
   php artisan schedule:list
+
+  # To run this seeder, you can add it to your DatabaseSeeder.php or run it directly with:
+  php artisan db:seed --class=ClientSeeder
