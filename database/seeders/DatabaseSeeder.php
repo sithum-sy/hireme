@@ -4,7 +4,11 @@ namespace Database\Seeders;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
+use App\Models\Appointment;
+use App\Models\Payment;
 use App\Models\Quote;
+use App\Models\Review;
+use GuzzleHttp\Client;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -24,11 +28,14 @@ class DatabaseSeeder extends Seeder
         // Run in order due to foreign key constraints
         $this->call([
             // ServiceCategorySeeder::class,
-            // ServiceProviderSeeder::class,
-            ServiceSeeder::class,
             // AdditionalServiceProviderSeeder::class,
-            // QuoteSeeder::class,
-            // AdminSeeder::class,
+            // ClientSeeder::class,
+            // ComprehensiveServicesSeeder::class,
+            // AppointmentsSeeder::class,
+            InvoicesSeeder::class,
+            // PaymentsSeeder::class,
+            // QuotesSeeder::class,
+            // ReviewsSeeder::class,
             // Add more seeders here as needed
         ]);
     }

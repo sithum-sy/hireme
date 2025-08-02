@@ -120,6 +120,9 @@ export const providerProfileAPI = {
 export const notificationAPI = {
     // Get all notifications with pagination
     getNotifications: (params = {}) => api.get("/notifications", { params }),
+    
+    // Alias for getNotifications to match component usage
+    getAll: (params = {}) => api.get("/notifications", { params }),
 
     // Get recent notifications
     getRecent: () => api.get("/notifications/recent"),

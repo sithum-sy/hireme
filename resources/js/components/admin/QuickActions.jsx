@@ -24,14 +24,14 @@ const QuickActions = ({
             link: "/admin/users",
             permission: "manage_users",
         },
-        {
-            title: "View Reports",
-            description: "Analytics and insights",
-            icon: "fas fa-chart-bar",
-            variant: "success",
-            link: "/admin/reports",
-            permission: "view_reports",
-        },
+        // {
+        //     title: "View Reports",
+        //     description: "Analytics and insights",
+        //     icon: "fas fa-chart-bar",
+        //     variant: "success",
+        //     link: "/admin/reports",
+        //     permission: "view_reports",
+        // },
         {
             title: "Settings",
             description: "System configuration",
@@ -65,7 +65,10 @@ const QuickActions = ({
             <div className="card h-100 border border-2 border-opacity-25 action-card">
                 <div className="card-body text-center d-flex flex-column">
                     <div className={`mb-3 position-relative`}>
-                        <div className={`rounded-circle d-inline-flex align-items-center justify-content-center bg-${action.variant} bg-opacity-10 text-${action.variant}`} style={{width: '60px', height: '60px'}}>
+                        <div
+                            className={`rounded-circle d-inline-flex align-items-center justify-content-center bg-${action.variant} bg-opacity-10 text-${action.variant}`}
+                            style={{ width: "60px", height: "60px" }}
+                        >
                             <i className={`${action.icon} fa-2x`}></i>
                         </div>
                         {action.badge && (
@@ -84,7 +87,9 @@ const QuickActions = ({
                         )}
                     </div>
                     <h6 className="card-title fw-bold mb-2">{action.title}</h6>
-                    <p className="card-text text-muted small flex-grow-1">{action.description}</p>
+                    <p className="card-text text-muted small flex-grow-1">
+                        {action.description}
+                    </p>
                 </div>
             </div>
         );
@@ -154,7 +159,11 @@ const QuickActions = ({
             </div>
 
             <div className="card-body">
-                <div className={`responsive-grid responsive-grid-sm responsive-grid-${columns === 2 ? 'md' : 'lg'}`}>
+                <div
+                    className={`responsive-grid responsive-grid-sm responsive-grid-${
+                        columns === 2 ? "md" : "lg"
+                    }`}
+                >
                     {displayActions.map((action, index) => (
                         <ActionCard key={action.id || index} action={action} />
                     ))}
@@ -164,13 +173,17 @@ const QuickActions = ({
             <div className="card-footer bg-light">
                 <div className="row text-center">
                     <div className="col-4">
-                        <small className="text-muted d-block">Total Actions</small>
+                        <small className="text-muted d-block">
+                            Total Actions
+                        </small>
                         <strong className="text-primary">
                             {displayActions.length}
                         </strong>
                     </div>
                     <div className="col-4">
-                        <small className="text-muted d-block">Quick Access</small>
+                        <small className="text-muted d-block">
+                            Quick Access
+                        </small>
                         <strong className="text-success">
                             <i className="fas fa-check-circle me-1"></i>
                             <span>Available</span>
@@ -207,14 +220,14 @@ export const AdminQuickActions = ({ onAction = null }) => {
             variant: "info",
             link: "/admin/users",
         },
-        {
-            id: "view-reports",
-            title: "Analytics",
-            description: "View reports and system insights",
-            icon: "fas fa-chart-bar",
-            variant: "success",
-            link: "/admin/reports",
-        },
+        // {
+        //     id: "view-reports",
+        //     title: "Analytics",
+        //     description: "View reports and system insights",
+        //     icon: "fas fa-chart-bar",
+        //     variant: "success",
+        //     link: "/admin/reports",
+        // },
         {
             id: "system-settings",
             title: "Settings",

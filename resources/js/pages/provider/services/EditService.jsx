@@ -53,12 +53,13 @@ const EditService = () => {
 
     const {
         nearbyAreas,
+        showAllAreas: hookShowAllAreas,
         selectedAreas,
         setSelectedAreas,
         handleAreaSelection,
-        loadNearbyAreas,
+        toggleShowAllAreas,
         isLoading: areasLoading,
-    } = useServiceAreasSimple(formData?.latitude, formData?.longitude);
+    } = useServiceAreasSimple(formData?.latitude, formData?.longitude, formData?.service_areas);
 
     const { validateStep } = useServiceFormValidation();
 
@@ -98,7 +99,14 @@ const EditService = () => {
     // Load service data and categories on mount
     useEffect(() => {
         Promise.all([loadServiceData(), loadCategories()]);
+        // Scroll to top when component mounts
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }, [id]);
+
+    // Scroll to top when step changes
+    useEffect(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, [currentStep]);
 
     // Note: loadNearbyAreas is now handled automatically by useServiceAreasSimple hook with debouncing
 
@@ -143,6 +151,12 @@ const EditService = () => {
 
                 setFormData(transformedData);
                 setSelectedAreas(service.service_areas || []);
+                
+                // Also update the formData with service areas for consistency
+                setFormData(prev => ({
+                    ...prev,
+                    service_areas: service.service_areas || []
+                }));
 
                 // Set existing images previews
                 if (
@@ -181,6 +195,27 @@ const EditService = () => {
         }));
     };
 
+    // Handle service area selection/deselection
+    const handleServiceAreaChange = (areaName) => {
+        const isCurrentlySelected = selectedAreas.includes(areaName);
+        let newSelectedAreas;
+        
+        if (isCurrentlySelected) {
+            // Remove area
+            newSelectedAreas = selectedAreas.filter(area => area !== areaName);
+        } else {
+            // Add area
+            newSelectedAreas = [...selectedAreas, areaName];
+        }
+        
+        // Update both the hook state and form data
+        setSelectedAreas(newSelectedAreas);
+        setFormData(prev => ({
+            ...prev,
+            service_areas: newSelectedAreas
+        }));
+    };
+
     const validateForm = (formData, selectedAreas) => {
         let allErrors = {};
 
@@ -192,8 +227,9 @@ const EditService = () => {
             }
         }
 
-        // Validate service areas
-        if (!selectedAreas || selectedAreas.length === 0) {
+        // Validate service areas - check both selectedAreas and formData.service_areas
+        const serviceAreas = selectedAreas && selectedAreas.length > 0 ? selectedAreas : formData.service_areas;
+        if (!serviceAreas || serviceAreas.length === 0) {
             allErrors.service_areas = "Please select at least one service area";
         }
 
@@ -209,14 +245,14 @@ const EditService = () => {
         }
 
         // Additional validation for step 3 (service areas)
-        if (
-            stepNumber === 3 &&
-            (!selectedAreas || selectedAreas.length === 0)
-        ) {
-            setValidationErrors({
-                service_areas: "Please select at least one service area",
-            });
-            return false;
+        if (stepNumber === 3) {
+            const serviceAreas = selectedAreas && selectedAreas.length > 0 ? selectedAreas : formData.service_areas;
+            if (!serviceAreas || serviceAreas.length === 0) {
+                setValidationErrors({
+                    service_areas: "Please select at least one service area",
+                });
+                return false;
+            }
         }
 
         setValidationErrors({});
@@ -227,6 +263,8 @@ const EditService = () => {
         if (handleStepValidation(currentStep)) {
             if (currentStep < steps.length) {
                 setCurrentStep(currentStep + 1);
+                // Scroll to top when moving to next step
+                window.scrollTo({ top: 0, behavior: 'smooth' });
             }
         }
     };
@@ -234,6 +272,8 @@ const EditService = () => {
     const handlePrevious = () => {
         if (currentStep > 1) {
             setCurrentStep(currentStep - 1);
+            // Scroll to top when moving to previous step
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     };
 
@@ -249,7 +289,7 @@ const EditService = () => {
         if (!submitClicked) {
             return;
         }
-        
+
         // Reset the flag
         setSubmitClicked(false);
 
@@ -283,9 +323,11 @@ const EditService = () => {
             submitData.append("service_radius", formData.service_radius);
 
             // Service areas
-            selectedAreas.forEach((area, index) => {
-                submitData.append(`service_areas[${index}]`, area);
-            });
+            (Array.isArray(selectedAreas) ? selectedAreas : []).forEach(
+                (area, index) => {
+                    submitData.append(`service_areas[${index}]`, area);
+                }
+            );
 
             // Additional details
             submitData.append("requirements", formData.requirements);
@@ -301,10 +343,16 @@ const EditService = () => {
             });
 
             // Existing images to keep - send as JSON string
-            if (formData.existing_images && formData.existing_images.length > 0) {
-                submitData.append('existing_images', JSON.stringify(formData.existing_images));
+            if (
+                formData.existing_images &&
+                formData.existing_images.length > 0
+            ) {
+                submitData.append(
+                    "existing_images",
+                    JSON.stringify(formData.existing_images)
+                );
             } else {
-                submitData.append('existing_images', '[]');
+                submitData.append("existing_images", "[]");
             }
 
             const result = await updateService(id, submitData);
@@ -424,13 +472,19 @@ const EditService = () => {
                                     {/* Step 3: Service Areas */}
                                     {currentStep === 3 && (
                                         <ServiceAreasStep
-                                            formData={formData}
+                                            formData={{
+                                                ...formData,
+                                                service_areas: selectedAreas
+                                            }}
                                             errors={validationErrors}
-                                            dynamicAreas={nearbyAreas}
-                                            showAllAreas={showAllAreas}
-                                            locationLoading={false}
-                                            onServiceAreasChange={handleAreaSelection}
-                                            onShowAllAreas={() => setShowAllAreas(!showAllAreas)}
+                                            dynamicAreas={nearbyAreas.map(area => ({
+                                                name: typeof area === 'string' ? area : area.name,
+                                                distance: typeof area === 'object' ? area.distance : null
+                                            }))}
+                                            showAllAreas={hookShowAllAreas}
+                                            locationLoading={areasLoading}
+                                            onServiceAreasChange={handleServiceAreaChange}
+                                            onShowAllAreas={toggleShowAllAreas}
                                         />
                                     )}
 
@@ -450,7 +504,9 @@ const EditService = () => {
                                             existingImagesPreviews={
                                                 existingImagesPreviews
                                             }
-                                            getPricingPreview={getPricingPreview}
+                                            getPricingPreview={
+                                                getPricingPreview
+                                            }
                                         />
                                     )}
                                 </div>
@@ -483,7 +539,9 @@ const EditService = () => {
                                             type="submit"
                                             className="btn btn-success"
                                             disabled={isSubmitting || loading}
-                                            onClick={() => setSubmitClicked(true)}
+                                            onClick={() =>
+                                                setSubmitClicked(true)
+                                            }
                                         >
                                             {isSubmitting ? (
                                                 <>

@@ -55,6 +55,7 @@ const ServiceActions = ({ service, onToggleStatus, onDelete, loading }) => {
                                 Edit Service
                             </Link>
                             <button
+                                type="button"
                                 className={`btn ${
                                     service.is_active
                                         ? "btn-outline-warning"
@@ -62,6 +63,9 @@ const ServiceActions = ({ service, onToggleStatus, onDelete, loading }) => {
                                 }`}
                                 onClick={onToggleStatus}
                                 disabled={loading}
+                                style={{
+                                    boxShadow: "0 0 0 0.01rem #4a90e2",
+                                }} // Optional: Add custom outline if Bootstrap outline is missing
                             >
                                 <i
                                     className={`fas ${

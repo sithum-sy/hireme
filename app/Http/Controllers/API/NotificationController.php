@@ -20,7 +20,8 @@ class NotificationController extends Controller
             'per_page' => 'nullable|integer|min:1|max:50',
             'type' => 'nullable|string',
             'category' => 'nullable|string',
-            'unread_only' => 'nullable|boolean'
+            'unread_only' => 'nullable',
+            'read_only' => 'nullable'
         ]);
 
         try {
@@ -38,16 +39,31 @@ class NotificationController extends Controller
             }
 
             // Filter unread only if requested
-            if ($request->unread_only) {
+            if ($request->boolean('unread_only')) {
                 $query->unread();
+            }
+            
+            // Filter read only if requested
+            if ($request->boolean('read_only')) {
+                $query->read();
             }
 
             $perPage = $request->get('per_page', 15);
             $notifications = $query->paginate($perPage);
 
+            // Get notification counts for stats
+            $totalCount = InAppNotification::where('user_id', Auth::id())->count();
+            $unreadCount = InAppNotification::where('user_id', Auth::id())->unread()->count();
+            $readCount = InAppNotification::where('user_id', Auth::id())->read()->count();
+
             return response()->json([
                 'success' => true,
-                'data' => $notifications
+                'data' => $notifications,
+                'meta' => [
+                    'total_count' => $totalCount,
+                    'unread_count' => $unreadCount,
+                    'read_count' => $readCount
+                ]
             ]);
         } catch (\Exception $e) {
             Log::error('Notifications fetch failed:', ['error' => $e->getMessage()]);
@@ -119,7 +135,7 @@ class NotificationController extends Controller
         try {
             InAppNotification::where('user_id', Auth::id())
                 ->unread()
-                ->update(['is_read' => true, 'read_at' => now()]);
+                ->update(['is_read' => true]);
 
             return response()->json([
                 'success' => true,

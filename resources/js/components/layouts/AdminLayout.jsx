@@ -232,13 +232,13 @@ const AdminLayout = ({ children }) => {
                                                 <i className="fas fa-users me-2"></i>
                                                 Manage Users
                                             </Link>
-                                            <Link
+                                            {/* <Link
                                                 to="/admin/reports"
                                                 className="btn btn-outline-light"
                                             >
                                                 <i className="fas fa-chart-bar me-2"></i>
                                                 View Reports
-                                            </Link>
+                                            </Link> */}
                                         </div>
                                     </div>
                                     <div className="col-md-4 text-center d-none d-md-block">

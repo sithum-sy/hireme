@@ -1,13 +1,13 @@
 import React from "react";
 
-const ServiceAreasStep = ({ 
-    formData, 
-    errors, 
-    dynamicAreas, 
+const ServiceAreasStep = ({
+    formData,
+    errors,
+    dynamicAreas,
     showAllAreas,
     locationLoading,
     onServiceAreasChange,
-    onShowAllAreas
+    onShowAllAreas,
 }) => {
     return (
         <div className="step-content">
@@ -20,14 +20,15 @@ const ServiceAreasStep = ({
                     {formData.location_city ? (
                         <>
                             Based on your location in{" "}
-                            <strong>{formData.location_city}</strong>, here are the
-                            recommended service areas. You can also view all available
-                            areas.
+                            <strong>{formData.location_city}</strong>, here are
+                            the recommended service areas. You can also view all
+                            available areas.
                         </>
                     ) : (
                         <>
-                            Select all areas where you provide your services. This
-                            helps clients know if you're available in their location.
+                            Select all areas where you provide your services.
+                            This helps clients know if you're available in their
+                            location.
                         </>
                     )}
                 </p>
@@ -145,48 +146,51 @@ const ServiceAreasStep = ({
             )}
 
             {/* Selected areas display */}
-            {formData.service_areas.length > 0 && (
-                <div className="selected-areas mt-4">
-                    <h6 className="fw-semibold mb-2">
-                        Selected Areas ({formData.service_areas.length}):
-                    </h6>
-                    <div className="d-flex flex-wrap gap-2">
-                        {formData.service_areas.map((area) => {
-                            const areaData = dynamicAreas.find((a) => a.name === area);
-                            return (
-                                <span
-                                    key={area}
-                                    className="badge bg-primary bg-opacity-10 text-primary px-3 py-2 d-flex align-items-center"
-                                >
-                                    <span>{area}</span>
-                                    {areaData?.distance && (
-                                        <small className="ms-1 opacity-75">
-                                            ({areaData.distance}km)
-                                        </small>
-                                    )}
-                                    <button
-                                        type="button"
-                                        className="btn-close btn-close-sm ms-2"
-                                        onClick={(e) => {
-                                            e.preventDefault();
-                                            e.stopPropagation();
-                                            onServiceAreasChange(area);
-                                        }}
-                                        style={{ fontSize: "0.6rem" }}
-                                    ></button>
-                                </span>
-                            );
-                        })}
+            {Array.isArray(formData.service_areas) &&
+                formData.service_areas.length > 0 && (
+                    <div className="selected-areas mt-4">
+                        <h6 className="fw-semibold mb-2">
+                            Selected Areas ({formData.service_areas.length}):
+                        </h6>
+                        <div className="d-flex flex-wrap gap-2">
+                            {formData.service_areas.map((area) => {
+                                const areaData = dynamicAreas.find(
+                                    (a) => a.name === area
+                                );
+                                return (
+                                    <span
+                                        key={area}
+                                        className="badge bg-primary bg-opacity-10 text-primary px-3 py-2 d-flex align-items-center"
+                                    >
+                                        <span>{area}</span>
+                                        {areaData?.distance && (
+                                            <small className="ms-1 opacity-75">
+                                                ({areaData.distance}km)
+                                            </small>
+                                        )}
+                                        <button
+                                            type="button"
+                                            className="btn-close btn-close-sm ms-2"
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                onServiceAreasChange(area);
+                                            }}
+                                            style={{ fontSize: "0.6rem" }}
+                                        ></button>
+                                    </span>
+                                );
+                            })}
+                        </div>
                     </div>
-                </div>
-            )}
+                )}
 
             {/* Location hint */}
             {!formData.location_city && (
                 <div className="alert alert-info mt-3">
                     <i className="fas fa-info-circle me-2"></i>
-                    <strong>Tip:</strong> Select your service location in Step 2 to 
-                    see areas near you automatically.
+                    <strong>Tip:</strong> Select your service location in Step 2
+                    to see areas near you automatically.
                 </div>
             )}
 

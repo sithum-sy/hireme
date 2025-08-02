@@ -31,7 +31,7 @@ Route::prefix('services')->group(function () {
 });
 
 // Service Categories (for forms)
-Route::get('/service-categories', [ServiceCategoryController::class, 'index']);
+Route::get('/service-categories', [ServiceController::class, 'getServiceCategories']);
 
 // Availability Management
 Route::prefix('availability')->group(function () {

@@ -199,6 +199,12 @@ const DashboardSidebar = ({
                     label: "My Quotes",
                     path: "/client/quotes",
                 },
+                {
+                    id: "notifications",
+                    icon: "fas fa-bell",
+                    label: "Notifications",
+                    path: "/client/notifications",
+                },
                 // {
                 //     id: "payments",
                 //     icon: "fas fa-credit-card",
@@ -302,6 +308,12 @@ const DashboardSidebar = ({
                     icon: "fas fa-file-invoice",
                     label: "Invoices",
                     path: "/provider/invoices",
+                },
+                {
+                    id: "notifications",
+                    icon: "fas fa-bell",
+                    label: "Notifications",
+                    path: "/provider/notifications",
                 },
                 // {
                 //     id: "earnings",

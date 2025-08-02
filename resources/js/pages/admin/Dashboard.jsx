@@ -121,9 +121,7 @@ const AdminDashboard = () => {
                 {/* Dashboard Header */}
                 <div className="page-header d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-6">
                     <div className="mb-3 mb-md-0">
-                        <h1 className="page-title">
-                            Admin Dashboard
-                        </h1>
+                        <h1 className="page-title">Admin Dashboard</h1>
                         <p className="page-subtitle">
                             Welcome back! Here's what's happening with your
                             platform.

@@ -102,18 +102,32 @@ class ProviderProfile extends Model
     {
         if (!$this->certifications) return [];
 
+        // Ensure we have an array
+        $certifications = is_array($this->certifications) 
+            ? $this->certifications 
+            : json_decode($this->certifications, true) ?? [];
+
+        if (!is_array($certifications)) return [];
+
         return array_map(function ($cert) {
             return Storage::url($cert);
-        }, $this->certifications);
+        }, $certifications);
     }
 
     public function getPortfolioImageUrlsAttribute()
     {
         if (!$this->portfolio_images) return [];
 
+        // Ensure we have an array
+        $images = is_array($this->portfolio_images) 
+            ? $this->portfolio_images 
+            : json_decode($this->portfolio_images, true) ?? [];
+
+        if (!is_array($images)) return [];
+
         return array_map(function ($image) {
             return Storage::url($image);
-        }, $this->portfolio_images);
+        }, $images);
     }
 
     public function getAverageRatingAttribute()

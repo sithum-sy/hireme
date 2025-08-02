@@ -948,4 +948,28 @@ class ServiceController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Get service categories for forms (Provider only)
+     */
+    public function getServiceCategories()
+    {
+        try {
+            $categories = \App\Models\ServiceCategory::where('is_active', true)
+                ->orderBy('sort_order', 'asc')
+                ->orderBy('name', 'asc')
+                ->get(['id', 'name', 'slug', 'icon', 'color']);
+
+            return response()->json([
+                'success' => true,
+                'data' => $categories
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch service categories',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

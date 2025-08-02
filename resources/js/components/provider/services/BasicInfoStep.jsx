@@ -1,11 +1,11 @@
 import React from "react";
 
-const BasicInfoStep = ({ 
-    formData, 
-    categories, 
-    errors, 
+const BasicInfoStep = ({
+    formData,
+    categories,
+    errors,
     onInputChange,
-    getPricingPreview 
+    getPricingPreview,
 }) => {
     return (
         <div className="step-content">
@@ -13,8 +13,7 @@ const BasicInfoStep = ({
                 <div className="col-md-8">
                     <div className="mb-3">
                         <label className="form-label fw-semibold">
-                            Service Title{" "}
-                            <span className="text-danger">*</span>
+                            Service Title <span className="text-danger">*</span>
                         </label>
                         <input
                             type="text"
@@ -40,8 +39,7 @@ const BasicInfoStep = ({
                 <div className="col-md-4">
                     <div className="mb-3">
                         <label className="form-label fw-semibold">
-                            Category{" "}
-                            <span className="text-danger">*</span>
+                            Category <span className="text-danger">*</span>
                         </label>
                         <select
                             className={`form-select ${
@@ -74,8 +72,7 @@ const BasicInfoStep = ({
 
             <div className="mb-3">
                 <label className="form-label fw-semibold">
-                    Service Description{" "}
-                    <span className="text-danger">*</span>
+                    Service Description <span className="text-danger">*</span>
                 </label>
                 <textarea
                     className={`form-control ${
@@ -89,12 +86,11 @@ const BasicInfoStep = ({
                     maxLength="2000"
                 ></textarea>
                 {errors.description && (
-                    <div className="invalid-feedback">
-                        {errors.description}
-                    </div>
+                    <div className="invalid-feedback">{errors.description}</div>
                 )}
                 <div className="form-text">
-                    {formData.description.length}/2000 characters (minimum 50 required)
+                    {formData.description.length}/2000 characters (minimum 50
+                    required)
                 </div>
             </div>
 
@@ -102,8 +98,7 @@ const BasicInfoStep = ({
                 <div className="col-md-4">
                     <div className="mb-3">
                         <label className="form-label fw-semibold">
-                            Pricing Type{" "}
-                            <span className="text-danger">*</span>
+                            Pricing Type <span className="text-danger">*</span>
                         </label>
                         <select
                             className="form-select"

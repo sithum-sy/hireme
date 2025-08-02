@@ -7,221 +7,353 @@ use Illuminate\Database\Seeder;
 use App\Models\User;
 use App\Models\ProviderProfile;
 use Illuminate\Support\Facades\Hash;
+use Carbon\Carbon;
 
 class AdditionalServiceProviderSeeder extends Seeder
 {
     /**
      * Run the database seeds.
      */
-    public function run()
+    public function run(): void
     {
-        // Negombo area locations
-        $negomboLocations = [
-            'Negombo City Center' => ['lat' => 7.2084, 'lng' => 79.8358],
-            'Negombo Beach Road' => ['lat' => 7.2089, 'lng' => 79.8370],
-            'Negombo Lagoon Side' => ['lat' => 7.2150, 'lng' => 79.8400],
-            'Negombo Fish Market Area' => ['lat' => 7.2070, 'lng' => 79.8340],
-            'Negombo St. Sebastian Road' => ['lat' => 7.2100, 'lng' => 79.8380]
-        ];
-
-        // Colombo area locations
+        // Colombo area locations with coordinates
         $colomboLocations = [
-            'Colombo 3 (Kollupitiya)' => ['lat' => 6.9147, 'lng' => 79.8501],
-            'Colombo 4 (Bambalapitiya)' => ['lat' => 6.8905, 'lng' => 79.8565],
-            'Colombo 5 (Narahenpita)' => ['lat' => 6.8956, 'lng' => 79.8772],
-            'Colombo 6 (Wellawatta)' => ['lat' => 6.8731, 'lng' => 79.8611],
-            'Colombo 7 (Cinnamon Gardens)' => ['lat' => 6.9198, 'lng' => 79.8615]
+            ['area' => 'Colombo 01 - Fort', 'lat' => 6.9344, 'lng' => 79.8428, 'addresses' => ['World Trade Center Area', 'Bank of Ceylon Mawatha', 'Chatham Street']],
+            ['area' => 'Colombo 02 - Slave Island', 'lat' => 6.9147, 'lng' => 79.8560, 'addresses' => ['Beira Lake Road', 'Sir Chittampalam Gardiner Mawatha', 'Kompanna Veediya']],
+            ['area' => 'Colombo 03 - Kollupitiya', 'lat' => 6.9147, 'lng' => 79.8560, 'addresses' => ['Galle Road', 'Dharmapala Mawatha', 'Kollupitiya Road']],
+            ['area' => 'Colombo 04 - Bambalapitiya', 'lat' => 6.8905, 'lng' => 79.8565, 'addresses' => ['Galle Road', 'Bauddhaloka Mawatha', 'Lauries Road']],
+            ['area' => 'Colombo 05 - Narahenpita', 'lat' => 6.8884, 'lng' => 79.8742, 'addresses' => ['Narahenpita Road', 'Wijerama Mawatha', 'Thimbirigasyaya Road']],
+            ['area' => 'Colombo 06 - Wellawatta', 'lat' => 6.8684, 'lng' => 79.8625, 'addresses' => ['Galle Road', 'Wellawatta Road', 'High Level Road']],
+            ['area' => 'Colombo 07 - Cinnamon Gardens', 'lat' => 6.9147, 'lng' => 79.8742, 'addresses' => ['Independence Avenue', 'Horton Place', 'Gregory Road']],
+            ['area' => 'Colombo 08 - Borella', 'lat' => 6.9147, 'lng' => 79.8878, 'addresses' => ['Borella Road', 'General Hospital Road', 'Deans Road']],
+            ['area' => 'Colombo 09 - Dematagoda', 'lat' => 6.9344, 'lng' => 79.8878, 'addresses' => ['Baseline Road', 'Dematagoda Road', 'Station Road']],
+            ['area' => 'Colombo 10 - Maradana', 'lat' => 6.9269, 'lng' => 79.8612, 'addresses' => ['Maradana Road', 'Olcott Mawatha', 'Panchikawatte Road']],
+            ['area' => 'Colombo 11 - Pettah', 'lat' => 6.9395, 'lng' => 79.8578, 'addresses' => ['Main Street', 'Sea Street', 'Prince Street']],
+            ['area' => 'Colombo 12 - Hulftsdorp', 'lat' => 6.9344, 'lng' => 79.8497, 'addresses' => ['Hulftsdorp Street', 'Court Road', 'Princes Street']],
+            ['area' => 'Colombo 13 - Kotahena', 'lat' => 6.9500, 'lng' => 79.8500, 'addresses' => ['Kotahena Street', 'Church Street', 'Reclamation Road']],
+            ['area' => 'Colombo 14 - Grandpass', 'lat' => 6.9500, 'lng' => 79.8600, 'addresses' => ['Grandpass Road', 'Baseline Road', 'St. Sebastian Road']],
+            ['area' => 'Colombo 15 - Mutwal', 'lat' => 6.9600, 'lng' => 79.8500, 'addresses' => ['Mutwal Road', 'Harbour Road', 'Station Road']],
         ];
 
-        // 5 Negombo providers - same categories as existing
-        $negomboProviders = [
-            [
-                'first_name' => 'Saman',
-                'last_name' => 'Gunawardana',
-                'email' => 'saman.gunawardana@email.com',
-                'contact_number' => '+94771234583',
-                'address' => 'Beach Road, Negombo',
-                'location' => 'Negombo Beach Road',
-                'business_name' => 'Saman\'s Home Cleaning Plus',
-                'category' => 'Home Cleaning',
-                'bio' => 'Premium home cleaning services with 6 years experience. Specializing in post-construction cleanup and move-in/move-out cleaning.',
-                'years_of_experience' => 6,
-                'service_area_radius' => 12
-            ],
-            [
-                'first_name' => 'Upul',
-                'last_name' => 'Ranasinghe',
-                'email' => 'upul.ranasinghe@email.com',
-                'contact_number' => '+94771234584',
-                'address' => 'Lagoon Road, Negombo',
-                'location' => 'Negombo Lagoon Side',
-                'business_name' => 'Upul Plumbing & Drainage',
-                'category' => 'Plumbing Services',
-                'bio' => 'Expert plumber specializing in drainage systems and water line installations. 14 years of experience.',
-                'years_of_experience' => 14,
-                'service_area_radius' => 18
-            ],
-            [
-                'first_name' => 'Dammika',
-                'last_name' => 'Jayaweera',
-                'email' => 'dammika.jayaweera@email.com',
-                'contact_number' => '+94771234585',
-                'address' => 'Fish Market Road, Negombo',
-                'location' => 'Negombo Fish Market Area',
-                'business_name' => 'Dammika Electrical Solutions',
-                'category' => 'Electrical Services',
-                'bio' => 'Licensed electrical contractor with expertise in smart home installations and electrical panel upgrades.',
-                'years_of_experience' => 13,
-                'service_area_radius' => 16
-            ],
-            [
-                'first_name' => 'Chandana',
-                'last_name' => 'Liyanage',
-                'email' => 'chandana.liyanage@email.com',
-                'contact_number' => '+94771234586',
-                'address' => 'St. Sebastian Road, Negombo',
-                'location' => 'Negombo St. Sebastian Road',
-                'business_name' => 'Tropical Garden Masters',
-                'category' => 'Gardening & Landscaping',
-                'bio' => 'Landscape designer and garden maintenance expert. Creating stunning outdoor spaces for 9 years.',
-                'years_of_experience' => 9,
-                'service_area_radius' => 15
-            ],
-            [
-                'first_name' => 'Indunil',
-                'last_name' => 'Perera',
-                'email' => 'indunil.perera@email.com',
-                'contact_number' => '+94771234587',
-                'address' => 'Main Street, Negombo',
-                'location' => 'Negombo City Center',
-                'business_name' => 'Handy Indunil Services',
-                'category' => 'Handyman Services',
-                'bio' => 'Reliable handyman for all home repairs, installations, and maintenance. Available for emergency repairs.',
-                'years_of_experience' => 8,
-                'service_area_radius' => 14
-            ]
+        // Negombo area locations with coordinates
+        $negomboLocations = [
+            ['area' => 'Negombo', 'lat' => 7.2084, 'lng' => 79.8358, 'addresses' => ['Main Street', 'Lewis Place', 'Poruthota Road', 'St. Joseph Street', 'Beach Road']],
+            ['area' => 'Wennappuwa', 'lat' => 7.3667, 'lng' => 79.8500, 'addresses' => ['Kurunegala Road', 'Church Road', 'Market Street', 'Station Road']],
+            ['area' => 'Ja-Ela', 'lat' => 7.0742, 'lng' => 79.8919, 'addresses' => ['Station Road', 'Gampaha Road', 'Commercial Street', 'Church Street']],
+            ['area' => 'Wattala', 'lat' => 6.9897, 'lng' => 79.8664, 'addresses' => ['Negombo Road', 'Hendala Road', 'Mabola Road', 'Station Road']],
+            ['area' => 'Seeduwa', 'lat' => 7.1167, 'lng' => 79.8833, 'addresses' => ['Airport Road', 'Old Negombo Road', 'Temple Road', 'Market Street']],
+            ['area' => 'Katunayake', 'lat' => 7.1697, 'lng' => 79.8847, 'addresses' => ['Kandy Road', 'Airport Road', 'Church Road', 'Station Road']],
+            ['area' => 'Kelaniya', 'lat' => 6.9553, 'lng' => 79.9217, 'addresses' => ['Temple Road', 'Kandy Road', 'Station Road', 'Market Street']],
+            ['area' => 'Peliyagoda', 'lat' => 6.9667, 'lng' => 79.8833, 'addresses' => ['Kandy Road', 'Station Road', 'Market Street', 'Church Road']],
+            ['area' => 'Kiribathgoda', 'lat' => 6.9833, 'lng' => 79.9167, 'addresses' => ['Kandy Road', 'Station Road', 'Temple Road', 'Market Street']],
+            ['area' => 'Ragama', 'lat' => 7.0167, 'lng' => 79.9167, 'addresses' => ['Station Road', 'Kandy Road', 'Church Street', 'Market Street']],
         ];
 
-        // 5 Colombo providers - different categories
-        $colomboProviders = [
-            [
-                'first_name' => 'Malathi',
-                'last_name' => 'Weerasinghe',
-                'email' => 'malathi.weerasinghe@email.com',
-                'contact_number' => '+94771234588',
-                'address' => 'Galle Road, Kollupitiya',
-                'location' => 'Colombo 3 (Kollupitiya)',
-                'business_name' => 'Tutoring Excellence',
-                'category' => 'Tutoring & Education',
-                'bio' => 'Experienced educator with M.Ed degree. Specializing in O/L and A/L mathematics and science subjects.',
-                'years_of_experience' => 15,
-                'service_area_radius' => 20
-            ],
-            [
-                'first_name' => 'Nayomi',
-                'last_name' => 'Seneviratne',
-                'email' => 'nayomi.seneviratne@email.com',
-                'contact_number' => '+94771234589',
-                'address' => 'Marine Drive, Bambalapitiya',
-                'location' => 'Colombo 4 (Bambalapitiya)',
-                'business_name' => 'Caring Hearts Healthcare',
-                'category' => 'Healthcare & Caregiving',
-                'bio' => 'Registered nurse providing elderly care, medication management, and health monitoring services.',
-                'years_of_experience' => 12,
-                'service_area_radius' => 18
-            ],
-            [
-                'first_name' => 'Kamal',
-                'last_name' => 'Rajapaksha',
-                'email' => 'kamal.rajapaksha@email.com',
-                'contact_number' => '+94771234590',
-                'address' => 'Narahenpita Road, Colombo',
-                'location' => 'Colombo 5 (Narahenpita)',
-                'business_name' => 'Kamal Tech Support',
-                'category' => 'Tech Support',
-                'bio' => 'IT professional with 10 years experience. Computer repairs, software installation, and network setup.',
-                'years_of_experience' => 10,
-                'service_area_radius' => 25
-            ],
-            [
-                'first_name' => 'Amara',
-                'last_name' => 'Wickremasinghe',
-                'email' => 'amara.wickremasinghe@email.com',
-                'contact_number' => '+94771234591',
-                'address' => 'Galle Road, Wellawatta',
-                'location' => 'Colombo 6 (Wellawatta)',
-                'business_name' => 'Amara Beauty & Wellness',
-                'category' => 'Beauty & Wellness',
-                'bio' => 'Licensed beautician and massage therapist. Offering in-home beauty treatments and wellness services.',
-                'years_of_experience' => 7,
-                'service_area_radius' => 15
-            ],
-            [
-                'first_name' => 'Dimuthu',
-                'last_name' => 'Abeywardana',
-                'email' => 'dimuthu.abeywardana@email.com',
-                'contact_number' => '+94771234592',
-                'address' => 'Independence Avenue, Cinnamon Gardens',
-                'location' => 'Colombo 7 (Cinnamon Gardens)',
-                'business_name' => 'Elite Event Services',
-                'category' => 'Event Services',
-                'bio' => 'Professional event planner specializing in weddings, corporate events, and private celebrations.',
-                'years_of_experience' => 11,
-                'service_area_radius' => 30
-            ]
+        // Business name components
+        $businessPrefixes = ['Elite', 'Pro', 'Quality', 'Expert', 'Premium', 'Reliable', 'Swift', 'Perfect', 'Smart', 'Quick'];
+        $businessTypes = ['Services', 'Solutions', 'Care', 'Works', 'Hub', 'Center', 'Group', 'Company', 'Specialists', 'Professionals'];
+
+        // Sri Lankan names
+        $maleFirstNames = [
+            'Amila',
+            'Buddika',
+            'Chathura',
+            'Danushka',
+            'Eshan',
+            'Gayan',
+            'Harsha',
+            'Isuru',
+            'Janaka',
+            'Kavinda',
+            'Lahiru',
+            'Manjula',
+            'Nirmal',
+            'Osanda',
+            'Pradeep',
+            'Rajitha',
+            'Samitha',
+            'Tharindu',
+            'Udara',
+            'Viraj',
+            'Waruna',
+            'Yasitha',
+            'Charith',
+            'Dilan',
+            'Eranda',
+            'Geeth',
+            'Hasitha',
+            'Ireshan',
+            'Jaliya',
+            'Kasun',
+            'Lakshan',
+            'Maduka',
+            'Nalin',
+            'Oshan',
+            'Piyal',
+            'Ranil',
+            'Sarath',
+            'Thilak',
+            'Upul',
+            'Vindana'
         ];
 
-        // Combine all providers
-        $allProviders = array_merge($negomboProviders, $colomboProviders);
-        $allLocations = array_merge($negomboLocations, $colomboLocations);
+        $femaleFirstNames = [
+            'Amaya',
+            'Binara',
+            'Chathurika',
+            'Dilani',
+            'Esandi',
+            'Gayani',
+            'Hiruni',
+            'Ishara',
+            'Jayani',
+            'Kavitha',
+            'Lakmini',
+            'Madhavi',
+            'Nayani',
+            'Oshadhi',
+            'Priyanka',
+            'Rashmi',
+            'Sanduni',
+            'Tharushi',
+            'Udari',
+            'Vindya',
+            'Waruni',
+            'Yashodha',
+            'Chathuri',
+            'Dinusha',
+            'Erandi',
+            'Geetha',
+            'Hasani',
+            'Iresha',
+            'Janani',
+            'Kaushalya',
+            'Lakshika',
+            'Manisha',
+            'Neluni',
+            'Oshadi',
+            'Piyumi',
+            'Ransi',
+            'Sachini',
+            'Thisuri',
+            'Upeksha',
+            'Vindana'
+        ];
 
-        foreach ($allProviders as $providerData) {
+        $lastNames = [
+            'Abeysinghe',
+            'Balasooriya',
+            'Chandrasekara',
+            'Dassanayake',
+            'Edirisinghe',
+            'Fonseka',
+            'Gunathilake',
+            'Hettiarachchi',
+            'Ilangakoon',
+            'Jayatilaka',
+            'Karunaratne',
+            'Liyanage',
+            'Munasinghe',
+            'Nanayakkara',
+            'Obeysekera',
+            'Peiris',
+            'Rajakaruna',
+            'Samarakoon',
+            'Tennakoon',
+            'Udayakantha',
+            'Vithanage',
+            'Weerakoon',
+            'Amaratunga',
+            'Batuwitage',
+            'Cooray',
+            'Dayaratne',
+            'Ekanayake',
+            'Galappatti',
+            'Hewage',
+            'Iddamalgoda',
+            'Jayasinghe',
+            'Kulatilaka',
+            'Lokuhettige',
+            'Marapana',
+            'Nugawela',
+            'Opatha',
+            'Panditharatne',
+            'Ranaweera',
+            'Siriwardena',
+            'Thalagala'
+        ];
+
+        // Professional bios
+        $bioPrefixes = [
+            'Experienced professional with',
+            'Dedicated service provider offering',
+            'Skilled expert specializing in',
+            'Reliable professional providing',
+            'Quality-focused provider with',
+            'Customer-oriented specialist in',
+            'Professional service provider with',
+            'Experienced technician offering',
+            'Trusted professional specializing in',
+            'Committed service provider with'
+        ];
+
+        $bioSuffixes = [
+            'high-quality service and customer satisfaction.',
+            'reliable and professional solutions.',
+            'excellent results and timely delivery.',
+            'personalized service and attention to detail.',
+            'affordable rates and quality workmanship.',
+            'prompt response and professional service.',
+            'comprehensive solutions for all your needs.',
+            'exceptional service and competitive pricing.',
+            'trusted expertise and reliable service.',
+            'professional standards and customer care.'
+        ];
+
+        $providers = [];
+
+        // Generate 30 Colombo providers
+        for ($i = 0; $i < 30; $i++) {
+            $isGender = rand(0, 1);
+            $firstName = $isGender ? $femaleFirstNames[array_rand($femaleFirstNames)] : $maleFirstNames[array_rand($maleFirstNames)];
+            $lastName = $lastNames[array_rand($lastNames)];
+
+            $locationData = $colomboLocations[array_rand($colomboLocations)];
+            $address = $locationData['addresses'][array_rand($locationData['addresses'])] . ', ' . $locationData['area'];
+
+            // Generate business name
+            $businessName = $businessPrefixes[array_rand($businessPrefixes)] . ' ' . $businessTypes[array_rand($businessTypes)];
+
+            $email = strtolower($firstName . '.' . $lastName . '@email.com');
+
+            $providers[] = [
+                'first_name' => $firstName,
+                'last_name' => $lastName,
+                'email' => $email,
+                'address' => $address,
+                'business_name' => $businessName,
+                'location_data' => $locationData,
+                'area_type' => 'colombo'
+            ];
+        }
+
+        // Generate 30 Negombo providers
+        for ($i = 0; $i < 30; $i++) {
+            $isGender = rand(0, 1);
+            $firstName = $isGender ? $femaleFirstNames[array_rand($femaleFirstNames)] : $maleFirstNames[array_rand($maleFirstNames)];
+            $lastName = $lastNames[array_rand($lastNames)];
+
+            $locationData = $negomboLocations[array_rand($negomboLocations)];
+            $address = $locationData['addresses'][array_rand($locationData['addresses'])] . ', ' . $locationData['area'];
+
+            // Generate business name
+            $businessName = $businessPrefixes[array_rand($businessPrefixes)] . ' ' . $businessTypes[array_rand($businessTypes)];
+
+            $email = strtolower($firstName . '.' . $lastName . '@email.com');
+
+            $providers[] = [
+                'first_name' => $firstName,
+                'last_name' => $lastName,
+                'email' => $email,
+                'address' => $address,
+                'business_name' => $businessName,
+                'location_data' => $locationData,
+                'area_type' => 'negombo'
+            ];
+        }
+
+        // Ensure unique emails
+        $usedEmails = [];
+        foreach ($providers as &$provider) {
+            $originalEmail = $provider['email'];
+            $counter = 1;
+            while (in_array($provider['email'], $usedEmails)) {
+                $provider['email'] = str_replace('@email.com', $counter . '@email.com', $originalEmail);
+                $counter++;
+            }
+            $usedEmails[] = $provider['email'];
+        }
+
+        // Registration period: July 1st to August 2nd
+        $registrationStart = Carbon::create(2025, 7, 1, 0, 0, 0);
+        $registrationEnd = Carbon::create(2025, 8, 2, 23, 59, 59);
+
+        foreach ($providers as $providerData) {
+            // Random registration date within the period
+            $registrationDate = Carbon::createFromTimestamp(
+                rand($registrationStart->timestamp, $registrationEnd->timestamp)
+            );
+
+            // Email verification: 1-24 hours after registration
+            $emailVerifiedAt = $registrationDate->copy()->addHours(rand(1, 24));
+
+            // Last login: between email verification and now
+            $lastLoginStart = $emailVerifiedAt->copy();
+            $lastLoginEnd = min(now(), $registrationDate->copy()->addDays(30));
+            $lastLoginAt = Carbon::createFromTimestamp(
+                rand($lastLoginStart->timestamp, $lastLoginEnd->timestamp)
+            );
+
+            // Generate contact number
+            $contactNumber = '+9477' . rand(1000000, 9999999);
+
+            // Generate random date of birth (25-60 years old)
+            $dateOfBirth = Carbon::now()->subYears(rand(25, 60))->subDays(rand(0, 365));
+
             // Create user
             $user = User::create([
                 'first_name' => $providerData['first_name'],
                 'last_name' => $providerData['last_name'],
                 'email' => $providerData['email'],
-                'password' => Hash::make('password123'),
+                'password' => Hash::make($providerData['email']), // Password is their email
                 'role' => User::ROLE_SERVICE_PROVIDER,
-                'date_of_birth' => fake()->dateTimeBetween('-55 years', '-23 years'),
+                'date_of_birth' => $dateOfBirth,
                 'address' => $providerData['address'],
-                'contact_number' => $providerData['contact_number'],
+                'contact_number' => $contactNumber,
+                'profile_picture' => null,
                 'is_active' => true,
-                'email_verified_at' => now(),
-                'last_login_at' => fake()->dateTimeBetween('-15 days', 'now'),
+                'email_verified_at' => $emailVerifiedAt,
+                'last_login_at' => $lastLoginAt,
+                'email_notifications_enabled' => true,
+                'app_notifications_enabled' => true,
+                'created_at' => $registrationDate,
+                'updated_at' => $lastLoginAt,
             ]);
 
-            // Get location coordinates
-            $locationCoords = $allLocations[$providerData['location']];
+            // Create service location JSON
             $serviceLocation = json_encode([
                 'address' => $providerData['address'],
-                'city' => $providerData['location'],
-                'latitude' => $locationCoords['lat'],
-                'longitude' => $locationCoords['lng']
+                'city' => $providerData['location_data']['area'],
+                'latitude' => $providerData['location_data']['lat'],
+                'longitude' => $providerData['location_data']['lng']
             ]);
+
+            // Generate professional bio
+            $bio = $bioPrefixes[array_rand($bioPrefixes)] . ' ' . rand(2, 15) . ' years of experience providing ' . $bioSuffixes[array_rand($bioSuffixes)];
 
             // Create provider profile
             ProviderProfile::create([
                 'user_id' => $user->id,
                 'business_name' => $providerData['business_name'],
-                'years_of_experience' => $providerData['years_of_experience'],
-                'service_area_radius' => $providerData['service_area_radius'],
-                'bio' => $providerData['bio'],
-                'verification_status' => fake()->randomElement(['verified', 'verified', 'pending', 'verified']), // Mostly verified
-                'average_rating' => fake()->randomFloat(1, 3.8, 5.0),
-                'total_reviews' => fake()->numberBetween(8, 65),
-                'total_earnings' => fake()->randomFloat(2, 75000, 750000),
-                'is_available' => fake()->boolean(85), // 85% available
-                'verified_at' => fake()->dateTimeBetween('-8 months', 'now'),
+                'years_of_experience' => rand(2, 15),
+                'service_area_radius' => rand(0, 1) ? 5 : 10, // Either 5km or 10km
+                'bio' => $bio,
+                'verification_status' => 'verified', // All verified
+                'total_earnings' => 0.00, // Set to 0.00 as requested
+                'is_available' => rand(0, 4) ? true : false, // 80% available
+                'verified_at' => $emailVerifiedAt->copy()->addDays(rand(1, 5)),
                 'service_location' => $serviceLocation,
                 'certifications' => json_encode([
-                    'Professional ' . $providerData['category'] . ' Certificate',
-                    'Customer Service Excellence',
-                    'Safety and Quality Standards'
+                    'Professional Service Certification',
+                    'Safety and Quality Standards Training',
+                    'Customer Service Excellence Certificate'
                 ]),
             ]);
         }
 
-        $this->command->info('Additional 10 service providers (5 from Negombo, 5 from Colombo) seeded successfully!');
+        $this->command->info('Successfully created 60 additional service providers!');
+        $this->command->info('30 from Colombo areas, 30 from Negombo areas');
+        $this->command->info('All providers are verified with 5km or 10km service radius');
+        $this->command->info('Total earnings set to 0.00 for all new providers');
     }
 }

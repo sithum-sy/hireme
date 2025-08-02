@@ -40,6 +40,7 @@ import AppointmentDetail from "./pages/client/appointments/AppointmentDetail";
 import ClientQuoteDetail from "./pages/client/quotes/QuoteDetail";
 import QuoteAcceptanceBooking from "./components/client/booking/QuoteAcceptanceBooking";
 import ClientProfile from "./pages/client/profile/ClientProfile";
+import ClientAllNotifications from "./pages/client/notifications/AllNotifications";
 
 // Provider Pages
 import ProviderDashboard from "./pages/provider/Dashboard";
@@ -62,6 +63,7 @@ import InvoicesList from "./pages/provider/payments/InvoicesList";
 import InvoiceDetail from "./pages/provider/payments/InvoiceDetail";
 import EarningsOverview from "./pages/provider/payments/EarningsOverview";
 import ProviderProfile from "./pages/provider/profile/ProviderProfile";
+import ProviderAllNotifications from "./pages/provider/notifications/AllNotifications";
 
 // Admin Pages
 import AdminDashboard from "./pages/admin/Dashboard";
@@ -333,27 +335,7 @@ function App() {
                                             {/* Other client routes */}
                                             <Route
                                                 path="notifications"
-                                                element={
-                                                    <PlaceholderPage
-                                                        title="Notifications"
-                                                        subtitle="Stay updated with your latest alerts"
-                                                        icon="fas fa-bell"
-                                                        description="Stay updated with booking alerts, appointment reminders, and important updates."
-                                                        variant="info"
-                                                        actions={
-                                                            <Link
-                                                                to="/client/appointments"
-                                                                className="btn btn-primary"
-                                                            >
-                                                                <i className="fas fa-calendar-alt"></i>
-                                                                <span>
-                                                                    View
-                                                                    Appointments
-                                                                </span>
-                                                            </Link>
-                                                        }
-                                                    />
-                                                }
+                                                element={<ClientAllNotifications />}
                                             />
 
                                             <Route
@@ -696,6 +678,12 @@ function App() {
                                                         />
                                                     }
                                                 /> */}
+
+                                                {/* Provider Notifications */}
+                                                <Route
+                                                    path="notifications"
+                                                    element={<ProviderAllNotifications />}
+                                                />
 
                                                 {/* Provider Reports Routes */}
                                                 <Route

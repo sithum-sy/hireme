@@ -174,7 +174,10 @@ const ServiceCard = ({
                                     Service Areas:
                                 </small>
                                 <div className="d-flex flex-wrap gap-1">
-                                    {service.service_areas
+                                    {(Array.isArray(service.service_areas)
+                                        ? service.service_areas
+                                        : []
+                                    )
                                         .slice(0, 2)
                                         .map((area, index) => (
                                             <span
@@ -207,7 +210,9 @@ const ServiceCard = ({
                             title="View service details"
                         >
                             <i className="fas fa-eye"></i>
-                            <span className="d-none d-xxl-inline ms-1">View</span>
+                            <span className="d-none d-xxl-inline ms-1">
+                                View
+                            </span>
                         </Link>
                         <Link
                             to={`/provider/services/${service.id}/edit`}
@@ -215,7 +220,9 @@ const ServiceCard = ({
                             title="Edit service"
                         >
                             <i className="fas fa-edit"></i>
-                            <span className="d-none d-xxl-inline ms-1">Edit</span>
+                            <span className="d-none d-xxl-inline ms-1">
+                                Edit
+                            </span>
                         </Link>
                         <button
                             className={`btn btn-sm flex-fill ${
@@ -226,7 +233,11 @@ const ServiceCard = ({
                             onClick={() =>
                                 onToggleStatus(service.id, service.is_active)
                             }
-                            title={service.is_active ? "Deactivate service" : "Activate service"}
+                            title={
+                                service.is_active
+                                    ? "Deactivate service"
+                                    : "Activate service"
+                            }
                         >
                             <i
                                 className={`fas fa-${
@@ -243,7 +254,9 @@ const ServiceCard = ({
                             title="Delete service"
                         >
                             <i className="fas fa-trash"></i>
-                            <span className="d-none d-xxl-inline ms-1">Delete</span>
+                            <span className="d-none d-xxl-inline ms-1">
+                                Delete
+                            </span>
                         </button>
                     </div>
                 </div>
@@ -277,9 +290,16 @@ const ServiceCard = ({
                                         : "btn-outline-success"
                                 }`}
                                 onClick={() =>
-                                    onToggleStatus(service.id, service.is_active)
+                                    onToggleStatus(
+                                        service.id,
+                                        service.is_active
+                                    )
                                 }
-                                title={service.is_active ? "Deactivate" : "Activate"}
+                                title={
+                                    service.is_active
+                                        ? "Deactivate"
+                                        : "Activate"
+                                }
                             >
                                 <i
                                     className={`fas fa-${
@@ -328,14 +348,18 @@ const ServiceCard = ({
                             onClick={() =>
                                 onToggleStatus(service.id, service.is_active)
                             }
-                            title={service.is_active ? "Deactivate" : "Activate"}
+                            title={
+                                service.is_active ? "Deactivate" : "Activate"
+                            }
                         >
                             <i
                                 className={`fas fa-${
                                     service.is_active ? "pause" : "play"
                                 } me-1`}
                             ></i>
-                            {service.is_active ? "Pause Service" : "Activate Service"}
+                            {service.is_active
+                                ? "Pause Service"
+                                : "Activate Service"}
                         </button>
                         <button
                             className="btn btn-outline-danger btn-sm"

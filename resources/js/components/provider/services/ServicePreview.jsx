@@ -1,11 +1,11 @@
 import React from "react";
 
-const ServicePreview = ({ 
-    formData = {}, 
-    categories = [], 
-    imagesPreviews = [], 
+const ServicePreview = ({
+    formData = {},
+    categories = [],
+    imagesPreviews = [],
     getPricingPreview = () => "Rs. 0",
-    selectedAreas = []
+    selectedAreas = [],
 }) => {
     return (
         <div className="card border-0 shadow-sm mb-4">
@@ -24,11 +24,9 @@ const ServicePreview = ({
                         </h6>
                         {formData.category_id && categories.length > 0 && (
                             <span className="badge bg-primary bg-opacity-10 text-primary">
-                                {
-                                    categories.find(
-                                        (c) => c.id == formData.category_id
-                                    )?.name || "Category"
-                                }
+                                {categories.find(
+                                    (c) => c.id == formData.category_id
+                                )?.name || "Category"}
                             </span>
                         )}
                     </div>
@@ -77,7 +75,10 @@ const ServicePreview = ({
                                 Service Areas:
                             </small>
                             <div className="d-flex flex-wrap gap-1">
-                                {selectedAreas
+                                {(Array.isArray(selectedAreas)
+                                    ? selectedAreas
+                                    : []
+                                )
                                     .slice(0, 3)
                                     .map((area) => (
                                         <span
@@ -103,20 +104,22 @@ const ServicePreview = ({
                                 Images:
                             </small>
                             <div className="row g-2">
-                                {imagesPreviews.slice(0, 2).map((preview, index) => (
-                                    <div key={index} className="col-6">
-                                        <img
-                                            src={preview}
-                                            alt={`Preview ${index + 1}`}
-                                            className="img-fluid rounded"
-                                            style={{
-                                                height: "60px",
-                                                objectFit: "cover",
-                                                width: "100%",
-                                            }}
-                                        />
-                                    </div>
-                                ))}
+                                {imagesPreviews
+                                    .slice(0, 2)
+                                    .map((preview, index) => (
+                                        <div key={index} className="col-6">
+                                            <img
+                                                src={preview}
+                                                alt={`Preview ${index + 1}`}
+                                                className="img-fluid rounded"
+                                                style={{
+                                                    height: "60px",
+                                                    objectFit: "cover",
+                                                    width: "100%",
+                                                }}
+                                            />
+                                        </div>
+                                    ))}
                             </div>
                             {imagesPreviews.length > 2 && (
                                 <small className="text-muted">
@@ -136,7 +139,8 @@ const ServicePreview = ({
                             <div className="bg-light p-2 rounded">
                                 <small>
                                     {formData.includes.length > 100
-                                        ? formData.includes.substring(0, 100) + "..."
+                                        ? formData.includes.substring(0, 100) +
+                                          "..."
                                         : formData.includes}
                                 </small>
                             </div>
@@ -152,7 +156,10 @@ const ServicePreview = ({
                             <div className="bg-warning bg-opacity-10 p-2 rounded">
                                 <small>
                                     {formData.requirements.length > 100
-                                        ? formData.requirements.substring(0, 100) + "..."
+                                        ? formData.requirements.substring(
+                                              0,
+                                              100
+                                          ) + "..."
                                         : formData.requirements}
                                 </small>
                             </div>

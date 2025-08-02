@@ -293,16 +293,19 @@ const ServiceInfo = ({ service, activeTab, setActiveTab }) => {
                                                     Service Areas
                                                 </div>
                                                 <div className="d-flex flex-wrap gap-1 mt-2">
-                                                    {service.service_areas.map(
-                                                        (area, index) => (
-                                                            <span
-                                                                key={index}
-                                                                className="badge bg-light text-dark"
-                                                            >
-                                                                {area}
-                                                            </span>
-                                                        )
-                                                    )}
+                                                    {(Array.isArray(
+                                                        service.service_areas
+                                                    )
+                                                        ? service.service_areas
+                                                        : []
+                                                    ).map((area, index) => (
+                                                        <span
+                                                            key={index}
+                                                            className="badge bg-light text-dark"
+                                                        >
+                                                            {area}
+                                                        </span>
+                                                    ))}
                                                 </div>
                                             </div>
                                         </div>
