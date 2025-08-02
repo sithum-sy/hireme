@@ -30,12 +30,13 @@ class InvoicesSeeder extends Seeder
 
         $createdInvoices = 0;
 
-        // Sri Lankan tax and fee structure
-        // $taxRate = 0.0; // No tax for most services in Sri Lanka
-        // $platformFeeRate = 0.05; // 5% platform fee
+        // Set fixed values
+        $taxAmount = 0.00;
+        $serviceFee = 0.00;
+        $platformFee = 0.00;
 
-        // Payment methods commonly used in Sri Lanka
-        $paymentMethods = ['cash', 'bank_transfer', 'card'];
+        // Payment methods commonly used in Sri Lanka (removed bank_transfer)
+        $paymentMethods = ['cash', 'card'];
 
         // Invoice status distribution
         $statusDistribution = [
@@ -77,18 +78,12 @@ class InvoicesSeeder extends Seeder
 
             // Calculate invoice amounts
             $subtotal = $appointment->total_price;
-            // $taxAmount = round($subtotal * $taxRate, 2);
-            // $platformFee = round($subtotal * $platformFeeRate, 2);
-            $totalAmount = $subtotal;
-            $providerEarnings = $subtotal;
+            $totalAmount = $subtotal; // No additional fees
+            $providerEarnings = $subtotal; // Provider gets full amount
 
-            // Generate invoice number
-            $invoiceNumber = $this->generateInvoiceNumber($appointment->created_at);
-            // Ensure invoice number is unique
-            while (Invoice::where('invoice_number', $invoiceNumber)->exists()) {
-                // If exists, increment sequence and regenerate
-                $invoiceNumber = $this->generateInvoiceNumber($appointment->created_at->copy()->addSeconds(rand(1, 60)));
-            }
+            // Generate unique invoice number
+            $invoiceNumber = $this->generateUniqueInvoiceNumber($appointment->created_at);
+
             // Create line items breakdown
             $lineItems = [
                 [
@@ -98,24 +93,6 @@ class InvoicesSeeder extends Seeder
                     'total' => $appointment->base_price
                 ]
             ];
-
-            // Add travel fee if applicable
-            // if ($appointment->travel_fee > 0) {
-            //     $lineItems[] = [
-            //         'description' => 'Travel Fee',
-            //         'quantity' => 1,
-            //         'unit_price' => $appointment->travel_fee,
-            //         'total' => $appointment->travel_fee
-            //     ];
-            // }
-
-            // Add platform fee
-            // $lineItems[] = [
-            //     'description' => 'Platform Service Fee',
-            //     'quantity' => 1,
-            //     'unit_price' => $platformFee,
-            //     'total' => $platformFee
-            // ];
 
             // Determine dates
             $issuedAt = $appointment->completed_at ?? $appointment->created_at;
@@ -145,7 +122,6 @@ class InvoicesSeeder extends Seeder
                     'method' => $paymentMethod,
                     'transaction_id' => 'TXN' . rand(100000, 999999),
                     'payment_date' => $paidAt->toDateString(),
-                    'reference' => $paymentMethod === 'bank_transfer' ? 'BT' . rand(1000000, 9999999) : null
                 ];
             }
 
@@ -164,8 +140,9 @@ class InvoicesSeeder extends Seeder
                 'provider_id' => $appointment->provider_id,
                 'client_id' => $appointment->client_id,
                 'subtotal' => $subtotal,
-                // 'tax_amount' => $taxAmount,
-                // 'platform_fee' => $platformFee,
+                'tax_amount' => $taxAmount,
+                'service_fee' => $serviceFee,
+                'platform_fee' => $platformFee,
                 'total_amount' => $totalAmount,
                 'provider_earnings' => $providerEarnings,
                 'status' => $invoiceStatus,
@@ -180,7 +157,6 @@ class InvoicesSeeder extends Seeder
                 'line_items' => $lineItems,
                 'payment_details' => $paymentDetails,
                 'stripe_payment_intent_id' => null, // Not using Stripe for seeded data
-                // 'service_fee' => $platformFee,
                 'client_viewed_at' => $invoiceStatus !== 'draft' ? $sentAt?->copy()->addHours(rand(1, 48)) : null,
                 'created_at' => $issuedAt,
                 'updated_at' => $paidAt ?? $sentAt ?? $issuedAt
@@ -197,7 +173,7 @@ class InvoicesSeeder extends Seeder
 
         $totalAmount = Invoice::sum('total_amount');
         $paidAmount = Invoice::where('payment_status', 'completed')->sum('total_amount');
-        $platformEarnings = Invoice::sum('platform_fee');
+        $platformEarnings = Invoice::sum('service_fee');
 
         $this->command->info("Successfully created {$createdInvoices} invoices!");
         $this->command->info("\n📊 Invoice Status Summary:");
@@ -212,26 +188,36 @@ class InvoicesSeeder extends Seeder
         $this->command->info("   • Platform Earnings: LKR " . number_format($platformEarnings, 2));
 
         $this->command->info("\n🌴 All invoices include realistic Sri Lankan business context");
-        $this->command->info("💳 Payment methods: Cash, Bank Transfer, Card");
+        $this->command->info("💳 Payment methods: Cash, Card");
         $this->command->info("📄 Standard 7-day payment terms applied");
     }
 
     /**
-     * Generate realistic invoice number based on date
+     * Generate unique invoice number based on date with retry mechanism
      */
-    private function generateInvoiceNumber($date)
+    private function generateUniqueInvoiceNumber($date)
     {
-        $prefix = 'INV';
-        $year = $date->format('Y');
-        $month = $date->format('m');
+        $maxAttempts = 100; // Prevent infinite loops
+        $attempts = 0;
 
-        // Get count of existing invoices for this month to generate sequence
-        $existingCount = Invoice::whereYear('created_at', $year)
-            ->whereMonth('created_at', $month)
-            ->count();
+        do {
+            $prefix = 'INV';
+            $year = $date->format('Y');
+            $month = $date->format('m');
 
-        $sequence = $existingCount + 1;
+            // Add random component to ensure uniqueness
+            $randomComponent = str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
+            $invoiceNumber = $prefix . $year . $month . $randomComponent;
 
-        return $prefix . $year . $month . str_pad($sequence, 4, '0', STR_PAD_LEFT);
+            $attempts++;
+
+            // If we've tried too many times, add timestamp to ensure uniqueness
+            if ($attempts >= $maxAttempts) {
+                $invoiceNumber = $prefix . $year . $month . time() . rand(10, 99);
+                break;
+            }
+        } while (Invoice::where('invoice_number', $invoiceNumber)->exists());
+
+        return $invoiceNumber;
     }
 }
