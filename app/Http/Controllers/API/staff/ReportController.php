@@ -17,7 +17,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Log;
+
 use Carbon\Carbon;
+
 
 class ReportController extends Controller
 {
@@ -26,7 +29,7 @@ class ReportController extends Controller
      */
     public function analytics(Request $request)
     {
-        \Log::info('Staff analytics endpoint called', [
+        Log::info('Staff analytics endpoint called', [
             'user_id' => Auth::id(),
             'user_role' => Auth::user() ? Auth::user()->role : 'no user',
             'filters' => $request->all()
@@ -49,7 +52,7 @@ class ReportController extends Controller
 
             $startDate = $request->start_date ?? now()->subDays(30)->toDateString();
             $endDate = $request->end_date ?? now()->toDateString();
-            
+
             // Convert to proper datetime boundaries for accurate filtering
             $startDateTime = Carbon::parse($startDate)->startOfDay();
             $endDateTime = Carbon::parse($endDate)->endOfDay();
@@ -88,7 +91,7 @@ class ReportController extends Controller
         $totalClients = User::where('role', 'client')
             ->whereBetween('created_at', [$startDateTime, $endDateTime])
             ->count();
-        
+
         $totalServices = Service::whereBetween('created_at', [$startDateTime, $endDateTime])->count();
         $activeServices = Service::where('is_active', true)
             ->whereBetween('created_at', [$startDateTime, $endDateTime])
@@ -160,7 +163,7 @@ class ReportController extends Controller
 
         $current = $start->copy();
         $diffInDays = $start->diffInDays($end);
-        
+
         while ($current->lte($end)) {
             // For single day, show more descriptive label
             if ($diffInDays == 0) {
@@ -343,7 +346,7 @@ class ReportController extends Controller
 
         $current = $start->copy();
         $diffInDays = $start->diffInDays($end);
-        
+
         while ($current->lte($end)) {
             // For single day, show more descriptive label
             if ($diffInDays == 0) {
@@ -790,7 +793,7 @@ class ReportController extends Controller
                 ]
             ]);
         } catch (\Exception $e) {
-            \Log::error('Field options fetch failed', [
+            Log::error('Field options fetch failed', [
                 'error' => $e->getMessage(),
                 'request' => $request->all()
             ]);
@@ -911,7 +914,7 @@ class ReportController extends Controller
             $formattedResults = array_map(function ($row) {
                 return array_map(function ($value) {
                     if (is_object($value) || is_array($value)) {
-                        \Log::warning('Object/Array value detected in report results', [
+                        Log::warning('Object/Array value detected in report results', [
                             'value' => $value,
                             'type' => gettype($value)
                         ]);
@@ -942,7 +945,7 @@ class ReportController extends Controller
                 ]
             ]);
         } catch (\Exception $e) {
-            \Log::error('Custom report generation failed', [
+            Log::error('Custom report generation failed', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
                 'request' => $request->all(),
@@ -1036,7 +1039,7 @@ class ReportController extends Controller
             try {
                 $query->with($relations);
             } catch (\Exception $e) {
-                \Log::error("Error loading relations: " . $e->getMessage(), [
+                Log::error("Error loading relations: " . $e->getMessage(), [
                     'relations' => $relations,
                     'model' => $modelClass
                 ]);
@@ -1068,7 +1071,7 @@ class ReportController extends Controller
                     $this->applyDirectFilter($query, $field, $operator, $value);
                 }
             } catch (\Exception $e) {
-                \Log::warning("Error applying filter", [
+                Log::warning("Error applying filter", [
                     'filter' => $filter,
                     'error' => $e->getMessage()
                 ]);
@@ -1109,7 +1112,7 @@ class ReportController extends Controller
                 }
                 // TODO: Implement relation-based sorting later if needed
             } catch (\Exception $e) {
-                \Log::warning("Error applying sort", [
+                Log::warning("Error applying sort", [
                     'sort' => $sort,
                     'error' => $e->getMessage()
                 ]);
@@ -1188,7 +1191,7 @@ class ReportController extends Controller
                     break;
             }
         } catch (\Exception $e) {
-            \Log::warning("Error applying JSON field filter for '$jsonPath': " . $e->getMessage());
+            Log::warning("Error applying JSON field filter for '$jsonPath': " . $e->getMessage());
             // Skip this filter if it fails
         }
     }
@@ -1253,7 +1256,7 @@ class ReportController extends Controller
     private function applyRelationFilter($query, $relation, $operator, $value)
     {
         try {
-            \Log::info("Applying relation filter", [
+            Log::info("Applying relation filter", [
                 'relation' => $relation,
                 'operator' => $operator,
                 'value' => $value
@@ -1278,7 +1281,7 @@ class ReportController extends Controller
             // Handle single relation path
             $this->applySingleRelationFilter($query, $relation, $operator, $value);
         } catch (\Exception $e) {
-            \Log::warning("Error applying relation filter for '$relation': " . $e->getMessage());
+            Log::warning("Error applying relation filter for '$relation': " . $e->getMessage());
             // Skip this filter if it fails
         }
     }
@@ -1314,7 +1317,7 @@ class ReportController extends Controller
                 });
             }
         } catch (\Exception $e) {
-            \Log::warning("Error applying single relation filter for '$relation': " . $e->getMessage());
+            Log::warning("Error applying single relation filter for '$relation': " . $e->getMessage());
         }
     }
 
@@ -1413,7 +1416,7 @@ class ReportController extends Controller
 
             return $current;
         } catch (\Exception $e) {
-            \Log::warning("Error extracting JSON field value for '$jsonPath': " . $e->getMessage());
+            Log::warning("Error extracting JSON field value for '$jsonPath': " . $e->getMessage());
             return null;
         }
     }
@@ -1443,7 +1446,7 @@ class ReportController extends Controller
             // Handle single relation path
             return $this->getSingleRelationValue($item, $relationPath);
         } catch (\Exception $e) {
-            \Log::warning("Error getting relation value for '$relationPath': " . $e->getMessage());
+            Log::warning("Error getting relation value for '$relationPath': " . $e->getMessage());
             return null;
         }
     }
@@ -1472,7 +1475,7 @@ class ReportController extends Controller
             $finalField = $parts[count($parts) - 1];
             return $current->{$finalField} ?? null;
         } catch (\Exception $e) {
-            \Log::warning("Error getting single relation value for '$relationPath': " . $e->getMessage());
+            Log::warning("Error getting single relation value for '$relationPath': " . $e->getMessage());
             return null;
         }
     }
@@ -1526,7 +1529,7 @@ class ReportController extends Controller
                     return null;
             }
         } catch (\Exception $e) {
-            \Log::warning("Error computing value for '$computation': " . $e->getMessage());
+            Log::warning("Error computing value for '$computation': " . $e->getMessage());
             return null;
         }
     }

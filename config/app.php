@@ -63,6 +63,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Appointment Grace Period
+    |--------------------------------------------------------------------------
+    |
+    | This defines how many minutes before the scheduled appointment time
+    | providers can start the service. Set to 0 to disable grace period.
+    |
+    */
+
+    'appointment_grace_minutes' => (int) env('APPOINTMENT_GRACE_MINUTES', 15),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |

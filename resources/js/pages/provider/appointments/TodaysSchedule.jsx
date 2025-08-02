@@ -9,6 +9,7 @@ const TodaysSchedule = () => {
     const [appointments, setAppointments] = useState([]);
     const [loading, setLoading] = useState(true);
     const [currentTime, setCurrentTime] = useState(new Date());
+    const [graceMinutes, setGraceMinutes] = useState(15); // Default fallback
     const [todayStats, setTodayStats] = useState({
         total: 0,
         pending: 0,
@@ -19,6 +20,7 @@ const TodaysSchedule = () => {
 
     useEffect(() => {
         loadTodaysAppointments();
+        loadAppointmentConfig();
 
         // Update current time every minute
         const timer = setInterval(() => {
@@ -27,6 +29,18 @@ const TodaysSchedule = () => {
 
         return () => clearInterval(timer);
     }, []);
+
+    const loadAppointmentConfig = async () => {
+        try {
+            const result = await providerAppointmentService.getAppointmentConfig();
+            if (result.success) {
+                setGraceMinutes(result.data.grace_minutes);
+            }
+        } catch (error) {
+            console.error('Failed to load appointment config:', error);
+            // Keep default fallback value
+        }
+    };
 
     useEffect(() => {
         calculateTodayStats();
@@ -111,14 +125,22 @@ const TodaysSchedule = () => {
         }
     };
 
-    // Check if appointment is happening now (within 15 minutes)
+    // Check if appointment is happening now (within grace period)
     const isAppointmentNow = (appointmentTime) => {
+        // If grace period is 0, only exact time matches
+        if (graceMinutes === 0) {
+            const now = new Date();
+            const currentMinutes = now.getHours() * 60 + now.getMinutes();
+            const appointmentMinutes = parseTimeToMinutes(appointmentTime);
+            return currentMinutes === appointmentMinutes;
+        }
+
         const now = new Date();
         const currentMinutes = now.getHours() * 60 + now.getMinutes();
         const appointmentMinutes = parseTimeToMinutes(appointmentTime);
 
-        // Consider "now" if within 15 minutes before or after
-        return Math.abs(currentMinutes - appointmentMinutes) <= 15;
+        // Consider "now" if within configurable grace period before or after
+        return Math.abs(currentMinutes - appointmentMinutes) <= graceMinutes;
     };
 
     // Check if appointment time has passed
@@ -127,7 +149,8 @@ const TodaysSchedule = () => {
         const currentMinutes = now.getHours() * 60 + now.getMinutes();
         const appointmentMinutes = parseTimeToMinutes(appointmentTime);
 
-        return currentMinutes > appointmentMinutes + 15; // Past if more than 15 minutes ago
+        // Past if more than grace period minutes ago
+        return currentMinutes > appointmentMinutes + graceMinutes;
     };
 
     const loadTodaysAppointments = async () => {

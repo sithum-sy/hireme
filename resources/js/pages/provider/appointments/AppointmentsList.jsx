@@ -71,6 +71,65 @@ const AppointmentsList = () => {
         }
     };
 
+    // Check if service can be started based on grace period
+    const canStartService = (appointment) => {
+        if (appointment.status !== "confirmed") return false;
+
+        // If grace period is 0, no time restriction
+        if (graceMinutes === 0) return true;
+
+        try {
+            const now = new Date();
+            const appointmentDateTime = createSafeDate(appointment.appointment_date, appointment.appointment_time);
+
+            if (!appointmentDateTime || isNaN(appointmentDateTime.getTime())) return false;
+
+            // Allow starting with configurable grace period
+            const allowedStartTime = new Date(
+                appointmentDateTime.getTime() - graceMinutes * 60 * 1000
+            );
+
+            return now >= allowedStartTime;
+        } catch (error) {
+            console.error("Error checking appointment start time:", error);
+            return false;
+        }
+    };
+
+    // Get time until appointment can start
+    const getTimeUntilStart = (appointment) => {
+        // If grace period is 0, no waiting time
+        if (graceMinutes === 0) return null;
+
+        try {
+            const now = new Date();
+            const appointmentDateTime = createSafeDate(appointment.appointment_date, appointment.appointment_time);
+
+            if (!appointmentDateTime || isNaN(appointmentDateTime.getTime())) return null;
+
+            const allowedStartTime = new Date(
+                appointmentDateTime.getTime() - graceMinutes * 60 * 1000
+            );
+
+            if (now >= allowedStartTime) return null; // Can start now
+
+            const timeDiff = allowedStartTime - now;
+            const hoursUntil = Math.floor(timeDiff / (1000 * 60 * 60));
+            const minutesUntil = Math.floor(
+                (timeDiff % (1000 * 60 * 60)) / (1000 * 60)
+            );
+
+            if (hoursUntil > 0) {
+                return `${hoursUntil}h ${minutesUntil}m`;
+            } else {
+                return `${minutesUntil}m`;
+            }
+        } catch (error) {
+            console.error("Error calculating time until start:", error);
+            return null;
+        }
+    };
+
     // Cancellation modal state
     const [showCancelModal, setShowCancelModal] = useState(false);
     const [cancelReason, setCancelReason] = useState("");
@@ -89,6 +148,7 @@ const AppointmentsList = () => {
 
     // Refresh trigger for TodaysSchedule component
     const [todaysScheduleRefresh, setTodaysScheduleRefresh] = useState(0);
+    const [graceMinutes, setGraceMinutes] = useState(15); // Default fallback
     const [filters, setFilters] = useState({
         status: searchParams.get("status") || "all",
         date_from: searchParams.get("date_from") || "",
@@ -123,7 +183,20 @@ const AppointmentsList = () => {
     // Load stats separately from filtered appointments
     useEffect(() => {
         loadStats();
+        loadAppointmentConfig();
     }, []);
+
+    const loadAppointmentConfig = async () => {
+        try {
+            const result = await providerAppointmentService.getAppointmentConfig();
+            if (result.success) {
+                setGraceMinutes(result.data.grace_minutes);
+            }
+        } catch (error) {
+            console.error('Failed to load appointment config:', error);
+            // Keep default fallback value
+        }
+    };
 
     useEffect(() => {
         const statusFromUrl = searchParams.get("status");
@@ -609,6 +682,18 @@ const AppointmentsList = () => {
                     }
                     break;
                 case "start":
+                    // Check if service can be started based on grace period
+                    if (!canStartService(appointment)) {
+                        const timeUntil = getTimeUntilStart(appointment);
+                        if (timeUntil) {
+                            const graceText = graceMinutes > 0 ? ` (${graceMinutes} minutes before scheduled time)` : '';
+                            alert(`You can start this service in ${timeUntil}${graceText}.`);
+                        } else {
+                            alert('This service cannot be started yet. Please wait until the scheduled time.');
+                        }
+                        return;
+                    }
+                    
                     result = await providerAppointmentService.startService(
                         appointment.id
                     );

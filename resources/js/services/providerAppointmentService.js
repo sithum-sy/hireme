@@ -50,6 +50,22 @@ class ProviderAppointmentService {
     }
 
     /**
+     * Get appointment configuration settings
+     */
+    async getAppointmentConfig() {
+        try {
+            const response = await axios.get(`${API_BASE}/appointments/config`);
+            return {
+                success: true,
+                data: response.data.data || response.data,
+                message: "Configuration loaded successfully",
+            };
+        } catch (error) {
+            return this.handleError(error, "Failed to load configuration");
+        }
+    }
+
+    /**
      * Get today's appointments
      */
     async getTodaysAppointments() {

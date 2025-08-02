@@ -247,16 +247,19 @@ class AppointmentController extends Controller
             ], 403);
         }
 
-        // Special validation for starting service - COMMENTED OUT FOR DEVELOPMENT
-        // if ($request->status === 'in_progress' && $appointment->status === 'confirmed') {
-        //     if (!$this->canStartService($appointment)) {
-        //         return response()->json([
-        //             'success' => false,
-        //             'message' => 'Service cannot be started yet. Please wait until the scheduled time (15 minutes grace period allowed).',
-        //             'time_validation_failed' => true
-        //         ], 400);
-        //     }
-        // }
+        // Validation for starting service - check grace period
+        if ($request->status === 'in_progress' && $appointment->status === 'confirmed') {
+            if (!$this->canStartService($appointment)) {
+                $graceMinutes = config('app.appointment_grace_minutes', 15);
+                return response()->json([
+                    'success' => false,
+                    'message' => $graceMinutes > 0 
+                        ? "Service cannot be started yet. Please wait until the scheduled time ({$graceMinutes} minutes grace period allowed)."
+                        : 'Service cannot be started yet. Please wait until the scheduled time.',
+                    'time_validation_failed' => true
+                ], 400);
+            }
+        }
 
         try {
             $oldStatus = $appointment->status;
@@ -325,21 +328,30 @@ class AppointmentController extends Controller
                 return false;
             }
 
-            // Allow starting 15 minutes before scheduled time - COMMENTED OUT FOR DEVELOPMENT
-            // $allowedStartTime = $appointmentDateTime->copy()->subMinutes(15);
-            // $allowedStartTime = $appointmentDateTime->copy()->subHours(24);
-
-            // Log::info('Time check details', [
-            //     'now' => $now->format('Y-m-d H:i:s'),
-            //     'appointment_datetime' => $appointmentDateTime->format('Y-m-d H:i:s'),
-            //     'allowed_start_time' => $allowedStartTime->format('Y-m-d H:i:s'),
-            //     'can_start' => $now->gte($allowedStartTime)
-            // ]);
-
-            // return $now->gte($allowedStartTime);
+            // Get configurable grace period from environment
+            $graceMinutes = config('app.appointment_grace_minutes', 15);
             
-            // DEVELOPMENT: Always return true to allow starting service
-            return true;
+            // If grace period is 0, no time restriction - always allow starting
+            if ($graceMinutes == 0) {
+                Log::info('Grace period disabled - allowing service start', [
+                    'appointment_id' => $appointment->id,
+                    'grace_minutes' => $graceMinutes
+                ]);
+                return true;
+            }
+            
+            // Calculate allowed start time based on grace period
+            $allowedStartTime = $appointmentDateTime->copy()->subMinutes($graceMinutes);
+
+            Log::info('Time check details', [
+                'now' => $now->format('Y-m-d H:i:s'),
+                'appointment_datetime' => $appointmentDateTime->format('Y-m-d H:i:s'),
+                'allowed_start_time' => $allowedStartTime->format('Y-m-d H:i:s'),
+                'grace_minutes' => $graceMinutes,
+                'can_start' => $now->gte($allowedStartTime)
+            ]);
+
+            return $now->gte($allowedStartTime);
         } catch (\Exception $e) {
             Log::error('Error checking appointment start time: ' . $e->getMessage(), [
                 'appointment_id' => $appointment->id,
@@ -936,5 +948,18 @@ class AppointmentController extends Controller
                 ] : null,
             ] : null,
         ];
+    }
+
+    /**
+     * Get appointment configuration settings
+     */
+    public function getConfig()
+    {
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'grace_minutes' => config('app.appointment_grace_minutes', 15)
+            ]
+        ]);
     }
 }

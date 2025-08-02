@@ -25,69 +25,84 @@ const AppointmentDetail = () => {
     const [pendingAction, setPendingAction] = useState(null);
     const [optimisticStatus, setOptimisticStatus] = useState(null);
     const [statusUpdateTimer, setStatusUpdateTimer] = useState(null);
+    const [graceMinutes, setGraceMinutes] = useState(15); // Default fallback
 
     useEffect(() => {
         // Scroll to top when component mounts or ID changes
         window.scrollTo(0, 0);
         loadAppointmentDetail();
+        loadAppointmentConfig();
     }, [id]);
+
+    const loadAppointmentConfig = async () => {
+        try {
+            const result = await providerAppointmentService.getAppointmentConfig();
+            if (result.success) {
+                setGraceMinutes(result.data.grace_minutes);
+            }
+        } catch (error) {
+            console.error('Failed to load appointment config:', error);
+            // Keep default fallback value
+        }
+    };
 
     const canStartService = () => {
         if (appointment.status !== "confirmed") return false;
 
-        // DEVELOPMENT: Time checking commented out - always allow starting service
-        return true;
+        // If grace period is 0, no time restriction
+        if (graceMinutes === 0) return true;
 
-        // try {
-        //     const now = new Date();
+        try {
+            const now = new Date();
 
-        //     const appointmentDate = appointment.appointment_date;
-        //     const appointmentTime = appointment.appointment_time;
+            const appointmentDate = appointment.appointment_date;
+            const appointmentTime = appointment.appointment_time;
 
-        //     if (!appointmentDate || !appointmentTime) return false;
+            if (!appointmentDate || !appointmentTime) return false;
 
-        //     let appointmentDateTime;
+            let appointmentDateTime;
 
-        //     if (typeof appointmentDate === "string") {
-        //         let datePart;
-        //         if (appointmentDate.includes("T")) {
-        //             datePart = appointmentDate.split("T")[0];
-        //         } else {
-        //             datePart = appointmentDate;
-        //         }
+            if (typeof appointmentDate === "string") {
+                let datePart;
+                if (appointmentDate.includes("T")) {
+                    datePart = appointmentDate.split("T")[0];
+                } else {
+                    datePart = appointmentDate;
+                }
 
-        //         let timePart;
-        //         if (
-        //             typeof appointmentTime === "string" &&
-        //             appointmentTime.includes("T")
-        //         ) {
-        //             timePart = appointmentTime.split("T")[1].split(".")[0];
-        //         } else {
-        //             timePart = appointmentTime.toString();
-        //         }
+                let timePart;
+                if (
+                    typeof appointmentTime === "string" &&
+                    appointmentTime.includes("T")
+                ) {
+                    timePart = appointmentTime.split("T")[1].split(".")[0];
+                } else {
+                    timePart = appointmentTime.toString();
+                }
 
-        //         appointmentDateTime = new Date(`${datePart}T${timePart}`);
-        //     } else {
-        //         appointmentDateTime = new Date(appointmentDate);
-        //     }
+                appointmentDateTime = new Date(`${datePart}T${timePart}`);
+            } else {
+                appointmentDateTime = new Date(appointmentDate);
+            }
 
-        //     if (isNaN(appointmentDateTime.getTime())) return false;
+            if (isNaN(appointmentDateTime.getTime())) return false;
 
-        //     // Allow starting 15 minutes before scheduled time
-        //     // const graceMinutes = 15;
-        //     // const graceMinutes = 60 * 24;
-        //     // const allowedStartTime = new Date(
-        //     //     appointmentDateTime.getTime() - graceMinutes * 60 * 1000
-        //     // );
+            // Allow starting with configurable grace period
+            const allowedStartTime = new Date(
+                appointmentDateTime.getTime() - graceMinutes * 60 * 1000
+            );
 
-        //     // return now >= allowedStartTime;
-        // } catch (error) {
-        //     console.error("Error checking appointment time:", error);
-        //     return false;
-        // }
+            return now >= allowedStartTime;
+        } catch (error) {
+            console.error("Error checking appointment time:", error);
+            return false;
+        }
     };
 
     const getTimeUntilStart = () => {
+        // If grace period is 0, no waiting time
+        if (graceMinutes === 0) return null;
+
         try {
             const now = new Date();
             const appointmentDate = appointment.appointment_date;
@@ -114,25 +129,23 @@ const AppointmentDetail = () => {
 
             if (isNaN(appointmentDateTime.getTime())) return null;
 
-            // const graceMinutes = 15;
-            // const graceMinutes = 60 * 24;
-            // const allowedStartTime = new Date(
-            //     appointmentDateTime.getTime() - graceMinutes * 60 * 1000
-            // );
+            const allowedStartTime = new Date(
+                appointmentDateTime.getTime() - graceMinutes * 60 * 1000
+            );
 
-            // if (now >= allowedStartTime) return null;
+            if (now >= allowedStartTime) return null;
 
-            // const timeDiff = allowedStartTime - now;
-            // const hoursUntil = Math.floor(timeDiff / (1000 * 60 * 60));
-            // const minutesUntil = Math.floor(
-            //     (timeDiff % (1000 * 60 * 60)) / (1000 * 60)
-            // );
+            const timeDiff = allowedStartTime - now;
+            const hoursUntil = Math.floor(timeDiff / (1000 * 60 * 60));
+            const minutesUntil = Math.floor(
+                (timeDiff % (1000 * 60 * 60)) / (1000 * 60)
+            );
 
-            // if (hoursUntil > 0) {
-            //     return `${hoursUntil}h ${minutesUntil}m`;
-            // } else {
-            //     return `${minutesUntil}m`;
-            // }
+            if (hoursUntil > 0) {
+                return `${hoursUntil}h ${minutesUntil}m`;
+            } else {
+                return `${minutesUntil}m`;
+            }
         } catch (error) {
             return null;
         }
@@ -140,20 +153,21 @@ const AppointmentDetail = () => {
 
     // Optimized handleStatusUpdate with optimistic UI updates
     const handleStatusUpdate = async (status, requiresNotes = false) => {
-        // Special validation for starting service - COMMENTED OUT FOR DEVELOPMENT
-        // if (status === "in_progress" && !canStartService()) {
-        //     const timeUntil = getTimeUntilStart();
-        //     if (timeUntil) {
-        //         alert(
-        //             `You can start this service in ${timeUntil} (15 minutes before scheduled time).`
-        //         );
-        //     } else {
-        //         alert(
-        //             "This service cannot be started yet. Please wait until the scheduled time."
-        //         );
-        //     }
-        //     return;
-        // }
+        // Validation for starting service - check grace period
+        if (status === "in_progress" && !canStartService()) {
+            const timeUntil = getTimeUntilStart();
+            if (timeUntil) {
+                const graceText = graceMinutes > 0 ? ` (${graceMinutes} minutes before scheduled time)` : '';
+                alert(
+                    `You can start this service in ${timeUntil}${graceText}.`
+                );
+            } else {
+                alert(
+                    "This service cannot be started yet. Please wait until the scheduled time."
+                );
+            }
+            return;
+        }
 
         if (requiresNotes && !notes.trim()) {
             setPendingAction(status);

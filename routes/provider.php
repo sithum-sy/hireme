@@ -62,6 +62,7 @@ Route::prefix('profile')->group(function () {
 Route::prefix('appointments')->group(function () {
     Route::get('/', [AppointmentController::class, 'index']);
     Route::get('/today', [AppointmentController::class, 'today']);
+    Route::get('/config', [AppointmentController::class, 'getConfig']);
     Route::get('/{appointment}', [AppointmentController::class, 'show']);
     Route::patch('/{appointment}/status', [AppointmentController::class, 'updateStatus']);
     Route::post('/{appointment}/complete', [AppointmentController::class, 'completeService']); // Add this

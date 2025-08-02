@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import CompleteServiceModal from "./CompleteServiceModal";
 import RescheduleRequestModal from "./RescheduleRequestModal";
@@ -10,6 +10,23 @@ const AppointmentCard = ({ appointment, onStatusUpdate }) => {
     const [actionLoading, setActionLoading] = useState(false);
     const [showCompleteModal, setShowCompleteModal] = useState(false);
     const [showRescheduleModal, setShowRescheduleModal] = useState(false);
+    const [graceMinutes, setGraceMinutes] = useState(15); // Default fallback
+
+    useEffect(() => {
+        loadAppointmentConfig();
+    }, []);
+
+    const loadAppointmentConfig = async () => {
+        try {
+            const result = await providerAppointmentService.getAppointmentConfig();
+            if (result.success) {
+                setGraceMinutes(result.data.grace_minutes);
+            }
+        } catch (error) {
+            console.error('Failed to load appointment config:', error);
+            // Keep default fallback value
+        }
+    };
 
     // Check if appointment has pending reschedule request
     const hasPendingReschedule = () => {
@@ -45,6 +62,7 @@ const AppointmentCard = ({ appointment, onStatusUpdate }) => {
                 return timeString;
             }
         };
+        
         if (appointment.status !== "confirmed") return false;
 
         try {
@@ -88,8 +106,10 @@ const AppointmentCard = ({ appointment, onStatusUpdate }) => {
                 return false;
             }
 
-            // Allow starting 15 minutes before scheduled time (grace period)
-            const graceMinutes = 15;
+            // If grace period is 0, no time restriction
+            if (graceMinutes === 0) return true;
+
+            // Allow starting with configurable grace period
             const allowedStartTime = new Date(
                 appointmentDateTime.getTime() - graceMinutes * 60 * 1000
             );
@@ -137,7 +157,9 @@ const AppointmentCard = ({ appointment, onStatusUpdate }) => {
 
             if (isNaN(appointmentDateTime.getTime())) return null;
 
-            const graceMinutes = 15;
+            // If grace period is 0, no waiting time
+            if (graceMinutes === 0) return null;
+
             const allowedStartTime = new Date(
                 appointmentDateTime.getTime() - graceMinutes * 60 * 1000
             );
@@ -368,8 +390,9 @@ const AppointmentCard = ({ appointment, onStatusUpdate }) => {
         if (!canStartService()) {
             const timeUntil = getTimeUntilStart();
             if (timeUntil) {
+                const graceText = graceMinutes > 0 ? ` (${graceMinutes} minutes before scheduled time)` : '';
                 alert(
-                    `You can start this service in ${timeUntil} (15 minutes before scheduled time).`
+                    `You can start this service in ${timeUntil}${graceText}.`
                 );
             } else {
                 alert(
