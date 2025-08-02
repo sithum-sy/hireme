@@ -60,17 +60,17 @@ const ServicesBrowse = () => {
                 isCustomLocation: true,
             };
 
-            console.log(
-                "✅ Restored custom location from URL:",
-                restoredLocation
-            );
+            // console.log(
+            //     "Restored custom location from URL:",
+            //     restoredLocation
+            // );
             setCurrentLocation(restoredLocation);
             return;
         }
 
         // Try to get user's current location on component mount
         if (!currentLocation && !showLocationSelector) {
-            // console.log("🌐 Attempting to get user's location on mount");
+            // console.log("Attempting to get user's location on mount");
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
                     (position) => {
@@ -87,7 +87,7 @@ const ServicesBrowse = () => {
                             )}, ${longitude.toFixed(4)}`,
                         };
 
-                        // console.log("✅ Initial GPS location set:", {
+                        // console.log("Initial GPS location set:", {
                         //     coordinates: `${latitude}, ${longitude}`,
                         //     radius: currentRadius,
                         // });
@@ -95,12 +95,12 @@ const ServicesBrowse = () => {
                         setCurrentLocation(initialLocation);
                     },
                     (error) => {
-                        console.warn("⚠️ Geolocation error on mount:", error);
+                        console.warn("Geolocation error on mount:", error);
                         // Don't set any location if GPS fails - user will need to select manually
                     }
                 );
             } else {
-                console.log("❌ Geolocation not supported");
+                console.log("Geolocation not supported");
             }
         }
     }, []);
@@ -115,7 +115,7 @@ const ServicesBrowse = () => {
                 async (position) => {
                     const { latitude, longitude, accuracy } = position.coords;
 
-                    // console.log("📍 GPS location captured:", {
+                    // console.log("GPS location captured:", {
                     //     coordinates: `${latitude}, ${longitude}`,
                     //     accuracy: `±${accuracy} meters`,
                     // });
@@ -186,7 +186,7 @@ const ServicesBrowse = () => {
                             setShowLocationSelector(false);
 
                             // console.log(
-                            //     "✅ Location updated:",
+                            //     "Location updated:",
                             //     locationData.address
                             // );
                         } else {
@@ -258,7 +258,7 @@ const ServicesBrowse = () => {
     };
 
     const loadServices = async (page = 1) => {
-        // console.log("🔍 Loading services with:", {
+        // console.log("Loading services with:", {
         //     currentLocation: currentLocation
         //         ? `${currentLocation.lat}, ${currentLocation.lng}`
         //         : "null",
@@ -289,14 +289,14 @@ const ServicesBrowse = () => {
                 params.longitude = currentLocation.lng;
                 params.radius = filters.radius || 5;
 
-                // console.log("📍 API call with location:", {
+                // console.log("API call with location:", {
                 //     latitude: params.latitude,
                 //     longitude: params.longitude,
                 //     radius: params.radius,
                 // });
             } else {
                 console.log(
-                    "❌ No location available - cannot search for services"
+                    "No location available - cannot search for services"
                 );
                 // Don't make API call without location - show no results instead
                 setServices([]);
@@ -311,8 +311,8 @@ const ServicesBrowse = () => {
             }
 
             const response = await clientService.getServices(params);
-            // console.log("🎯 API response full:", response);
-            // console.log("🎯 Services data:", response.data?.data);
+            // console.log("API response full:", response);
+            // console.log("Services data:", response.data?.data);
 
             // Let's also check individual service distances
             // if (response.data?.data && Array.isArray(response.data.data)) {
@@ -328,7 +328,7 @@ const ServicesBrowse = () => {
             //     });
             // }
 
-            // console.log("🎯 API response:", {
+            // console.log("API response:", {
             //     success: response.success,
             //     total: response.data?.total || 0,
             //     services_count: response.data?.data?.length || 0,
@@ -407,7 +407,7 @@ const ServicesBrowse = () => {
     };
 
     const handleLocationChange = (newLocation) => {
-        // console.log("📍 Location changed to:", {
+        // console.log("Location changed to:", {
         //     lat: newLocation.lat,
         //     lng: newLocation.lng,
         //     address: newLocation.address,
@@ -425,7 +425,7 @@ const ServicesBrowse = () => {
         setShowLocationSelector(false);
 
         // Force a reload of services for the new location
-        // console.log("🔄 Triggering service reload for new location");
+        // console.log("Triggering service reload for new location");
     };
 
     const handlePageChange = (page) => {

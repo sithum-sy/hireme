@@ -35,9 +35,9 @@ const CreateQuote = () => {
 
     useEffect(() => {
         // Set quote_id from URL parameter when component loads
-        console.log("CreateQuote: URL quoteId =", quoteId);
+        // console.log("CreateQuote: URL quoteId =", quoteId);
         if (quoteId && !quoteData.quote_id) {
-            console.log("Setting quote_id in form data");
+            // console.log("Setting quote_id in form data");
             setQuoteData((prev) => ({ ...prev, quote_id: quoteId }));
         }
     }, [quoteId]);
@@ -78,18 +78,18 @@ const CreateQuote = () => {
 
             // If not found in pending quotes, fetch directly from API
             if (!quote) {
-                console.log(
-                    "Quote not found in pending list, fetching from API..."
-                );
+                // console.log(
+                //     "Quote not found in pending list, fetching from API..."
+                // );
                 const result = await providerQuoteService.getQuoteDetail(
                     quoteData.quote_id
                 );
                 if (result.success) {
                     quote = result.data;
-                    console.log("Quote loaded from API:", quote);
+                    // console.log("Quote loaded from API:", quote);
                 }
             } else {
-                console.log("Quote found in pending list:", quote);
+                // console.log("Quote found in pending list:", quote);
             }
 
             if (quote) {

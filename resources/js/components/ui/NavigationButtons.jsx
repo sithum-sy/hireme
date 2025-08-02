@@ -8,9 +8,13 @@ const NavigationButtons = ({
     onSubmit,
     loading = false,
     disabled = false,
+    isProviderSubStep = false,
+    currentSubStep = 1,
+    isProvider = false,
 }) => {
     const isFirstStep = currentStep === 1;
-    const isLastStep = currentStep === totalSteps;
+    // For providers on step 3, only show "Create Account" when on sub-step 3
+    const isLastStep = currentStep === totalSteps && (!isProvider || currentSubStep === 3);
 
     return (
         <div className="navigation-buttons">

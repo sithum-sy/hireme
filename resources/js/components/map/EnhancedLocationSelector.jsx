@@ -65,9 +65,15 @@ const LocationPicker = ({
                     <div>
                         <strong>Selected Location</strong>
                         <br />
-                        Lat: {typeof position[0] === 'number' ? position[0].toFixed(4) : 'N/A'}
+                        Lat:{" "}
+                        {typeof position[0] === "number"
+                            ? position[0].toFixed(4)
+                            : "N/A"}
                         <br />
-                        Lng: {typeof position[1] === 'number' ? position[1].toFixed(4) : 'N/A'}
+                        Lng:{" "}
+                        {typeof position[1] === "number"
+                            ? position[1].toFixed(4)
+                            : "N/A"}
                         <br />
                         Radius: {radius}km
                     </div>
@@ -93,16 +99,16 @@ const reverseGeocode = async (lat, lng) => {
             `/api/geocoding/reverse?lat=${lat}&lon=${lng}`,
             {
                 headers: {
-                    "Accept": "application/json",
+                    Accept: "application/json",
                     "Content-Type": "application/json",
                 },
             }
         );
-        
+
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
+
         return await response.json();
     } catch (error) {
         console.error("Reverse geocoding failed:", error);
@@ -126,16 +132,16 @@ const geocodeSearch = async (query) => {
             )}&countrycodes=lk&limit=5`,
             {
                 headers: {
-                    "Accept": "application/json",
+                    Accept: "application/json",
                     "Content-Type": "application/json",
                 },
             }
         );
-        
+
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
+
         return await response.json();
     } catch (error) {
         console.error("Geocoding failed:", error);
@@ -222,33 +228,33 @@ const EnhancedLocationSelector = ({ value, onChange, error }) => {
     const [mapLoading, setMapLoading] = useState(true);
     const [containerVisible, setContainerVisible] = useState(false);
     const mapContainerRef = useRef(null);
-    
-    console.log("EnhancedLocationSelector render:", {
-        hasValue: !!value,
-        valueDetails: value ? `${value.city}, ${value.province}` : 'null',
-        position: position ? `[${position[0]}, ${position[1]}]` : 'null',
-        mapKey,
-        mapLoading,
-        containerVisible
-    });
+
+    // console.log("EnhancedLocationSelector render:", {
+    //     hasValue: !!value,
+    //     valueDetails: value ? `${value.city}, ${value.province}` : 'null',
+    //     position: position ? `[${position[0]}, ${position[1]}]` : 'null',
+    //     mapKey,
+    //     mapLoading,
+    //     containerVisible
+    // });
 
     // Initialize with existing value
     useEffect(() => {
-        console.log("EnhancedLocationSelector useEffect[value]:", {
-            value: value ? `${value.city} (${value.lat}, ${value.lng})` : 'null',
-            hasValidCoords: value && value.lat && value.lng,
-            position: position ? `[${position[0]}, ${position[1]}]` : 'null'
-        });
-        
+        // console.log("EnhancedLocationSelector useEffect[value]:", {
+        //     value: value ? `${value.city} (${value.lat}, ${value.lng})` : 'null',
+        //     hasValidCoords: value && value.lat && value.lng,
+        //     position: position ? `[${position[0]}, ${position[1]}]` : 'null'
+        // });
+
         if (value && value.lat && value.lng) {
             // Ensure lat and lng are valid numbers
             const lat = parseFloat(value.lat);
             const lng = parseFloat(value.lng);
-            
-            console.log("EnhancedLocationSelector coordinates:", { lat, lng, isValidLat: !isNaN(lat), isValidLng: !isNaN(lng) });
-            
+
+            // console.log("EnhancedLocationSelector coordinates:", { lat, lng, isValidLat: !isNaN(lat), isValidLng: !isNaN(lng) });
+
             if (!isNaN(lat) && !isNaN(lng)) {
-                console.log("EnhancedLocationSelector setting position:", [lat, lng]);
+                // console.log("EnhancedLocationSelector setting position:", [lat, lng]);
                 setPosition([lat, lng]);
                 setRadius(value.radius || 15);
                 setMapKey((prev) => prev + 1);
@@ -256,7 +262,7 @@ const EnhancedLocationSelector = ({ value, onChange, error }) => {
             }
         } else if (!value) {
             // If no value is provided, reset to default state
-            console.log("EnhancedLocationSelector: No value provided, resetting to default");
+            // console.log("EnhancedLocationSelector: No value provided, resetting to default");
             setPosition(null);
             setMapKey((prev) => prev + 1);
             setMapLoading(true);
@@ -266,26 +272,27 @@ const EnhancedLocationSelector = ({ value, onChange, error }) => {
     // Force map invalidate size when component becomes visible
     useEffect(() => {
         // Check if we're in a modal context
-        const isInModal = document.querySelector('.modal.show') !== null;
+        const isInModal = document.querySelector(".modal.show") !== null;
         const delay = isInModal ? 500 : 200; // Longer delay for modal context
-        
-        console.log("EnhancedLocationSelector: Setting up resize timer", { isInModal, delay });
-        
+
+        // console.log("EnhancedLocationSelector: Setting up resize timer", { isInModal, delay });
+
         const timer = setTimeout(() => {
             // Find any Leaflet map instance and force it to resize
-            const leafletContainers = document.querySelectorAll('.leaflet-container');
-            console.log("EnhancedLocationSelector: Found", leafletContainers.length, "leaflet containers");
-            
+            const leafletContainers =
+                document.querySelectorAll(".leaflet-container");
+            // console.log("EnhancedLocationSelector: Found", leafletContainers.length, "leaflet containers");
+
             leafletContainers.forEach((container, index) => {
                 if (container._leaflet_map) {
-                    console.log(`EnhancedLocationSelector: Invalidating map size for container ${index}`);
+                    // console.log(`EnhancedLocationSelector: Invalidating map size for container ${index}`);
                     container._leaflet_map.invalidateSize();
-                    
+
                     // Additional force refresh for modal context
                     if (isInModal) {
                         setTimeout(() => {
                             container._leaflet_map.invalidateSize();
-                            console.log(`EnhancedLocationSelector: Second invalidation for modal context ${index}`);
+                            // console.log(`EnhancedLocationSelector: Second invalidation for modal context ${index}`);
                         }, 200);
                     }
                 }
@@ -299,10 +306,11 @@ const EnhancedLocationSelector = ({ value, onChange, error }) => {
     useEffect(() => {
         if (mapKey > 0) {
             const timer = setTimeout(() => {
-                const leafletContainers = document.querySelectorAll('.leaflet-container');
-                leafletContainers.forEach(container => {
+                const leafletContainers =
+                    document.querySelectorAll(".leaflet-container");
+                leafletContainers.forEach((container) => {
                     if (container._leaflet_map) {
-                        console.log("EnhancedLocationSelector: Invalidating map size after key change");
+                        // console.log("EnhancedLocationSelector: Invalidating map size after key change");
                         container._leaflet_map.invalidateSize();
                     }
                 });
@@ -315,12 +323,13 @@ const EnhancedLocationSelector = ({ value, onChange, error }) => {
     // Watch for modal transitions and resize map accordingly
     useEffect(() => {
         const handleModalShown = () => {
-            console.log("EnhancedLocationSelector: Modal shown event detected");
+            // console.log("EnhancedLocationSelector: Modal shown event detected");
             setTimeout(() => {
-                const leafletContainers = document.querySelectorAll('.leaflet-container');
-                leafletContainers.forEach(container => {
+                const leafletContainers =
+                    document.querySelectorAll(".leaflet-container");
+                leafletContainers.forEach((container) => {
                     if (container._leaflet_map) {
-                        console.log("EnhancedLocationSelector: Invalidating on modal shown");
+                        // console.log("EnhancedLocationSelector: Invalidating on modal shown");
                         container._leaflet_map.invalidateSize();
                     }
                 });
@@ -328,10 +337,10 @@ const EnhancedLocationSelector = ({ value, onChange, error }) => {
         };
 
         // Listen for Bootstrap modal events
-        document.addEventListener('shown.bs.modal', handleModalShown);
-        
+        document.addEventListener("shown.bs.modal", handleModalShown);
+
         return () => {
-            document.removeEventListener('shown.bs.modal', handleModalShown);
+            document.removeEventListener("shown.bs.modal", handleModalShown);
         };
     }, []);
 
@@ -342,20 +351,26 @@ const EnhancedLocationSelector = ({ value, onChange, error }) => {
         const observer = new IntersectionObserver(
             (entries) => {
                 entries.forEach((entry) => {
-                    console.log("EnhancedLocationSelector: Intersection observer", {
-                        isIntersecting: entry.isIntersecting,
-                        intersectionRatio: entry.intersectionRatio
-                    });
-                    
+                    // console.log(
+                    //     "EnhancedLocationSelector: Intersection observer",
+                    //     {
+                    //         isIntersecting: entry.isIntersecting,
+                    //         intersectionRatio: entry.intersectionRatio,
+                    //     }
+                    // );
+
                     if (entry.isIntersecting && entry.intersectionRatio > 0.1) {
                         setContainerVisible(true);
-                        
+
                         // Force map resize when container becomes visible
                         setTimeout(() => {
-                            const leafletContainers = document.querySelectorAll('.leaflet-container');
-                            leafletContainers.forEach(container => {
+                            const leafletContainers =
+                                document.querySelectorAll(".leaflet-container");
+                            leafletContainers.forEach((container) => {
                                 if (container._leaflet_map) {
-                                    console.log("EnhancedLocationSelector: Invalidating on intersection");
+                                    // console.log(
+                                    //     "EnhancedLocationSelector: Invalidating on intersection"
+                                    // );
                                     container._leaflet_map.invalidateSize();
                                 }
                             });
@@ -367,7 +382,7 @@ const EnhancedLocationSelector = ({ value, onChange, error }) => {
             },
             {
                 threshold: [0, 0.1, 0.5, 1],
-                rootMargin: '50px'
+                rootMargin: "50px",
             }
         );
 
@@ -399,7 +414,7 @@ const EnhancedLocationSelector = ({ value, onChange, error }) => {
             if (Array.isArray(results)) {
                 setSearchResults(results.slice(0, 5));
             } else if (results.error) {
-                console.warn('Geocoding API error:', results.error);
+                console.warn("Geocoding API error:", results.error);
                 setSearchResults([]);
                 // You could add a toast notification here
             } else {
@@ -463,7 +478,7 @@ const EnhancedLocationSelector = ({ value, onChange, error }) => {
                             <div className="spinner-border spinner-border-sm"></div>
                         </div>
                     )}
-                    
+
                     {/* Search Results - Fixed positioning */}
                     {searchResults.length > 0 && (
                         <div className="search-results">
@@ -523,57 +538,75 @@ const EnhancedLocationSelector = ({ value, onChange, error }) => {
                         border: "2px solid #007bff",
                         borderRadius: "8px",
                         overflow: "hidden",
-                        backgroundColor: "#f8f9fa"
+                        backgroundColor: "#f8f9fa",
                     }}
                 >
                     {mapLoading && (
                         <div className="position-absolute top-50 start-50 translate-middle">
-                            <div className="spinner-border text-primary" role="status">
-                                <span className="visually-hidden">Loading map...</span>
+                            <div
+                                className="spinner-border text-primary"
+                                role="status"
+                            >
+                                <span className="visually-hidden">
+                                    Loading map...
+                                </span>
                             </div>
                         </div>
                     )}
                     {containerVisible !== false && (
                         <MapContainer
-                        key={mapKey}
-                        center={position || [6.9271, 79.8612]} // Default to Colombo
-                        zoom={position ? 13 : 8}
-                        style={{
-                            height: "100%",
-                            width: "100%",
-                            zIndex: 1,
-                        }}
-                        scrollWheelZoom={true}
-                        attributionControl={true}
-                        zoomControl={true}
-                        whenReady={() => {
-                            console.log("EnhancedLocationSelector: Map is ready");
-                            setMapLoading(false);
-                        }}
-                        whenCreated={(mapInstance) => {
-                            console.log("EnhancedLocationSelector: Map created", mapInstance);
-                            console.log("Map container size:", mapInstance.getContainer().getBoundingClientRect());
-                            console.log("Map size:", mapInstance.getSize());
-                            
-                            // Force map to invalidate size after creation
-                            setTimeout(() => {
-                                mapInstance.invalidateSize();
-                                console.log("Map size after invalidate:", mapInstance.getSize());
-                            }, 100);
-                        }}
-                    >
-                        <TileLayer
-                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                            maxZoom={19}
-                        />
-                        <LocationPicker
-                            position={position}
-                            setPosition={setPosition}
-                            radius={radius}
-                            onLocationSelect={handleLocationSelect}
-                        />
-                    </MapContainer>
+                            key={mapKey}
+                            center={position || [6.9271, 79.8612]} // Default to Colombo
+                            zoom={position ? 13 : 8}
+                            style={{
+                                height: "100%",
+                                width: "100%",
+                                zIndex: 1,
+                            }}
+                            scrollWheelZoom={true}
+                            attributionControl={true}
+                            zoomControl={true}
+                            whenReady={() => {
+                                // console.log(
+                                //     "EnhancedLocationSelector: Map is ready"
+                                // );
+                                setMapLoading(false);
+                            }}
+                            whenCreated={(mapInstance) => {
+                                // console.log(
+                                //     "EnhancedLocationSelector: Map created",
+                                //     mapInstance
+                                // );
+                                // console.log(
+                                //     "Map container size:",
+                                //     mapInstance
+                                //         .getContainer()
+                                //         .getBoundingClientRect()
+                                // );
+                                // console.log("Map size:", mapInstance.getSize());
+
+                                // Force map to invalidate size after creation
+                                setTimeout(() => {
+                                    mapInstance.invalidateSize();
+                                    // console.log(
+                                    //     "Map size after invalidate:",
+                                    //     mapInstance.getSize()
+                                    // );
+                                }, 100);
+                            }}
+                        >
+                            <TileLayer
+                                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                                maxZoom={19}
+                            />
+                            <LocationPicker
+                                position={position}
+                                setPosition={setPosition}
+                                radius={radius}
+                                onLocationSelect={handleLocationSelect}
+                            />
+                        </MapContainer>
                     )}
                 </div>
             </div>
@@ -587,8 +620,14 @@ const EnhancedLocationSelector = ({ value, onChange, error }) => {
                     </h6>
                     <div className="small text-muted">
                         <div>
-                            Coordinates: {typeof position[0] === 'number' ? position[0].toFixed(4) : 'N/A'},{" "}
-                            {typeof position[1] === 'number' ? position[1].toFixed(4) : 'N/A'}
+                            Coordinates:{" "}
+                            {typeof position[0] === "number"
+                                ? position[0].toFixed(4)
+                                : "N/A"}
+                            ,{" "}
+                            {typeof position[1] === "number"
+                                ? position[1].toFixed(4)
+                                : "N/A"}
                         </div>
                         <div>Service Radius: {radius}km</div>
                     </div>

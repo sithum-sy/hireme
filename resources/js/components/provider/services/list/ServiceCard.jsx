@@ -203,14 +203,14 @@ const ServiceCard = ({
             <div className="card-footer bg-light border-top-0 p-3">
                 {/* Desktop Layout: Horizontal buttons with flexible sizing */}
                 <div className="d-none d-lg-block">
-                    <div className="d-flex gap-2 w-100">
+                    <div className="d-flex gap-1 w-100">
                         <Link
                             to={`/provider/services/${service.id}`}
                             className="btn btn-outline-primary btn-sm flex-fill"
                             title="View service details"
                         >
                             <i className="fas fa-eye"></i>
-                            <span className="d-none d-xxl-inline ms-1">
+                            <span className="d-none d-xl-inline ms-1">
                                 View
                             </span>
                         </Link>
@@ -220,7 +220,7 @@ const ServiceCard = ({
                             title="Edit service"
                         >
                             <i className="fas fa-edit"></i>
-                            <span className="d-none d-xxl-inline ms-1">
+                            <span className="d-none d-xl-inline ms-1">
                                 Edit
                             </span>
                         </Link>
@@ -244,7 +244,7 @@ const ServiceCard = ({
                                     service.is_active ? "pause" : "play"
                                 }`}
                             ></i>
-                            <span className="d-none d-xxl-inline ms-1">
+                            <span className="d-none d-xl-inline ms-1">
                                 {service.is_active ? "Pause" : "Activate"}
                             </span>
                         </button>
@@ -254,8 +254,8 @@ const ServiceCard = ({
                             title="Delete service"
                         >
                             <i className="fas fa-trash"></i>
-                            <span className="d-none d-xxl-inline ms-1">
-                                Delete
+                            <span className="d-none d-xl-inline ms-1">
+                                {/* Delete */}
                             </span>
                         </button>
                     </div>

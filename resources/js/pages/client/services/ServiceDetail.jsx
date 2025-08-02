@@ -42,10 +42,10 @@ const ServiceDetail = () => {
     useEffect(() => {
         // First, check if we have a custom location from browse page
         if (customLocationFromBrowse) {
-            console.log(
-                "Using custom location from browse page:",
-                customLocationFromBrowse
-            );
+            // console.log(
+            //     "Using custom location from browse page:",
+            //     customLocationFromBrowse
+            // );
             setClientLocation(customLocationFromBrowse);
             setLocationLoading(false);
             return;
@@ -58,7 +58,7 @@ const ServiceDetail = () => {
                     const { latitude, longitude } = position.coords;
 
                     try {
-                        // ✅ Use Laravel backend proxy instead of direct API call
+                        // Use Laravel backend proxy instead of direct API call
                         const response = await fetch(
                             `/api/geocoding/reverse?lat=${latitude}&lon=${longitude}`
                         );
@@ -107,7 +107,7 @@ const ServiceDetail = () => {
                             setClientLocation(locationData);
                             setLocationLoading(false);
                             // console.log(
-                            //     "📍 Client location detected:",
+                            //     "Client location detected:",
                             //     locationData.address
                             // );
                         } else {
@@ -306,7 +306,7 @@ const ServiceDetail = () => {
         setLoading(true);
 
         try {
-            // ✅ Pass client location to service
+            // Pass client location to service
             const response = await clientService.getServiceDetail(
                 id,
                 clientLocation
@@ -381,10 +381,10 @@ const ServiceDetail = () => {
         window.history.pushState(null, "", `#book`);
     };
 
-    const handleContactProvider = () => {
-        // Open contact modal or navigate to messages
-        console.log("Contact provider:", provider.id);
-    };
+    // const handleContactProvider = () => {
+    //     // Open contact modal or navigate to messages
+    //     console.log("Contact provider:", provider.id);
+    // };
 
     const safeParseJson = (field) => {
         if (!field) return [];

@@ -44,7 +44,7 @@ const DurationDetailsStep = ({
                     response.data.end_time
                 );
                 setMaxDuration(Math.min(maxHours, 12)); // Cap at 12 hours
-                console.log("Calculated max duration:", Math.min(maxHours, 12));
+                // console.log("Calculated max duration:", Math.min(maxHours, 12));
             } else {
                 // Provider not available, set a default duration
                 setMaxDuration(8);
@@ -110,11 +110,13 @@ const DurationDetailsStep = ({
 
         // Calculate pricing
         const basePrice = service?.base_price || service?.price || 0;
-        
+
         // If this is from a quote acceptance, the service price is already the total amount
         // Don't multiply by duration as the quoted price is for the entire job
-        const isFromQuote = bookingData.booking_source === "quote_acceptance" || bookingData.quote_id;
-        const totalPrice = isFromQuote 
+        const isFromQuote =
+            bookingData.booking_source === "quote_acceptance" ||
+            bookingData.quote_id;
+        const totalPrice = isFromQuote
             ? Math.round(basePrice) // Quote price is already total
             : Math.round(basePrice * duration); // Regular booking: hourly rate * duration
 
@@ -139,10 +141,12 @@ const DurationDetailsStep = ({
     };
 
     const basePrice = service?.base_price || service?.price || 0;
-    
+
     // If this is from a quote acceptance, the service price is already the total amount
-    const isFromQuote = bookingData.booking_source === "quote_acceptance" || bookingData.quote_id;
-    const totalPrice = isFromQuote 
+    const isFromQuote =
+        bookingData.booking_source === "quote_acceptance" ||
+        bookingData.quote_id;
+    const totalPrice = isFromQuote
         ? Math.round(basePrice) // Quote price is already total
         : Math.round(basePrice * duration); // Regular booking: hourly rate * duration
 
@@ -291,49 +295,91 @@ const DurationDetailsStep = ({
                                                                         <div className="d-flex justify-content-between mb-2">
                                                                             <span>
                                                                                 <i className="fas fa-quote-left text-success me-1"></i>
-                                                                                Quote Price (Total):
+                                                                                Quote
+                                                                                Price
+                                                                                (Total):
                                                                             </span>
                                                                             <span>
-                                                                                {formatPrice(basePrice)}
+                                                                                {formatPrice(
+                                                                                    basePrice
+                                                                                )}
                                                                             </span>
                                                                         </div>
                                                                         <div className="d-flex justify-content-between mb-2">
-                                                                            <span>Duration:</span>
                                                                             <span>
-                                                                                {duration} {duration > 1 ? "hours" : "hour"}
+                                                                                Duration:
+                                                                            </span>
+                                                                            <span>
+                                                                                {
+                                                                                    duration
+                                                                                }{" "}
+                                                                                {duration >
+                                                                                1
+                                                                                    ? "hours"
+                                                                                    : "hour"}
                                                                             </span>
                                                                         </div>
                                                                         <div className="small text-muted mb-2">
                                                                             <i className="fas fa-info-circle me-1"></i>
-                                                                            Fixed quote price - not charged per hour
+                                                                            Fixed
+                                                                            quote
+                                                                            price
+                                                                            -
+                                                                            not
+                                                                            charged
+                                                                            per
+                                                                            hour
                                                                         </div>
                                                                         <hr />
                                                                         <div className="d-flex justify-content-between fw-bold">
-                                                                            <span>Total:</span>
+                                                                            <span>
+                                                                                Total:
+                                                                            </span>
                                                                             <span className="text-success h5 mb-0">
-                                                                                {formatPrice(totalPrice)}
+                                                                                {formatPrice(
+                                                                                    totalPrice
+                                                                                )}
                                                                             </span>
                                                                         </div>
                                                                     </>
                                                                 ) : (
                                                                     <>
                                                                         <div className="d-flex justify-content-between mb-2">
-                                                                            <span>Base rate per hour:</span>
                                                                             <span>
-                                                                                {formatPrice(basePrice)}
+                                                                                Base
+                                                                                rate
+                                                                                per
+                                                                                hour:
+                                                                            </span>
+                                                                            <span>
+                                                                                {formatPrice(
+                                                                                    basePrice
+                                                                                )}
                                                                             </span>
                                                                         </div>
                                                                         <div className="d-flex justify-content-between mb-2">
-                                                                            <span>Duration:</span>
                                                                             <span>
-                                                                                {duration} {duration > 1 ? "hours" : "hour"}
+                                                                                Duration:
+                                                                            </span>
+                                                                            <span>
+                                                                                {
+                                                                                    duration
+                                                                                }{" "}
+                                                                                {duration >
+                                                                                1
+                                                                                    ? "hours"
+                                                                                    : "hour"}
                                                                             </span>
                                                                         </div>
                                                                         <hr />
                                                                         <div className="d-flex justify-content-between fw-bold">
-                                                                            <span>Total:</span>
+                                                                            <span>
+                                                                                Total:
+                                                                            </span>
                                                                             <span className="text-primary h5 mb-0">
-                                                                                {formatPrice(totalPrice)}
+                                                                                {formatPrice(
+                                                                                    totalPrice
+                                                                                )}
                                                                             </span>
                                                                         </div>
                                                                     </>

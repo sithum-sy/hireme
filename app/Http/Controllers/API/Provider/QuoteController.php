@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API\Provider;
 
 use App\Http\Controllers\Controller;
 use App\Models\Quote;
+use App\Events\QuoteStatusChanged;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -172,6 +173,8 @@ class QuoteController extends Controller
         }
 
         try {
+            $oldStatus = $quote->status;
+            
             $quote->update([
                 'quoted_price' => $request->quoted_price,
                 'duration_hours' => $request->estimated_duration,
@@ -188,6 +191,9 @@ class QuoteController extends Controller
                 'valid_until' => now()->addDays($request->validity_days ?? 7),
                 'responded_at' => now(),
             ]);
+
+            // Dispatch quote status changed event for notifications
+            event(new QuoteStatusChanged($quote->fresh(['client', 'service', 'provider']), $oldStatus, 'quoted'));
 
             return response()->json([
                 'success' => true,

@@ -12,20 +12,26 @@ const SecuritySection = ({ onSuccess, onError }) => {
 
     const userData = profile?.user;
 
-    const handleFormSuccess = useCallback((result) => {
-        setChangePasswordMode(false);
-        if (onSuccess) {
-            onSuccess(
-                result.message || "Security settings updated successfully!"
-            );
-        }
-    }, [onSuccess]);
+    const handleFormSuccess = useCallback(
+        (result) => {
+            setChangePasswordMode(false);
+            if (onSuccess) {
+                onSuccess(
+                    result.message || "Security settings updated successfully!"
+                );
+            }
+        },
+        [onSuccess]
+    );
 
-    const handleFormError = useCallback((error) => {
-        if (onError) {
-            onError(error.message || "Failed to update security settings");
-        }
-    }, [onError]);
+    const handleFormError = useCallback(
+        (error) => {
+            if (onError) {
+                onError(error.message || "Failed to update security settings");
+            }
+        },
+        [onError]
+    );
 
     const getSecurityScore = () => {
         let score = 0;
@@ -70,7 +76,18 @@ const SecuritySection = ({ onSuccess, onError }) => {
         };
     };
 
-    const securityScore = useMemo(() => getSecurityScore(), [userData?.email_verified_at, userData?.first_name, userData?.last_name, userData?.last_login_at, userData?.created_at, userData?.role, profile?.provider_profile?.verification_status]);
+    const securityScore = useMemo(
+        () => getSecurityScore(),
+        [
+            userData?.email_verified_at,
+            userData?.first_name,
+            userData?.last_name,
+            userData?.last_login_at,
+            userData?.created_at,
+            userData?.role,
+            profile?.provider_profile?.verification_status,
+        ]
+    );
 
     const renderViewMode = () => (
         <div className="security-view-mode">
@@ -147,7 +164,7 @@ const SecuritySection = ({ onSuccess, onError }) => {
                     <div className="setting-item">
                         <div className="setting-header">
                             <div className="setting-icon">
-                                <i className="fas fa-envelope-check"></i>
+                                <i className="fas fa-envelope"></i>
                             </div>
                             <div className="setting-info">
                                 <h6>Email Verification</h6>
@@ -174,7 +191,7 @@ const SecuritySection = ({ onSuccess, onError }) => {
                     </div>
 
                     {/* Two-Factor Authentication */}
-                    <div className="setting-item">
+                    {/* <div className="setting-item">
                         <div className="setting-header">
                             <div className="setting-icon">
                                 <i className="fas fa-mobile-alt"></i>
@@ -193,10 +210,10 @@ const SecuritySection = ({ onSuccess, onError }) => {
                                 Coming Soon
                             </Button>
                         </div>
-                    </div>
+                    </div> */}
 
                     {/* Login Notifications */}
-                    <div className="setting-item">
+                    {/* <div className="setting-item">
                         <div className="setting-header">
                             <div className="setting-icon">
                                 <i className="fas fa-bell"></i>
@@ -212,7 +229,7 @@ const SecuritySection = ({ onSuccess, onError }) => {
                                 <span className="toggle-slider"></span>
                             </label>
                         </div>
-                    </div>
+                    </div> */}
                 </div>
             </div>
 

@@ -13,6 +13,8 @@ const ContactAndProfessional = ({
     previewImage,
     onRemoveImage,
     documentPreviews,
+    currentSubStep = 1,
+    onSubStepChange,
 }) => {
     const isProvider = formData.role === "service_provider";
 
@@ -21,55 +23,64 @@ const ContactAndProfessional = ({
             <div className="step-header">
                 <h2 className="step-title">
                     {isProvider
-                        ? "Contact & Professional Info"
+                        ? currentSubStep === 1
+                            ? "Contact Information"
+                            : currentSubStep === 2
+                            ? "Professional Information"
+                            : "Documents & Portfolio"
                         : "Contact Details"}
                 </h2>
                 <p className="step-subtitle">
                     {isProvider
-                        ? "Tell us about your business"
+                        ? currentSubStep === 1
+                            ? "Let's get your contact details"
+                            : currentSubStep === 2
+                            ? "Tell us about your business"
+                            : "Upload your documents and showcase your work"
                         : "Complete your profile"}
                 </p>
             </div>
 
             <div className="form-sections">
-                {/* Contact Information */}
-                <div className="contact-section">
-                    <FormField
-                        label="Address"
-                        name="address"
-                        value={formData.address}
-                        onChange={onChange}
-                        error={errors.address}
-                        placeholder="Your full address"
-                        required
-                    >
-                        <textarea
+                {/* Contact Information - Always show for non-providers, show for providers only on sub-step 1 */}
+                {(!isProvider || currentSubStep === 1) && (
+                    <div className="contact-section">
+                        <FormField
+                            label="Address"
                             name="address"
-                            rows="3"
-                            className={`form-input ${
-                                errors.address ? "is-invalid" : ""
-                            }`}
                             value={formData.address}
                             onChange={onChange}
+                            error={errors.address}
                             placeholder="Your full address"
-                        />
-                    </FormField>
-
-                    <div className="form-row">
-                        <FormField
-                            label="Contact Number"
-                            name="contact_number"
-                            type="tel"
-                            value={formData.contact_number}
-                            onChange={onChange}
-                            error={errors.contact_number}
-                            placeholder="+1234567890"
                             required
-                            className="half-width"
-                        />
+                        >
+                            <textarea
+                                name="address"
+                                rows="3"
+                                className={`form-input ${
+                                    errors.address ? "is-invalid" : ""
+                                }`}
+                                value={formData.address}
+                                onChange={onChange}
+                                placeholder="Your full address"
+                            />
+                        </FormField>
 
-                        <div className="profile-picture-section half-width">
-                            {/* <FormField
+                        <div className="form-row">
+                            <FormField
+                                label="Contact Number"
+                                name="contact_number"
+                                type="tel"
+                                value={formData.contact_number}
+                                onChange={onChange}
+                                error={errors.contact_number}
+                                placeholder="+1234567890"
+                                required
+                                className="half-width"
+                            />
+
+                            <div className="profile-picture-section half-width">
+                                {/* <FormField
                                 label="Profile Picture (Optional)"
                                 name="profile_picture"
                                 error={errors.profile_picture}
@@ -84,70 +95,76 @@ const ContactAndProfessional = ({
                                 />
                             </FormField> */}
 
-                            <FormField
-                                label="Profile Picture (Optional)"
-                                name="profile_picture"
-                                error={errors.profile_picture}
-                                helpText="Max 2MB, JPEG/PNG/GIF/WebP only"
-                            >
-                                <FileUpload
+                                <FormField
+                                    label="Profile Picture (Optional)"
                                     name="profile_picture"
-                                    accept="image/jpeg, image/png, image/gif, image/webp"
-                                    onFileSelect={(files) => {
-                                        const file = files[0];
-                                        const allowedTypes = [
-                                            "image/jpeg",
-                                            "image/png",
-                                            "image/gif",
-                                            "image/webp",
-                                        ];
-                                        const maxSizeInBytes = 2 * 1024 * 1024;
+                                    error={errors.profile_picture}
+                                    helpText="Max 2MB, JPEG/PNG/GIF/WebP only"
+                                >
+                                    <FileUpload
+                                        name="profile_picture"
+                                        accept="image/jpeg, image/png, image/gif, image/webp"
+                                        onFileSelect={(files) => {
+                                            const file = files[0];
+                                            const allowedTypes = [
+                                                "image/jpeg",
+                                                "image/png",
+                                                "image/gif",
+                                                "image/webp",
+                                            ];
+                                            const maxSizeInBytes =
+                                                2 * 1024 * 1024;
 
-                                        if (!file) return;
+                                            if (!file) return;
 
-                                        if (!allowedTypes.includes(file.type)) {
-                                            alert(
-                                                "Only JPEG, PNG, GIF, or WebP images are allowed."
-                                            );
-                                            return;
-                                        }
+                                            if (
+                                                !allowedTypes.includes(
+                                                    file.type
+                                                )
+                                            ) {
+                                                alert(
+                                                    "Only JPEG, PNG, GIF, or WebP images are allowed."
+                                                );
+                                                return;
+                                            }
 
-                                        if (file.size > maxSizeInBytes) {
-                                            alert(
-                                                "File size must be under 2MB."
-                                            );
-                                            return;
-                                        }
+                                            if (file.size > maxSizeInBytes) {
+                                                alert(
+                                                    "File size must be under 2MB."
+                                                );
+                                                return;
+                                            }
 
-                                        onFileChange(file);
-                                    }}
-                                />
-                            </FormField>
+                                            onFileChange(file);
+                                        }}
+                                    />
+                                </FormField>
 
-                            {previewImage && (
-                                <div className="image-preview-container">
-                                    <div className="image-preview">
-                                        <img
-                                            src={previewImage}
-                                            alt="Profile Preview"
-                                            className="preview-img"
-                                        />
-                                        <button
-                                            type="button"
-                                            className="remove-image-btn"
-                                            onClick={onRemoveImage}
-                                        >
-                                            <i className="fas fa-times"></i>
-                                        </button>
+                                {previewImage && (
+                                    <div className="image-preview-container">
+                                        <div className="image-preview">
+                                            <img
+                                                src={previewImage}
+                                                alt="Profile Preview"
+                                                className="preview-img"
+                                            />
+                                            <button
+                                                type="button"
+                                                className="remove-image-btn"
+                                                onClick={onRemoveImage}
+                                            >
+                                                <i className="fas fa-times"></i>
+                                            </button>
+                                        </div>
                                     </div>
-                                </div>
-                            )}
+                                )}
+                            </div>
                         </div>
                     </div>
-                </div>
+                )}
 
-                {/* Provider Professional Information */}
-                {isProvider && (
+                {/* Provider Professional Information - Show only on sub-step 2 */}
+                {isProvider && currentSubStep === 2 && (
                     <div className="provider-section">
                         <div className="section-header">
                             <h3 className="section-title">
@@ -225,12 +242,23 @@ const ContactAndProfessional = ({
                             your dashboard.
                         </div>
 
-                        {/* Documents Section */}
-                        <div className="documents-section">
-                            <h4 className="documents-title">
+                    </div>
+                )}
+
+                {/* Provider Documents & Portfolio Section - Show only on sub-step 3 */}
+                {isProvider && currentSubStep === 3 && (
+                    <div className="provider-section">
+                        <div className="section-header">
+                            <h3 className="section-title">
                                 <i className="fas fa-upload me-2"></i>
-                                Documents & Portfolio (Optional)
-                            </h4>
+                                Documents & Portfolio
+                            </h3>
+                            <p className="section-subtitle">
+                                Upload your professional documents and showcase your work (All optional)
+                            </p>
+                        </div>
+
+                        <div className="documents-section">
 
                             <div className="form-row">
                                 <FormField
@@ -429,6 +457,12 @@ const ContactAndProfessional = ({
                     font-weight: 600;
                     color: var(--success-color);
                     margin: 0;
+                }
+
+                .section-subtitle {
+                    font-size: 0.9rem;
+                    color: var(--text-secondary);
+                    margin: 0.5rem 0 0 0;
                 }
 
                 .info-alert {

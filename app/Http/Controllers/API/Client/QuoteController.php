@@ -9,6 +9,7 @@ use App\Models\Service;
 use App\Models\User;
 use App\Models\Appointment;
 use App\Services\AvailabilityService;
+use App\Events\QuoteStatusChanged;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -51,6 +52,9 @@ class QuoteController extends Controller
             $quote->load(['service', 'provider', 'client']);
 
             DB::commit();
+
+            // Dispatch quote status changed event for notifications
+            event(new QuoteStatusChanged($quote, null, $quote->status));
 
             // Log::info('Quote request created successfully', ['quote_id' => $quote->id, 'client_id' => Auth::id()]);
 

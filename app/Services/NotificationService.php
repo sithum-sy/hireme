@@ -50,9 +50,57 @@ class NotificationService
             ]);
 
             return $results;
-
         } catch (\Exception $e) {
             Log::error("Service notification sending failed", [
+                'type' => $type,
+                'recipient' => $recipient->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return false;
+        }
+    }
+
+    /**
+     * Send quote-related notification
+     */
+    public function sendQuoteNotification(
+        string $type,
+        User $recipient,
+        array $data,
+        bool $sendEmail = true,
+        bool $sendInApp = true
+    ) {
+        try {
+            // Check if user has notifications enabled
+            if (!$this->canReceiveNotifications($recipient)) {
+                Log::info("User has notifications disabled", ['user_id' => $recipient->id]);
+                return false;
+            }
+
+            $results = [
+                'email' => false,
+                'app' => false
+            ];
+
+            if ($sendEmail && $this->shouldSendEmail($recipient, $type)) {
+                $results['email'] = $this->sendEmailNotification($type, $recipient, $data);
+            }
+
+            if ($sendInApp && $this->shouldSendInApp($recipient, $type)) {
+                $results['app'] = $this->createInAppNotification($type, $recipient, $data);
+            }
+
+            Log::info("Quote notification processed", [
+                'type' => $type,
+                'recipient' => $recipient->id,
+                'results' => $results
+            ]);
+
+            return $results;
+        } catch (\Exception $e) {
+            Log::error("Quote notification sending failed", [
                 'type' => $type,
                 'recipient' => $recipient->id,
                 'error' => $e->getMessage(),
@@ -100,7 +148,6 @@ class NotificationService
             ]);
 
             return $results;
-
         } catch (\Exception $e) {
             Log::error("Notification sending failed", [
                 'type' => $type,
@@ -120,7 +167,7 @@ class NotificationService
     {
         try {
             $mailClass = $this->getMailClass($type, $recipient->role);
-            
+
             if (!$mailClass) {
                 Log::warning("No mail class found for notification type", [
                     'type' => $type,
@@ -149,7 +196,6 @@ class NotificationService
             ]);
 
             return true;
-
         } catch (\Exception $e) {
             Log::error("Email notification failed", [
                 'type' => $type,
@@ -168,7 +214,7 @@ class NotificationService
     {
         try {
             $template = $this->getInAppTemplate($type, $recipient->role);
-            
+
             if (!$template) {
                 Log::warning("No in-app template found for notification type", [
                     'type' => $type,
@@ -197,7 +243,6 @@ class NotificationService
             ]);
 
             return true;
-
         } catch (\Exception $e) {
             Log::error("In-app notification creation failed", [
                 'type' => $type,
@@ -214,8 +259,8 @@ class NotificationService
      */
     private function canReceiveNotifications(User $recipient): bool
     {
-        return $recipient->is_active && 
-               $recipient->email_verified_at !== null;
+        return $recipient->is_active &&
+            $recipient->email_verified_at !== null;
     }
 
     /**
@@ -240,10 +285,10 @@ class NotificationService
     private function getMailClass(string $type, string $role): ?string
     {
         $templates = $this->getEmailTemplates();
-        
-        return $templates[$type][$role] ?? 
-               $templates[$type]['default'] ?? 
-               null;
+
+        return $templates[$type][$role] ??
+            $templates[$type]['default'] ??
+            null;
     }
 
     /**
@@ -252,10 +297,10 @@ class NotificationService
     private function getInAppTemplate(string $type, string $role): ?array
     {
         $templates = $this->getInAppTemplates();
-        
-        return $templates[$type][$role] ?? 
-               $templates[$type]['default'] ?? 
-               null;
+
+        return $templates[$type][$role] ??
+            $templates[$type]['default'] ??
+            null;
     }
 
     /**
@@ -264,7 +309,7 @@ class NotificationService
     private function renderTemplate(string $template, array $data): string
     {
         $rendered = $template;
-        
+
         foreach ($data as $key => $value) {
             if (is_string($value) || is_numeric($value)) {
                 $rendered = str_replace('{' . $key . '}', $value, $rendered);
@@ -279,6 +324,17 @@ class NotificationService
             $rendered = str_replace('{provider_name}', $appointment->provider->full_name ?? 'Provider', $rendered);
             $rendered = str_replace('{appointment_date}', $appointment->appointment_date->format('M j, Y'), $rendered);
             $rendered = str_replace('{appointment_time}', \Carbon\Carbon::parse($appointment->appointment_time)->format('g:i A'), $rendered);
+        }
+
+        // Handle quote-related placeholders
+        if (isset($data['quote'])) {
+            $quote = $data['quote'];
+            $rendered = str_replace('{service_name}', $quote->service->title ?? 'Service', $rendered);
+            $rendered = str_replace('{service_title}', $quote->service->title ?? 'Service', $rendered);
+            $rendered = str_replace('{client_name}', $quote->client->full_name ?? 'Client', $rendered);
+            $rendered = str_replace('{provider_name}', $quote->provider->full_name ?? 'Provider', $rendered);
+            $rendered = str_replace('{quote_number}', $quote->quote_number ?? '', $rendered);
+            $rendered = str_replace('{quoted_price}', $quote->quoted_price ? 'Rs. ' . number_format($quote->quoted_price) : 'Price pending', $rendered);
         }
 
         // Handle service-related placeholders
@@ -308,7 +364,7 @@ class NotificationService
             case 'appointment_declined':
             case 'appointment_cancelled':
                 if ($appointmentId) {
-                    return $role === 'client' 
+                    return $role === 'client'
                         ? "/client/appointments/{$appointmentId}"
                         : "/provider/appointments/{$appointmentId}";
                 }
@@ -325,6 +381,12 @@ class NotificationService
 
             case 'quote_received':
             case 'quote_accepted':
+            case 'quote_request_sent':
+            case 'quote_request_received':
+            case 'quote_response_received':
+            case 'quote_declined':
+            case 'quote_withdrawn':
+            case 'quote_expired':
                 if ($quoteId) {
                     return $role === 'client'
                         ? "/client/quotes/{$quoteId}"
@@ -438,7 +500,7 @@ class NotificationService
                 'service_provider' => [
                     'title' => 'New Booking Request',
                     'message' => 'You have a new booking request for {service_name} from {client_name}.',
-                    'type' => 'info', 
+                    'type' => 'info',
                     'category' => 'appointment',
                 ],
             ],
@@ -452,11 +514,11 @@ class NotificationService
                 'service_provider' => [
                     'title' => 'New Booking Request',
                     'message' => 'You have a new booking request for {service_name} from {client_name}.',
-                    'type' => 'info', 
+                    'type' => 'info',
                     'category' => 'appointment',
                 ],
             ],
-            
+
             'appointment_confirmed' => [
                 'client' => [
                     'title' => 'Appointment Confirmed',
@@ -465,7 +527,7 @@ class NotificationService
                     'category' => 'appointment',
                 ],
             ],
-            
+
             'appointment_declined' => [
                 'client' => [
                     'title' => 'Appointment Declined',
@@ -502,7 +564,7 @@ class NotificationService
             'appointment_completed' => [
                 'client' => [
                     'title' => 'Service Completed',
-                    'message' => 'Your {service_name} appointment has been completed. Please review the service.',
+                    'message' => 'Your {service_name} appointment has been completed. Please make the necessary payments.',
                     'type' => 'success',
                     'category' => 'appointment',
                 ],
@@ -544,7 +606,7 @@ class NotificationService
             'review_received' => [
                 'default' => [
                     'title' => 'New Review Received',
-                    'message' => '{reviewer_name} left you a {rating}-star review for {service_name}.',
+                    'message' => '{reviewer_name} left you a {rating}-star review for {service_name}. This appointment is now closed.',
                     'type' => 'info',
                     'category' => 'general',
                 ],
@@ -608,6 +670,76 @@ class NotificationService
                     'message' => 'Reminder: You have an appointment with {client_name} tomorrow at {appointment_time}.',
                     'type' => 'info',
                     'category' => 'appointment',
+                ],
+            ],
+
+            // Quote notification templates
+            'quote_request_sent' => [
+                'client' => [
+                    'title' => 'Quote Request Sent',
+                    'message' => 'Your quote request for {service_name} has been sent successfully. The provider will respond within 24 hours.',
+                    'type' => 'info',
+                    'category' => 'general',
+                ],
+            ],
+
+            'quote_request_received' => [
+                'service_provider' => [
+                    'title' => 'New Quote Request',
+                    'message' => 'You have a new quote request for {service_name} from {client_name}. Please review and respond.',
+                    'type' => 'info',
+                    'category' => 'general',
+                ],
+            ],
+
+            'quote_response_received' => [
+                'client' => [
+                    'title' => 'Quote Response Received',
+                    'message' => '{provider_name} has responded to your quote request for {service_name} with a price of {quoted_price}.',
+                    'type' => 'success',
+                    'category' => 'general',
+                ],
+            ],
+
+            'quote_accepted' => [
+                'service_provider' => [
+                    'title' => 'Quote Accepted',
+                    'message' => '{client_name} has accepted your quote for {service_name} ({quoted_price}). An appointment will be created automatically.',
+                    'type' => 'success',
+                    'category' => 'general',
+                ],
+            ],
+
+            'quote_declined' => [
+                'service_provider' => [
+                    'title' => 'Quote Declined',
+                    'message' => '{client_name} has declined your quote for {service_name}. You can view other quote requests or adjust your pricing.',
+                    'type' => 'warning',
+                    'category' => 'general',
+                ],
+            ],
+
+            'quote_withdrawn' => [
+                'client' => [
+                    'title' => 'Quote Withdrawn',
+                    'message' => '{provider_name} has withdrawn their quote for {service_name}. You can request quotes from other providers.',
+                    'type' => 'warning',
+                    'category' => 'general',
+                ],
+            ],
+
+            'quote_expired' => [
+                'client' => [
+                    'title' => 'Quote Expired',
+                    'message' => 'Your quote request for {service_name} has expired. You can submit a new quote request if still needed.',
+                    'type' => 'warning',
+                    'category' => 'general',
+                ],
+                'service_provider' => [
+                    'title' => 'Quote Expired',
+                    'message' => 'Your quote for {service_name} with {client_name} has expired and is no longer valid.',
+                    'type' => 'info',
+                    'category' => 'general',
                 ],
             ],
         ];

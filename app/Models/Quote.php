@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
+use App\Events\QuoteStatusChanged;
 
 /**
  * Quote Model - Manages the quote request/response workflow between clients and providers
@@ -387,20 +388,28 @@ class Quote extends Model
 
     public function accept($clientNotes = null)
     {
+        $oldStatus = $this->status;
         $this->update([
             'status' => self::STATUS_ACCEPTED,
             'client_notes' => $clientNotes,
             'client_responded_at' => now(),
         ]);
+        
+        // Dispatch status changed event
+        event(new QuoteStatusChanged($this->fresh(['service', 'provider', 'client']), $oldStatus, self::STATUS_ACCEPTED));
     }
 
     public function reject($clientNotes = null)
     {
+        $oldStatus = $this->status;
         $this->update([
             'status' => self::STATUS_REJECTED,
             'client_notes' => $clientNotes,
             'client_responded_at' => now(),
         ]);
+        
+        // Dispatch status changed event
+        event(new QuoteStatusChanged($this->fresh(['service', 'provider', 'client']), $oldStatus, self::STATUS_REJECTED));
     }
 
     public function withdraw($providerNotes = null)

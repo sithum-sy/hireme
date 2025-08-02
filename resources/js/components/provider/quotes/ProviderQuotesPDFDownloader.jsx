@@ -1,39 +1,39 @@
-import React from 'react';
+import React from "react";
 
 const ProviderQuotesPDFDownloader = ({
     quote = null,
     quotes = null,
-    role = 'provider',
+    role = "provider",
     onDownload = null,
     onError = null,
     disabled = false,
     buttonText = null,
-    className = '',
-    variant = 'button'
+    className = "",
+    variant = "button",
 }) => {
     const formatDate = (dateString) => {
         if (!dateString) return "N/A";
         const date = new Date(dateString);
-        return date.toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
+        return date.toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
         });
     };
 
     const formatTime = (timeString) => {
         if (!timeString) return "";
         try {
-            const timeParts = timeString.toString().split(':');
+            const timeParts = timeString.toString().split(":");
             if (timeParts.length >= 2) {
                 const hours = parseInt(timeParts[0]);
                 const minutes = timeParts[1];
-                const ampm = hours >= 12 ? 'PM' : 'AM';
+                const ampm = hours >= 12 ? "PM" : "AM";
                 const displayHour = hours % 12 || 12;
                 return `${displayHour}:${minutes} ${ampm}`;
             }
         } catch (error) {
-            console.warn('Error formatting time:', error);
+            console.warn("Error formatting time:", error);
         }
         return timeString.toString();
     };
@@ -50,19 +50,22 @@ const ProviderQuotesPDFDownloader = ({
             accepted: "Accepted",
             rejected: "Declined",
             withdrawn: "Withdrawn",
-            expired: "Expired"
+            expired: "Expired",
         };
-        return statusTexts[status] || status.replace('_', ' ').toUpperCase();
+        return statusTexts[status] || status.replace("_", " ").toUpperCase();
     };
 
     const downloadSingleQuotePDF = (quote) => {
         try {
-            const printWindow = window.open('', '_blank');
+            const printWindow = window.open("", "_blank");
             const htmlContent = `
                 <!DOCTYPE html>
                 <html>
                 <head>
-                    <title>Quote ${quote.quote_number || `Q${String(quote.id).padStart(6, '0')}`} - Provider Copy</title>
+                    <title>Quote ${
+                        quote.quote_number ||
+                        `Q${String(quote.id).padStart(6, "0")}`
+                    } - Provider Copy</title>
                     <style>
                         body { 
                             font-family: Arial, sans-serif; 
@@ -170,14 +173,20 @@ const ProviderQuotesPDFDownloader = ({
                 <body>
                     <div class="header">
                         <h1>Service Quote - Provider Copy</h1>
-                        <p>Quote Number: ${quote.quote_number || `Q${String(quote.id).padStart(6, '0')}`}</p>
-                        <p>Generated on: ${new Date().toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                        })}</p>
+                        <p>Quote Number: ${
+                            quote.quote_number ||
+                            `Q${String(quote.id).padStart(6, "0")}`
+                        }</p>
+                        <p>Generated on: ${new Date().toLocaleDateString(
+                            "en-US",
+                            {
+                                year: "numeric",
+                                month: "long",
+                                day: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                            }
+                        )}</p>
                     </div>
 
                     <div class="section">
@@ -185,22 +194,34 @@ const ProviderQuotesPDFDownloader = ({
                         <div class="info-grid">
                             <div class="info-item">
                                 <span class="info-label">Current Status:</span>
-                                <span class="status ${quote.status}">${getStatusText(quote.status)}</span>
+                                <span class="status ${
+                                    quote.status
+                                }">${getStatusText(quote.status)}</span>
                             </div>
                             <div class="info-item">
                                 <span class="info-label">Received:</span>
-                                <span class="info-value">${formatDate(quote.created_at)}</span>
+                                <span class="info-value">${formatDate(
+                                    quote.created_at
+                                )}</span>
                             </div>
                             <div class="info-item">
                                 <span class="info-label">Requested Date:</span>
-                                <span class="info-value">${formatDate(quote.requested_date)} ${formatTime(quote.requested_time)}</span>
+                                <span class="info-value">${formatDate(
+                                    quote.requested_date
+                                )} ${formatTime(quote.requested_time)}</span>
                             </div>
-                            ${quote.expires_at && quote.status === 'quoted' ? `
+                            ${
+                                quote.expires_at && quote.status === "quoted"
+                                    ? `
                             <div class="info-item">
                                 <span class="info-label">Quote Expires:</span>
-                                <span class="info-value">${formatDate(quote.expires_at)}</span>
+                                <span class="info-value">${formatDate(
+                                    quote.expires_at
+                                )}</span>
                             </div>
-                            ` : ''}
+                            `
+                                    : ""
+                            }
                         </div>
                     </div>
 
@@ -208,72 +229,120 @@ const ProviderQuotesPDFDownloader = ({
                         <h3>Service Information</h3>
                         <div class="info-item">
                             <span class="info-label">Service:</span>
-                            <span class="info-value">${quote.service_title || quote.service?.title || 'Service'}</span>
+                            <span class="info-value">${
+                                quote.service_title ||
+                                quote.service?.title ||
+                                "Service"
+                            }</span>
                         </div>
-                        ${quote.service_category ? `
+                        ${
+                            quote.service_category
+                                ? `
                         <div class="info-item">
                             <span class="info-label">Category:</span>
                             <span class="info-value">${quote.service_category}</span>
                         </div>
-                        ` : ''}
+                        `
+                                : ""
+                        }
                     </div>
 
                     <div class="section">
                         <h3>Client Information</h3>
                         <div class="info-item">
                             <span class="info-label">Client:</span>
-                            <span class="info-value">${quote.client_name || quote.client?.name || 'Client'} ${quote.client_verified ? '✓ Verified' : ''}</span>
+                            <span class="info-value">${
+                                quote.client_name ||
+                                quote.client?.name ||
+                                "Client"
+                            } ${
+                quote.client_verified ? "✓ Verified" : ""
+            }</span>
                         </div>
-                        ${quote.client_phone ? `
+                        ${
+                            quote.client_phone
+                                ? `
                         <div class="info-item">
                             <span class="info-label">Phone:</span>
                             <span class="info-value">${quote.client_phone}</span>
                         </div>
-                        ` : ''}
-                        ${quote.client_email ? `
+                        `
+                                : ""
+                        }
+                        ${
+                            quote.client_email
+                                ? `
                         <div class="info-item">
                             <span class="info-label">Email:</span>
                             <span class="info-value">${quote.client_email}</span>
                         </div>
-                        ` : ''}
+                        `
+                                : ""
+                        }
                     </div>
 
-                    ${quote.quoted_price ? `
+                    ${
+                        quote.quoted_price
+                            ? `
                     <div class="price-highlight">
                         Your Quote: ${formatPrice(quote.quoted_price)}
-                        ${quote.travel_fee && quote.travel_fee > 0 ? `<br><small style="font-size: 14px; color: #666;">+ Rs. ${quote.travel_fee} travel fee</small>` : ''}
-                        ${quote.estimated_duration ? `<br><small style="font-size: 14px; color: #666;">Estimated Duration: ${quote.estimated_duration} hours</small>` : ''}
+                        ${
+                            quote.travel_fee && quote.travel_fee > 0
+                                ? `<br><small style="font-size: 14px; color: #666;">+ Rs. ${quote.travel_fee} travel fee</small>`
+                                : ""
+                        }
+                        ${
+                            quote.estimated_duration
+                                ? `<br><small style="font-size: 14px; color: #666;">Estimated Duration: ${quote.estimated_duration} hours</small>`
+                                : ""
+                        }
                     </div>
-                    ` : ''}
+                    `
+                            : ""
+                    }
 
-                    ${quote.message ? `
+                    ${
+                        quote.message
+                            ? `
                     <div class="section">
                         <h3>Client Request</h3>
                         <div class="message-box">
                             ${quote.message}
                         </div>
                     </div>
-                    ` : ''}
+                    `
+                            : ""
+                    }
 
-                    ${quote.provider_response ? `
+                    ${
+                        quote.provider_response
+                            ? `
                     <div class="section">
                         <h3>Your Response</h3>
                         <div class="message-box">
                             ${quote.provider_response}
                         </div>
                     </div>
-                    ` : ''}
+                    `
+                            : ""
+                    }
 
-                    ${quote.special_requirements ? `
+                    ${
+                        quote.special_requirements
+                            ? `
                     <div class="section">
                         <h3>Special Requirements</h3>
                         <div class="message-box">
                             ${quote.special_requirements}
                         </div>
                     </div>
-                    ` : ''}
+                    `
+                            : ""
+                    }
 
-                    ${quote.location_summary ? `
+                    ${
+                        quote.location_summary
+                            ? `
                     <div class="section">
                         <h3>Service Location</h3>
                         <div class="info-item">
@@ -281,19 +350,31 @@ const ProviderQuotesPDFDownloader = ({
                             <span class="info-value">${quote.location_summary}</span>
                         </div>
                     </div>
-                    ` : ''}
+                    `
+                            : ""
+                    }
 
-                    ${quote.urgency && quote.urgency !== 'normal' ? `
+                    ${
+                        quote.urgency && quote.urgency !== "normal"
+                            ? `
                     <div class="section">
                         <h3>Urgency Level</h3>
                         <div class="info-item">
                             <span class="info-label">Priority:</span>
-                            <span class="info-value" style="color: ${quote.urgency === 'urgent' ? '#dc3545' : quote.urgency === 'emergency' ? '#dc3545' : '#28a745'}; font-weight: bold; text-transform: uppercase;">
+                            <span class="info-value" style="color: ${
+                                quote.urgency === "urgent"
+                                    ? "#dc3545"
+                                    : quote.urgency === "emergency"
+                                    ? "#dc3545"
+                                    : "#28a745"
+                            }; font-weight: bold; text-transform: uppercase;">
                                 ${quote.urgency}
                             </span>
                         </div>
                     </div>
-                    ` : ''}
+                    `
+                            : ""
+                    }
 
                     <div class="footer">
                         <p>This quote record was generated automatically by the HireMe platform.</p>
@@ -322,7 +403,7 @@ const ProviderQuotesPDFDownloader = ({
                 onDownload(quote);
             }
         } catch (error) {
-            console.error('Error generating provider quote PDF:', error);
+            console.error("Error generating provider quote PDF:", error);
             if (onError) {
                 onError(error);
             }
@@ -331,18 +412,28 @@ const ProviderQuotesPDFDownloader = ({
 
     const downloadQuotesListPDF = (quotes) => {
         try {
-            const printWindow = window.open('', '_blank');
-            
+            const printWindow = window.open("", "_blank");
+
             // Calculate stats
             const stats = {
                 total: quotes.length,
-                pending: quotes.filter(q => q.status === 'pending').length,
-                quoted: quotes.filter(q => q.status === 'quoted').length,
-                accepted: quotes.filter(q => q.status === 'accepted').length,
-                rejected: quotes.filter(q => q.status === 'rejected').length,
-                totalValue: quotes.reduce((sum, q) => sum + (parseFloat(q.quoted_price) || 0), 0),
-                potentialRevenue: quotes.filter(q => ['quoted', 'accepted'].includes(q.status))
-                                      .reduce((sum, q) => sum + (parseFloat(q.quoted_price) || 0) + (parseFloat(q.travel_fee) || 0), 0)
+                pending: quotes.filter((q) => q.status === "pending").length,
+                quoted: quotes.filter((q) => q.status === "quoted").length,
+                accepted: quotes.filter((q) => q.status === "accepted").length,
+                rejected: quotes.filter((q) => q.status === "rejected").length,
+                totalValue: quotes.reduce(
+                    (sum, q) => sum + (parseFloat(q.quoted_price) || 0),
+                    0
+                ),
+                potentialRevenue: quotes
+                    .filter((q) => ["quoted", "accepted"].includes(q.status))
+                    .reduce(
+                        (sum, q) =>
+                            sum +
+                            (parseFloat(q.quoted_price) || 0) +
+                            (parseFloat(q.travel_fee) || 0),
+                        0
+                    ),
             };
 
             const htmlContent = `
@@ -483,51 +574,108 @@ const ProviderQuotesPDFDownloader = ({
                             </tr>
                         </thead>
                         <tbody>
-                            ${quotes.map(quote => `
+                            ${quotes
+                                .map(
+                                    (quote) => `
                                 <tr>
-                                    <td>${quote.quote_number || `Q${String(quote.id).padStart(6, '0')}`}</td>
+                                    <td>${
+                                        quote.quote_number ||
+                                        `Q${String(quote.id).padStart(6, "0")}`
+                                    }</td>
                                     <td>
-                                        ${quote.service_title || quote.service?.title || 'Service'}
-                                        ${quote.service_category ? `<br><small style="color: #666;">${quote.service_category}</small>` : ''}
+                                        ${
+                                            quote.service_title ||
+                                            quote.service?.title ||
+                                            "Service"
+                                        }
+                                        ${
+                                            quote.service_category
+                                                ? `<br><small style="color: #666;">${quote.service_category}</small>`
+                                                : ""
+                                        }
                                     </td>
                                     <td>
-                                        ${quote.client_name || quote.client?.name || 'Client'}
-                                        ${quote.client_verified ? '<br><small style="color: #28a745;">✓ Verified</small>' : ''}
+                                        ${
+                                            quote.client_name ||
+                                            quote.client?.name ||
+                                            "Client"
+                                        }
+                                        ${
+                                            quote.client_verified
+                                                ? '<br><small style="color: #28a745;">✓ Verified</small>'
+                                                : ""
+                                        }
                                     </td>
                                     <td>
                                         ${formatDate(quote.requested_date)}
-                                        ${quote.requested_time ? `<br><small>${formatTime(quote.requested_time)}</small>` : ''}
+                                        ${
+                                            quote.requested_time
+                                                ? `<br><small>${formatTime(
+                                                      quote.requested_time
+                                                  )}</small>`
+                                                : ""
+                                        }
                                     </td>
                                     <td class="price">
                                         ${formatPrice(quote.quoted_price)}
-                                        ${quote.travel_fee && quote.travel_fee > 0 ? `<br><small>+ Rs. ${quote.travel_fee}</small>` : ''}
+                                        ${
+                                            quote.travel_fee &&
+                                            quote.travel_fee > 0
+                                                ? `<br><small>+ Rs. ${quote.travel_fee}</small>`
+                                                : ""
+                                        }
                                     </td>
                                     <td>
-                                        <span class="status ${quote.status}">${getStatusText(quote.status)}</span>
-                                        ${quote.expires_at && quote.status === 'quoted' ? `<br><small>Exp: ${formatDate(quote.expires_at)}</small>` : ''}
+                                        <span class="status ${
+                                            quote.status
+                                        }">${getStatusText(quote.status)}</span>
+                                        ${
+                                            quote.expires_at &&
+                                            quote.status === "quoted"
+                                                ? `<br><small>Exp: ${formatDate(
+                                                      quote.expires_at
+                                                  )}</small>`
+                                                : ""
+                                        }
                                     </td>
                                     <td>
                                         ${formatDate(quote.created_at)}
                                     </td>
                                     <td class="price">
-                                        ${quote.status === 'accepted' ? 
-                                            `Rs. ${((parseFloat(quote.quoted_price) || 0) + (parseFloat(quote.travel_fee) || 0)).toLocaleString()}` : 
-                                            quote.status === 'quoted' ? 'Pending' : '-'}
+                                        ${
+                                            quote.status === "accepted"
+                                                ? `Rs. ${(
+                                                      (parseFloat(
+                                                          quote.quoted_price
+                                                      ) || 0) +
+                                                      (parseFloat(
+                                                          quote.travel_fee
+                                                      ) || 0)
+                                                  ).toLocaleString()}`
+                                                : quote.status === "quoted"
+                                                ? "Pending"
+                                                : "-"
+                                        }
                                     </td>
                                 </tr>
-                            `).join('')}
+                            `
+                                )
+                                .join("")}
                         </tbody>
                     </table>
 
                     <div class="footer">
                         <p>This business report was generated automatically by the HireMe platform.</p>
-                        <p>Generated on: ${new Date().toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                        })}</p>
+                        <p>Generated on: ${new Date().toLocaleDateString(
+                            "en-US",
+                            {
+                                year: "numeric",
+                                month: "long",
+                                day: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                            }
+                        )}</p>
                     </div>
 
                     <div class="no-print" style="margin-top: 30px; text-align: center;">
@@ -552,7 +700,7 @@ const ProviderQuotesPDFDownloader = ({
                 onDownload(quotes);
             }
         } catch (error) {
-            console.error('Error generating provider quotes list PDF:', error);
+            console.error("Error generating provider quotes list PDF:", error);
             if (onError) {
                 onError(error);
             }
@@ -561,7 +709,7 @@ const ProviderQuotesPDFDownloader = ({
 
     const handleDownload = () => {
         if (disabled) return;
-        
+
         if (quote) {
             downloadSingleQuotePDF(quote);
         } else if (quotes && quotes.length > 0) {
@@ -571,15 +719,17 @@ const ProviderQuotesPDFDownloader = ({
 
     const getButtonText = () => {
         if (buttonText) return buttonText;
-        
+
         if (quotes) {
-            return `Download ${quotes.length} Quote${quotes.length > 1 ? 's' : ''} Report`;
+            return `Download ${quotes.length} Quote${
+                quotes.length > 1 ? "s" : ""
+            }`;
         }
-        
-        return 'Download PDF';
+
+        return "Download PDF";
     };
 
-    if (variant === 'custom') {
+    if (variant === "custom") {
         return (
             <div onClick={handleDownload} className={className}>
                 {children}
@@ -587,7 +737,7 @@ const ProviderQuotesPDFDownloader = ({
         );
     }
 
-    if (variant === 'link') {
+    if (variant === "link") {
         return (
             <button
                 type="button"

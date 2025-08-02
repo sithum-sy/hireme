@@ -187,14 +187,8 @@ const PersonalSection = React.memo(({ onSuccess, onError }) => {
                     </div>
 
                     <div className="status-item">
-                        <div
-                            className={`status-icon ${
-                                userData?.email_verified_at
-                                    ? "active"
-                                    : "inactive"
-                            }`}
-                        >
-                            <i className="fas fa-envelope-check"></i>
+                        <div className="status-icon active">
+                            <i className="fas fa-envelope"></i>
                         </div>
                         <div className="status-content">
                             <h6>
@@ -222,7 +216,7 @@ const PersonalSection = React.memo(({ onSuccess, onError }) => {
                                             : "pending"
                                     }`}
                                 >
-                                    <i className="fas fa-shield-check"></i>
+                                    <i className="fas fa-shield"></i>
                                 </div>
                                 <div className="status-content">
                                     <h6>

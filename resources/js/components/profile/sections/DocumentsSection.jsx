@@ -15,18 +15,24 @@ const DocumentsSection = ({ onSuccess, onError }) => {
         )
     );
 
-    const handleFormSuccess = useCallback((result) => {
-        setUploadMode(false);
-        if (onSuccess) {
-            onSuccess(result.message || "Documents uploaded successfully!");
-        }
-    }, [onSuccess]);
+    const handleFormSuccess = useCallback(
+        (result) => {
+            setUploadMode(false);
+            if (onSuccess) {
+                onSuccess(result.message || "Documents uploaded successfully!");
+            }
+        },
+        [onSuccess]
+    );
 
-    const handleFormError = useCallback((error) => {
-        if (onError) {
-            onError(error.message || "Failed to upload documents");
-        }
-    }, [onError]);
+    const handleFormError = useCallback(
+        (error) => {
+            if (onError) {
+                onError(error.message || "Failed to upload documents");
+            }
+        },
+        [onError]
+    );
 
     const getDocumentStatus = () => {
         const hasLicense = !!providerProfile?.business_license_url;
@@ -51,7 +57,14 @@ const DocumentsSection = ({ onSuccess, onError }) => {
         };
     };
 
-    const status = useMemo(() => getDocumentStatus(), [providerProfile?.business_license_url, providerProfile?.certification_urls?.length, providerProfile?.portfolio_image_urls?.length]);
+    const status = useMemo(
+        () => getDocumentStatus(),
+        [
+            providerProfile?.business_license_url,
+            providerProfile?.certification_urls?.length,
+            providerProfile?.portfolio_image_urls?.length,
+        ]
+    );
 
     const renderViewMode = () => (
         <div className="documents-view-mode">
@@ -107,13 +120,7 @@ const DocumentsSection = ({ onSuccess, onError }) => {
                 >
                     <div className="category-header">
                         <div className="category-icon">
-                            <i
-                                className={`fas fa-${
-                                    status.hasLicense
-                                        ? "file-check"
-                                        : "file-times"
-                                }`}
-                            ></i>
+                            <i className="fas fa-file-contract"></i>
                         </div>
                         <div className="category-info">
                             <h5>Business License</h5>

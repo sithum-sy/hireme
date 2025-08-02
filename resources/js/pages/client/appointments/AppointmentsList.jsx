@@ -256,6 +256,7 @@ const AppointmentsList = () => {
         setLoading(true);
         try {
             // Use enhanced appointment service with payment data
+            // Only send backend-supported filters to the API
             const params = {
                 status:
                     filters.status !== "all" && filters.status !== "cancelled"
@@ -264,10 +265,7 @@ const AppointmentsList = () => {
                 date_from: filters.date_from || undefined,
                 date_to: filters.date_to || undefined,
                 service_type: filters.service_type || undefined,
-                category:
-                    filters.category !== "all" ? filters.category : undefined,
-                price_min: filters.price_min || undefined,
-                price_max: filters.price_max || undefined,
+                // Remove category and price filters from API params - these will be handled client-side
                 per_page: pagination.per_page,
                 page: pagination.current_page,
             };
@@ -299,6 +297,28 @@ const AppointmentsList = () => {
                 if (filters.status === "completed,closed") {
                     appointmentsData = appointmentsData.filter((apt) =>
                         ["completed", "closed"].includes(apt.status)
+                    );
+                }
+
+                // Apply client-side category filtering
+                if (filters.category && filters.category !== "all") {
+                    appointmentsData = appointmentsData.filter((apt) => 
+                        apt.service?.category?.id?.toString() === filters.category.toString()
+                    );
+                }
+
+                // Apply client-side price filtering
+                if (filters.price_min && !isNaN(parseFloat(filters.price_min))) {
+                    const minPrice = parseFloat(filters.price_min);
+                    appointmentsData = appointmentsData.filter((apt) => 
+                        apt.total_price && parseFloat(apt.total_price) >= minPrice
+                    );
+                }
+
+                if (filters.price_max && !isNaN(parseFloat(filters.price_max))) {
+                    const maxPrice = parseFloat(filters.price_max);
+                    appointmentsData = appointmentsData.filter((apt) => 
+                        apt.total_price && parseFloat(apt.total_price) <= maxPrice
                     );
                 }
 
@@ -339,7 +359,7 @@ const AppointmentsList = () => {
     // Fallback to your existing API method
     const loadAppointmentsFallback = async () => {
         try {
-            // Build query parameters
+            // Build query parameters - only include backend-supported filters
             const params = new URLSearchParams();
             if (filters.status !== "all" && filters.status !== "cancelled")
                 params.append("status", filters.status);
@@ -348,12 +368,7 @@ const AppointmentsList = () => {
             if (filters.date_to) params.append("date_to", filters.date_to);
             if (filters.service_type)
                 params.append("service_type", filters.service_type);
-            if (filters.category !== "all")
-                params.append("category", filters.category);
-            if (filters.price_min)
-                params.append("price_min", filters.price_min);
-            if (filters.price_max)
-                params.append("price_max", filters.price_max);
+            // Remove category and price filters from API params - these will be handled client-side
             params.append("page", pagination.current_page);
 
             const response = await fetch(`/api/client/bookings?${params}`, {
@@ -400,6 +415,28 @@ const AppointmentsList = () => {
                 if (filters.status === "completed,closed") {
                     appointmentsData = appointmentsData.filter((apt) =>
                         ["completed", "closed"].includes(apt.status)
+                    );
+                }
+
+                // Apply client-side category filtering
+                if (filters.category && filters.category !== "all") {
+                    appointmentsData = appointmentsData.filter((apt) => 
+                        apt.service?.category?.id?.toString() === filters.category.toString()
+                    );
+                }
+
+                // Apply client-side price filtering
+                if (filters.price_min && !isNaN(parseFloat(filters.price_min))) {
+                    const minPrice = parseFloat(filters.price_min);
+                    appointmentsData = appointmentsData.filter((apt) => 
+                        apt.total_price && parseFloat(apt.total_price) >= minPrice
+                    );
+                }
+
+                if (filters.price_max && !isNaN(parseFloat(filters.price_max))) {
+                    const maxPrice = parseFloat(filters.price_max);
+                    appointmentsData = appointmentsData.filter((apt) => 
+                        apt.total_price && parseFloat(apt.total_price) <= maxPrice
                     );
                 }
 

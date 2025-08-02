@@ -86,20 +86,20 @@ const AppointmentSections = () => {
                 const allAppointments = allResult.data?.data || [];
 
                 // Debug logging
-                console.log("Appointment Data Loading:", {
-                    today: {
-                        date: today,
-                        count: todayAppointments.length,
-                        appointments: todayAppointments,
-                    },
-                    upcoming: {
-                        count: upcomingAppointments.length,
-                        appointments: upcomingAppointments,
-                    },
-                    past: { count: pastAppointments.length },
-                    cancelled: { count: cancelledAppointments.length },
-                    total: { count: allAppointments.length },
-                });
+                // console.log("Appointment Data Loading:", {
+                //     today: {
+                //         date: today,
+                //         count: todayAppointments.length,
+                //         appointments: todayAppointments,
+                //     },
+                //     upcoming: {
+                //         count: upcomingAppointments.length,
+                //         appointments: upcomingAppointments,
+                //     },
+                //     past: { count: pastAppointments.length },
+                //     cancelled: { count: cancelledAppointments.length },
+                //     total: { count: allAppointments.length },
+                // });
 
                 // Calculate stats
                 const stats = {
@@ -280,7 +280,9 @@ const AppointmentSections = () => {
                             <i className="fas fa-calendar-day me-2"></i>
                             {getTodaysDate()}
                         </h4>
-                        <small className="opacity-75">Today's Schedule Overview</small>
+                        <small className="opacity-75">
+                            Today's Schedule Overview
+                        </small>
                     </div>
                 </div>
             </div>

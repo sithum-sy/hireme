@@ -197,7 +197,7 @@ const BookingModal = ({
                 ),
             };
             setCurrentSelectedSlot(updatedSlot);
-            console.log("BookingModal: Updated selected slot:", updatedSlot);
+            // console.log("BookingModal: Updated selected slot:", updatedSlot);
         }
 
         // Proper step advancement with validation
@@ -270,30 +270,37 @@ const BookingModal = ({
         try {
             // Check if booking was successful
             if (result && result.success) {
-                console.log("BookingModal: Booking completed successfully");
+                // console.log("BookingModal: Booking completed successfully");
 
                 // If this was a quote acceptance, try to update the quote status
                 if (quoteId && onQuoteAccepted) {
                     try {
-                        console.log("Attempting to accept quote:", quoteId);
-                        const quoteUpdateResult = await clientService.acceptQuote(quoteId, {
-                            appointment_id: result.data?.id || result.appointment?.id,
-                            notes: "Quote accepted through booking process"
-                        });
+                        // console.log("Attempting to accept quote:", quoteId);
+                        const quoteUpdateResult =
+                            await clientService.acceptQuote(quoteId, {
+                                appointment_id:
+                                    result.data?.id || result.appointment?.id,
+                                notes: "Quote accepted through booking process",
+                            });
 
                         if (quoteUpdateResult.success) {
-                            console.log("Quote status updated successfully");
+                            // console.log("Quote status updated successfully");
                             onQuoteAccepted(quoteUpdateResult.data);
                         } else {
-                            console.log("Quote update message:", quoteUpdateResult.message);
+                            // console.log("Quote update message:", quoteUpdateResult.message);
                             // If quote cannot be accepted (likely already accepted), that's OK
                             // The appointment was still created successfully
-                            if (quoteUpdateResult.message && quoteUpdateResult.message.includes("cannot be accepted")) {
-                                console.log("Quote was likely already accepted during appointment creation - this is normal");
+                            if (
+                                quoteUpdateResult.message &&
+                                quoteUpdateResult.message.includes(
+                                    "cannot be accepted"
+                                )
+                            ) {
+                                // console.log("Quote was likely already accepted during appointment creation - this is normal");
                             }
                         }
                     } catch (quoteError) {
-                        console.log("Quote update error (non-critical):", quoteError);
+                        // console.log("Quote update error (non-critical):", quoteError);
                         // Don't throw this error as the appointment was still created successfully
                     }
                 }
@@ -302,9 +309,10 @@ const BookingModal = ({
                 onHide();
 
                 // Show toast notification
-                const message = quoteId 
+                const message = quoteId
                     ? "Quote accepted and appointment created successfully!"
-                    : (result.message || "Booking request submitted successfully!");
+                    : result.message ||
+                      "Booking request submitted successfully!";
 
                 toast.success(message, {
                     position: "top-right",

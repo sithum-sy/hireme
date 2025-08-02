@@ -19,20 +19,29 @@ const BusinessSection = ({ onSuccess, onError }) => {
         ].includes(field)
     );
 
-    const handleFormSuccess = useCallback((result) => {
-        setEditMode(false);
-        if (onSuccess) {
-            onSuccess(
-                result.message || "Business information updated successfully!"
-            );
-        }
-    }, [onSuccess]);
+    const handleFormSuccess = useCallback(
+        (result) => {
+            setEditMode(false);
+            if (onSuccess) {
+                onSuccess(
+                    result.message ||
+                        "Business information updated successfully!"
+                );
+            }
+        },
+        [onSuccess]
+    );
 
-    const handleFormError = useCallback((error) => {
-        if (onError) {
-            onError(error.message || "Failed to update business information");
-        }
-    }, [onError]);
+    const handleFormError = useCallback(
+        (error) => {
+            if (onError) {
+                onError(
+                    error.message || "Failed to update business information"
+                );
+            }
+        },
+        [onError]
+    );
 
     const handleToggleAvailability = useCallback(async () => {
         setToggling(true);
@@ -224,13 +233,7 @@ const BusinessSection = ({ onSuccess, onError }) => {
                                     : "unverified"
                             }`}
                         >
-                            <i
-                                className={`fas fa-${
-                                    providerProfile?.business_license
-                                        ? "file-check"
-                                        : "file-times"
-                                }`}
-                            ></i>
+                            <i className="fas fa-file"></i>
                         </div>
                         <div className="verification-content">
                             <h6>Business License</h6>

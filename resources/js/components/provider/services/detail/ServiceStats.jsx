@@ -84,14 +84,14 @@ const ServiceStats = ({ service }) => {
                 <div className="col-lg-12 col-md-6">
                     <div className="card border-0 shadow-sm">
                         <div className="card-body text-center p-3">
-                            <div className="d-flex justify-content-between align-items-center mb-2">
+                            <div className="position-relative mb-2">
                                 <div className="text-info">
                                     <i className="fas fa-eye fa-lg"></i>
                                 </div>
                                 <span
                                     className={`badge bg-${getStatusColor(
                                         service.is_active
-                                    )}`}
+                                    )} position-absolute top-0 end-0`}
                                 >
                                     {service.is_active ? "Active" : "Inactive"}
                                 </span>

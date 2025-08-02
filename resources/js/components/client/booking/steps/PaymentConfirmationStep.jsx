@@ -293,6 +293,7 @@ const PaymentConfirmationStep = ({
                                                     1
                                                         ? "review"
                                                         : "reviews"}
+                                                    )
                                                 </div>
                                                 {provider?.is_verified && (
                                                     <span className="badge bg-success bg-opacity-10 text-success">

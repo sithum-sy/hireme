@@ -3,12 +3,12 @@ import EnhancedLocationSelector from "./EnhancedLocationSelector";
 import LocationSearch from "./LocationSearch";
 
 const LocationSelector = ({ value, onChange, error, radius = 5 }) => {
-    console.log("🎯 LocationSelector props:", {
-        radius: radius,
-        hasValue: !!value,
-        valueRadius: value?.radius,
-        valueCity: value?.city || "none",
-    });
+    // console.log("LocationSelector props:", {
+    //     radius: radius,
+    //     hasValue: !!value,
+    //     valueRadius: value?.radius,
+    //     valueCity: value?.city || "none",
+    // });
     // console.log("LocationSelector: Component rendering", {
     //     hasValue: !!value,
     //     valueCity: value?.city || "none",
@@ -38,7 +38,7 @@ const LocationSelector = ({ value, onChange, error, radius = 5 }) => {
 
                 if (response.ok) {
                     const data = await response.json();
-                    console.log("Geocoding response:", data);
+                    // console.log("Geocoding response:", data);
 
                     const address = data.address || {};
                     const displayName = data.display_name || "";
@@ -371,9 +371,9 @@ const LocationSelector = ({ value, onChange, error, radius = 5 }) => {
         }
 
         console.error("GPS Error:", errorMessage);
-        console.log(
-            "LocationSelector: GPS failed, switching to manual selection"
-        );
+        // console.log(
+        //     "LocationSelector: GPS failed, switching to manual selection"
+        // );
         setLocationState("manual");
     };
 
@@ -389,7 +389,7 @@ const LocationSelector = ({ value, onChange, error, radius = 5 }) => {
 
             navigator.geolocation.getCurrentPosition(
                 async (position) => {
-                    console.log("  LocationSelector: Geolocation success");
+                    // console.log("  LocationSelector: Geolocation success");
                     const {
                         latitude,
                         longitude,
@@ -401,13 +401,13 @@ const LocationSelector = ({ value, onChange, error, radius = 5 }) => {
                     } = position.coords;
 
                     // ENHANCED: Log GPS accuracy information
-                    console.log("GPS Details:", {
-                        coordinates: `${latitude}, ${longitude}`,
-                        accuracy: `±${accuracy} meters`,
-                        altitude: altitude ? `${altitude}m` : "unavailable",
-                        heading: heading ? `${heading}°` : "unavailable",
-                        speed: speed ? `${speed} m/s` : "unavailable",
-                    });
+                    // console.log("GPS Details:", {
+                    //     coordinates: `${latitude}, ${longitude}`,
+                    //     accuracy: `±${accuracy} meters`,
+                    //     altitude: altitude ? `${altitude}m` : "unavailable",
+                    //     heading: heading ? `${heading}°` : "unavailable",
+                    //     speed: speed ? `${speed} m/s` : "unavailable",
+                    // });
 
                     try {
                         // Use our unified reverse geocoding
@@ -424,10 +424,10 @@ const LocationSelector = ({ value, onChange, error, radius = 5 }) => {
                         locationData.gps_speed = speed;
                         locationData.gps_timestamp = new Date().toISOString();
 
-                        console.log(
-                            "LocationSelector: Reverse geocoded location:",
-                            locationData
-                        );
+                        // console.log(
+                        //     "LocationSelector: Reverse geocoded location:",
+                        //     locationData
+                        // );
 
                         isUserInteraction.current = true;
                         setCurrentLocation(locationData);
@@ -540,12 +540,12 @@ const LocationSelector = ({ value, onChange, error, radius = 5 }) => {
                 radius: currentLocation.radius || radius,
             };
 
-            console.log("📦 LocationSelector sending to parent:", {
-                radius: locationData.radius,
-                propRadius: radius,
-                currentLocationRadius: currentLocation.radius,
-                finalRadius: locationData.radius,
-            });
+            // console.log("LocationSelector sending to parent:", {
+            //     radius: locationData.radius,
+            //     propRadius: radius,
+            //     currentLocationRadius: currentLocation.radius,
+            //     finalRadius: locationData.radius,
+            // });
 
             // console.log(
             //     "LocationSelector: Calling onChange with location data",
@@ -635,12 +635,14 @@ const LocationSelector = ({ value, onChange, error, radius = 5 }) => {
     };
 
     const handleAdvancedMapToggle = () => {
-        console.log("LocationSelector: Advanced map toggle", {
-            currentState: useAdvancedMap,
-            newState: !useAdvancedMap,
-            currentLocation: currentLocation ? `${currentLocation.city}, ${currentLocation.province}` : 'null',
-            locationState
-        });
+        // console.log("LocationSelector: Advanced map toggle", {
+        //     currentState: useAdvancedMap,
+        //     newState: !useAdvancedMap,
+        //     currentLocation: currentLocation
+        //         ? `${currentLocation.city}, ${currentLocation.province}`
+        //         : "null",
+        //     locationState,
+        // });
         setUseAdvancedMap(!useAdvancedMap);
     };
 

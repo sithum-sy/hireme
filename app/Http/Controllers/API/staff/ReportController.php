@@ -561,7 +561,7 @@ class ReportController extends Controller
                         'amount' => ['type' => 'decimal', 'label' => 'Amount', 'sortable' => true],
                         'platform_fee' => ['type' => 'decimal', 'label' => 'Platform Fee', 'sortable' => true],
                         'status' => ['type' => 'enum', 'label' => 'Status', 'sortable' => true, 'options' => ['pending', 'completed', 'failed', 'refunded']],
-                        'payment_method' => ['type' => 'string', 'label' => 'Payment Method', 'sortable' => true],
+                        'payment_method' => ['type' => 'string', 'label' => 'Payment Method', 'sortable' => true, 'field_map' => 'method'],
                         'stripe_payment_intent_id' => ['type' => 'string', 'label' => 'Stripe ID', 'sortable' => true],
                         'created_at' => ['type' => 'datetime', 'label' => 'Payment Date', 'sortable' => true],
                         'updated_at' => ['type' => 'datetime', 'label' => 'Last Updated', 'sortable' => true],
@@ -911,6 +911,24 @@ class ReportController extends Controller
     {
         $query = $modelClass::query();
         
+        // Handle computed fields that need special query handling
+        $needsWithCount = false;
+        foreach ($fields as $field) {
+            $fieldConfig = $sourceConfig['fields'][$field] ?? null;
+            if ($fieldConfig && isset($fieldConfig['computed'])) {
+                switch ($fieldConfig['computed']) {
+                    case 'services_count':
+                        $needsWithCount = true;
+                        $query->withCount('services');
+                        break;
+                    case 'average_rating':
+                    case 'total_reviews':
+                        // These will be computed at format time
+                        break;
+                }
+            }
+        }
+        
         // Handle relations for selected fields
         $relations = [];
         foreach ($fields as $field) {
@@ -1192,6 +1210,9 @@ class ReportController extends Controller
                 } elseif (isset($fieldConfig['computed'])) {
                     // Handle computed fields
                     $value = $this->getComputedValue($item, $fieldConfig['computed']);
+                } elseif (isset($fieldConfig['field_map'])) {
+                    // Handle field mapping (e.g., payment_method -> method)
+                    $value = $item->{$fieldConfig['field_map']};
                 } else {
                     // Direct field
                     $value = $item->{$field};
@@ -1277,21 +1298,43 @@ class ReportController extends Controller
         try {
             switch ($computation) {
                 case 'services_count':
+                    // Check if withCount was used (preferred)
+                    if (isset($item->services_count)) {
+                        return (int) $item->services_count;
+                    }
+                    // Fallback to relationship count
                     if (method_exists($item, 'services') && $item->services) {
                         return (int) $item->services->count();
                     }
+                    // Fallback to accessor if available
+                    if (method_exists($item, 'getServicesCountAttribute')) {
+                        return (int) $item->services_count;
+                    }
                     return 0;
+                    
                 case 'average_rating':
+                    // Try accessor method first
+                    if (method_exists($item, 'getAverageRatingAttribute')) {
+                        return round((float) $item->average_rating, 2);
+                    }
+                    // Fallback to reviews relationship
                     if (method_exists($item, 'reviews') && $item->reviews) {
                         $avg = $item->reviews->avg('rating');
                         return $avg ? round((float) $avg, 2) : 0.0;
                     }
                     return 0.0;
+                    
                 case 'total_reviews':
+                    // Try accessor method first
+                    if (method_exists($item, 'getTotalReviewsAttribute')) {
+                        return (int) $item->total_reviews;
+                    }
+                    // Fallback to reviews relationship
                     if (method_exists($item, 'reviews') && $item->reviews) {
                         return (int) $item->reviews->count();
                     }
                     return 0;
+                    
                 default:
                     return null;
             }

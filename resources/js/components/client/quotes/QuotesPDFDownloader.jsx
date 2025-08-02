@@ -73,7 +73,7 @@ const QuotesPDFDownloader = ({
                         }
                         body { 
                             font-family: Arial, sans-serif; 
-                            margin: 0;
+                            margin: 0 auto;
                             padding: 20px;
                             line-height: 1.3; 
                             color: #333;
@@ -82,7 +82,7 @@ const QuotesPDFDownloader = ({
                             border: 2px solid #007bff;
                             border-radius: 8px;
                             box-sizing: border-box;
-                            width: fit-content;
+                            width: 210mm;
                             height: fit-content;
                             min-height: auto;
                         }
@@ -183,12 +183,13 @@ const QuotesPDFDownloader = ({
                         }
                         @media print {
                             body { 
-                                margin: 0; 
+                                margin: 0 auto; 
                                 padding: 15px;
                                 font-size: 10px;
                                 border-width: 1px;
                                 height: auto !important;
                                 min-height: auto !important;
+                                width: 210mm;
                             }
                             .no-print { display: none; }
                             .section { 
@@ -291,7 +292,8 @@ const QuotesPDFDownloader = ({
                         <div class="info-item">
                             <span class="info-label">Category:</span>
                             <span class="info-value">${
-                                quote.service_category.name || quote.service_category
+                                quote.service_category.name ||
+                                quote.service_category
                             }</span>
                         </div>
                         `
@@ -457,7 +459,7 @@ const QuotesPDFDownloader = ({
                         }
                         body { 
                             font-family: Arial, sans-serif; 
-                            margin: 0;
+                            margin: 0 auto;
                             padding: 20px;
                             line-height: 1.3;
                             color: #333;
@@ -466,7 +468,7 @@ const QuotesPDFDownloader = ({
                             border: 2px solid #007bff;
                             border-radius: 8px;
                             box-sizing: border-box;
-                            width: fit-content;
+                            width: 210mm;
                             height: fit-content;
                             min-height: auto;
                         }
@@ -531,12 +533,13 @@ const QuotesPDFDownloader = ({
                         }
                         @media print {
                             body { 
-                                margin: 0; 
+                                margin: 0 auto; 
                                 padding: 15px;
                                 font-size: 10px;
                                 border-width: 1px;
                                 height: auto !important;
                                 min-height: auto !important;
+                                width: 210mm;
                             }
                             .no-print { display: none; }
                             .header { 
@@ -610,15 +613,22 @@ const QuotesPDFDownloader = ({
                                         ${
                                             quote.service_category
                                                 ? `<br><small style="color: #666; font-weight: bold;">${
-                                                    quote.service_category.name || quote.service_category
-                                                }</small>`
+                                                      quote.service_category
+                                                          .name ||
+                                                      quote.service_category
+                                                  }</small>`
                                                 : ""
                                         }
                                     </td>
                                     <td>
                                         ${quote.provider_name || "Provider"}
-                                        ${quote.provider_business_name ? 
-                                            '<br><small style="color: #666;">' + quote.provider_business_name + '</small>' : ''}
+                                        ${
+                                            quote.provider_business_name
+                                                ? '<br><small style="color: #666;">' +
+                                                  quote.provider_business_name +
+                                                  "</small>"
+                                                : ""
+                                        }
                                         ${
                                             quote.provider_verified
                                                 ? '<br><small style="color: #28a745;">✓ Verified</small>'
@@ -716,7 +726,7 @@ const QuotesPDFDownloader = ({
         if (quotes) {
             return `Download ${quotes.length} Quote${
                 quotes.length > 1 ? "s" : ""
-            } PDF`;
+            }`;
         }
 
         return "Download PDF";

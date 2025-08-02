@@ -197,7 +197,11 @@ const AppointmentSummary = ({
                                         {Number(
                                             provider.average_rating
                                         ).toFixed(1)}{" "}
-                                        ({provider.reviews_count || 0})
+                                        ({provider.reviews_count || 0}{" "}
+                                        {provider.reviews_count === 1
+                                            ? "review"
+                                            : "reviews"}
+                                        )
                                     </div>
                                 )}
                             </div>

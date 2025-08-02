@@ -3,7 +3,11 @@
   "permissions": {
     "allow": [
       "Bash(npm run build:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(php artisan queue:work:*)",
+      "Bash(php artisan tinker:*)",
+      "Bash(php artisan config:clear:*)",
+      "Bash(php artisan:*)"
     ],
     "deny": []
   }

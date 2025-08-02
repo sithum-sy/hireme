@@ -16,6 +16,7 @@ const RegisterForm = () => {
 
     // State Management
     const [step, setStep] = useState(1);
+    const [subStep, setSubStep] = useState(1); // For provider sub-steps in step 3
     const [formData, setFormData] = useState({
         first_name: "",
         last_name: "",
@@ -185,18 +186,23 @@ const RegisterForm = () => {
                 const today = new Date();
                 let age = today.getFullYear() - birthDate.getFullYear();
                 const monthDiff = today.getMonth() - birthDate.getMonth();
-                
-                if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+
+                if (
+                    monthDiff < 0 ||
+                    (monthDiff === 0 && today.getDate() < birthDate.getDate())
+                ) {
                     age--;
                 }
-                
+
                 if (age < 18) {
-                    newErrors.date_of_birth = "You must be at least 18 years old to register";
+                    newErrors.date_of_birth =
+                        "You must be at least 18 years old to register";
                 }
             }
         }
 
         if (stepNumber === 3) {
+            // Always validate contact information first
             if (!formData.address.trim())
                 newErrors.address = "Address is required";
             if (!formData.contact_number.trim())
@@ -210,42 +216,47 @@ const RegisterForm = () => {
                 newErrors.profile_picture = "Profile picture must be under 2MB";
             }
 
+            // For providers, validate based on current sub-step
             if (formData.role === "service_provider") {
-                if (!formData.years_of_experience)
-                    newErrors.years_of_experience = "Experience is required";
-                if (!formData.bio || formData.bio.length < 50)
-                    newErrors.bio = "Bio must be at least 50 characters";
+                if (subStep === 2) {
+                    // Professional info validation
+                    if (!formData.years_of_experience)
+                        newErrors.years_of_experience =
+                            "Experience is required";
+                    if (!formData.bio || formData.bio.length < 50)
+                        newErrors.bio = "Bio must be at least 50 characters";
+                } else if (subStep === 3) {
+                    // Documents validation (all optional, but validate file sizes if present)
+                    if (
+                        formData.business_license &&
+                        formData.business_license.size > 5 * 1024 * 1024
+                    ) {
+                        newErrors.business_license =
+                            "Business license must be under 5MB";
+                    }
 
-                // File size validation
-                if (
-                    formData.business_license &&
-                    formData.business_license.size > 5 * 1024 * 1024
-                ) {
-                    newErrors.business_license =
-                        "Business license must be under 5MB";
-                }
+                    if (
+                        formData.certifications.some(
+                            (file) => file.size > 5 * 1024 * 1024
+                        )
+                    ) {
+                        newErrors.certifications =
+                            "Each certification file must be under 5MB";
+                    }
 
-                if (
-                    formData.certifications.some(
-                        (file) => file.size > 5 * 1024 * 1024
-                    )
-                ) {
-                    newErrors.certifications =
-                        "Each certification file must be under 5MB";
-                }
+                    if (
+                        formData.portfolio_images.some(
+                            (file) => file.size > 2 * 1024 * 1024
+                        )
+                    ) {
+                        newErrors.portfolio_images =
+                            "Each portfolio image must be under 2MB";
+                    }
 
-                if (
-                    formData.portfolio_images.some(
-                        (file) => file.size > 2 * 1024 * 1024
-                    )
-                ) {
-                    newErrors.portfolio_images =
-                        "Each portfolio image must be under 2MB";
-                }
-
-                if (formData.portfolio_images.length > 10) {
-                    newErrors.portfolio_images =
-                        "Maximum 10 portfolio images allowed";
+                    if (formData.portfolio_images.length > 10) {
+                        newErrors.portfolio_images =
+                            "Maximum 10 portfolio images allowed";
+                    }
                 }
             }
         }
@@ -256,6 +267,53 @@ const RegisterForm = () => {
     // Navigation
     const handleNext = (e) => {
         e.preventDefault();
+        console.log("Moving from step", step, "sub-step", subStep); // Debug log
+
+        // For step 3 providers, handle sub-steps
+        if (step === 3 && formData.role === "service_provider") {
+            if (subStep === 1) {
+                // Validate contact section first
+                const contactErrors = {};
+                if (!formData.address.trim())
+                    contactErrors.address = "Address is required";
+                if (!formData.contact_number.trim())
+                    contactErrors.contact_number = "Contact number is required";
+                if (
+                    formData.profile_picture &&
+                    formData.profile_picture.size > 2 * 1024 * 1024
+                ) {
+                    contactErrors.profile_picture =
+                        "Profile picture must be under 2MB";
+                }
+
+                if (Object.keys(contactErrors).length > 0) {
+                    setErrors(contactErrors);
+                    return;
+                }
+                setErrors({});
+                setSubStep(2); // Move to professional info sub-step
+                return;
+            } else if (subStep === 2) {
+                // Validate professional section
+                const professionalErrors = {};
+                if (!formData.years_of_experience)
+                    professionalErrors.years_of_experience =
+                        "Experience is required";
+                if (!formData.bio || formData.bio.length < 50)
+                    professionalErrors.bio =
+                        "Bio must be at least 50 characters";
+
+                if (Object.keys(professionalErrors).length > 0) {
+                    setErrors(professionalErrors);
+                    return;
+                }
+                setErrors({});
+                setSubStep(3); // Move to documents sub-step
+                return;
+            }
+            // If subStep === 3, validate documents (optional) and submit
+        }
+
         const stepErrors = validateStep(step);
         if (Object.keys(stepErrors).length > 0) {
             setErrors(stepErrors);
@@ -267,6 +325,21 @@ const RegisterForm = () => {
 
     const handlePrevious = (e) => {
         e.preventDefault();
+        console.log("Moving from step", step, "sub-step", subStep); // Debug log
+
+        // For step 3 providers, handle sub-step navigation
+        if (step === 3 && formData.role === "service_provider") {
+            if (subStep === 2) {
+                setSubStep(1); // Go back to contact
+                return;
+            } else if (subStep === 3) {
+                setSubStep(2); // Go back to professional
+                return;
+            }
+        }
+
+        // Reset sub-step when going to previous main step
+        setSubStep(1);
         setStep(step - 1);
     };
 
@@ -320,7 +393,7 @@ const RegisterForm = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const stepErrors = validateStep(3);
+        const stepErrors = validateStep(3); // Always validate step 3 for submission
         if (Object.keys(stepErrors).length > 0) {
             setErrors(stepErrors);
             return;
@@ -337,12 +410,14 @@ const RegisterForm = () => {
         if (result.success) {
             if (result.requires_verification) {
                 // Show success message and redirect to login with verification message
-                navigate('/login', { 
-                    state: { 
-                        message: result.message || 'Registration successful! Please check your email to verify your account before logging in.',
-                        type: 'success',
-                        email: result.user.email
-                    }
+                navigate("/login", {
+                    state: {
+                        message:
+                            result.message ||
+                            "Registration successful! Please check your email to verify your account before logging in.",
+                        type: "success",
+                        email: result.user.email,
+                    },
                 });
             } else {
                 // Normal registration with immediate login (shouldn't happen now)
@@ -368,44 +443,9 @@ const RegisterForm = () => {
         return labels;
     };
 
-    // Render Current Step
-    const renderCurrentStep = () => {
-        switch (step) {
-            case 1:
-                return (
-                    <RoleSelection
-                        selectedRole={formData.role}
-                        onRoleSelect={handleRoleSelect}
-                        error={errors.role}
-                    />
-                );
-            case 2:
-                return (
-                    <PersonalInfo
-                        formData={formData}
-                        onChange={handleInputChange}
-                        errors={errors}
-                        showPassword={showPassword}
-                        onTogglePassword={() => setShowPassword(!showPassword)}
-                    />
-                );
-            case 3:
-                return (
-                    <ContactAndProfessional
-                        formData={formData}
-                        onChange={handleInputChange}
-                        errors={errors}
-                        onFileChange={handleFileChange}
-                        onDocumentUpload={handleDocumentUpload}
-                        onRemoveDocument={handleRemoveDocument}
-                        previewImage={previewImage}
-                        onRemoveImage={handleRemoveImage}
-                        documentPreviews={documentPreviews}
-                    />
-                );
-            default:
-                return null;
-        }
+    // Get total steps based on role
+    const getTotalSteps = () => {
+        return 3; // Keep it at 3 steps for both roles as it was before
     };
 
     return (
@@ -447,7 +487,7 @@ const RegisterForm = () => {
                 <div className="form-card">
                     <StepIndicator
                         currentStep={step}
-                        totalSteps={3}
+                        totalSteps={getTotalSteps()}
                         stepLabels={getStepLabels()}
                     />
 
@@ -462,17 +502,66 @@ const RegisterForm = () => {
 
                         {/* Current Step Content */}
                         <div className="step-content">
-                            {renderCurrentStep()}
+                            {/* Step 1: Role Selection */}
+                            {step === 1 ? (
+                                <div className="step-container active-step">
+                                    <RoleSelection
+                                        selectedRole={formData.role}
+                                        onRoleSelect={handleRoleSelect}
+                                        error={errors.role}
+                                    />
+                                </div>
+                            ) : null}
+
+                            {/* Step 2: Personal Info */}
+                            {step === 2 ? (
+                                <div className="step-container active-step">
+                                    <PersonalInfo
+                                        formData={formData}
+                                        onChange={handleInputChange}
+                                        errors={errors}
+                                        showPassword={showPassword}
+                                        onTogglePassword={() =>
+                                            setShowPassword(!showPassword)
+                                        }
+                                    />
+                                </div>
+                            ) : null}
+
+                            {/* Step 3: Contact & Professional */}
+                            {step === 3 ? (
+                                <div className="step-container active-step">
+                                    <ContactAndProfessional
+                                        formData={formData}
+                                        onChange={handleInputChange}
+                                        errors={errors}
+                                        onFileChange={handleFileChange}
+                                        onDocumentUpload={handleDocumentUpload}
+                                        onRemoveDocument={handleRemoveDocument}
+                                        previewImage={previewImage}
+                                        onRemoveImage={handleRemoveImage}
+                                        documentPreviews={documentPreviews}
+                                        currentSubStep={subStep}
+                                        onSubStepChange={setSubStep}
+                                    />
+                                </div>
+                            ) : null}
                         </div>
 
                         {/* Navigation */}
                         <NavigationButtons
                             currentStep={step}
-                            totalSteps={3}
+                            totalSteps={getTotalSteps()}
                             onPrevious={handlePrevious}
                             onNext={handleNext}
                             onSubmit={handleSubmit}
                             loading={loading}
+                            isProvider={formData.role === "service_provider"}
+                            currentSubStep={subStep}
+                            isProviderSubStep={
+                                step === 3 &&
+                                formData.role === "service_provider"
+                            }
                         />
                     </form>
                 </div>
@@ -570,6 +659,30 @@ const RegisterForm = () => {
 
                 .step-content {
                     margin-bottom: 0.75rem;
+                    min-height: 400px;
+                    position: relative;
+                    overflow: hidden;
+                }
+
+                .step-container {
+                    width: 100%;
+                    display: none; /* Hide all steps by default */
+                }
+
+                .step-container.active-step {
+                    display: block; /* Only show active step */
+                    animation: fadeIn 0.3s ease-in-out;
+                }
+
+                @keyframes fadeIn {
+                    from {
+                        opacity: 0;
+                        transform: translateY(10px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
                 }
 
                 .form-footer {

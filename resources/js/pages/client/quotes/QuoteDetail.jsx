@@ -282,7 +282,7 @@ const QuoteDetail = () => {
                             quote={quote}
                             role="client"
                             className="btn btn-outline-secondary"
-                            buttonText="Download PDF"
+                            buttonText="Download Quote"
                         />
                     </div>
                 </div>
@@ -397,12 +397,6 @@ const QuoteDetail = () => {
                                                 <small className="text-muted">
                                                     <strong>Location:</strong>{" "}
                                                     {quote.location_summary}
-                                                </small>
-                                            </div>
-                                            <div className="col-6">
-                                                <small className="text-muted">
-                                                    <strong>Urgency:</strong>{" "}
-                                                    {quote.urgency || "Normal"}
                                                 </small>
                                             </div>
                                         </div>

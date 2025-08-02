@@ -38,6 +38,11 @@ class EventServiceProvider extends ServiceProvider
         \App\Events\ReviewSubmitted::class => [
             \App\Listeners\SendReviewNotification::class,
         ],
+        
+        // Quote events
+        \App\Events\QuoteStatusChanged::class => [
+            \App\Listeners\SendQuoteStatusNotification::class,
+        ],
     ];
 
     /**

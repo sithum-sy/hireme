@@ -40,7 +40,7 @@ export const profileAPI = {
     // Update profile
     updateProfile: async (data) => {
         try {
-            console.log("Updating profile with data:", data);
+            // console.log("Updating profile with data:", data);
             const response = await api.put("/profile", data);
             return response;
         } catch (error) {
@@ -120,7 +120,7 @@ export const providerProfileAPI = {
 export const notificationAPI = {
     // Get all notifications with pagination
     getNotifications: (params = {}) => api.get("/notifications", { params }),
-    
+
     // Alias for getNotifications to match component usage
     getAll: (params = {}) => api.get("/notifications", { params }),
 
