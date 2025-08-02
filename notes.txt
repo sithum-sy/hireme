@@ -112,33 +112,36 @@ php artisan queue:work   │
   php artisan db:seed --class=ClientSeeder
 
 
+  Vite is a modern build tool and development server for frontend applications.
+  When you run npm run dev, Vite starts the development server and makes your React components available.
+  Vite makes your frontend development faster and your production builds more efficient.
+
+  React is a JavaScript library for building user interfaces, especially web applications
+  React creates the interactive user interface that your customers see and use, while Laravel handles the server-side logic and data management.
+
+  Stripe is a payment processing platform that handles online payments for your HireMe application.
+  Stripe handles all the complex payment processing so you don't have to deal with credit card data, security compliance, or banking integrations directly.
+
+  Mailtrap is an email testing service that captures and displays emails sent from your application during development.
+  Mailtrap lets you safely test all your email functionality without sending real emails to users, ensuring everything works perfectly before deployment.
+
+  Haversine Formula calculates the shortest distance between two points on Earth's surface using latitude and longitude coordinates.
+  The Haversine formula enables precise location-based matching between clients and service providers, making your platform more efficient by connecting people with nearby services.
+
+  Reverse Geocoding converts geographic coordinates (latitude and longitude) into human-readable addresses or location names.
+  Reverse geocoding makes your location-based features user-friendly by converting technical coordinates into meaningful place names that users can understand and relate to.
+  OpenStreetMap Nominatim
+
+  Leaflet is a lightweight, open-source JavaScript library for creating interactive maps in web applications.
+  Leaflet provides the interactive mapping functionality for your HireMe platform, allowing users to visually see, select, and interact with service locations, making the location-based aspects of your app much more intuitive and user-friendly.
+
+  Laravel Sanctum is a lightweight authentication system for SPAs (Single Page Applications), mobile applications, and simple token-based APIs.
+  Sanctum handles all the authentication security between your React frontend and Laravel backend, ensuring only authenticated users can access protected features and API endpoints in your HireMe platform.
+  
+
+
 
 
 
 
   
-1. Provider AppointmentController.php (app/Http/Controllers/API/Provider/AppointmentController.php)
-
-  - Lines around the validation check (commented out):
-    - The main validation is commented out in the startService() method
-    - canStartService() method has the 15-minute rule commented out: // $allowedStartTime = 
-  $appointmentDateTime->copy()->subMinutes(15);
-
-  2. Provider AppointmentDetail.jsx (resources/js/pages/provider/appointments/AppointmentDetail.jsx)
-
-  - Multiple locations with commented 15-minute logic:
-    - // const graceMinutes = 15; (commented out)
-    - Functions for checking start time with 15-minute grace period are commented out
-
-  3. AppointmentCard.jsx (resources/js/components/provider/appointments/AppointmentCard.jsx)
-
-  - Active 15-minute rule implementation:
-    - const graceMinutes = 15; - This is NOT commented out
-    - Used in canStartService() and getTimeUntilStart() functions
-    - Alert message: You can start this service in ${timeUntil} (15 minutes before scheduled time).
-
-  4. TodaysSchedule.jsx (resources/js/pages/provider/appointments/TodaysSchedule.jsx)
-
-  - Active 15-minute rule for appointment status:
-    - isAppointmentNow() function checks if appointment is within 15 minutes
-    - isAppointmentPast() function considers appointment past if more than 15 minutes ago

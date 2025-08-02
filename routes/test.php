@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Mail;
 
 // Test route for geocoding functionality
 Route::get('/test-geocoding', function () {
@@ -29,5 +30,37 @@ Route::get('/test-geocoding', function () {
             'status' => 'error',
             'message' => $e->getMessage()
         ]);
+    }
+});
+
+// Test route for email functionality
+Route::get('/test-email', function () {
+    try {
+        Mail::raw('Test email from HireMe - SMTP Connection Test', function ($message) {
+            $message->to('test@example.com')
+                   ->subject('Test Email - SMTP Check');
+        });
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Email sent successfully!',
+            'config' => [
+                'host' => config('mail.mailers.smtp.host'),
+                'port' => config('mail.mailers.smtp.port'),
+                'username' => config('mail.mailers.smtp.username'),
+                'encryption' => config('mail.mailers.smtp.encryption'),
+            ]
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'error' => $e->getMessage(),
+            'config' => [
+                'host' => config('mail.mailers.smtp.host'),
+                'port' => config('mail.mailers.smtp.port'),
+                'username' => config('mail.mailers.smtp.username'),
+                'encryption' => config('mail.mailers.smtp.encryption'),
+            ]
+        ], 500);
     }
 });
