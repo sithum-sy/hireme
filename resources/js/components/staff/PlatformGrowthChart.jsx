@@ -32,23 +32,43 @@ const PlatformGrowthChart = ({
 
         // Transform the API data structure to match our chart format
         // Handle various possible API response structures
-        return rawData.map(item => {
-            // Handle different date formats
-            let dateValue = item.date;
-            if (!dateValue && item.created_at) {
-                dateValue = item.created_at.split('T')[0];
-            }
-            if (!dateValue) {
-                dateValue = new Date().toISOString().split('T')[0];
-            }
+        return rawData
+            .map((item) => {
+                // Handle different date formats
+                let dateValue = item.date;
+                if (!dateValue && item.created_at) {
+                    dateValue = item.created_at.split("T")[0];
+                }
+                if (!dateValue) {
+                    dateValue = new Date().toISOString().split("T")[0];
+                }
 
-            return {
-                date: dateValue,
-                users: Number(item.users || item.user_count || item.total_users || item.user_registrations || 0),
-                services: Number(item.services || item.service_count || item.total_services || item.services_created || 0),
-                appointments: Number(item.appointments || item.appointment_count || item.total_appointments || item.appointments_created || 0),
-            };
-        }).filter(item => item.date && item.date !== 'Invalid Date'); // Filter out items with invalid dates
+                return {
+                    date: dateValue,
+                    users: Number(
+                        item.users ||
+                            item.user_count ||
+                            item.total_users ||
+                            item.user_registrations ||
+                            0
+                    ),
+                    services: Number(
+                        item.services ||
+                            item.service_count ||
+                            item.total_services ||
+                            item.services_created ||
+                            0
+                    ),
+                    appointments: Number(
+                        item.appointments ||
+                            item.appointment_count ||
+                            item.total_appointments ||
+                            item.appointments_created ||
+                            0
+                    ),
+                };
+            })
+            .filter((item) => item.date && item.date !== "Invalid Date"); // Filter out items with invalid dates
     };
 
     const chartData = processChartData(data);
@@ -603,8 +623,8 @@ const PlatformGrowthChart = ({
                         <div className="row mt-4">
                             <div className="col-md-4">
                                 <div className="text-center p-3 border border-success rounded">
-                                    <div className="d-flex justify-content-between align-items-center mb-1">
-                                        <h6 className="text-primary mb-0">
+                                    <div className="position-relative mb-1">
+                                        <h6 className="text-primary mb-0 text-center">
                                             {chartData.length > 0
                                                 ? (
                                                       chartData[
@@ -614,7 +634,7 @@ const PlatformGrowthChart = ({
                                                 : "0"}
                                         </h6>
                                         <small
-                                            className={`badge ${
+                                            className={`badge position-absolute top-0 end-0 ${
                                                 parseFloat(usersGrowth) >= 0
                                                     ? "bg-success"
                                                     : "bg-danger"
@@ -633,8 +653,8 @@ const PlatformGrowthChart = ({
                             </div>
                             <div className="col-md-4">
                                 <div className="text-center p-3 border border-success rounded">
-                                    <div className="d-flex justify-content-between align-items-center mb-1">
-                                        <h6 className="text-success mb-0">
+                                    <div className="position-relative mb-1">
+                                        <h6 className="text-success mb-0 text-center">
                                             {chartData.length > 0
                                                 ? (
                                                       chartData[
@@ -644,7 +664,7 @@ const PlatformGrowthChart = ({
                                                 : "0"}
                                         </h6>
                                         <small
-                                            className={`badge ${
+                                            className={`badge position-absolute top-0 end-0 ${
                                                 parseFloat(servicesGrowth) >= 0
                                                     ? "bg-success"
                                                     : "bg-danger"
@@ -663,8 +683,8 @@ const PlatformGrowthChart = ({
                             </div>
                             <div className="col-md-4">
                                 <div className="text-center p-3 border border-warning rounded">
-                                    <div className="d-flex justify-content-between align-items-center mb-1">
-                                        <h6 className="text-warning mb-0">
+                                    <div className="position-relative mb-1">
+                                        <h6 className="text-warning mb-0 text-center">
                                             {chartData.length > 0
                                                 ? (
                                                       chartData[
@@ -674,7 +694,7 @@ const PlatformGrowthChart = ({
                                                 : "0"}
                                         </h6>
                                         <small
-                                            className={`badge ${
+                                            className={`badge position-absolute top-0 end-0 ${
                                                 parseFloat(
                                                     appointmentsGrowth
                                                 ) >= 0
@@ -703,10 +723,9 @@ const PlatformGrowthChart = ({
                                     No Growth Data Available
                                 </h6>
                                 <p className="text-muted small mb-0">
-                                    {loading 
-                                        ? "Loading platform growth metrics..." 
-                                        : `Platform growth data for the last ${selectedPeriod} days will appear here once available.`
-                                    }
+                                    {loading
+                                        ? "Loading platform growth metrics..."
+                                        : `Platform growth data for the last ${selectedPeriod} days will appear here once available.`}
                                 </p>
                                 {!loading && (
                                     <small className="text-muted d-block mt-2">
@@ -726,16 +745,6 @@ const PlatformGrowthChart = ({
                         <i className="fas fa-info-circle me-1"></i>
                         Data updated every 15 minutes
                     </small>
-                    <div className="d-flex gap-2">
-                        <button className="btn btn-sm btn-outline-secondary">
-                            <i className="fas fa-download me-1"></i>
-                            Export
-                        </button>
-                        <button className="btn btn-sm btn-outline-primary">
-                            <i className="fas fa-expand me-1"></i>
-                            Full View
-                        </button>
-                    </div>
                 </div>
             </div>
         </div>

@@ -41,6 +41,7 @@ const StaffReportsPage = () => {
         useStaffReportsPDF();
 
     const quickFilters = [
+        { label: "Today", days: 1 },
         { label: "Last 7 Days", days: 7 },
         { label: "Last 30 Days", days: 30 },
         { label: "Last 90 Days", days: 90 },
@@ -56,7 +57,15 @@ const StaffReportsPage = () => {
 
     const setQuickFilter = (days) => {
         const endDate = new Date();
-        const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+        let startDate;
+        
+        if (days === 1) {
+            // For "Today" filter, set both dates to today
+            startDate = new Date();
+        } else {
+            // For other filters, calculate days back
+            startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+        }
 
         setFilters({
             start_date: startDate.toISOString().split("T")[0],
@@ -66,7 +75,15 @@ const StaffReportsPage = () => {
 
     const isQuickFilterActive = (days) => {
         const endDate = new Date();
-        const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+        let startDate;
+        
+        if (days === 1) {
+            // For "Today" filter, both dates should be today
+            startDate = new Date();
+        } else {
+            // For other filters, calculate days back
+            startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+        }
 
         return (
             filters.start_date === startDate.toISOString().split("T")[0] &&
@@ -207,7 +224,7 @@ const StaffReportsPage = () => {
         labels: analyticsData?.revenue_analytics?.labels || [],
         datasets: [
             {
-                label: "Platform Revenue (LKR)",
+                label: "Total Money Exchanged (LKR)",
                 data: analyticsData?.revenue_analytics?.data || [],
                 fill: false,
                 borderColor: "rgba(54, 162, 235, 1)",
@@ -226,7 +243,7 @@ const StaffReportsPage = () => {
             tooltip: {
                 callbacks: {
                     label: function (context) {
-                        if (context.dataset.label?.includes("Revenue")) {
+                        if (context.dataset.label?.includes("Money Exchanged") || context.dataset.label?.includes("Revenue")) {
                             return (
                                 context.dataset.label +
                                 ": LKR " +
@@ -243,8 +260,11 @@ const StaffReportsPage = () => {
                 beginAtZero: true,
                 ticks: {
                     callback: function (value) {
-                        // Format y-axis labels for revenue charts
+                        // Format y-axis labels for money flow charts
                         if (
+                            this.chart.canvas.parentNode
+                                .querySelector(".card-title")
+                                ?.textContent?.includes("Money Flow") ||
                             this.chart.canvas.parentNode
                                 .querySelector(".card-title")
                                 ?.textContent?.includes("Revenue")
@@ -351,7 +371,7 @@ const StaffReportsPage = () => {
                                     }}
                                 >
                                     <i className="fas fa-money-bill me-2"></i>
-                                    Revenue Report
+                                    Money Flow Report
                                 </a>
                             </li>
                             <li>
@@ -480,11 +500,11 @@ const StaffReportsPage = () => {
                             <div className="card text-center">
                                 <div className="card-body">
                                     <h3 className="text-success">
-                                        {analyticsData.summary?.total_revenue ||
+                                        {analyticsData.summary?.total_money_exchanged ||
                                             "LKR 0.00"}
                                     </h3>
                                     <p className="text-muted mb-0">
-                                        Platform Revenue
+                                        Total Money Exchanged
                                     </p>
                                 </div>
                             </div>
@@ -538,7 +558,7 @@ const StaffReportsPage = () => {
                             <div className="card">
                                 <div className="card-header">
                                     <h5 className="card-title mb-0">
-                                        Platform Revenue Analytics
+                                        Total Money Flow Analytics
                                     </h5>
                                 </div>
                                 <div className="card-body">

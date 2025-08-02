@@ -246,8 +246,16 @@ class StatisticsService
     {
         $startDate = Carbon::now()->subDays($days);
 
+        // Get individual trend data
+        $userTrend = $this->getUserRegistrationTrend($startDate);
+        $serviceTrend = $this->getServiceCreationTrend($startDate);
+        $appointmentTrend = $this->getAppointmentBookingTrend($startDate);
+
+        // Combine all trends into a single chart format
+        $combinedTrend = $this->combineTrendData($userTrend, $serviceTrend, $appointmentTrend, $days);
+
         return [
-            'user_registrations' => $this->getUserRegistrationTrend($startDate),
+            'user_registrations' => $combinedTrend,
             'service_creation' => $this->getServiceCreationTrend($startDate),
             'appointment_bookings' => $this->getAppointmentBookingTrend($startDate),
             'category_usage' => $this->getCategoryUsageTrend($startDate),
@@ -534,5 +542,54 @@ class StatisticsService
     {
         // This would typically come from a login_attempts table
         return 0;
+    }
+
+    /**
+     * Combine different trend data into a single format for the chart
+     */
+    private function combineTrendData($userTrend, $serviceTrend, $appointmentTrend, $days)
+    {
+        // Create date range for the chart
+        $dates = [];
+        for ($i = $days - 1; $i >= 0; $i--) {
+            $dates[] = Carbon::now()->subDays($i)->format('Y-m-d');
+        }
+
+        // Initialize combined data
+        $combinedData = [];
+        
+        foreach ($dates as $date) {
+            // Find data for this date - handle both array and object formats
+            $userItem = $userTrend->firstWhere('date', $date);
+            $serviceItem = $serviceTrend->firstWhere('date', $date);
+            $appointmentItem = $appointmentTrend->firstWhere('date', $date);
+
+            $userCount = 0;
+            $serviceCount = 0;
+            $appointmentCount = 0;
+
+            // Handle different data formats
+            if ($userItem) {
+                $userCount = is_array($userItem) ? $userItem['count'] : $userItem->count;
+            }
+            if ($serviceItem) {
+                $serviceCount = is_array($serviceItem) ? $serviceItem['count'] : $serviceItem->count;
+            }
+            if ($appointmentItem) {
+                $appointmentCount = is_array($appointmentItem) ? $appointmentItem['count'] : $appointmentItem->count;
+            }
+
+            $combinedData[] = [
+                'date' => $date,
+                'users' => (int) $userCount,
+                'services' => (int) $serviceCount,
+                'appointments' => (int) $appointmentCount,
+                'user_registrations' => (int) $userCount, // Alternative field name
+                'services_created' => (int) $serviceCount, // Alternative field name
+                'appointments_created' => (int) $appointmentCount, // Alternative field name
+            ];
+        }
+
+        return $combinedData;
     }
 }

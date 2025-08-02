@@ -39,7 +39,7 @@ class ReportController extends Controller
 
         try {
             $user = Auth::user();
-            
+
             if ($user->role !== 'staff') {
                 return response()->json([
                     'success' => false,
@@ -49,12 +49,16 @@ class ReportController extends Controller
 
             $startDate = $request->start_date ?? now()->subDays(30)->toDateString();
             $endDate = $request->end_date ?? now()->toDateString();
+            
+            // Convert to proper datetime boundaries for accurate filtering
+            $startDateTime = Carbon::parse($startDate)->startOfDay();
+            $endDateTime = Carbon::parse($endDate)->endOfDay();
 
             $data = [
-                'summary' => $this->getPlatformSummary($startDate, $endDate),
+                'summary' => $this->getPlatformSummary($startDateTime, $endDateTime),
                 'user_growth' => $this->getUserGrowthData($startDate, $endDate),
-                'service_statistics' => $this->getServiceStatisticsData($startDate, $endDate),
-                'appointment_analytics' => $this->getAppointmentAnalyticsData($startDate, $endDate),
+                'service_statistics' => $this->getServiceStatisticsData($startDateTime, $endDateTime),
+                'appointment_analytics' => $this->getAppointmentAnalyticsData($startDateTime, $endDateTime),
                 'revenue_analytics' => $this->getRevenueAnalyticsData($startDate, $endDate),
             ];
 
@@ -62,7 +66,6 @@ class ReportController extends Controller
                 'success' => true,
                 'data' => $data
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -75,28 +78,35 @@ class ReportController extends Controller
     /**
      * Get platform summary data
      */
-    private function getPlatformSummary($startDate, $endDate)
+    private function getPlatformSummary($startDateTime, $endDateTime)
     {
-        $totalUsers = User::whereBetween('created_at', [$startDate, $endDate])->count();
+        // Summary cards show data within selected date range
+        $totalUsers = User::whereBetween('created_at', [$startDateTime, $endDateTime])->count();
         $totalProviders = User::where('role', 'service_provider')
-            ->whereBetween('created_at', [$startDate, $endDate])
+            ->whereBetween('created_at', [$startDateTime, $endDateTime])
             ->count();
         $totalClients = User::where('role', 'client')
-            ->whereBetween('created_at', [$startDate, $endDate])
+            ->whereBetween('created_at', [$startDateTime, $endDateTime])
             ->count();
         
-        $totalServices = Service::whereBetween('created_at', [$startDate, $endDate])->count();
+        $totalServices = Service::whereBetween('created_at', [$startDateTime, $endDateTime])->count();
         $activeServices = Service::where('is_active', true)
-            ->whereBetween('created_at', [$startDate, $endDate])
+            ->whereBetween('created_at', [$startDateTime, $endDateTime])
             ->count();
-        
-        $totalAppointments = Appointment::whereBetween('created_at', [$startDate, $endDate])->count();
+
+        // Appointments filtered by date range for activity tracking
+        $totalAppointments = Appointment::whereBetween('created_at', [$startDateTime, $endDateTime])->count();
         $completedAppointments = Appointment::where('status', 'completed')
-            ->whereBetween('created_at', [$startDate, $endDate])
+            ->whereBetween('created_at', [$startDateTime, $endDateTime])
             ->count();
-        
-        $totalRevenue = Payment::where('status', 'completed')
-            ->whereBetween('created_at', [$startDate, $endDate])
+
+        // Total Money Exchanged: Show ALL completed payments (cumulative platform total)
+        // This represents total money flow through the platform since launch
+        $totalMoneyExchanged = Payment::where('status', 'completed')->sum('amount');
+
+        // For average calculation, use payments within date range
+        $dateRangePayments = Payment::where('status', 'completed')
+            ->whereBetween('created_at', [$startDateTime, $endDateTime])
             ->sum('amount');
 
         $successRate = $totalAppointments > 0 ? round(($completedAppointments / $totalAppointments) * 100, 1) : 0;
@@ -110,8 +120,8 @@ class ReportController extends Controller
             'total_appointments' => $totalAppointments,
             'completed_appointments' => $completedAppointments,
             'success_rate' => $successRate,
-            'total_revenue' => 'LKR ' . number_format($totalRevenue, 2),
-            'avg_revenue_per_appointment' => $totalAppointments > 0 ? 'LKR ' . number_format($totalRevenue / $totalAppointments, 2) : 'LKR 0.00'
+            'total_money_exchanged' => 'LKR ' . number_format($totalMoneyExchanged, 2),
+            'avg_money_per_appointment' => $totalAppointments > 0 ? 'LKR ' . number_format($dateRangePayments / $totalAppointments, 2) : 'LKR 0.00'
         ];
     }
 
@@ -125,7 +135,10 @@ class ReportController extends Controller
         $diffInDays = $start->diffInDays($end);
 
         // Determine granularity based on date range
-        if ($diffInDays <= 7) {
+        if ($diffInDays == 0) {
+            // Single day (Today) - show hourly or just single point
+            $data = $this->getDailyUserGrowth($start, $end);
+        } elseif ($diffInDays <= 7) {
             // Daily data for week or less
             $data = $this->getDailyUserGrowth($start, $end);
         } elseif ($diffInDays <= 90) {
@@ -146,19 +159,26 @@ class ReportController extends Controller
         $providerData = [];
 
         $current = $start->copy();
+        $diffInDays = $start->diffInDays($end);
+        
         while ($current->lte($end)) {
-            $labels[] = $current->format('M j');
-            
+            // For single day, show more descriptive label
+            if ($diffInDays == 0) {
+                $labels[] = 'Today (' . $current->format('M j') . ')';
+            } else {
+                $labels[] = $current->format('M j');
+            }
+
             $clientCount = User::where('role', 'client')
                 ->whereDate('created_at', $current)
                 ->count();
             $providerCount = User::where('role', 'service_provider')
                 ->whereDate('created_at', $current)
                 ->count();
-            
+
             $clientData[] = $clientCount;
             $providerData[] = $providerCount;
-            
+
             $current->addDay();
         }
 
@@ -183,17 +203,17 @@ class ReportController extends Controller
             }
 
             $labels[] = $current->format('M j') . ' - ' . $weekEnd->format('M j');
-            
+
             $clientCount = User::where('role', 'client')
                 ->whereBetween('created_at', [$current, $weekEnd])
                 ->count();
             $providerCount = User::where('role', 'service_provider')
                 ->whereBetween('created_at', [$current, $weekEnd])
                 ->count();
-            
+
             $clientData[] = $clientCount;
             $providerData[] = $providerCount;
-            
+
             $current->addWeek();
         }
 
@@ -218,17 +238,17 @@ class ReportController extends Controller
             }
 
             $labels[] = $current->format('M Y');
-            
+
             $clientCount = User::where('role', 'client')
                 ->whereBetween('created_at', [$current, $monthEnd])
                 ->count();
             $providerCount = User::where('role', 'service_provider')
                 ->whereBetween('created_at', [$current, $monthEnd])
                 ->count();
-            
+
             $clientData[] = $clientCount;
             $providerData[] = $providerCount;
-            
+
             $current->addMonth();
         }
 
@@ -242,10 +262,10 @@ class ReportController extends Controller
     /**
      * Get service statistics data
      */
-    private function getServiceStatisticsData($startDate, $endDate)
+    private function getServiceStatisticsData($startDateTime, $endDateTime)
     {
-        $categories = ServiceCategory::withCount(['services' => function ($query) use ($startDate, $endDate) {
-            $query->whereBetween('created_at', [$startDate, $endDate]);
+        $categories = ServiceCategory::withCount(['services' => function ($query) use ($startDateTime, $endDateTime) {
+            $query->whereBetween('created_at', [$startDateTime, $endDateTime]);
         }])
             ->having('services_count', '>', 0)
             ->orderBy('services_count', 'desc')
@@ -261,10 +281,10 @@ class ReportController extends Controller
     /**
      * Get appointment analytics data
      */
-    private function getAppointmentAnalyticsData($startDate, $endDate)
+    private function getAppointmentAnalyticsData($startDateTime, $endDateTime)
     {
         $statusData = Appointment::selectRaw('status, COUNT(*) as count')
-            ->whereBetween('created_at', [$startDate, $endDate])
+            ->whereBetween('created_at', [$startDateTime, $endDateTime])
             ->groupBy('status')
             ->get();
 
@@ -299,7 +319,10 @@ class ReportController extends Controller
         $diffInDays = $start->diffInDays($end);
 
         // Determine granularity based on date range
-        if ($diffInDays <= 7) {
+        if ($diffInDays == 0) {
+            // Single day (Today) - show single point
+            $data = $this->getDailyRevenue($start, $end);
+        } elseif ($diffInDays <= 7) {
             // Daily data for week or less
             $data = $this->getDailyRevenue($start, $end);
         } elseif ($diffInDays <= 90) {
@@ -319,15 +342,22 @@ class ReportController extends Controller
         $data = [];
 
         $current = $start->copy();
+        $diffInDays = $start->diffInDays($end);
+        
         while ($current->lte($end)) {
-            $labels[] = $current->format('M j');
-            
+            // For single day, show more descriptive label
+            if ($diffInDays == 0) {
+                $labels[] = 'Today (' . $current->format('M j') . ')';
+            } else {
+                $labels[] = $current->format('M j');
+            }
+
             $revenue = Payment::where('status', 'completed')
                 ->whereDate('created_at', $current)
                 ->sum('amount');
-            
+
             $data[] = floatval($revenue);
-            
+
             $current->addDay();
         }
 
@@ -350,13 +380,13 @@ class ReportController extends Controller
             }
 
             $labels[] = $current->format('M j') . ' - ' . $weekEnd->format('M j');
-            
+
             $revenue = Payment::where('status', 'completed')
                 ->whereBetween('created_at', [$current, $weekEnd])
                 ->sum('amount');
-            
+
             $data[] = floatval($revenue);
-            
+
             $current->addWeek();
         }
 
@@ -379,13 +409,13 @@ class ReportController extends Controller
             }
 
             $labels[] = $current->format('M Y');
-            
+
             $revenue = Payment::where('status', 'completed')
                 ->whereBetween('created_at', [$current, $monthEnd])
                 ->sum('amount');
-            
+
             $data[] = floatval($revenue);
-            
+
             $current->addMonth();
         }
 
@@ -402,7 +432,7 @@ class ReportController extends Controller
     {
         try {
             $user = Auth::user();
-            
+
             if ($user->role !== 'staff') {
                 return response()->json([
                     'success' => false,
@@ -429,8 +459,21 @@ class ReportController extends Controller
                         'service_category' => ['type' => 'string', 'label' => 'Category', 'sortable' => true, 'relation' => 'service.category.name'],
                         'service_price' => ['type' => 'decimal', 'label' => 'Service Price', 'sortable' => true, 'relation' => 'service.price'],
                         'status' => ['type' => 'enum', 'label' => 'Status', 'sortable' => true, 'options' => [
-                            'pending', 'confirmed', 'in_progress', 'completed', 'invoice_sent', 'payment_pending', 'paid', 'reviewed', 'closed',
-                            'cancelled_by_client', 'cancelled_by_provider', 'cancelled_by_staff', 'no_show', 'disputed', 'expired'
+                            'pending',
+                            'confirmed',
+                            'in_progress',
+                            'completed',
+                            'invoice_sent',
+                            'payment_pending',
+                            'paid',
+                            'reviewed',
+                            'closed',
+                            'cancelled_by_client',
+                            'cancelled_by_provider',
+                            'cancelled_by_staff',
+                            'no_show',
+                            'disputed',
+                            'expired'
                         ]],
                         'appointment_date' => ['type' => 'date', 'label' => 'Appointment Date', 'sortable' => true],
                         'appointment_time' => ['type' => 'time', 'label' => 'Appointment Time', 'sortable' => true],
@@ -439,8 +482,17 @@ class ReportController extends Controller
                         'base_price' => ['type' => 'decimal', 'label' => 'Base Price', 'sortable' => true],
                         'travel_fee' => ['type' => 'decimal', 'label' => 'Travel Fee', 'sortable' => true],
                         'location_type' => ['type' => 'string', 'label' => 'Location Type', 'sortable' => true],
-                        'client_address' => ['type' => 'string', 'label' => 'Client Address', 'sortable' => false],
-                        'client_city' => ['type' => 'string', 'label' => 'Client City', 'sortable' => true],
+
+                        // Client location fields (broken down from client_location object)
+                        'client_location_address' => ['type' => 'string', 'label' => 'Client Location - Address', 'sortable' => true, 'json_field' => 'client_location.address'],
+                        'client_location_city' => ['type' => 'string', 'label' => 'Client Location - City', 'sortable' => true, 'json_field' => 'client_location.city'],
+                        'client_location_state' => ['type' => 'string', 'label' => 'Client Location - State', 'sortable' => true, 'json_field' => 'client_location.state'],
+                        'client_location_postal_code' => ['type' => 'string', 'label' => 'Client Location - Postal Code', 'sortable' => true, 'json_field' => 'client_location.postal_code'],
+                        'client_location_country' => ['type' => 'string', 'label' => 'Client Location - Country', 'sortable' => true, 'json_field' => 'client_location.country'],
+
+                        // Legacy fields (keep for backward compatibility)
+                        'client_address' => ['type' => 'string', 'label' => 'Client Address (Legacy)', 'sortable' => false],
+                        'client_city' => ['type' => 'string', 'label' => 'Client City (Legacy)', 'sortable' => true],
                         'payment_method' => ['type' => 'string', 'label' => 'Payment Method', 'sortable' => true],
                         'booking_source' => ['type' => 'string', 'label' => 'Booking Source', 'sortable' => true],
                         'client_notes' => ['type' => 'text', 'label' => 'Client Notes', 'sortable' => false],
@@ -477,17 +529,27 @@ class ReportController extends Controller
                     'description' => 'Service listings and details',
                     'icon' => 'fas fa-concierge-bell',
                     'model' => Service::class,
-                    'default_fields' => ['id', 'title', 'provider_name', 'category_name', 'price', 'is_active', 'created_at'],
+                    'default_fields' => ['id', 'title', 'provider_name', 'category_name', 'base_price', 'is_active', 'created_at'],
                     'fields' => [
                         'id' => ['type' => 'integer', 'label' => 'ID', 'sortable' => true],
                         'title' => ['type' => 'string', 'label' => 'Service Title', 'sortable' => true],
                         'provider_name' => ['type' => 'string', 'label' => 'Provider Name', 'sortable' => true, 'relation' => 'provider.first_name,provider.last_name'],
                         'category_name' => ['type' => 'string', 'label' => 'Category', 'sortable' => true, 'relation' => 'category.name'],
                         'description' => ['type' => 'text', 'label' => 'Description', 'sortable' => false],
-                        'price' => ['type' => 'decimal', 'label' => 'Price', 'sortable' => true],
+                        'base_price' => ['type' => 'decimal', 'label' => 'Price', 'sortable' => true],
                         'duration' => ['type' => 'integer', 'label' => 'Duration (mins)', 'sortable' => true],
                         'is_active' => ['type' => 'boolean', 'label' => 'Active Status', 'sortable' => true],
-                        'location' => ['type' => 'string', 'label' => 'Location', 'sortable' => true],
+
+                        // Location fields (broken down from location object)
+                        'location_address' => ['type' => 'string', 'label' => 'Location - Address', 'sortable' => true, 'json_field' => 'location.address'],
+                        'location_city' => ['type' => 'string', 'label' => 'Location - City', 'sortable' => true, 'json_field' => 'location.city'],
+                        'location_state' => ['type' => 'string', 'label' => 'Location - State/Province', 'sortable' => true, 'json_field' => 'location.state'],
+                        'location_postal_code' => ['type' => 'string', 'label' => 'Location - Postal Code', 'sortable' => true, 'json_field' => 'location.postal_code'],
+                        'location_country' => ['type' => 'string', 'label' => 'Location - Country', 'sortable' => true, 'json_field' => 'location.country'],
+                        'location_type' => ['type' => 'string', 'label' => 'Location - Type', 'sortable' => true, 'json_field' => 'location.type'],
+                        'location_name' => ['type' => 'string', 'label' => 'Location - Name/Area', 'sortable' => true, 'json_field' => 'location.name'],
+                        'location_coordinates' => ['type' => 'string', 'label' => 'Location - Coordinates', 'sortable' => false, 'json_field' => 'location.coordinates'],
+
                         'created_at' => ['type' => 'datetime', 'label' => 'Created Date', 'sortable' => true],
                         'updated_at' => ['type' => 'datetime', 'label' => 'Last Updated', 'sortable' => true],
                     ]
@@ -504,7 +566,7 @@ class ReportController extends Controller
                         'description' => ['type' => 'text', 'label' => 'Description', 'sortable' => false],
                         'services_count' => ['type' => 'integer', 'label' => 'Services Count', 'sortable' => true, 'computed' => 'services_count'],
                         'is_active' => ['type' => 'boolean', 'label' => 'Active Status', 'sortable' => true],
-                        'sort_order' => ['type' => 'integer', 'label' => 'Sort Order', 'sortable' => true],  
+                        'sort_order' => ['type' => 'integer', 'label' => 'Sort Order', 'sortable' => true],
                         'created_at' => ['type' => 'datetime', 'label' => 'Created Date', 'sortable' => true],
                         'updated_at' => ['type' => 'datetime', 'label' => 'Last Updated', 'sortable' => true],
                     ]
@@ -617,7 +679,6 @@ class ReportController extends Controller
                 'success' => true,
                 'data' => $dataSources
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -639,7 +700,7 @@ class ReportController extends Controller
 
         try {
             $user = Auth::user();
-            
+
             if ($user->role !== 'staff') {
                 return response()->json([
                     'success' => false,
@@ -652,7 +713,7 @@ class ReportController extends Controller
 
             // Get data source configuration
             $dataSources = $this->getDataSources(new Request())->getData(true)['data'];
-            
+
             if (!isset($dataSources[$dataSource])) {
                 return response()->json([
                     'success' => false,
@@ -675,7 +736,7 @@ class ReportController extends Controller
             // Handle different field types that need dynamic options
             if ($fieldConfig['type'] === 'enum' && isset($fieldConfig['options'])) {
                 // For enum fields with predefined options
-                $options = array_map(function($option) {
+                $options = array_map(function ($option) {
                     return [
                         'value' => $option,
                         'label' => ucwords(str_replace('_', ' ', $option))
@@ -686,8 +747,8 @@ class ReportController extends Controller
                 $categories = ServiceCategory::where('is_active', true)
                     ->orderBy('name')
                     ->get(['id', 'name']);
-                
-                $options = $categories->map(function($category) {
+
+                $options = $categories->map(function ($category) {
                     return [
                         'value' => $category->name,
                         'label' => $category->name
@@ -697,11 +758,11 @@ class ReportController extends Controller
                 // For other relational fields, get unique values from the database
                 $modelClass = $sourceConfig['model'];
                 $relationParts = explode('.', $fieldConfig['relation']);
-                
+
                 if (count($relationParts) >= 2) {
                     $relation = $relationParts[0];
                     $relationField = $relationParts[1];
-                    
+
                     // Get unique values for this relation field
                     $values = $modelClass::with($relation)
                         ->get()
@@ -710,8 +771,8 @@ class ReportController extends Controller
                         ->unique()
                         ->sort()
                         ->values();
-                    
-                    $options = $values->map(function($value) {
+
+                    $options = $values->map(function ($value) {
                         return [
                             'value' => $value,
                             'label' => $value
@@ -728,7 +789,6 @@ class ReportController extends Controller
                     'options' => $options
                 ]
             ]);
-
         } catch (\Exception $e) {
             \Log::error('Field options fetch failed', [
                 'error' => $e->getMessage(),
@@ -750,7 +810,7 @@ class ReportController extends Controller
     {
         try {
             $user = Auth::user();
-            
+
             if ($user->role !== 'staff') {
                 return response()->json([
                     'success' => false,
@@ -772,7 +832,6 @@ class ReportController extends Controller
                     'test' => 'Basic appointment query successful'
                 ]
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -805,7 +864,7 @@ class ReportController extends Controller
 
         try {
             $user = Auth::user();
-            
+
             if ($user->role !== 'staff') {
                 return response()->json([
                     'success' => false,
@@ -821,7 +880,7 @@ class ReportController extends Controller
 
             // Get data source configuration
             $dataSources = $this->getDataSources(new Request())->getData(true)['data'];
-            
+
             if (!isset($dataSources[$dataSource])) {
                 return response()->json([
                     'success' => false,
@@ -834,20 +893,20 @@ class ReportController extends Controller
 
             // Build query
             $query = $this->buildCustomQuery($modelClass, $sourceConfig, $fields, $filters, $sorting);
-            
+
             // Get total count before pagination (clone query to avoid issues)
             $totalCount = (clone $query)->count();
-            
+
             // Apply pagination
             $page = $pagination['page'];
             $perPage = $pagination['per_page'];
             $offset = ($page - 1) * $perPage;
-            
+
             $results = $query->offset($offset)->limit($perPage)->get();
-            
+
             // Format results
             $formattedResults = $this->formatReportResults($results, $sourceConfig, $fields);
-            
+
             // Final safety check to ensure no objects are passed to frontend
             $formattedResults = array_map(function ($row) {
                 return array_map(function ($value) {
@@ -882,7 +941,6 @@ class ReportController extends Controller
                     ]
                 ]
             ]);
-
         } catch (\Exception $e) {
             \Log::error('Custom report generation failed', [
                 'error' => $e->getMessage(),
@@ -910,7 +968,7 @@ class ReportController extends Controller
     private function buildCustomQuery($modelClass, $sourceConfig, $fields, $filters, $sorting)
     {
         $query = $modelClass::query();
-        
+
         // Handle computed fields that need special query handling
         $needsWithCount = false;
         foreach ($fields as $field) {
@@ -928,19 +986,19 @@ class ReportController extends Controller
                 }
             }
         }
-        
+
         // Handle relations for selected fields
         $relations = [];
         foreach ($fields as $field) {
             if (isset($sourceConfig['fields'][$field]['relation'])) {
                 $relationPath = $sourceConfig['fields'][$field]['relation'];
-                
+
                 // Handle comma-separated fields from same relation (e.g., 'client.first_name,client.last_name')
                 if (strpos($relationPath, ',') !== false) {
                     $relationFields = explode(',', $relationPath);
                     foreach ($relationFields as $relationField) {
                         $relationParts = explode('.', trim($relationField));
-                        
+
                         // Build nested relation paths
                         $currentPath = '';
                         for ($i = 0; $i < count($relationParts) - 1; $i++) {
@@ -948,7 +1006,7 @@ class ReportController extends Controller
                                 $currentPath .= '.';
                             }
                             $currentPath .= $relationParts[$i];
-                            
+
                             if (!in_array($currentPath, $relations)) {
                                 $relations[] = $currentPath;
                             }
@@ -957,7 +1015,7 @@ class ReportController extends Controller
                 } else {
                     // Single relation field
                     $relationParts = explode('.', $relationPath);
-                    
+
                     // Build nested relation paths (e.g., service.category from service.category.name)
                     $currentPath = '';
                     for ($i = 0; $i < count($relationParts) - 1; $i++) {
@@ -965,7 +1023,7 @@ class ReportController extends Controller
                             $currentPath .= '.';
                         }
                         $currentPath .= $relationParts[$i];
-                        
+
                         if (!in_array($currentPath, $relations)) {
                             $relations[] = $currentPath;
                         }
@@ -973,7 +1031,7 @@ class ReportController extends Controller
                 }
             }
         }
-        
+
         if (!empty($relations)) {
             try {
                 $query->with($relations);
@@ -992,16 +1050,21 @@ class ReportController extends Controller
                 $field = $filter['field'];
                 $operator = $filter['operator'];
                 $value = $filter['value'] ?? null;
-                
+
                 // Skip empty filters
                 if (empty($field) || empty($operator)) {
                     continue;
                 }
-                
-                // Handle relation fields in filters
-                if (isset($sourceConfig['fields'][$field]['relation'])) {
+
+                // Handle different field types in filters
+                if (isset($sourceConfig['fields'][$field]['json_field'])) {
+                    // Handle JSON field filters
+                    $this->applyJsonFieldFilter($query, $sourceConfig['fields'][$field]['json_field'], $operator, $value);
+                } elseif (isset($sourceConfig['fields'][$field]['relation'])) {
+                    // Handle relation field filters
                     $this->applyRelationFilter($query, $sourceConfig['fields'][$field]['relation'], $operator, $value);
                 } else {
+                    // Handle direct field filters
                     $this->applyDirectFilter($query, $field, $operator, $value);
                 }
             } catch (\Exception $e) {
@@ -1018,19 +1081,30 @@ class ReportController extends Controller
             try {
                 $field = $sort['field'];
                 $direction = $sort['direction'];
-                
+
                 // Skip empty sort rules
                 if (empty($field) || empty($direction)) {
                     continue;
                 }
-                
+
                 // Validate direction
                 if (!in_array($direction, ['asc', 'desc'])) {
                     $direction = 'asc';
                 }
-                
-                // For now, only sort by direct fields to avoid complex join issues
-                if (!isset($sourceConfig['fields'][$field]['relation'])) {
+
+                // Handle sorting for different field types
+                if (isset($sourceConfig['fields'][$field]['json_field'])) {
+                    // Handle JSON field sorting
+                    $jsonPath = $sourceConfig['fields'][$field]['json_field'];
+                    $parts = explode('.', $jsonPath);
+
+                    if (count($parts) >= 2) {
+                        $jsonField = $parts[0];
+                        $jsonKey = implode('.', array_slice($parts, 1));
+                        $query->orderByRaw("JSON_UNQUOTE(JSON_EXTRACT($jsonField, '$.{$jsonKey}')) $direction");
+                    }
+                } elseif (!isset($sourceConfig['fields'][$field]['relation'])) {
+                    // Only sort by direct fields to avoid complex join issues
                     $query->orderBy($field, $direction);
                 }
                 // TODO: Implement relation-based sorting later if needed
@@ -1042,7 +1116,7 @@ class ReportController extends Controller
                 // Skip this sort and continue
             }
         }
-        
+
         // Default sorting if none applied successfully
         try {
             $hasValidSort = false;
@@ -1052,7 +1126,7 @@ class ReportController extends Controller
                     break;
                 }
             }
-            
+
             if (!$hasValidSort) {
                 $query->orderBy('created_at', 'desc');
             }
@@ -1062,6 +1136,61 @@ class ReportController extends Controller
         }
 
         return $query;
+    }
+
+    /**
+     * Apply JSON field filter (e.g., location.city)
+     */
+    private function applyJsonFieldFilter($query, $jsonPath, $operator, $value)
+    {
+        try {
+            $parts = explode('.', $jsonPath);
+
+            if (count($parts) < 2) {
+                // If no dot notation, treat as regular field
+                $this->applyDirectFilter($query, $jsonPath, $operator, $value);
+                return;
+            }
+
+            // Get the JSON field and path
+            $jsonField = $parts[0];
+            $jsonKey = implode('.', array_slice($parts, 1));
+
+            // Use JSON_EXTRACT for MySQL/MariaDB
+            switch ($operator) {
+                case 'equals':
+                    $query->whereRaw("JSON_UNQUOTE(JSON_EXTRACT($jsonField, '$.{$jsonKey}')) = ?", [$value]);
+                    break;
+                case 'not_equals':
+                    $query->whereRaw("JSON_UNQUOTE(JSON_EXTRACT($jsonField, '$.{$jsonKey}')) != ?", [$value]);
+                    break;
+                case 'contains':
+                    $query->whereRaw("JSON_UNQUOTE(JSON_EXTRACT($jsonField, '$.{$jsonKey}')) LIKE ?", ["%{$value}%"]);
+                    break;
+                case 'not_contains':
+                    $query->whereRaw("JSON_UNQUOTE(JSON_EXTRACT($jsonField, '$.{$jsonKey}')) NOT LIKE ?", ["%{$value}%"]);
+                    break;
+                case 'starts_with':
+                    $query->whereRaw("JSON_UNQUOTE(JSON_EXTRACT($jsonField, '$.{$jsonKey}')) LIKE ?", ["{$value}%"]);
+                    break;
+                case 'ends_with':
+                    $query->whereRaw("JSON_UNQUOTE(JSON_EXTRACT($jsonField, '$.{$jsonKey}')) LIKE ?", ["%{$value}"]);
+                    break;
+                case 'is_null':
+                    $query->whereRaw("JSON_EXTRACT($jsonField, '$.{$jsonKey}') IS NULL");
+                    break;
+                case 'is_not_null':
+                    $query->whereRaw("JSON_EXTRACT($jsonField, '$.{$jsonKey}') IS NOT NULL");
+                    break;
+                default:
+                    // For other operators, fall back to basic equals
+                    $query->whereRaw("JSON_UNQUOTE(JSON_EXTRACT($jsonField, '$.{$jsonKey}')) = ?", [$value]);
+                    break;
+            }
+        } catch (\Exception $e) {
+            \Log::warning("Error applying JSON field filter for '$jsonPath': " . $e->getMessage());
+            // Skip this filter if it fails
+        }
     }
 
     /**
@@ -1129,11 +1258,11 @@ class ReportController extends Controller
                 'operator' => $operator,
                 'value' => $value
             ]);
-            
+
             // Handle comma-separated complete relation paths (e.g., 'client.first_name,client.last_name')
             if (strpos($relation, ',') !== false) {
                 $relationPaths = explode(',', $relation);
-                
+
                 $query->where(function ($orQuery) use ($relationPaths, $operator, $value) {
                     foreach ($relationPaths as $singlePath) {
                         $singlePath = trim($singlePath);
@@ -1142,10 +1271,10 @@ class ReportController extends Controller
                         });
                     }
                 });
-                
+
                 return;
             }
-            
+
             // Handle single relation path
             $this->applySingleRelationFilter($query, $relation, $operator, $value);
         } catch (\Exception $e) {
@@ -1153,7 +1282,7 @@ class ReportController extends Controller
             // Skip this filter if it fails
         }
     }
-    
+
     /**
      * Apply single relation filter (helper method)
      */
@@ -1161,7 +1290,7 @@ class ReportController extends Controller
     {
         try {
             $relationParts = explode('.', $relation);
-            
+
             // Handle nested relations recursively
             if (count($relationParts) === 1) {
                 // Direct field on current model
@@ -1170,7 +1299,7 @@ class ReportController extends Controller
                 // Single relation level (e.g., service.title)
                 $relationName = $relationParts[0];
                 $field = $relationParts[1];
-                
+
                 $query->whereHas($relationName, function ($q) use ($field, $operator, $value) {
                     $this->applyDirectFilter($q, $field, $operator, $value);
                 });
@@ -1178,7 +1307,7 @@ class ReportController extends Controller
                 // Nested relations (e.g., service.category.name)
                 $firstRelation = $relationParts[0];
                 $remainingRelation = implode('.', array_slice($relationParts, 1));
-                
+
                 $query->whereHas($firstRelation, function ($q) use ($remainingRelation, $operator, $value) {
                     // Recursively handle the remaining relation path
                     $this->applySingleRelationFilter($q, $remainingRelation, $operator, $value);
@@ -1196,16 +1325,20 @@ class ReportController extends Controller
     {
         return $results->map(function ($item) use ($sourceConfig, $fields) {
             $formatted = [];
-            
+
             foreach ($fields as $field) {
                 $fieldConfig = $sourceConfig['fields'][$field] ?? null;
-                
+
                 if (!$fieldConfig) {
                     continue;
                 }
-                
-                // Handle relation fields
-                if (isset($fieldConfig['relation'])) {
+
+                // Handle different field types
+                if (isset($fieldConfig['json_field'])) {
+                    // Handle JSON field extraction (e.g., location.address)
+                    $value = $this->getJsonFieldValue($item, $fieldConfig['json_field']);
+                } elseif (isset($fieldConfig['relation'])) {
+                    // Handle relation fields
                     $value = $this->getRelationValue($item, $fieldConfig['relation']);
                 } elseif (isset($fieldConfig['computed'])) {
                     // Handle computed fields
@@ -1217,18 +1350,72 @@ class ReportController extends Controller
                     // Direct field
                     $value = $item->{$field};
                 }
-                
+
                 // Format value based on type
                 $formatted[$field] = $this->formatFieldValue($value, $fieldConfig['type']);
-                
+
                 // Additional safety check - ensure we never return objects to frontend
                 if (is_object($formatted[$field]) || is_array($formatted[$field])) {
                     $formatted[$field] = is_array($formatted[$field]) ? implode(', ', $formatted[$field]) : (string) $formatted[$field];
                 }
             }
-            
+
             return $formatted;
         })->toArray();
+    }
+
+    /**
+     * Get value from JSON field (e.g., location.address)
+     */
+    private function getJsonFieldValue($item, $jsonPath)
+    {
+        try {
+            $parts = explode('.', $jsonPath);
+
+            if (count($parts) < 2) {
+                // If no dot notation, treat as regular field
+                return $item->{$jsonPath} ?? null;
+            }
+
+            // Get the JSON field (first part)
+            $jsonField = $parts[0];
+            $jsonData = $item->{$jsonField};
+
+            // If the field is null or empty, return null
+            if (!$jsonData) {
+                return null;
+            }
+
+            // If it's a string, try to decode it as JSON
+            if (is_string($jsonData)) {
+                $jsonData = json_decode($jsonData, true);
+                if (json_last_error() !== JSON_ERROR_NONE) {
+                    return null;
+                }
+            }
+
+            // If it's still not an array/object, return null
+            if (!is_array($jsonData)) {
+                return null;
+            }
+
+            // Navigate through the remaining path parts
+            $current = $jsonData;
+            for ($i = 1; $i < count($parts); $i++) {
+                $key = $parts[$i];
+
+                if (!is_array($current) || !isset($current[$key])) {
+                    return null;
+                }
+
+                $current = $current[$key];
+            }
+
+            return $current;
+        } catch (\Exception $e) {
+            \Log::warning("Error extracting JSON field value for '$jsonPath': " . $e->getMessage());
+            return null;
+        }
     }
 
     /**
@@ -1241,7 +1428,7 @@ class ReportController extends Controller
             if (strpos($relationPath, ',') !== false) {
                 $relationPaths = explode(',', $relationPath);
                 $values = [];
-                
+
                 foreach ($relationPaths as $singlePath) {
                     $singlePath = trim($singlePath);
                     $value = $this->getSingleRelationValue($item, $singlePath);
@@ -1249,10 +1436,10 @@ class ReportController extends Controller
                         $values[] = $value;
                     }
                 }
-                
+
                 return implode(' ', $values);
             }
-            
+
             // Handle single relation path
             return $this->getSingleRelationValue($item, $relationPath);
         } catch (\Exception $e) {
@@ -1260,7 +1447,7 @@ class ReportController extends Controller
             return null;
         }
     }
-    
+
     /**
      * Get single relation value (helper method)
      */
@@ -1269,18 +1456,18 @@ class ReportController extends Controller
         try {
             $parts = explode('.', $relationPath);
             $current = $item;
-            
+
             // Traverse the relation path
             for ($i = 0; $i < count($parts) - 1; $i++) {
                 $relation = $parts[$i];
-                
+
                 if (!$current || !$current->relationLoaded($relation) || !$current->$relation) {
                     return null;
                 }
-                
+
                 $current = $current->$relation;
             }
-            
+
             // Get the final field value
             $finalField = $parts[count($parts) - 1];
             return $current->{$finalField} ?? null;
@@ -1311,7 +1498,7 @@ class ReportController extends Controller
                         return (int) $item->services_count;
                     }
                     return 0;
-                    
+
                 case 'average_rating':
                     // Try accessor method first
                     if (method_exists($item, 'getAverageRatingAttribute')) {
@@ -1323,7 +1510,7 @@ class ReportController extends Controller
                         return $avg ? round((float) $avg, 2) : 0.0;
                     }
                     return 0.0;
-                    
+
                 case 'total_reviews':
                     // Try accessor method first
                     if (method_exists($item, 'getTotalReviewsAttribute')) {
@@ -1334,7 +1521,7 @@ class ReportController extends Controller
                         return (int) $item->reviews->count();
                     }
                     return 0;
-                    
+
                 default:
                     return null;
             }
@@ -1352,7 +1539,7 @@ class ReportController extends Controller
         if ($value === null) {
             return null;
         }
-        
+
         // Handle objects and arrays first
         if (is_object($value)) {
             if ($value instanceof Carbon) {
@@ -1368,15 +1555,15 @@ class ReportController extends Controller
                         return $value->format('Y-m-d H:i:s');
                 }
             } else {
-                // Convert other objects to string
-                return (string) $value;
+                // Handle other types of objects
+                return $this->formatObjectForReport($value, $type);
             }
         }
-        
+
         if (is_array($value)) {
             return implode(', ', $value);
         }
-        
+
         switch ($type) {
             case 'boolean':
                 return $value ? 'Yes' : 'No';
@@ -1396,6 +1583,104 @@ class ReportController extends Controller
                 return strlen($stringValue) > 100 ? substr($stringValue, 0, 100) . '...' : $stringValue;
             default:
                 return (string) $value;
+        }
+    }
+
+    /**
+     * Format objects for report display
+     */
+    private function formatObjectForReport($value, $type)
+    {
+        // Convert object to array if it's a model instance
+        if (method_exists($value, 'toArray')) {
+            $valueArray = $value->toArray();
+        } else {
+            $valueArray = (array) $value;
+        }
+
+        // Handle location objects
+        if (isset($valueArray['address']) || isset($valueArray['city']) || isset($valueArray['coordinates'])) {
+            $locationParts = [];
+
+            if (!empty($valueArray['address'])) $locationParts[] = $valueArray['address'];
+            if (!empty($valueArray['city'])) $locationParts[] = $valueArray['city'];
+            if (!empty($valueArray['state'])) $locationParts[] = $valueArray['state'];
+            if (!empty($valueArray['postal_code'])) $locationParts[] = $valueArray['postal_code'];
+            if (!empty($valueArray['country'])) $locationParts[] = $valueArray['country'];
+
+            // If no standard location fields, try other common properties
+            if (empty($locationParts)) {
+                if (!empty($valueArray['name'])) $locationParts[] = $valueArray['name'];
+                if (!empty($valueArray['area'])) $locationParts[] = $valueArray['area'];
+                if (!empty($valueArray['region'])) $locationParts[] = $valueArray['region'];
+                if (!empty($valueArray['district'])) $locationParts[] = $valueArray['district'];
+            }
+
+            return !empty($locationParts) ? implode(', ', $locationParts) : 'Location data';
+        }
+
+        // Handle user/person objects
+        if (isset($valueArray['first_name']) || isset($valueArray['last_name'])) {
+            $nameParts = [];
+            if (!empty($valueArray['first_name'])) $nameParts[] = $valueArray['first_name'];
+            if (!empty($valueArray['last_name'])) $nameParts[] = $valueArray['last_name'];
+            if (empty($nameParts) && !empty($valueArray['name'])) $nameParts[] = $valueArray['name'];
+            return !empty($nameParts) ? implode(' ', $nameParts) : 'User';
+        }
+
+        // Handle category objects
+        if (isset($valueArray['name']) && !isset($valueArray['first_name'])) {
+            return $valueArray['name'];
+        }
+
+        // Handle service objects
+        if (isset($valueArray['title'])) {
+            return $valueArray['title'];
+        }
+
+        // Handle appointment objects
+        if (isset($valueArray['appointment_date']) || isset($valueArray['status'])) {
+            $parts = [];
+            if (!empty($valueArray['appointment_date'])) $parts[] = $valueArray['appointment_date'];
+            if (!empty($valueArray['status'])) $parts[] = '(' . $valueArray['status'] . ')';
+            return !empty($parts) ? implode(' ', $parts) : 'Appointment';
+        }
+
+        // Handle payment/invoice objects
+        if (isset($valueArray['amount']) || isset($valueArray['total_amount'])) {
+            $amount = $valueArray['amount'] ?? $valueArray['total_amount'];
+            $currency = $valueArray['currency'] ?? 'LKR';
+            return $currency . ' ' . number_format((float) $amount, 2);
+        }
+
+        // Handle objects with meaningful single fields
+        $meaningfulFields = ['title', 'name', 'label', 'value', 'description', 'message'];
+        foreach ($meaningfulFields as $field) {
+            if (!empty($valueArray[$field])) {
+                $val = (string) $valueArray[$field];
+                return strlen($val) > 50 ? substr($val, 0, 50) . '...' : $val;
+            }
+        }
+
+        // Handle objects with ID
+        if (isset($valueArray['id'])) {
+            if (count($valueArray) <= 3) {
+                return 'ID: ' . $valueArray['id'];
+            }
+        }
+
+        // Last resort: convert to simple string representation
+        $keys = array_keys($valueArray);
+        if (count($keys) === 1) {
+            return (string) $valueArray[$keys[0]];
+        } elseif (count($keys) <= 3) {
+            $pairs = [];
+            foreach ($keys as $key) {
+                $pairs[] = $key . ': ' . $valueArray[$key];
+            }
+            return implode(', ', $pairs);
+        } else {
+            return 'Object (' . count($keys) . ' properties)';
         }
     }
 }

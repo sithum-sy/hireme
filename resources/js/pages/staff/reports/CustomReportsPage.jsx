@@ -1,6 +1,111 @@
 import React, { useState, useEffect } from "react";
 import StaffLayout from "../../../components/layouts/StaffLayout";
 
+// Helper function to format object values in a readable way
+const formatObjectValue = (value, fieldName = '') => {
+    if (!value || typeof value !== 'object') {
+        return String(value || '');
+    }
+
+    // Handle arrays
+    if (Array.isArray(value)) {
+        return value.join(', ');
+    }
+
+    // Handle location objects
+    if (fieldName.toLowerCase().includes('location') || 
+        (value.hasOwnProperty('address') || value.hasOwnProperty('city') || value.hasOwnProperty('coordinates'))) {
+        const parts = [];
+        
+        if (value.address) parts.push(value.address);
+        if (value.city) parts.push(value.city);
+        if (value.state) parts.push(value.state);
+        if (value.postal_code || value.zip) parts.push(value.postal_code || value.zip);
+        if (value.country) parts.push(value.country);
+        
+        // If no standard location fields, try other common location properties
+        if (parts.length === 0) {
+            if (value.name) parts.push(value.name);
+            if (value.area) parts.push(value.area);
+            if (value.region) parts.push(value.region);
+            if (value.district) parts.push(value.district);
+        }
+        
+        return parts.length > 0 ? parts.join(', ') : 'Location data';
+    }
+
+    // Handle user/person objects (client, provider, etc.)
+    if (value.hasOwnProperty('first_name') || value.hasOwnProperty('last_name') || value.hasOwnProperty('name')) {
+        const parts = [];
+        if (value.first_name) parts.push(value.first_name);
+        if (value.last_name) parts.push(value.last_name);
+        if (parts.length === 0 && value.name) parts.push(value.name);
+        if (parts.length === 0 && value.display_name) parts.push(value.display_name);
+        return parts.length > 0 ? parts.join(' ') : 'User';
+    }
+
+    // Handle category objects
+    if (value.hasOwnProperty('name') && !value.hasOwnProperty('first_name')) {
+        return value.name;
+    }
+
+    // Handle service objects
+    if (value.hasOwnProperty('title')) {
+        return value.title;
+    }
+
+    // Handle appointment objects
+    if (value.hasOwnProperty('appointment_date') || value.hasOwnProperty('status')) {
+        const parts = [];
+        if (value.appointment_date) parts.push(value.appointment_date);
+        if (value.status) parts.push(`(${value.status})`);
+        return parts.length > 0 ? parts.join(' ') : 'Appointment';
+    }
+
+    // Handle payment/invoice objects
+    if (value.hasOwnProperty('amount') || value.hasOwnProperty('total_amount')) {
+        const amount = value.amount || value.total_amount;
+        const currency = value.currency || 'LKR';
+        return `${currency} ${amount}`;
+    }
+
+    // Handle date objects
+    if (value.hasOwnProperty('date') || value.hasOwnProperty('created_at')) {
+        const date = value.date || value.created_at;
+        return new Date(date).toLocaleDateString();
+    }
+
+    // Handle objects with id and description/details
+    if (value.hasOwnProperty('id') && (value.hasOwnProperty('description') || value.hasOwnProperty('details'))) {
+        const desc = value.description || value.details;
+        return desc.length > 50 ? desc.substring(0, 50) + '...' : desc;
+    }
+
+    // Handle objects with just an id (show the ID)
+    if (value.hasOwnProperty('id') && Object.keys(value).length <= 3) {
+        return `ID: ${value.id}`;
+    }
+
+    // Fallback: try to find the most meaningful field
+    const meaningfulFields = ['title', 'name', 'label', 'value', 'description', 'message'];
+    for (const field of meaningfulFields) {
+        if (value.hasOwnProperty(field) && value[field]) {
+            const val = String(value[field]);
+            return val.length > 50 ? val.substring(0, 50) + '...' : val;
+        }
+    }
+
+    // Last resort: show object keys or simplified JSON
+    const keys = Object.keys(value);
+    if (keys.length === 1) {
+        return String(value[keys[0]]);
+    } else if (keys.length <= 3) {
+        return keys.map(key => `${key}: ${value[key]}`).join(', ');
+    } else {
+        return `Object (${keys.length} properties)`;
+    }
+};
+
 // Filter Value Input Component
 const FilterValueInput = ({ field, fieldConfig, value, dataSource, onChange, fetchFieldOptions }) => {
     const [options, setOptions] = useState([]);
@@ -353,9 +458,25 @@ const CustomReportsPage = () => {
                         <tbody>
                             ${reportResults.results.map(row => `
                                 <tr>
-                                    ${reportData.selectedFields.map(field => 
-                                        `<td>${row[field] !== null && row[field] !== undefined ? row[field] : '-'}</td>`
-                                    ).join('')}
+                                    ${reportData.selectedFields.map(field => {
+                                        const value = row[field];
+                                        let displayValue = '-';
+                                        
+                                        if (value !== null && value !== undefined) {
+                                            if (typeof value === 'object') {
+                                                displayValue = formatObjectValue(value, field);
+                                            } else if (typeof value === 'boolean') {
+                                                displayValue = value ? 'Yes' : 'No';
+                                            } else {
+                                                displayValue = String(value);
+                                            }
+                                        }
+                                        
+                                        // Escape HTML entities for PDF
+                                        displayValue = displayValue.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                                        
+                                        return `<td>${displayValue}</td>`;
+                                    }).join('')}
                                 </tr>
                             `).join('')}
                         </tbody>
@@ -418,7 +539,7 @@ const CustomReportsPage = () => {
                     
                     let stringValue;
                     if (typeof value === 'object') {
-                        stringValue = JSON.stringify(value);
+                        stringValue = formatObjectValue(value, field);
                     } else if (typeof value === 'boolean') {
                         stringValue = value ? 'Yes' : 'No';
                     } else {
@@ -935,37 +1056,149 @@ const CustomReportsPage = () => {
 
                         {/* Report Results Table */}
                         {reportResults && (
-                            <div className="card">
+                            <div className="card" style={{ overflow: 'hidden' }}>
                                 <div className="card-header d-flex justify-content-between align-items-center">
-                                    <h6 className="mb-0">Report Results</h6>
+                                    <div className="d-flex align-items-center">
+                                        <h6 className="mb-0 me-2">Report Results</h6>
+                                        {reportData.selectedFields.length > 4 && (
+                                            <span className="badge bg-warning text-dark" title="Wide table - horizontal scrolling enabled">
+                                                <i className="fas fa-arrows-alt-h me-1"></i>
+                                                {reportData.selectedFields.length} cols
+                                            </span>
+                                        )}
+                                    </div>
                                     <small className="text-muted">
                                         Showing {reportResults.pagination.from} to {reportResults.pagination.to} of {reportResults.pagination.total} records
                                     </small>
                                 </div>
                                 <div className="card-body p-0">
+                                    {/* Table Container with Enhanced Scrolling */}
                                     <div 
-                                        className="table-responsive" 
+                                        className="table-responsive-custom" 
                                         style={{ 
                                             maxHeight: '600px', 
+                                            maxWidth: '100%',
                                             overflowY: 'auto',
                                             overflowX: 'auto',
-                                            width: '100%'
+                                            width: '100%',
+                                            border: '1px solid #dee2e6',
+                                            borderRadius: '0.375rem',
+                                            position: 'relative'
                                         }}
                                     >
-                                        <table className="table table-striped table-hover mb-0" style={{ minWidth: 'max-content' }}>
-                                            <thead className="table-dark" style={{ position: 'sticky', top: 0, zIndex: 10 }}>
+                                        {/* Enhanced scrollbar styling */}
+                                        <style jsx>{`
+                                            .table-responsive-custom {
+                                                scrollbar-width: auto;
+                                                scrollbar-color: #888 #f1f1f1;
+                                                /* Contain table width within container */
+                                                contain: layout;
+                                                display: block;
+                                                width: 100%;
+                                                overflow-x: auto;
+                                                overflow-y: auto;
+                                                white-space: nowrap;
+                                            }
+                                            
+                                            .table-responsive-custom::-webkit-scrollbar {
+                                                width: 14px;
+                                                height: 14px;
+                                            }
+                                            
+                                            .table-responsive-custom::-webkit-scrollbar-track {
+                                                background: #f8f9fa;
+                                                border-radius: 8px;
+                                                border: 1px solid #e9ecef;
+                                            }
+                                            
+                                            .table-responsive-custom::-webkit-scrollbar-thumb {
+                                                background: linear-gradient(180deg, #6c757d 0%, #495057 100%);
+                                                border-radius: 8px;
+                                                border: 2px solid #f8f9fa;
+                                            }
+                                            
+                                            .table-responsive-custom::-webkit-scrollbar-thumb:hover {
+                                                background: linear-gradient(180deg, #495057 0%, #343a40 100%);
+                                            }
+                                            
+                                            .table-responsive-custom::-webkit-scrollbar-corner {
+                                                background: #f8f9fa;
+                                                border: 1px solid #e9ecef;
+                                            }
+                                            
+                                            /* Ensure parent containers don't expand beyond viewport */
+                                            .table-responsive-custom {
+                                                max-width: 100vw; /* Never exceed viewport width */
+                                                box-sizing: border-box;
+                                            }
+                                            
+                                            .table-responsive-custom table {
+                                                margin: 0;
+                                                box-sizing: border-box;
+                                            }
+                                            
+                                            /* Ensure page doesn't expand horizontally */
+                                            .container, .container-fluid {
+                                                overflow-x: hidden;
+                                            }
+                                            
+                                            /* Mobile touch scrolling improvements */
+                                            @media (max-width: 768px) {
+                                                .table-responsive-custom {
+                                                    -webkit-overflow-scrolling: touch;
+                                                    scroll-behavior: smooth;
+                                                }
+                                                
+                                                .table-responsive-custom::-webkit-scrollbar {
+                                                    width: 8px;
+                                                    height: 8px;
+                                                }
+                                            }
+                                            
+                                            /* Indicate scrollable content */
+                                            .table-responsive-custom::before {
+                                                content: '';
+                                                position: absolute;
+                                                top: 0;
+                                                right: 0;
+                                                width: 20px;
+                                                height: 100%;
+                                                background: linear-gradient(90deg, transparent 0%, rgba(0,0,0,0.05) 100%);
+                                                pointer-events: none;
+                                                z-index: 1;
+                                                opacity: ${reportData.selectedFields.length > 4 ? '1' : '0'};
+                                                transition: opacity 0.3s ease;
+                                            }
+                                        `}</style>
+                                        
+                                        <table className="table table-striped table-hover mb-0" style={{ 
+                                            tableLayout: 'auto',
+                                            width: reportData.selectedFields.length > 4 ? `${reportData.selectedFields.length * 200}px` : '100%',
+                                            minWidth: 'max-content'
+                                        }}>
+                                            <thead className="table-dark" style={{ 
+                                                position: 'sticky', 
+                                                top: 0, 
+                                                zIndex: 10,
+                                                backgroundColor: '#212529'
+                                            }}>
                                                 <tr>
                                                     {reportData.selectedFields.map(field => {
                                                         const fieldConfig = currentSource?.fields[field];
                                                         return (
                                                             <th key={field} style={{ 
-                                                                minWidth: '150px', 
+                                                                minWidth: '180px',
+                                                                width: '200px',
                                                                 whiteSpace: 'nowrap',
-                                                                padding: '12px 8px'
+                                                                padding: '12px 8px',
+                                                                backgroundColor: '#212529',
+                                                                borderRight: '1px solid #495057'
                                                             }}>
                                                                 <div className="d-flex flex-column">
-                                                                    <span className="fw-bold text-white">{fieldConfig?.label || field}</span>
-                                                                    <small className="text-light opacity-75">
+                                                                    <span className="fw-bold text-white" style={{ fontSize: '0.875rem' }}>
+                                                                        {fieldConfig?.label || field}
+                                                                    </span>
+                                                                    <small className="text-light opacity-75" style={{ fontSize: '0.75rem' }}>
                                                                         {fieldConfig?.type}
                                                                     </small>
                                                                 </div>
@@ -983,8 +1216,8 @@ const CustomReportsPage = () => {
                                                             
                                                             if (value !== null && value !== undefined) {
                                                                 if (typeof value === 'object') {
-                                                                    // Handle object values (shouldn't happen with proper backend formatting, but just in case)
-                                                                    displayValue = JSON.stringify(value);
+                                                                    // Handle object values with proper formatting
+                                                                    displayValue = formatObjectValue(value, field);
                                                                 } else if (typeof value === 'boolean') {
                                                                     displayValue = value ? 'Yes' : 'No';
                                                                 } else {
@@ -994,12 +1227,14 @@ const CustomReportsPage = () => {
                                                             
                                                             return (
                                                                 <td key={field} style={{ 
-                                                                    minWidth: '150px',
-                                                                    maxWidth: '250px',
+                                                                    minWidth: '180px',
+                                                                    width: '200px',
                                                                     overflow: 'hidden',
                                                                     textOverflow: 'ellipsis',
                                                                     whiteSpace: 'nowrap',
-                                                                    padding: '8px'
+                                                                    padding: '8px 8px',
+                                                                    borderRight: '1px solid #dee2e6',
+                                                                    fontSize: '0.875rem'
                                                                 }} title={displayValue}>
                                                                     {displayValue}
                                                                 </td>
@@ -1011,20 +1246,40 @@ const CustomReportsPage = () => {
                                         </table>
                                     </div>
                                     
-                                    {/* Responsive help text */}
+                                    {/* Enhanced navigation help text */}
                                     <div className="px-3 py-2 bg-light border-top">
-                                        <small className="text-muted d-flex align-items-center justify-content-between flex-wrap">
-                                            <span>
-                                                <i className="fas fa-arrows-alt me-1"></i>
-                                                <strong>Navigation:</strong> Use scrollbars or arrow keys to navigate. Hover over cells to see full content.
-                                            </span>
-                                            {reportData.selectedFields.length > 8 && (
-                                                <span className="badge bg-info">
-                                                    <i className="fas fa-expand-arrows-alt me-1"></i>
-                                                    Wide table - scroll horizontally
-                                                </span>
-                                            )}
-                                        </small>
+                                        <div className="row g-2">
+                                            <div className="col-md-8">
+                                                <small className="text-muted">
+                                                    <i className="fas fa-arrows-alt me-1"></i>
+                                                    <strong>Navigation:</strong> Use scrollbars or arrow keys to navigate. Hover over cells for full content.
+                                                </small>
+                                            </div>
+                                            <div className="col-md-4 text-md-end">
+                                                {reportData.selectedFields.length > 4 && (
+                                                    <span className="badge bg-info me-2">
+                                                        <i className="fas fa-arrows-alt-h me-1"></i>
+                                                        {reportData.selectedFields.length} columns - scroll horizontal
+                                                    </span>
+                                                )}
+                                                {reportResults.results.length > 10 && (
+                                                    <span className="badge bg-secondary">
+                                                        <i className="fas fa-arrows-alt-v me-1"></i>
+                                                        {reportResults.results.length} rows
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                        
+                                        {/* Additional tip for wide tables */}
+                                        {reportData.selectedFields.length > 6 && (
+                                            <div className="mt-2 pt-2 border-top border-light">
+                                                <small className="text-warning">
+                                                    <i className="fas fa-lightbulb me-1"></i>
+                                                    <strong>Tip:</strong> For better viewing of wide tables, consider reducing the number of selected fields or use the export options (CSV/PDF) for full data access.
+                                                </small>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </div>

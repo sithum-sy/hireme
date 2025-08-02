@@ -394,15 +394,6 @@ const ReviewModal = ({ show, onHide, appointment, onReviewSuccess }) => {
                                                 )}
                                             </ul>
                                         </div>
-
-                                        {/* Photo Upload Placeholder */}
-                                        <div className="photo-upload-placeholder bg-light rounded p-3 text-center">
-                                            <i className="fas fa-camera fa-2x text-muted mb-2"></i>
-                                            <p className="text-muted mb-0 small">
-                                                Photo upload feature coming
-                                                soon!
-                                            </p>
-                                        </div>
                                     </div>
                                 </div>
 

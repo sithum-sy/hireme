@@ -7,7 +7,10 @@
       "Bash(php artisan queue:work:*)",
       "Bash(php artisan tinker:*)",
       "Bash(php artisan config:clear:*)",
-      "Bash(php artisan:*)"
+      "Bash(php artisan:*)",
+      "Bash(php:*)",
+      "Bash(php:*)",
+      "Bash(rm:*)"
     ],
     "deny": []
   }

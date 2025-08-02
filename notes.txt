@@ -110,3 +110,35 @@ php artisan queue:work   │
 
   # To run this seeder, you can add it to your DatabaseSeeder.php or run it directly with:
   php artisan db:seed --class=ClientSeeder
+
+
+
+
+
+
+  
+1. Provider AppointmentController.php (app/Http/Controllers/API/Provider/AppointmentController.php)
+
+  - Lines around the validation check (commented out):
+    - The main validation is commented out in the startService() method
+    - canStartService() method has the 15-minute rule commented out: // $allowedStartTime = 
+  $appointmentDateTime->copy()->subMinutes(15);
+
+  2. Provider AppointmentDetail.jsx (resources/js/pages/provider/appointments/AppointmentDetail.jsx)
+
+  - Multiple locations with commented 15-minute logic:
+    - // const graceMinutes = 15; (commented out)
+    - Functions for checking start time with 15-minute grace period are commented out
+
+  3. AppointmentCard.jsx (resources/js/components/provider/appointments/AppointmentCard.jsx)
+
+  - Active 15-minute rule implementation:
+    - const graceMinutes = 15; - This is NOT commented out
+    - Used in canStartService() and getTimeUntilStart() functions
+    - Alert message: You can start this service in ${timeUntil} (15 minutes before scheduled time).
+
+  4. TodaysSchedule.jsx (resources/js/pages/provider/appointments/TodaysSchedule.jsx)
+
+  - Active 15-minute rule for appointment status:
+    - isAppointmentNow() function checks if appointment is within 15 minutes
+    - isAppointmentPast() function considers appointment past if more than 15 minutes ago

@@ -35,6 +35,15 @@ class ReportController extends Controller
 
             $startDate = $request->start_date ?? now()->subDays(30)->toDateString();
             $endDate = $request->end_date ?? now()->toDateString();
+            
+            // Log the received dates for debugging
+            \Log::info('Analytics request', [
+                'user_id' => $user->id,
+                'requested_start_date' => $request->start_date,
+                'requested_end_date' => $request->end_date,
+                'computed_start_date' => $startDate,
+                'computed_end_date' => $endDate
+            ]);
 
             $data = [
                 'summary' => $this->getSummaryData($user, $startDate, $endDate),
@@ -74,7 +83,7 @@ class ReportController extends Controller
             // Method 1: Get income from completed payments (most accurate)
             $completedPayments = Payment::where('provider_id', $user->id)
                 ->where('status', Payment::STATUS_COMPLETED)
-                ->whereBetween('created_at', [$startDate, $endDate])
+                ->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
                 ->sum('amount');
             
             // No platform fee - providers get 100% of payments
@@ -88,7 +97,7 @@ class ReportController extends Controller
                         Appointment::STATUS_PAID,
                         Appointment::STATUS_CLOSED
                     ])
-                    ->whereBetween('created_at', [$startDate, $endDate])
+                    ->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
                     ->sum('total_price');
                 
                 // No platform fee - providers get 100% of appointment value
@@ -97,8 +106,14 @@ class ReportController extends Controller
 
             // Total appointments in the period
             $totalAppointments = Appointment::where('provider_id', $user->id)
-                ->whereBetween('created_at', [$startDate, $endDate])
+                ->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
                 ->count();
+                
+            \Log::info('Total appointments query', [
+                'user_id' => $user->id,
+                'date_range' => [$startDate . ' 00:00:00', $endDate . ' 23:59:59'],
+                'total_appointments' => $totalAppointments
+            ]);
 
             // Completed appointments (all successful statuses)
             $completedAppointments = Appointment::where('provider_id', $user->id)
@@ -110,7 +125,7 @@ class ReportController extends Controller
                     Appointment::STATUS_REVIEWED,
                     Appointment::STATUS_CLOSED
                 ])
-                ->whereBetween('created_at', [$startDate, $endDate])
+                ->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
                 ->count();
 
             // Calculate success rate (completed vs total)
@@ -121,12 +136,23 @@ class ReportController extends Controller
                 ->where('is_active', true)
                 ->count();
 
-            return [
+            $result = [
                 'total_income' => 'LKR ' . number_format($totalIncome, 2),
                 'total_appointments' => $totalAppointments,
                 'completed_rate' => $completedRate,
                 'active_services' => $activeServices
             ];
+            
+            // Log the computed summary for debugging
+            \Log::info('Summary computed', [
+                'user_id' => $user->id,
+                'date_range' => [$startDate, $endDate],
+                'summary' => $result,
+                'raw_income' => $totalIncome,
+                'completed_payments' => $completedPayments ?? 0
+            ]);
+            
+            return $result;
         } catch (\Exception $e) {
             \Log::error('Summary Data Error: ' . $e->getMessage());
             return [
@@ -158,7 +184,10 @@ class ReportController extends Controller
                     // Get income for this day
                     $dailyIncome = Payment::where('provider_id', $user->id)
                         ->where('status', Payment::STATUS_COMPLETED)
-                        ->whereDate('created_at', $current->toDateString())
+                        ->whereBetween('created_at', [
+                            $current->toDateString() . ' 00:00:00',
+                            $current->toDateString() . ' 23:59:59'
+                        ])
                         ->sum('amount');
                     
                     // Fallback to appointments if no payment data
@@ -169,7 +198,10 @@ class ReportController extends Controller
                                 Appointment::STATUS_PAID,
                                 Appointment::STATUS_CLOSED
                             ])
-                            ->whereDate('created_at', $current->toDateString())
+                            ->whereBetween('created_at', [
+                                $current->toDateString() . ' 00:00:00',
+                                $current->toDateString() . ' 23:59:59'
+                            ])
                             ->sum('total_price');
                     }
                     
@@ -191,7 +223,7 @@ class ReportController extends Controller
                     // Get income for this month period
                     $monthlyIncome = Payment::where('provider_id', $user->id)
                         ->where('status', Payment::STATUS_COMPLETED)
-                        ->whereBetween('created_at', [$monthStart, $monthEnd])
+                        ->whereBetween('created_at', [$monthStart . ' 00:00:00', $monthEnd . ' 23:59:59'])
                         ->sum('amount');
                     
                     // Fallback to appointments if no payment data
@@ -202,7 +234,7 @@ class ReportController extends Controller
                                 Appointment::STATUS_PAID,
                                 Appointment::STATUS_CLOSED
                             ])
-                            ->whereBetween('created_at', [$monthStart, $monthEnd])
+                            ->whereBetween('created_at', [$monthStart . ' 00:00:00', $monthEnd . ' 23:59:59'])
                             ->sum('total_price');
                     }
                     
@@ -231,7 +263,7 @@ class ReportController extends Controller
                     Appointment::STATUS_REVIEWED,
                     Appointment::STATUS_CLOSED
                 ])
-                ->whereBetween('created_at', [$startDate, $endDate])
+                ->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
                 ->count();
 
             // Cancelled appointments
@@ -242,13 +274,13 @@ class ReportController extends Controller
                     Appointment::STATUS_NO_SHOW,
                     Appointment::STATUS_EXPIRED
                 ])
-                ->whereBetween('created_at', [$startDate, $endDate])
+                ->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
                 ->count();
 
             // In Progress appointments (separate category)
             $inProgress = Appointment::where('provider_id', $user->id)
                 ->where('status', Appointment::STATUS_IN_PROGRESS)
-                ->whereBetween('created_at', [$startDate, $endDate])
+                ->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
                 ->count();
 
             // Pending appointments (waiting for confirmation or disputed)
@@ -258,7 +290,7 @@ class ReportController extends Controller
                     Appointment::STATUS_CONFIRMED,
                     Appointment::STATUS_DISPUTED
                 ])
-                ->whereBetween('created_at', [$startDate, $endDate])
+                ->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
                 ->count();
 
             return [$completed, $cancelled, $inProgress, $pending];
@@ -278,6 +310,15 @@ class ReportController extends Controller
             $start = \Carbon\Carbon::parse($startDate);
             $end = \Carbon\Carbon::parse($endDate);
             
+            \Log::info('Appointment Trend Data', [
+                'user_id' => $user->id,
+                'startDate' => $startDate,
+                'endDate' => $endDate,
+                'start_carbon' => $start->toDateString(),
+                'end_carbon' => $end->toDateString(),
+                'diff_in_days' => $start->diffInDays($end)
+            ]);
+            
             // If date range is less than 32 days, show daily data
             if ($start->diffInDays($end) <= 31) {
                 // Generate daily data within the filter range
@@ -286,7 +327,10 @@ class ReportController extends Controller
                     $labels[] = $current->format('M d');
                     
                     $dailyCount = Appointment::where('provider_id', $user->id)
-                        ->whereDate('created_at', $current->toDateString())
+                        ->whereBetween('created_at', [
+                            $current->toDateString() . ' 00:00:00',
+                            $current->toDateString() . ' 23:59:59'
+                        ])
                         ->count();
                     
                     $data[] = $dailyCount;
@@ -303,7 +347,7 @@ class ReportController extends Controller
                     $labels[] = $current->format('M d') . ' - ' . \Carbon\Carbon::parse($weekEnd)->format('M d');
                     
                     $weeklyCount = Appointment::where('provider_id', $user->id)
-                        ->whereBetween('created_at', [$weekStart, $weekEnd])
+                        ->whereBetween('created_at', [$weekStart . ' 00:00:00', $weekEnd . ' 23:59:59'])
                         ->count();
                     
                     $data[] = $weeklyCount;
@@ -323,7 +367,7 @@ class ReportController extends Controller
         try {
             $services = Service::where('provider_id', $user->id)
                 ->withCount(['appointments' => function($query) use ($startDate, $endDate) {
-                    $query->whereBetween('created_at', [$startDate, $endDate]);
+                    $query->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
                 }])
                 ->having('appointments_count', '>', 0)
                 ->orderBy('appointments_count', 'desc')

@@ -27,6 +27,7 @@ const ProviderReportsPage = () => {
     const { generateReportsPDF, generateQuickReportsPDF, generateChartsPDF } = useReportsPDF();
 
     const quickFilters = [
+        { label: 'Today', days: 0 },
         { label: 'Last 7 Days', days: 7 },
         { label: 'Last 30 Days', days: 30 },
         { label: 'Last 90 Days', days: 90 },
@@ -41,41 +42,80 @@ const ProviderReportsPage = () => {
     };
 
     const setQuickFilter = (days) => {
-        const endDate = new Date();
-        const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+        const today = new Date();
+        let startDate, endDate;
         
-        setFilters({
+        if (days === 0) {
+            // Today filter - same start and end date (today)
+            startDate = new Date(today);
+            endDate = new Date(today);
+        } else {
+            endDate = new Date(today);
+            startDate = new Date(today.getTime() - days * 24 * 60 * 60 * 1000);
+        }
+        
+        const newFilters = {
             start_date: startDate.toISOString().split('T')[0],
             end_date: endDate.toISOString().split('T')[0]
-        });
+        };
+        
+        console.log('Setting quick filter:', { days, newFilters });
+        setFilters(newFilters);
     };
 
     const isQuickFilterActive = (days) => {
-        const endDate = new Date();
-        const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+        const today = new Date();
+        let startDate, endDate;
         
-        return filters.start_date === startDate.toISOString().split('T')[0] &&
-               filters.end_date === endDate.toISOString().split('T')[0];
+        if (days === 0) {
+            // Today filter - same start and end date (today)
+            startDate = new Date(today);
+            endDate = new Date(today);
+        } else {
+            endDate = new Date(today);
+            startDate = new Date(today.getTime() - days * 24 * 60 * 60 * 1000);
+        }
+        
+        const expectedStartDate = startDate.toISOString().split('T')[0];
+        const expectedEndDate = endDate.toISOString().split('T')[0];
+        
+        return filters.start_date === expectedStartDate &&
+               filters.end_date === expectedEndDate;
     };
 
     const fetchAnalytics = async () => {
         setLoading(true);
+        console.log('Fetching analytics with filters:', filters);
+        
         try {
             const queryParams = new URLSearchParams(filters);
+            // Add cache busting parameter to ensure fresh data
+            queryParams.append('_t', Date.now());
+            
+            console.log('API URL:', `/api/provider/reports/analytics?${queryParams}`);
+            
             const response = await fetch(`/api/provider/reports/analytics?${queryParams}`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                    'Accept': 'application/json'
+                    'Accept': 'application/json',
+                    'Cache-Control': 'no-cache'
                 }
             });
 
             if (!response.ok) {
-                throw new Error('Failed to fetch analytics data');
+                throw new Error(`HTTP ${response.status}: Failed to fetch analytics data`);
             }
 
             const data = await response.json();
-            setAnalyticsData(data.data);
+            console.log('API Response:', data);
+            console.log('Summary data:', data.data?.summary);
+            console.log('Appointment trend data:', data.data?.appointment_trend);
+            
+            // Force a complete state update
+            setAnalyticsData(null);
+            setTimeout(() => setAnalyticsData(data.data), 0);
+            
         } catch (error) {
             console.error('Error fetching analytics:', error);
             alert('Failed to fetch analytics data. Please try again.');
@@ -112,8 +152,14 @@ const ProviderReportsPage = () => {
     };
 
     useEffect(() => {
+        console.log('useEffect triggered with filters:', filters);
         fetchAnalytics();
-    }, [filters]);
+    }, [filters.start_date, filters.end_date]);
+    
+    // Also fetch analytics on component mount
+    useEffect(() => {
+        fetchAnalytics();
+    }, []);
 
     // Chart configurations
     const incomeChartData = {
@@ -297,42 +343,64 @@ const ProviderReportsPage = () => {
                 )}
 
                 {/* Summary Cards */}
-                {analyticsData && (
-                    <div className="row mb-4">
-                        <div className="col-md-3">
-                            <div className="card text-center">
-                                <div className="card-body">
-                                    <h3 className="text-success">{analyticsData.summary?.total_income || 'LKR 0.00'}</h3>
-                                    <p className="text-muted mb-0">Total Income</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="col-md-3">
-                            <div className="card text-center">
-                                <div className="card-body">
-                                    <h3 className="text-primary">{analyticsData.summary?.total_appointments || 0}</h3>
-                                    <p className="text-muted mb-0">Total Appointments</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="col-md-3">
-                            <div className="card text-center">
-                                <div className="card-body">
-                                    <h3 className="text-warning">{analyticsData.summary?.completed_rate || 0}%</h3>
-                                    <p className="text-muted mb-0">Success Rate</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="col-md-3">
-                            <div className="card text-center">
-                                <div className="card-body">
-                                    <h3 className="text-info">{analyticsData.summary?.active_services || 0}</h3>
-                                    <p className="text-muted mb-0">Active Services</p>
-                                </div>
+                <div className="row mb-4" key={`summary-${filters.start_date}-${filters.end_date}-${analyticsData?.summary?.total_income}`}>
+                    <div className="col-md-3">
+                        <div className="card text-center">
+                            <div className="card-body">
+                                <h3 className="text-success">
+                                    {loading ? (
+                                        <i className="fas fa-spinner fa-spin"></i>
+                                    ) : (
+                                        analyticsData?.summary?.total_income || 'LKR 0.00'
+                                    )}
+                                </h3>
+                                <p className="text-muted mb-0">Total Income</p>
                             </div>
                         </div>
                     </div>
-                )}
+                    <div className="col-md-3">
+                        <div className="card text-center">
+                            <div className="card-body">
+                                <h3 className="text-primary">
+                                    {loading ? (
+                                        <i className="fas fa-spinner fa-spin"></i>
+                                    ) : (
+                                        analyticsData?.summary?.total_appointments || 0
+                                    )}
+                                </h3>
+                                <p className="text-muted mb-0">Total Appointments</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="col-md-3">
+                        <div className="card text-center">
+                            <div className="card-body">
+                                <h3 className="text-warning">
+                                    {loading ? (
+                                        <i className="fas fa-spinner fa-spin"></i>
+                                    ) : (
+                                        `${analyticsData?.summary?.completed_rate || 0}%`
+                                    )}
+                                </h3>
+                                <p className="text-muted mb-0">Success Rate</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="col-md-3">
+                        <div className="card text-center">
+                            <div className="card-body">
+                                <h3 className="text-info">
+                                    {loading ? (
+                                        <i className="fas fa-spinner fa-spin"></i>
+                                    ) : (
+                                        analyticsData?.summary?.active_services || 0
+                                    )}
+                                </h3>
+                                <p className="text-muted mb-0">Active Services</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                 {/* Charts */}
                 {analyticsData && (
