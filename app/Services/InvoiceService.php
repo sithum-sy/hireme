@@ -35,15 +35,15 @@ class InvoiceService
                 throw new \Exception('Invoice already exists for this appointment');
             }
 
-            // $subtotal = $appointment->total_price;
-            // $platformFeeRate = 0.15; // 15% platform fee
-            // $platformFee = $subtotal * $platformFeeRate;
-            // $providerEarnings = $subtotal - $platformFee;
+            $subtotal = $appointment->total_price;
+            $discountRate = 0.15; // 15% discount rate
+            $discount = $subtotal * $discountRate;
+            $providerEarnings = $subtotal - $discount;
 
             // SET PROVIDER EARNINGS = TOTAL PRICE (no platform fee)
-            $platformFee = 0;
-            $subtotal = $appointment->total_price; // Use total price directly
-            $providerEarnings = $subtotal; // Provider gets full amount
+            // $platformFee = 0;
+            // $subtotal = $appointment->total_price; // Use total price directly
+            // $providerEarnings = $subtotal; // Provider gets full amount
 
             // Determine invoice and appointment status based on send_invoice option
             $sendInvoice = $options['send_invoice'] ?? false;
@@ -57,7 +57,7 @@ class InvoiceService
                 'client_id' => $appointment->client_id,
                 'subtotal' => $subtotal,
                 'tax_amount' => $options['tax_amount'] ?? 0,
-                'platform_fee' => $platformFee,
+                'platform_fee' => $discount,
                 'total_amount' => $subtotal,
                 'provider_earnings' => $providerEarnings,
                 'payment_method' => $options['payment_method'] ?? 'cash',

@@ -58,7 +58,9 @@ const CreateInvoiceModal = ({ appointment, isOpen, onClose, onComplete }) => {
             await onComplete(formData);
         } catch (error) {
             console.error("Error in completion flow:", error);
-            notificationService.error("Error completing service and creating invoice");
+            notificationService.error(
+                "Error completing service and creating invoice"
+            );
             setLoading(false);
         }
     };
@@ -105,10 +107,44 @@ const CreateInvoiceModal = ({ appointment, isOpen, onClose, onComplete }) => {
     };
 
     const calculateSubtotal = () => {
+        let sumBeforeDiscount = formData.line_items[0].amount;
+        console.log("sum", sumBeforeDiscount);
+
+        let discountRate = 0.15;
+        let discount = sumBeforeDiscount * discountRate;
+        let sum = sumBeforeDiscount - discount;
+
+        formData.line_items[0].amount = sum;
+        console.log("sum nw ,", sum);
+
+        // console.log(formData.line_items[0]);
+        // console.log("tiota", formData.line_items.item.amount);
+
         return formData.line_items.reduce(
             (sum, item) => sum + (parseFloat(item.amount) || 0),
+
             0
         );
+
+        // return formData.line_items.reduce(
+
+        //     (sum, item) => sum + (parseFloat(item.amount) || 0),
+
+        //     0
+        // );
+    };
+
+    const calculateDiscount = () => {
+        let sumBeforeDiscount = formData.line_items[0].amount;
+        console.log("sum", sumBeforeDiscount);
+
+        let discountRate = 0.15;
+        let discount = sumBeforeDiscount * discountRate;
+
+        // console.log(formData.line_items[0]);
+        // console.log("tiota", formData.line_items.item.amount);
+
+        return discount;
     };
 
     const handleClose = (e) => {
@@ -196,12 +232,24 @@ const CreateInvoiceModal = ({ appointment, isOpen, onClose, onComplete }) => {
                                 </div>
                             </div>
                             <div className="col-md-2">
-                                <small className="text-muted">Payment Method:</small>
+                                <small className="text-muted">
+                                    Payment Method:
+                                </small>
                                 <div className="fw-medium">
-                                    <i className={`fas ${appointment.payment_method === 'cash' ? 'fa-money-bill-wave' : 'fa-credit-card'} me-1`}></i>
-                                    {appointment.payment_method === 'cash' ? 'Cash' : 
-                                     appointment.payment_method === 'card' ? 'Card' :
-                                     appointment.payment_method || 'Not specified'}
+                                    <i
+                                        className={`fas ${
+                                            appointment.payment_method ===
+                                            "cash"
+                                                ? "fa-money-bill-wave"
+                                                : "fa-credit-card"
+                                        } me-1`}
+                                    ></i>
+                                    {appointment.payment_method === "cash"
+                                        ? "Cash"
+                                        : appointment.payment_method === "card"
+                                        ? "Card"
+                                        : appointment.payment_method ||
+                                          "Not specified"}
                                 </div>
                             </div>
                         </div>
@@ -243,15 +291,22 @@ const CreateInvoiceModal = ({ appointment, isOpen, onClose, onComplete }) => {
                                         id="sendInvoice"
                                         checked={formData.send_invoice}
                                         onChange={(e) =>
-                                            handleChange("send_invoice", e.target.checked)
+                                            handleChange(
+                                                "send_invoice",
+                                                e.target.checked
+                                            )
                                         }
                                         disabled={loading}
                                     />
-                                    <label className="form-check-label" htmlFor="sendInvoice">
+                                    <label
+                                        className="form-check-label"
+                                        htmlFor="sendInvoice"
+                                    >
                                         <i className="fas fa-paper-plane me-1"></i>
                                         Send invoice to client immediately
                                         <small className="d-block text-muted">
-                                            If unchecked, invoice will be saved as draft for review
+                                            If unchecked, invoice will be saved
+                                            as draft for review
                                         </small>
                                     </label>
                                 </div>
@@ -411,6 +466,21 @@ const CreateInvoiceModal = ({ appointment, isOpen, onClose, onComplete }) => {
                                     <tfoot>
                                         <tr>
                                             <td
+                                                colSpan=""
+                                                className="text-end fw-bold"
+                                            >
+                                                Discount(15%):
+                                                {/* {calculateDiscount().toFixed(2)} */}
+                                            </td>
+                                            <td
+                                                colSpan=""
+                                                className="text-end fw-bold"
+                                            >
+                                                Rs.{" "}
+                                                {calculateDiscount().toFixed(2)}
+                                            </td>
+
+                                            <td
                                                 colSpan="3"
                                                 className="text-end fw-bold"
                                             >
@@ -470,8 +540,8 @@ const CreateInvoiceModal = ({ appointment, isOpen, onClose, onComplete }) => {
                             ) : (
                                 <>
                                     <i className="fas fa-check me-1"></i>
-                                    {formData.send_invoice 
-                                        ? "Complete Service & Send Invoice" 
+                                    {formData.send_invoice
+                                        ? "Complete Service & Send Invoice"
                                         : "Complete Service & Create Invoice"}
                                 </>
                             )}

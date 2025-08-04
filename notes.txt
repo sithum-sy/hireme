@@ -140,7 +140,7 @@ php artisan queue:work   │
   
 
 
-
+ A unique constraint was added using provider_id', 'appointment_date', 'appointment_time'], 'unique_provider_datetime' to prevent double booking
 
 
 
