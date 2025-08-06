@@ -10,12 +10,14 @@ A comprehensive service marketplace platform built with Laravel and React, enabl
 ## 🌟 Features
 
 ### Multi-Role Architecture
+
 - **Clients**: Browse, book, and manage service appointments
 - **Service Providers**: Offer services, manage bookings, and handle payments
 - **Admin**: Complete platform oversight and user management
 - **Staff**: Content moderation and support operations
 
 ### Core Functionality
+
 - **Smart Service Discovery**: Geographic-based search with radius filtering
 - **Advanced Booking System**: Real-time availability with race condition handling
 - **Custom Quote System**: Request and provide custom pricing for services
@@ -26,6 +28,7 @@ A comprehensive service marketplace platform built with Laravel and React, enabl
 - **Real-time Dashboard**: Role-specific analytics and insights
 
 ### Advanced Features
+
 - **Appointment Expiration**: Automatic 24-hour expiration with reminder system
 - **Geographic Search**: Haversine formula for precise location-based results
 - **Multi-Channel Notifications**: Email and in-app notification preferences
@@ -36,6 +39,7 @@ A comprehensive service marketplace platform built with Laravel and React, enabl
 ## 🛠 Technology Stack
 
 ### Backend
+
 - **Framework**: Laravel 10.x
 - **Database**: MySQL/MariaDB with geographic functions
 - **Authentication**: Laravel Sanctum API tokens
@@ -45,6 +49,7 @@ A comprehensive service marketplace platform built with Laravel and React, enabl
 - **Image Processing**: Intervention Image for uploads
 
 ### Frontend
+
 - **Framework**: React 19.1 with Vite
 - **Routing**: React Router DOM
 - **UI Components**: Bootstrap 5 with custom CSS
@@ -54,6 +59,7 @@ A comprehensive service marketplace platform built with Laravel and React, enabl
 - **Payments**: Stripe React components
 
 ### Development Tools
+
 - **Code Quality**: Laravel Pint, PHPStan, ESLint, Prettier
 - **Testing**: PHPUnit for backend testing
 - **API Documentation**: RESTful API design
@@ -70,12 +76,14 @@ A comprehensive service marketplace platform built with Laravel and React, enabl
 ## 🚀 Installation
 
 ### 1. Clone the Repository
+
 ```bash
-git clone https://github.com/yourusername/hireme.git
+git clone https://github.com/sithum-sy/hireme.git
 cd hireme
 ```
 
 ### 2. Backend Setup
+
 ```bash
 # Install PHP dependencies
 composer install
@@ -97,6 +105,7 @@ php artisan storage:link
 ```
 
 ### 3. Frontend Setup
+
 ```bash
 # Install Node.js dependencies
 npm install
@@ -109,6 +118,7 @@ npm run build
 ```
 
 ### 4. Queue Configuration
+
 ```bash
 # Start the queue worker (required for notifications)
 php artisan queue:work
@@ -120,6 +130,7 @@ start-queue.bat
 ## ⚙️ Configuration
 
 ### Environment Variables
+
 Configure these essential variables in your `.env` file:
 
 ```env
@@ -149,6 +160,7 @@ QUEUE_CONNECTION=database
 ## 🏗 Architecture Overview
 
 ### Directory Structure
+
 ```
 app/
 ├── Http/Controllers/API/     # Role-based API controllers
@@ -165,6 +177,7 @@ resources/js/
 ```
 
 ### Database Schema
+
 - **Users**: Multi-role authentication hub
 - **Appointments**: Complex booking lifecycle (15+ statuses)
 - **Services**: Location-aware service offerings
@@ -175,6 +188,7 @@ resources/js/
 ## 🧑‍💻 Development
 
 ### Common Commands
+
 ```bash
 # Backend Development
 php artisan serve              # Start Laravel server
@@ -193,6 +207,7 @@ npm run format                 # Format with Prettier
 ```
 
 ### Testing
+
 ```bash
 # Run PHP tests
 php artisan test
@@ -206,23 +221,27 @@ vendor/bin/phpunit --coverage-html coverage
 ## 📊 Key Features in Detail
 
 ### Appointment System
+
 - **Race Condition Protection**: Database locking prevents double-booking
 - **Automatic Expiration**: 24-hour expiration with email reminders
 - **Status Management**: 15+ appointment statuses with transition validation
 - **Reschedule Requests**: Structured rescheduling workflow
 
 ### Geographic Search
+
 - **Radius-based Discovery**: Haversine formula for accurate distance calculation
 - **Location Validation**: Real-time address verification
 - **Service Areas**: Flexible coverage zones for providers
 
 ### Payment Integration
+
 - **Stripe Integration**: Secure payment processing
 - **Invoice Generation**: Automated PDF invoice creation
 - **Payment Tracking**: Complete financial transaction history
 - **Multi-payment Methods**: Support for various payment types
 
 ### Notification System
+
 - **Multi-channel Delivery**: Email and in-app notifications
 - **User Preferences**: Granular notification control
 - **Event-driven**: Automatic notifications for all major actions
@@ -237,6 +256,7 @@ vendor/bin/phpunit --coverage-html coverage
 5. Open a Pull Request
 
 ### Code Standards
+
 - Follow PSR-12 for PHP code
 - Use Laravel best practices
 - Follow React/JavaScript best practices
@@ -274,12 +294,14 @@ Authentication is handled via Laravel Sanctum tokens.
 ## 🔧 Troubleshooting
 
 ### Common Issues
+
 1. **Queue jobs not processing**: Ensure `php artisan queue:work` is running
 2. **File uploads failing**: Check storage permissions and symlinks
-3. **Email not sending**: Verify MAIL_* configuration in .env
+3. **Email not sending**: Verify MAIL\_\* configuration in .env
 4. **Geographic search issues**: Ensure MySQL has spatial function support
 
 ### Logs
+
 - Laravel logs: `storage/logs/laravel.log`
 - Queue failures: Check `failed_jobs` database table
 - Frontend errors: Browser developer console

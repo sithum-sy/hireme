@@ -3,11 +3,19 @@
     "type": "module",
     "scripts": {
         "dev": "vite",
-        "build": "vite build"
+        "build": "vite build",
+        "lint": "eslint resources/js",
+        "lint:fix": "eslint resources/js --fix",
+        "format": "prettier --write resources/js",
+        "format:check": "prettier --check resources/js"
     },
     "devDependencies": {
+        "@eslint/js": "^9.32.0",
         "axios": "^1.10.0",
+        "eslint": "^9.32.0",
+        "eslint-plugin-react": "^7.37.5",
         "laravel-vite-plugin": "^1.3.0",
+        "prettier": "^3.6.2",
         "vite": "^5.4.19"
     },
     "dependencies": {

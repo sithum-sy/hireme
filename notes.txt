@@ -145,3 +145,22 @@ php artisan queue:work   │
 
 
   
+
+  🚀 How to Run These Tests
+
+  1. Install PHPUnit (if not already installed):
+  composer require --dev phpunit/phpunit
+
+  2. Run specific test files:
+  # Run all tests
+  php artisan test
+
+  # Run specific test class
+  php artisan test --filter UserModelTest
+
+  # Run with coverage
+  php artisan test --coverage
+
+  3. Run individual test methods:
+  # Run specific test method
+  php artisan test --filter it_creates_appointment_with_correct_attributes

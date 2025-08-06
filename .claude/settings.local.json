@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(composer show:*)",
+      "Bash(vendor/bin/pint:*)",
+      "Bash(composer install:*)",
+      "Bash(composer require:*)",
+      "Bash(npm install:*)"
+    ],
+    "deny": []
+  }
+}

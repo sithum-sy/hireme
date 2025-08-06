@@ -1,0 +1,10 @@
+parameters:
+    level: 5
+    paths:
+        - app
+    excludePaths:
+        - app/Http/Kernel.php
+    ignoreErrors:
+        - '#Call to an undefined method Illuminate\\.*#'
+        - '#Access to an undefined property Illuminate\\.*#'
+    reportUnmatchedIgnoredErrors: false
