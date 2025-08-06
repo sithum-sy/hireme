@@ -1,66 +1,305 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# HireMe - Service Marketplace Platform
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+[![Laravel](https://img.shields.io/badge/Laravel-10.x-red.svg)](https://laravel.com)
+[![React](https://img.shields.io/badge/React-19.1-blue.svg)](https://reactjs.org)
+[![PHP](https://img.shields.io/badge/PHP-8.1%2B-purple.svg)](https://php.net)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-## About Laravel
+A comprehensive service marketplace platform built with Laravel and React, enabling seamless connections between service providers and clients across multiple industries.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 🌟 Features
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+### Multi-Role Architecture
+- **Clients**: Browse, book, and manage service appointments
+- **Service Providers**: Offer services, manage bookings, and handle payments
+- **Admin**: Complete platform oversight and user management
+- **Staff**: Content moderation and support operations
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### Core Functionality
+- **Smart Service Discovery**: Geographic-based search with radius filtering
+- **Advanced Booking System**: Real-time availability with race condition handling
+- **Custom Quote System**: Request and provide custom pricing for services
+- **Payment Integration**: Stripe integration for secure transactions
+- **Review & Rating System**: Bidirectional feedback between clients and providers
+- **Email & In-App Notifications**: Comprehensive notification system
+- **Document Management**: Provider verification through document uploads
+- **Real-time Dashboard**: Role-specific analytics and insights
 
-## Learning Laravel
+### Advanced Features
+- **Appointment Expiration**: Automatic 24-hour expiration with reminder system
+- **Geographic Search**: Haversine formula for precise location-based results
+- **Multi-Channel Notifications**: Email and in-app notification preferences
+- **PDF Generation**: Invoices, quotes, and reports with custom templates
+- **File Upload System**: Secure image and document handling with UUID naming
+- **Queue System**: Background job processing for emails and notifications
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## 🛠 Technology Stack
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+### Backend
+- **Framework**: Laravel 10.x
+- **Database**: MySQL/MariaDB with geographic functions
+- **Authentication**: Laravel Sanctum API tokens
+- **Queue System**: Database-driven background jobs
+- **File Storage**: Local storage with symbolic links
+- **PDF Generation**: DomPDF for reports and invoices
+- **Image Processing**: Intervention Image for uploads
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### Frontend
+- **Framework**: React 19.1 with Vite
+- **Routing**: React Router DOM
+- **UI Components**: Bootstrap 5 with custom CSS
+- **Charts**: Chart.js and Recharts for analytics
+- **Maps**: Leaflet for location services
+- **Icons**: Bootstrap Icons and Lucide React
+- **Payments**: Stripe React components
 
-## Laravel Sponsors
+### Development Tools
+- **Code Quality**: Laravel Pint, PHPStan, ESLint, Prettier
+- **Testing**: PHPUnit for backend testing
+- **API Documentation**: RESTful API design
+- **Version Control**: Git with structured branching
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+## 📋 Requirements
 
-### Premium Partners
+- PHP 8.1 or higher
+- Node.js 16+ and npm
+- MySQL 5.7+ or MariaDB 10.3+
+- Composer 2.0+
+- Web server (Apache/Nginx)
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+## 🚀 Installation
 
-## Contributing
+### 1. Clone the Repository
+```bash
+git clone https://github.com/yourusername/hireme.git
+cd hireme
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### 2. Backend Setup
+```bash
+# Install PHP dependencies
+composer install
 
-## Code of Conduct
+# Copy environment file
+cp .env.example .env
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+# Generate application key
+php artisan key:generate
 
-## Security Vulnerabilities
+# Configure your database in .env file
+# Set DB_DATABASE, DB_USERNAME, DB_PASSWORD
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+# Run migrations and seeders
+php artisan migrate --seed
 
-## License
+# Create storage symlink
+php artisan storage:link
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### 3. Frontend Setup
+```bash
+# Install Node.js dependencies
+npm install
+
+# Build assets for development
+npm run dev
+
+# Or build for production
+npm run build
+```
+
+### 4. Queue Configuration
+```bash
+# Start the queue worker (required for notifications)
+php artisan queue:work
+
+# Or use the provided batch file (Windows)
+start-queue.bat
+```
+
+## ⚙️ Configuration
+
+### Environment Variables
+Configure these essential variables in your `.env` file:
+
+```env
+# Database
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=hireme
+DB_USERNAME=root
+DB_PASSWORD=
+
+# Mail Configuration
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.mailtrap.io
+MAIL_PORT=2525
+MAIL_USERNAME=null
+MAIL_PASSWORD=null
+
+# Stripe Payment
+STRIPE_KEY=your_stripe_publishable_key
+STRIPE_SECRET=your_stripe_secret_key
+
+# Queue Driver
+QUEUE_CONNECTION=database
+```
+
+## 🏗 Architecture Overview
+
+### Directory Structure
+```
+app/
+├── Http/Controllers/API/     # Role-based API controllers
+├── Models/                   # Eloquent models
+├── Services/                 # Business logic layer
+├── Events/ & Listeners/      # Event-driven notifications
+└── Mail/                     # Email templates
+
+resources/js/
+├── components/               # Reusable React components
+├── pages/                    # Top-level page components
+├── context/                  # React Context providers
+└── services/                 # API client services
+```
+
+### Database Schema
+- **Users**: Multi-role authentication hub
+- **Appointments**: Complex booking lifecycle (15+ statuses)
+- **Services**: Location-aware service offerings
+- **Quotes**: Custom pricing system
+- **Reviews**: Bidirectional rating system
+- **Invoices & Payments**: Financial transaction tracking
+
+## 🧑‍💻 Development
+
+### Common Commands
+```bash
+# Backend Development
+php artisan serve              # Start Laravel server
+php artisan migrate:refresh    # Reset database
+php artisan queue:work         # Process background jobs
+
+# Frontend Development
+npm run dev                    # Start Vite dev server
+npm run build                  # Build for production
+
+# Code Quality
+vendor/bin/pint                # Format PHP code
+vendor/bin/phpstan analyse     # Static analysis
+npm run lint                   # Lint JavaScript
+npm run format                 # Format with Prettier
+```
+
+### Testing
+```bash
+# Run PHP tests
+php artisan test
+# or
+vendor/bin/phpunit
+
+# Run with coverage
+vendor/bin/phpunit --coverage-html coverage
+```
+
+## 📊 Key Features in Detail
+
+### Appointment System
+- **Race Condition Protection**: Database locking prevents double-booking
+- **Automatic Expiration**: 24-hour expiration with email reminders
+- **Status Management**: 15+ appointment statuses with transition validation
+- **Reschedule Requests**: Structured rescheduling workflow
+
+### Geographic Search
+- **Radius-based Discovery**: Haversine formula for accurate distance calculation
+- **Location Validation**: Real-time address verification
+- **Service Areas**: Flexible coverage zones for providers
+
+### Payment Integration
+- **Stripe Integration**: Secure payment processing
+- **Invoice Generation**: Automated PDF invoice creation
+- **Payment Tracking**: Complete financial transaction history
+- **Multi-payment Methods**: Support for various payment types
+
+### Notification System
+- **Multi-channel Delivery**: Email and in-app notifications
+- **User Preferences**: Granular notification control
+- **Event-driven**: Automatic notifications for all major actions
+- **Queue Processing**: Background delivery for performance
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+### Code Standards
+- Follow PSR-12 for PHP code
+- Use Laravel best practices
+- Follow React/JavaScript best practices
+- Maintain comprehensive test coverage
+- Document new features
+
+## 📝 API Documentation
+
+The platform provides a comprehensive RESTful API with role-based endpoints:
+
+- `/api/client/*` - Client-specific operations
+- `/api/provider/*` - Provider management
+- `/api/admin/*` - Administrative functions
+- `/api/staff/*` - Staff operations
+
+Authentication is handled via Laravel Sanctum tokens.
+
+## 🔒 Security
+
+- **HTTPS Enforcement**: SSL/TLS encryption
+- **Token Authentication**: Sanctum-based API security
+- **Role-based Access Control**: Middleware-enforced permissions
+- **Input Validation**: Comprehensive request validation
+- **File Upload Security**: UUID naming and type validation
+- **SQL Injection Prevention**: Eloquent ORM protection
+
+## 📈 Performance
+
+- **Database Optimization**: Strategic indexing for complex queries
+- **Caching Strategy**: Redis/Memcached support
+- **Asset Optimization**: Vite bundling and minification
+- **Background Processing**: Queue system for heavy operations
+- **Geographic Performance**: Optimized spatial queries
+
+## 🔧 Troubleshooting
+
+### Common Issues
+1. **Queue jobs not processing**: Ensure `php artisan queue:work` is running
+2. **File uploads failing**: Check storage permissions and symlinks
+3. **Email not sending**: Verify MAIL_* configuration in .env
+4. **Geographic search issues**: Ensure MySQL has spatial function support
+
+### Logs
+- Laravel logs: `storage/logs/laravel.log`
+- Queue failures: Check `failed_jobs` database table
+- Frontend errors: Browser developer console
+
+## 📧 Support
+
+For support, please create an issue in the GitHub repository or contact the development team.
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- Laravel community for the excellent framework
+- React community for powerful frontend tools
+- Stripe for secure payment processing
+- Bootstrap team for UI components
+- All contributors who helped build this platform
+
+---
+
+**HireMe** - Connecting service providers with clients efficiently and securely.
