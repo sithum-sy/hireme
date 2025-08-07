@@ -145,6 +145,332 @@ const InvoiceDetail = () => {
         return `badge bg-${classes[status] || "warning"}`;
     };
 
+    // Enhanced invoice item rendering
+    const renderEnhancedInvoiceItems = (invoice) => {
+        // Check if invoice uses enhanced structure - improved detection
+        const isEnhanced = invoice.line_items && typeof invoice.line_items === 'object' && 
+                          (invoice.line_items.line_items || invoice.line_items.additional_charges || 
+                           invoice.line_items.discounts || invoice.line_items.totals);
+
+        if (isEnhanced) {
+            return renderEnhancedStructure(invoice.line_items);
+        } else {
+            return renderLegacyStructure(invoice);
+        }
+    };
+
+    const renderEnhancedStructure = (lineItemData) => {
+        const { line_items = [], additional_charges = [], discounts = [], totals = {} } = lineItemData;
+
+        return (
+            <>
+                {/* Main Service Items */}
+                <h5 className="text-dark mb-3">
+                    <i className="fas fa-concierge-bell me-2"></i>
+                    Service Items
+                </h5>
+                <div className="table-responsive mb-4">
+                    <table className="table table-bordered">
+                        <thead className="table-light">
+                            <tr>
+                                <th>Description</th>
+                                <th className="text-center" style={{ width: "100px" }}>
+                                    Quantity/Hours
+                                </th>
+                                <th className="text-end" style={{ width: "120px" }}>
+                                    Rate
+                                </th>
+                                <th className="text-end" style={{ width: "120px" }}>
+                                    Amount
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {line_items.length > 0 ? line_items.map((item, index) => (
+                                <tr key={`service-${index}`}>
+                                    <td>
+                                        <div className="fw-medium">{item.description}</div>
+                                        <small className="text-muted">Service</small>
+                                    </td>
+                                    <td className="text-center">{item.quantity}</td>
+                                    <td className="text-end">{formatCurrency(item.rate)}</td>
+                                    <td className="text-end fw-bold">{formatCurrency(item.amount)}</td>
+                                </tr>
+                            )) : (
+                                <tr>
+                                    <td colSpan="4" className="text-center text-muted py-3">
+                                        No service items found
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+
+                {/* Additional Charges */}
+                {additional_charges.length > 0 && (
+                    <>
+                        <h5 className="text-info mb-3">
+                            <i className="fas fa-plus-circle me-2"></i>
+                            Additional Charges
+                        </h5>
+                        <div className="table-responsive mb-4">
+                            <table className="table table-bordered">
+                                <thead className="table-info">
+                                    <tr>
+                                        <th>Type</th>
+                                        <th>Description & Reason</th>
+                                        <th className="text-center" style={{ width: "100px" }}>
+                                            Quantity
+                                        </th>
+                                        <th className="text-end" style={{ width: "120px" }}>
+                                            Rate
+                                        </th>
+                                        <th className="text-end" style={{ width: "120px" }}>
+                                            Amount
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {additional_charges.map((charge, index) => (
+                                        <tr key={`charge-${index}`}>
+                                            <td>
+                                                <span className="badge bg-info text-capitalize">
+                                                    {charge.type}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <div className="fw-medium text-info">{charge.description}</div>
+                                                {charge.reason && (
+                                                    <small className="text-muted d-block mt-1">
+                                                        <i className="fas fa-info-circle me-1"></i>
+                                                        {charge.reason}
+                                                    </small>
+                                                )}
+                                                {charge.client_approved && (
+                                                    <small className="text-success d-block mt-1">
+                                                        <i className="fas fa-check-circle me-1"></i>
+                                                        Client Approved
+                                                    </small>
+                                                )}
+                                            </td>
+                                            <td className="text-center">{charge.quantity}</td>
+                                            <td className="text-end">{formatCurrency(charge.rate)}</td>
+                                            <td className="text-end fw-bold text-info">
+                                                +{formatCurrency(charge.amount)}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </>
+                )}
+
+                {/* Discounts */}
+                {discounts.length > 0 && (
+                    <>
+                        <h5 className="text-success mb-3">
+                            <i className="fas fa-percent me-2"></i>
+                            Discounts Applied
+                        </h5>
+                        <div className="table-responsive mb-4">
+                            <table className="table table-bordered">
+                                <thead className="table-success">
+                                    <tr>
+                                        <th>Type</th>
+                                        <th>Description & Reason</th>
+                                        <th className="text-center" style={{ width: "100px" }}>
+                                            Rate
+                                        </th>
+                                        <th className="text-end" style={{ width: "120px" }}>
+                                            Discount Amount
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {discounts.map((discount, index) => (
+                                        <tr key={`discount-${index}`}>
+                                            <td>
+                                                <span className="badge bg-success text-capitalize">
+                                                    {discount.type}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <div className="fw-medium text-success">{discount.description}</div>
+                                                {discount.reason && (
+                                                    <small className="text-muted d-block mt-1">
+                                                        <i className="fas fa-gift me-1"></i>
+                                                        {discount.reason}
+                                                    </small>
+                                                )}
+                                            </td>
+                                            <td className="text-center">
+                                                {discount.type === 'percentage' ? `${discount.rate}%` : 'Fixed'}
+                                            </td>
+                                            <td className="text-end fw-bold text-success">
+                                                -{formatCurrency(discount.amount)}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </>
+                )}
+            </>
+        );
+    };
+
+    const renderLegacyStructure = (invoice) => {
+        // Calculate actual subtotal from line items for legacy invoices
+        const calculateLegacySubtotal = () => {
+            if (invoice.line_items && invoice.line_items.length > 0) {
+                return invoice.line_items.reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0);
+            }
+            return parseFloat(invoice.subtotal) || 0;
+        };
+
+        return (
+            <>
+                <h5 className="text-dark mb-3">
+                    <i className="fas fa-list me-2"></i>
+                    Line Items
+                </h5>
+                <div className="table-responsive">
+                    <table className="table table-bordered">
+                        <thead className="table-light">
+                            <tr>
+                                <th>Description</th>
+                                <th className="text-center" style={{ width: "100px" }}>
+                                    Quantity/Hour Count
+                                </th>
+                                <th className="text-end" style={{ width: "120px" }}>
+                                    Rate
+                                </th>
+                                <th className="text-end" style={{ width: "120px" }}>
+                                    Amount
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {invoice.line_items && invoice.line_items.length > 0 ? (
+                                invoice.line_items.map((item, index) => (
+                                    <tr key={item.id || `${item.description}-${item.rate}-${item.quantity}-${index}`}>
+                                        <td>{item.description}</td>
+                                        <td className="text-center">{parseFloat(item.quantity).toFixed(2)}</td>
+                                        <td className="text-end">{formatCurrency(item.rate)}</td>
+                                        <td className="text-end fw-medium">{formatCurrency(item.amount)}</td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan="4" className="text-center text-muted py-4">
+                                        No line items found
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colSpan="3" className="text-end fw-bold">Subtotal:</td>
+                                <td className="text-end fw-bold">{formatCurrency(calculateLegacySubtotal())}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </>
+        );
+    };
+
+    // Enhanced totals rendering
+    const renderEnhancedTotals = (invoice) => {
+        // Check if invoice uses enhanced structure
+        const isEnhanced = invoice.line_items && typeof invoice.line_items === 'object' && 
+                          (invoice.line_items.totals);
+
+        if (isEnhanced && invoice.line_items.totals) {
+            const totals = invoice.line_items.totals;
+            return (
+                <div className="card bg-light">
+                    <div className="card-body">
+                        <table className="table table-borderless mb-0">
+                            <tbody>
+                                <tr>
+                                    <td className="text-muted">Subtotal:</td>
+                                    <td className="text-end">{formatCurrency(totals.subtotal || invoice.subtotal)}</td>
+                                </tr>
+                                {totals.total_additional_charges > 0 && (
+                                    <tr>
+                                        <td className="text-info">Additional Charges:</td>
+                                        <td className="text-end text-info">
+                                            +{formatCurrency(totals.total_additional_charges)}
+                                        </td>
+                                    </tr>
+                                )}
+                                {totals.total_discounts > 0 && (
+                                    <tr>
+                                        <td className="text-success">Total Discounts:</td>
+                                        <td className="text-end text-success">
+                                            -{formatCurrency(totals.total_discounts)}
+                                        </td>
+                                    </tr>
+                                )}
+                                <tr className="border-top">
+                                    <td className="fw-bold">Final Total:</td>
+                                    <td className="text-end fw-bold h5 text-primary">
+                                        {formatCurrency(totals.final_total || invoice.total_amount)}
+                                    </td>
+                                </tr>
+                                <tr className="border-top">
+                                    <td className="fw-bold text-success">Your Earnings:</td>
+                                    <td className="text-end fw-bold h5 text-success">
+                                        {formatCurrency(totals.final_total || invoice.total_amount)}
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            );
+        } else {
+            // Legacy totals display - calculate subtotal from line items
+            const calculateLegacySubtotal = () => {
+                if (invoice.line_items && invoice.line_items.length > 0) {
+                    return invoice.line_items.reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0);
+                }
+                return parseFloat(invoice.subtotal) || 0;
+            };
+
+            return (
+                <div className="card bg-light">
+                    <div className="card-body">
+                        <table className="table table-borderless mb-0">
+                            <tbody>
+                                <tr>
+                                    <td className="text-muted">Subtotal:</td>
+                                    <td className="text-end">{formatCurrency(calculateLegacySubtotal())}</td>
+                                </tr>
+                                <tr className="border-top">
+                                    <td className="fw-bold">Total:</td>
+                                    <td className="text-end fw-bold h5 text-primary">
+                                        {formatCurrency(invoice.total_amount)}
+                                    </td>
+                                </tr>
+                                <tr className="border-top">
+                                    <td className="fw-bold text-success">Your Earnings:</td>
+                                    <td className="text-end fw-bold h5 text-success">
+                                        {formatCurrency(invoice.total_amount)}
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            );
+        }
+    };
+
     return (
         <ProviderLayout>
             <div className="container-fluid">
@@ -497,146 +823,15 @@ const InvoiceDetail = () => {
                             </div>
                         </div>
 
-                        {/* Line Items */}
+                        {/* Enhanced Line Items */}
                         <div className="mb-4">
-                            <h5 className="text-dark mb-3">
-                                <i className="fas fa-list me-2"></i>
-                                Line Items
-                            </h5>
-                            <div className="table-responsive">
-                                <table className="table table-bordered">
-                                    <thead className="table-light">
-                                        <tr>
-                                            <th>Description</th>
-                                            <th
-                                                className="text-center"
-                                                style={{ width: "100px" }}
-                                            >
-                                                Quantity/Hour Count
-                                            </th>
-                                            <th
-                                                className="text-end"
-                                                style={{ width: "120px" }}
-                                            >
-                                                Rate
-                                            </th>
-                                            <th
-                                                className="text-end"
-                                                style={{ width: "120px" }}
-                                            >
-                                                Amount
-                                            </th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {invoice.line_items &&
-                                        invoice.line_items.length > 0 ? (
-                                            invoice.line_items.map(
-                                                (item, index) => (
-                                                    <tr
-                                                        key={
-                                                            item.id ||
-                                                            `${item.description}-${item.rate}-${item.quantity}-${index}`
-                                                        }
-                                                    >
-                                                        <td>
-                                                            {item.description}
-                                                        </td>
-                                                        <td className="text-center">
-                                                            {item.quantity}
-                                                        </td>
-                                                        <td className="text-end">
-                                                            {formatCurrency(
-                                                                item.rate
-                                                            )}
-                                                        </td>
-                                                        <td className="text-end fw-medium">
-                                                            {formatCurrency(
-                                                                item.amount
-                                                            )}
-                                                        </td>
-                                                    </tr>
-                                                )
-                                            )
-                                        ) : (
-                                            <tr>
-                                                <td
-                                                    colSpan="4"
-                                                    className="text-center text-muted py-4"
-                                                >
-                                                    No line items found
-                                                </td>
-                                            </tr>
-                                        )}
-                                    </tbody>
-                                </table>
-                            </div>
+                            {renderEnhancedInvoiceItems(invoice)}
                         </div>
 
-                        {/* Totals */}
+                        {/* Enhanced Totals */}
                         <div className="row justify-content-end">
                             <div className="col-md-4">
-                                <div className="card bg-light">
-                                    <div className="card-body">
-                                        <table className="table table-borderless mb-0">
-                                            <tbody>
-                                                <tr>
-                                                    <td className="text-muted">
-                                                        Subtotal:
-                                                    </td>
-                                                    <td className="text-end">
-                                                        {formatCurrency(
-                                                            invoice.subtotal
-                                                        )}
-                                                    </td>
-                                                </tr>
-                                                {/* {invoice.tax_amount > 0 && (
-                                                    <tr>
-                                                        <td className="text-muted">
-                                                            Tax:
-                                                        </td>
-                                                        <td className="text-end">
-                                                            {formatCurrency(
-                                                                invoice.tax_amount
-                                                            )}
-                                                        </td>
-                                                    </tr>
-                                                )} */}
-                                                <tr className="border-top">
-                                                    <td className="fw-bold">
-                                                        Total:
-                                                    </td>
-                                                    <td className="text-end fw-bold h5 text-primary">
-                                                        {formatCurrency(
-                                                            invoice.total_amount
-                                                        )}
-                                                    </td>
-                                                </tr>
-                                                {/* <tr>
-                                                    <td className="text-muted">
-                                                        Platform Fee:
-                                                    </td>
-                                                    <td className="text-end text-danger">
-                                                        -
-                                                        {formatCurrency(
-                                                            invoice.platform_fee
-                                                        )}
-                                                    </td>
-                                                </tr> */}
-                                                <tr className="border-top">
-                                                    <td className="fw-bold text-success">
-                                                        Your Earnings:
-                                                    </td>
-                                                    <td className="text-end fw-bold h5 text-success">
-                                                        {formatCurrency(
-                                                            invoice.total_amount
-                                                        )}
-                                                    </td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
+                                {renderEnhancedTotals(invoice)}
                             </div>
                         </div>
 

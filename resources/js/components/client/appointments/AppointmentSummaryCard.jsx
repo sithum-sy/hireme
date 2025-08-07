@@ -1,216 +1,217 @@
-import React from "react";
+import React from 'react';
 
 const AppointmentSummaryCard = ({ appointment, formatDateTime }) => {
-    const dateTime = formatDateTime(
-        appointment.appointment_date,
-        appointment.appointment_time
-    );
+  const dateTime = formatDateTime(
+    appointment.appointment_date,
+    appointment.appointment_time
+  );
 
-    const getLocationDisplay = () => {
-        const address =
-            appointment.custom_address || appointment.client_address || "";
-        const city = appointment.custom_city || appointment.client_city || "";
-        const fullAddress = address + (city ? ", " + city : "");
+  const getLocationDisplay = () => {
+    const address =
+      appointment.custom_address || appointment.client_address || '';
+    const city = appointment.custom_city || appointment.client_city || '';
+    const fullAddress = address + (city ? ', ' + city : '');
 
-        const locationTypes = {
-            client_address: "At your location",
-            provider_location: "At provider location",
-            custom_location: "Custom location",
-        };
-
-        const locationType =
-            locationTypes[appointment.location_type] ||
-            "Location not specified";
-
-        return {
-            type: locationType,
-            address: fullAddress,
-        };
+    const locationTypes = {
+      client_address: 'At your location',
+      provider_location: 'At provider location',
+      custom_location: 'Custom location',
     };
 
-    const location = getLocationDisplay();
+    const locationType =
+      locationTypes[appointment.location_type] || 'Location not specified';
 
-    const getNextSteps = () => {
-        const status = appointment.status;
-        const steps = {
-            pending: [
-                "Wait for provider confirmation",
-                "You'll receive notification once confirmed",
-                "Check your email and messages regularly",
-            ],
-            confirmed: [
-                "Appointment is confirmed and scheduled",
-                "Provider will contact you before the appointment",
-                "Be ready at the scheduled time and location",
-            ],
-            in_progress: [
-                "Service is currently being provided",
-                "Rate your experience after completion",
-                "Payment will be processed after service",
-            ],
-            completed: [
-                "Service has been completed",
-                "Please rate your experience",
-                "Invoice will be sent for payment",
-            ],
-            invoice_sent: [
-                "Invoice has been sent to you",
-                "Please review and make payment",
-                "Payment is due within the specified timeframe",
-            ],
-            payment_pending: [
-                "Payment is being processed",
-                "You'll receive confirmation once completed",
-                "Contact support if you have payment issues",
-            ],
-            paid: [
-                "Payment has been completed",
-                "Please rate your experience if you haven't",
-                "Thank you for using our service",
-            ],
-        };
+    return {
+      type: locationType,
+      address: fullAddress,
+    };
+  };
 
-        return steps[status] || ["Contact support for assistance"];
+  const location = getLocationDisplay();
+
+  const getNextSteps = () => {
+    const status = appointment.status;
+    const steps = {
+      pending: [
+        'Wait for provider confirmation',
+        "You'll receive notification once confirmed",
+        'Check your email and messages regularly',
+      ],
+      confirmed: [
+        'Appointment is confirmed and scheduled',
+        'Provider will contact you before the appointment',
+        'Be ready at the scheduled time and location',
+      ],
+      in_progress: [
+        'Service is currently being provided',
+        'Rate your experience after completion',
+        'Payment will be processed after service',
+      ],
+      completed: [
+        'Service has been completed',
+        'Please rate your experience',
+        'Invoice will be sent for payment',
+      ],
+      invoice_sent: [
+        'Invoice has been sent to you',
+        'Please review and make payment',
+        'Payment is due within the specified timeframe',
+      ],
+      payment_pending: [
+        'Payment is being processed',
+        "You'll receive confirmation once completed",
+        'Contact support if you have payment issues',
+      ],
+      paid: [
+        'Payment has been completed',
+        "Please rate your experience if you haven't",
+        'Thank you for using our service',
+      ],
     };
 
-    return (
-        <div className="card border-0 shadow-sm mb-4">
-            <div className="card-header bg-primary text-white">
-                <h6 className="fw-bold mb-0">
-                    <i className="fas fa-calendar-check me-2"></i>
-                    Appointment Summary
-                </h6>
+    return steps[status] || ['Contact support for assistance'];
+  };
+
+  return (
+    <div className='card border-0 shadow-sm mb-4'>
+      <div className='card-header bg-primary text-white'>
+        <h6 className='fw-bold mb-0'>
+          <i className='fas fa-calendar-check me-2'></i>
+          Appointment Summary
+        </h6>
+      </div>
+      <div className='card-body'>
+        {/* Date & Time */}
+        <div className='summary-item mb-3'>
+          <div className='summary-label text-muted small mb-1'>
+            <i className='fas fa-calendar me-1'></i>
+            Scheduled For
+          </div>
+          <div className='summary-value'>
+            <div className='fw-bold text-dark'>{dateTime.fullDate}</div>
+            <div className='text-success d-flex align-items-center'>
+              <i className='fas fa-clock me-1'></i>
+              {dateTime.time}
             </div>
-            <div className="card-body">
-                {/* Date & Time */}
-                <div className="summary-item mb-3">
-                    <div className="summary-label text-muted small mb-1">
-                        <i className="fas fa-calendar me-1"></i>
-                        Scheduled For
-                    </div>
-                    <div className="summary-value">
-                        <div className="fw-bold text-dark">
-                            {dateTime.fullDate}
-                        </div>
-                        <div className="text-success d-flex align-items-center">
-                            <i className="fas fa-clock me-1"></i>
-                            {dateTime.time}
-                        </div>
-                    </div>
-                </div>
+          </div>
+        </div>
 
-                {/* Location */}
-                <div className="summary-item mb-3">
-                    <div className="summary-label text-muted small mb-1">
-                        <i className="fas fa-map-marker-alt me-1"></i>
-                        Service Location
-                    </div>
-                    <div className="summary-value">
-                        <div className="fw-semibold text-dark">
-                            {location.type}
-                            {" - "}
-                        </div>
-                        {location.address && (
-                            <div className="text-muted small mt-1">
-                                {location.address}
-                            </div>
-                        )}
-                        {appointment.location_instructions && (
-                            <div className="text-info small mt-1">
-                                <i className="fas fa-info-circle me-1"></i>
-                                {appointment.location_instructions}
-                            </div>
-                        )}
-                    </div>
-                </div>
+        {/* Location */}
+        <div className='summary-item mb-3'>
+          <div className='summary-label text-muted small mb-1'>
+            <i className='fas fa-map-marker-alt me-1'></i>
+            Service Location
+          </div>
+          <div className='summary-value'>
+            <div className='fw-semibold text-dark'>
+              {location.type}
+              {' - '}
+            </div>
+            {location.address && (
+              <div className='text-muted small mt-1'>{location.address}</div>
+            )}
+            {appointment.location_instructions && (
+              <div className='text-info small mt-1'>
+                <i className='fas fa-info-circle me-1'></i>
+                {appointment.location_instructions}
+              </div>
+            )}
+          </div>
+        </div>
 
-                {/* Contact Information */}
-                <div className="summary-item mb-3">
-                    <div className="summary-label text-muted small mb-1">
-                        <i className="fas fa-address-card me-1"></i>
-                        Your Contact Details
-                    </div>
-                    <div className="summary-value">
-                        {appointment.client_phone && (
-                            <div className="mb-1">
-                                <i className="fas fa-phone text-success me-2"></i>
-                                <span>
-                                    {appointment.client_phone}
-                                    {" | "}
-                                </span>
-                            </div>
-                        )}
-                        {appointment.client_email && (
-                            <div className="mb-1">
-                                <i className="fas fa-envelope text-info me-2"></i>
-                                <span>{appointment.client_email}</span>
-                            </div>
-                        )}
-                        {/* <div className="text-muted small">
+        {/* Contact Information */}
+        <div className='summary-item mb-3'>
+          <div className='summary-label text-muted small mb-1'>
+            <i className='fas fa-address-card me-1'></i>
+            Your Contact Details
+          </div>
+          <div className='summary-value'>
+            {appointment.client_phone && (
+              <div className='mb-1'>
+                <i className='fas fa-phone text-success me-2'></i>
+                <span>
+                  {appointment.client_phone}
+                  {' | '}
+                </span>
+              </div>
+            )}
+            {appointment.client_email && (
+              <div className='mb-1'>
+                <i className='fas fa-envelope text-info me-2'></i>
+                <span>{appointment.client_email}</span>
+              </div>
+            )}
+            {/* <div className="text-muted small">
                             <i className="fas fa-bell me-1"></i>
                             Preferred contact:{" "}
                             {appointment.contact_preference === "phone"
                                 ? "Phone call"
                                 : "Text/WhatsApp"}
                         </div> */}
-                    </div>
-                </div>
+          </div>
+        </div>
 
-                {/* Payment Information */}
-                <div className="summary-item mb-3">
-                    <div className="summary-label text-muted small mb-1">
-                        <i className="fas fa-credit-card me-1"></i>
-                        Payment Information
-                    </div>
-                    <div className="summary-value">
-                        <div className="payment-info">
-                            {/* Service Fee */}
-                            {/* Check if this appointment is from a quote */}
-                            {appointment.booking_source === "quote_acceptance" || appointment.quote_id ? (
-                                <>
-                                    <div className="d-flex justify-content-between align-items-center mb-2 small">
-                                        <span className="text-dark">
-                                            <i className="fas fa-quote-left text-success me-1"></i>
-                                            Quote Price (Total)
-                                        </span>
-                                        <span className="fw-bold text-success">
-                                            Rs. {appointment.total_price}
-                                        </span>
-                                    </div>
-                                    <div className="d-flex justify-content-between align-items-center mb-2 small">
-                                        <span className="text-dark">Duration</span>
-                                        <span className="fw-bold">
-                                            {appointment.duration_hours} {appointment.duration_hours > 1 ? "hours" : "hour"}
-                                        </span>
-                                    </div>
-                                    <div className="small text-muted mb-2">
-                                        <i className="fas fa-info-circle me-1"></i>
-                                        Fixed quote price - not charged per hour
-                                    </div>
-                                </>
-                            ) : (
-                                <>
-                                    <div className="d-flex justify-content-between align-items-center mb-2 small">
-                                        <span className="text-dark">
-                                            Base Rate (per hour)
-                                        </span>
-                                        <span className="fw-bold">
-                                            Rs. {appointment.base_price || Math.round((appointment.total_price || 0) / (appointment.duration_hours || 1))}
-                                        </span>
-                                    </div>
-                                    <div className="d-flex justify-content-between align-items-center mb-2 small">
-                                        <span className="text-dark">
-                                            Number of Hours
-                                        </span>
-                                        <span className="fw-bold">
-                                            {appointment.duration_hours}
-                                        </span>
-                                    </div>
-                                </>
-                            )}
+        {/* Payment Information */}
+        <div className='summary-item mb-3'>
+          <div className='summary-label text-muted small mb-1'>
+            <i className='fas fa-credit-card me-1'></i>
+            Payment Information
+          </div>
+          <div className='summary-value'>
+            <div className='payment-info'>
+              {/* Service Fee */}
+              {/* Check if this appointment is from a quote */}
+              {appointment.booking_source === 'quote_acceptance' ||
+              appointment.quote_id ? (
+                <>
+                  <div className='d-flex justify-content-between align-items-center mb-2 small'>
+                    <span className='text-dark'>
+                      <i className='fas fa-quote-left text-success me-1'></i>
+                      Quote Price (Total)
+                    </span>
+                    <span className='fw-bold text-success'>
+                      Rs.{' '}
+                      {appointment.status === 'invoice_sent' || appointment.status === 'payment_pending' || appointment.status === 'paid'
+                        ? parseFloat(appointment.invoice?.total_amount || appointment.total_price).toFixed(2)
+                        : parseFloat(appointment.total_price).toFixed(2)}
+                    </span>
+                  </div>
+                  <div className='d-flex justify-content-between align-items-center mb-2 small'>
+                    <span className='text-dark'>Duration</span>
+                    <span className='fw-bold'>
+                      {appointment.duration_hours}{' '}
+                      {appointment.duration_hours > 1 ? 'hours' : 'hour'}
+                    </span>
+                  </div>
+                  <div className='small text-muted mb-2'>
+                    <i className='fas fa-info-circle me-1'></i>
+                    Fixed quote price - not charged per hour
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* <div className='d-flex justify-content-between align-items-center mb-2 small'>
+                    <span className='text-dark'>Base Rate (per hour)</span>
+                    <span className='fw-bold'>
+                      Rs.{' '}
+                      {appointment.base_price ||
+                        Math.round(
+                          (appointment.total_price || 0) /
+                            (appointment.duration_hours || 1)
+                        )}
+                    </span>
+                  </div>
+                  <div className='d-flex justify-content-between align-items-center mb-2 small'>
+                    <span className='text-dark'>Number of Hours</span>
+                    <span className='fw-bold'>
+                      {appointment.duration_hours}
+                    </span>
+                  </div> */}
+                </>
+              )}
 
-                            {/* Additional Charges */}
-                            {/* {appointment.travel_fee > 0 && (
+              {/* Additional Charges */}
+              {/* {appointment.travel_fee > 0 && (
                                 <div className="d-flex justify-content-between align-items-center mb-2">
                                     <span className="text-muted small">
                                         Travel Fee
@@ -232,7 +233,7 @@ const AppointmentSummaryCard = ({ appointment, formatDateTime }) => {
                                 </div>
                             )} */}
 
-                            {/* {appointment.tax_amount > 0 && (
+              {/* {appointment.tax_amount > 0 && (
                                 <div className="d-flex justify-content-between align-items-center mb-2">
                                     <span className="text-muted small">
                                         Tax ({appointment.tax_rate}%)
@@ -255,129 +256,107 @@ const AppointmentSummaryCard = ({ appointment, formatDateTime }) => {
                                 </div>
                             )} */}
 
-                            {/* Total Amount */}
-                            <div className="d-flex justify-content-between align-items-center pt-2 mt-2 border-top">
-                                <span className="fw-bold text-dark">
-                                    Total Amount
-                                </span>
-                                <span className="fw-bold text-primary h6 mb-0">
-                                    Rs. {appointment.total_price}
-                                </span>
-                            </div>
+              {/* Total Amount */}
+              <div className='d-flex justify-content-between align-items-center pt-2 mt-2 border-top'>
+                <span className='fw-bold text-dark'>Total Amount</span>
+                <span className='fw-bold text-primary h6 mb-0'>
+                  Rs.{' '}
+                  {appointment.status === 'invoice_sent' || appointment.status === 'payment_pending' || appointment.status === 'paid'
+                    ? parseFloat(appointment.invoice?.total_amount || appointment.total_price).toFixed(2)
+                    : parseFloat(appointment.total_price).toFixed(2)}
+                </span>
+              </div>
 
-                            {/* Payment Method */}
-                            <div className="d-flex justify-content-between align-items-center mt-3 pt-2 border-top">
-                                <span className="text-muted small">
-                                    <i className="fas fa-wallet me-1"></i>
-                                    Payment Method
-                                </span>
-                                <span className="badge bg-light text-dark ml-2">
-                                    {appointment.payment_method === "cash"
-                                        ? "Cash Payment"
-                                        : appointment.payment_method
-                                              ?.charAt(0)
-                                              .toUpperCase() +
-                                          appointment.payment_method?.slice(1)}
-                                </span>
-                            </div>
+              {/* Payment Method */}
+              <div className='d-flex justify-content-between align-items-center mt-3 pt-2 border-top'>
+                <span className='text-muted small'>
+                  <i className='fas fa-wallet me-1'></i>
+                  Payment Method
+                </span>
+                <span className='badge bg-light text-dark ml-2'>
+                  {appointment.payment_method === 'cash'
+                    ? 'Cash Payment'
+                    : appointment.payment_method?.charAt(0).toUpperCase() +
+                      appointment.payment_method?.slice(1)}
+                </span>
+              </div>
 
-                            {/* Payment Status */}
-                            {appointment.invoice && (
-                                <div className="d-flex justify-content-between align-items-center mt-2">
-                                    <span className="text-muted small">
-                                        Payment Status
-                                    </span>
-                                    <span
-                                        className={`badge ${
-                                            appointment.invoice
-                                                .payment_status === "pending"
-                                                ? "bg-warning text-dark"
-                                                : appointment.invoice
-                                                      .payment_status ===
-                                                  "completed"
-                                                ? "bg-success text-white"
-                                                : "bg-secondary text-white"
-                                        }`}
-                                    >
-                                        <i
-                                            className={`fas ${
-                                                appointment.invoice
-                                                    .payment_status ===
-                                                "pending"
-                                                    ? "fa-clock"
-                                                    : appointment.invoice
-                                                          .payment_status ===
-                                                      "completed"
-                                                    ? "fa-check"
-                                                    : "fa-info"
-                                            } me-1`}
-                                        ></i>
-                                        {appointment.invoice.payment_status
-                                            .charAt(0)
-                                            .toUpperCase() +
-                                            appointment.invoice.payment_status.slice(
-                                                1
-                                            )}
-                                    </span>
-                                </div>
-                            )}
-
-                            {/* Due Date */}
-                            {appointment.invoice?.due_date && (
-                                <div className="d-flex justify-content-between align-items-center mt-2">
-                                    <span className="text-muted small">
-                                        Due Date
-                                    </span>
-                                    <span
-                                        className={`small ${
-                                            appointment.invoice.is_overdue
-                                                ? "text-danger fw-medium"
-                                                : "text-muted"
-                                        }`}
-                                    >
-                                        {new Date(
-                                            appointment.invoice.due_date
-                                        ).toLocaleDateString()}
-                                        {appointment.invoice.is_overdue && (
-                                            <span className="text-danger ms-1">
-                                                (
-                                                {
-                                                    appointment.invoice
-                                                        .days_overdue
-                                                }{" "}
-                                                days overdue)
-                                            </span>
-                                        )}
-                                    </span>
-                                </div>
-                            )}
-                        </div>
-                    </div>
+              {/* Payment Status */}
+              {appointment.invoice && (
+                <div className='d-flex justify-content-between align-items-center mt-2'>
+                  <span className='text-muted small'>Payment Status</span>
+                  <span
+                    className={`badge ${
+                      appointment.invoice.payment_status === 'pending'
+                        ? 'bg-warning text-dark'
+                        : appointment.invoice.payment_status === 'completed'
+                          ? 'bg-success text-white'
+                          : 'bg-secondary text-white'
+                    }`}
+                  >
+                    <i
+                      className={`fas ${
+                        appointment.invoice.payment_status === 'pending'
+                          ? 'fa-clock'
+                          : appointment.invoice.payment_status === 'completed'
+                            ? 'fa-check'
+                            : 'fa-info'
+                      } me-1`}
+                    ></i>
+                    {appointment.invoice.payment_status
+                      .charAt(0)
+                      .toUpperCase() +
+                      appointment.invoice.payment_status.slice(1)}
+                  </span>
                 </div>
+              )}
 
-                {/* Next Steps */}
-                <div className="summary-item">
-                    <div className="summary-label text-muted small mb-1">
-                        <i className="fas fa-list-check me-1"></i>
-                        What Happens Next
-                    </div>
-                    <div className="summary-value">
-                        <ul className="list-unstyled mb-0">
-                            {getNextSteps().map((step, index) => (
-                                <li
-                                    key={index}
-                                    className="small text-muted mb-1"
-                                >
-                                    <i className="fas fa-check-circle text-success me-2"></i>
-                                    {step}
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
+              {/* Due Date */}
+              {appointment.invoice?.due_date && (
+                <div className='d-flex justify-content-between align-items-center mt-2'>
+                  <span className='text-muted small'>Due Date</span>
+                  <span
+                    className={`small ${
+                      appointment.invoice.is_overdue
+                        ? 'text-danger fw-medium'
+                        : 'text-muted'
+                    }`}
+                  >
+                    {new Date(
+                      appointment.invoice.due_date
+                    ).toLocaleDateString()}
+                    {appointment.invoice.is_overdue && (
+                      <span className='text-danger ms-1'>
+                        ({appointment.invoice.days_overdue} days overdue)
+                      </span>
+                    )}
+                  </span>
                 </div>
+              )}
             </div>
+          </div>
+        </div>
 
-            <style>{`
+        {/* Next Steps */}
+        <div className='summary-item'>
+          <div className='summary-label text-muted small mb-1'>
+            <i className='fas fa-list-check me-1'></i>
+            What Happens Next
+          </div>
+          <div className='summary-value'>
+            <ul className='list-unstyled mb-0'>
+              {getNextSteps().map((step, index) => (
+                <li key={index} className='small text-muted mb-1'>
+                  <i className='fas fa-check-circle text-success me-2'></i>
+                  {step}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <style>{`
                 .summary-item {
                     padding: var(--space-4);
                     margin-bottom: var(--space-4);
@@ -603,8 +582,8 @@ const AppointmentSummaryCard = ({ appointment, formatDateTime }) => {
                     }
                 }
             `}</style>
-        </div>
-    );
+    </div>
+  );
 };
 
 export default AppointmentSummaryCard;

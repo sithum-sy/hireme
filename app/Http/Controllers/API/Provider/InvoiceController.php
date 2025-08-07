@@ -108,6 +108,20 @@ class InvoiceController extends Controller
             'line_items.*.quantity' => 'required_with:line_items|numeric|min:1',
             'line_items.*.rate' => 'required_with:line_items|numeric|min:0',
             'line_items.*.amount' => 'required_with:line_items|numeric|min:0',
+            'additional_charges' => 'nullable|array',
+            'additional_charges.*.type' => 'required_with:additional_charges|string|in:overtime,materials,travel,emergency,other',
+            'additional_charges.*.description' => 'required_with:additional_charges|string|max:255',
+            'additional_charges.*.quantity' => 'required_with:additional_charges|numeric|min:1',
+            'additional_charges.*.rate' => 'required_with:additional_charges|numeric|min:0',
+            'additional_charges.*.amount' => 'required_with:additional_charges|numeric|min:0',
+            'additional_charges.*.reason' => 'nullable|string|max:500',
+            'additional_charges.*.client_approved' => 'nullable|boolean',
+            'discounts' => 'nullable|array',
+            'discounts.*.type' => 'required_with:discounts|string|in:percentage,fixed',
+            'discounts.*.description' => 'required_with:discounts|string|max:255',
+            'discounts.*.rate' => 'nullable|numeric|min:0|max:100',
+            'discounts.*.amount' => 'required_with:discounts|numeric|min:0',
+            'discounts.*.reason' => 'nullable|string|max:500',
             'send_invoice' => 'nullable|boolean'
         ]);
 
@@ -143,12 +157,14 @@ class InvoiceController extends Controller
                 ], 400);
             }
 
-            // Create invoice
+            // Create invoice with enhanced data
             $invoiceData = [
                 'payment_method' => $request->payment_method,
                 'due_days' => $request->due_days ?? 7,
                 'notes' => $request->notes,
                 'line_items' => $request->line_items ?? [],
+                'additional_charges' => $request->additional_charges ?? [],
+                'discounts' => $request->discounts ?? [],
                 'auto_created' => false,
                 'send_invoice' => $request->send_invoice ?? false
             ];

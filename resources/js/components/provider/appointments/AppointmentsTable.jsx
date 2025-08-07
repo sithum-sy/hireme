@@ -293,13 +293,13 @@ const AppointmentsTable = ({
                                     <div className="price-info">
                                         <span className="price">
                                             Rs.{" "}
-                                            {appointment.total_price?.toLocaleString(
-                                                "en-US",
-                                                {
-                                                    minimumFractionDigits: 0,
-                                                    maximumFractionDigits: 0,
-                                                }
-                                            ) || 0}
+                                            {((appointment.status === 'invoice_sent' || appointment.status === 'payment_pending' || appointment.status === 'paid' ? 
+                                                parseFloat(appointment.invoice?.total_amount || appointment.total_price) : 
+                                                parseFloat(appointment.total_price)) || 0
+                                            ).toLocaleString("en-LK", {
+                                                minimumFractionDigits: 2,
+                                                maximumFractionDigits: 2,
+                                            })}
                                         </span>
                                         {appointment.booking_source ===
                                             "quote_acceptance" ||
@@ -318,11 +318,11 @@ const AppointmentsTable = ({
                                                         : "hr"}{" "}
                                                     × Rs.{" "}
                                                     {Math.round(
-                                                        (appointment.total_price ||
-                                                            0) /
-                                                            (appointment.duration_hours ||
-                                                                1)
-                                                    )}
+                                                        ((appointment.status === 'invoice_sent' || appointment.status === 'payment_pending' || appointment.status === 'paid' ? 
+                                                            parseFloat(appointment.invoice?.total_amount || appointment.total_price) : 
+                                                            parseFloat(appointment.total_price)) || 0) /
+                                                            (appointment.duration_hours || 1)
+                                                    ).toFixed(2)}
                                                 </small>
                                             )
                                         )}

@@ -151,13 +151,14 @@ class AppointmentController extends Controller
             ], 404);
         }
 
-        // Load comprehensive relationships for PDF generation
+        // Load comprehensive relationships for PDF generation and reschedule requests
         $appointment->load([
             'client', 
             'service.category', 
             'quote', 
             'invoice',
-            'provider.provider_profile'
+            'provider.provider_profile',
+            'pendingRescheduleRequest'
         ]);
 
         return response()->json([

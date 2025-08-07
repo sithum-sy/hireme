@@ -239,6 +239,31 @@ export const getInvoicePDFStyles = (config = {}) => {
             background: #f8f9fa;
         }
         
+        /* Enhanced invoice item types */
+        .items-table tr.additional-charge {
+            background: rgba(23, 162, 184, 0.1) !important;
+        }
+        
+        .items-table tr.additional-charge td {
+            color: #17a2b8;
+        }
+        
+        .items-table tr.discount {
+            background: rgba(40, 167, 69, 0.1) !important;
+        }
+        
+        .items-table tr.discount td {
+            color: #28a745;
+        }
+        
+        .text-info {
+            color: #17a2b8 !important;
+        }
+        
+        .text-success {
+            color: #28a745 !important;
+        }
+        
         .center { text-align: center; }
         .right { text-align: right; }
         

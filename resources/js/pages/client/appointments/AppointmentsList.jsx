@@ -310,16 +310,20 @@ const AppointmentsList = () => {
                 // Apply client-side price filtering
                 if (filters.price_min && !isNaN(parseFloat(filters.price_min))) {
                     const minPrice = parseFloat(filters.price_min);
-                    appointmentsData = appointmentsData.filter((apt) => 
-                        apt.total_price && parseFloat(apt.total_price) >= minPrice
-                    );
+                    appointmentsData = appointmentsData.filter((apt) => {
+                        const price = (apt.status === 'invoice_sent' || apt.status === 'payment_pending' || apt.status === 'paid') ? 
+                            parseFloat(apt.invoice?.total_amount || apt.total_price) : parseFloat(apt.total_price);
+                        return price && price >= minPrice;
+                    });
                 }
 
                 if (filters.price_max && !isNaN(parseFloat(filters.price_max))) {
                     const maxPrice = parseFloat(filters.price_max);
-                    appointmentsData = appointmentsData.filter((apt) => 
-                        apt.total_price && parseFloat(apt.total_price) <= maxPrice
-                    );
+                    appointmentsData = appointmentsData.filter((apt) => {
+                        const price = (apt.status === 'invoice_sent' || apt.status === 'payment_pending' || apt.status === 'paid') ? 
+                            parseFloat(apt.invoice?.total_amount || apt.total_price) : parseFloat(apt.total_price);
+                        return price && price <= maxPrice;
+                    });
                 }
 
                 // Apply custom date sorting: closest future dates first, then past dates
@@ -428,16 +432,20 @@ const AppointmentsList = () => {
                 // Apply client-side price filtering
                 if (filters.price_min && !isNaN(parseFloat(filters.price_min))) {
                     const minPrice = parseFloat(filters.price_min);
-                    appointmentsData = appointmentsData.filter((apt) => 
-                        apt.total_price && parseFloat(apt.total_price) >= minPrice
-                    );
+                    appointmentsData = appointmentsData.filter((apt) => {
+                        const price = (apt.status === 'invoice_sent' || apt.status === 'payment_pending' || apt.status === 'paid') ? 
+                            parseFloat(apt.invoice?.total_amount || apt.total_price) : parseFloat(apt.total_price);
+                        return price && price >= minPrice;
+                    });
                 }
 
                 if (filters.price_max && !isNaN(parseFloat(filters.price_max))) {
                     const maxPrice = parseFloat(filters.price_max);
-                    appointmentsData = appointmentsData.filter((apt) => 
-                        apt.total_price && parseFloat(apt.total_price) <= maxPrice
-                    );
+                    appointmentsData = appointmentsData.filter((apt) => {
+                        const price = (apt.status === 'invoice_sent' || apt.status === 'payment_pending' || apt.status === 'paid') ? 
+                            parseFloat(apt.invoice?.total_amount || apt.total_price) : parseFloat(apt.total_price);
+                        return price && price <= maxPrice;
+                    });
                 }
 
                 // Apply custom date sorting: closest future dates first, then past dates
@@ -707,7 +715,10 @@ const AppointmentsList = () => {
                                 appointment.status
                                     .replace(/_/g, " ")
                                     .toUpperCase(),
-                                `Rs. ${appointment.total_price || 0}`,
+                                `Rs. ${(appointment.status === 'invoice_sent' || appointment.status === 'payment_pending' || appointment.status === 'paid' ? 
+                                    parseFloat(appointment.invoice?.total_amount || appointment.total_price || 0).toFixed(2) : 
+                                    parseFloat(appointment.total_price || 0).toFixed(2)
+                                )}`,
                                 (() => {
                                     const getLocationDisplay = () => {
                                         // For all location types, try to show the actual address if available
@@ -852,7 +863,9 @@ const AppointmentsList = () => {
                                     " "
                                 )}</td>
                                 <td class="price">Rs. ${
-                                    appointment.total_price || 0
+                                    appointment.status === 'invoice_sent' || appointment.status === 'payment_pending' || appointment.status === 'paid' ? 
+                                        parseFloat(appointment.invoice?.total_amount || appointment.total_price || 0).toFixed(2) : 
+                                        parseFloat(appointment.total_price || 0).toFixed(2)
                                 }</td>
                                 <td>${(() => {
                                     const address =

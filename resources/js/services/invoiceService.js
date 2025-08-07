@@ -55,6 +55,8 @@ class InvoiceService {
                 due_days: invoiceData.due_days || 7,
                 notes: invoiceData.notes,
                 line_items: invoiceData.line_items || [],
+                additional_charges: invoiceData.additional_charges || [],
+                discounts: invoiceData.discounts || [],
                 send_invoice: invoiceData.send_invoice || false,
             });
 

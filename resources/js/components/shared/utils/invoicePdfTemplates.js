@@ -260,7 +260,38 @@ export const generateServiceDetails = (invoice) => {
 };
 
 export const generateLineItems = (invoice) => {
-    const lineItems = invoice.line_items || [];
+    // Handle both enhanced and legacy structures
+    let lineItems = [];
+    
+    // Check if invoice uses enhanced structure
+    const isEnhanced = invoice.line_items && typeof invoice.line_items === 'object' && 
+                      (invoice.line_items.line_items || invoice.line_items.additional_charges || 
+                       invoice.line_items.discounts || invoice.line_items.totals);
+    
+    if (isEnhanced) {
+        // Enhanced structure: combine line items, additional charges, and discounts
+        const enhancedData = invoice.line_items;
+        lineItems = [
+            ...(enhancedData.line_items || []),
+            ...(enhancedData.additional_charges || []).map(charge => ({
+                description: `${charge.description} (${charge.type})`,
+                quantity: charge.quantity || 1,
+                rate: charge.rate || charge.amount,
+                amount: charge.amount,
+                isAdditionalCharge: true
+            })),
+            ...(enhancedData.discounts || []).map(discount => ({
+                description: `${discount.description} (${discount.type === 'percentage' ? discount.rate + '%' : 'Fixed'} discount)`,
+                quantity: 1,
+                rate: -Math.abs(discount.amount),
+                amount: -Math.abs(discount.amount),
+                isDiscount: true
+            }))
+        ];
+    } else {
+        // Legacy structure: line_items is an array
+        lineItems = Array.isArray(invoice.line_items) ? invoice.line_items : [];
+    }
 
     // If no line items, create default from appointment
     const items =
@@ -292,11 +323,11 @@ export const generateLineItems = (invoice) => {
                     ${items
                         .map(
                             (item) => `
-                        <tr>
+                        <tr class="${item.isAdditionalCharge ? 'additional-charge' : item.isDiscount ? 'discount' : ''}">
                             <td>${item.description}</td>
-                            <td class="center">${item.quantity}</td>
+                            <td class="center">${parseFloat(item.quantity || 1).toFixed(2)}</td>
                             <td class="right">${formatCurrency(item.rate)}</td>
-                            <td class="right">${formatCurrency(
+                            <td class="right ${item.isAdditionalCharge ? 'text-info' : item.isDiscount ? 'text-success' : ''}">${formatCurrency(
                                 item.amount
                             )}</td>
                         </tr>
@@ -310,10 +341,25 @@ export const generateLineItems = (invoice) => {
 };
 
 export const generateTotalsSection = (invoice) => {
-    const subtotal = parseFloat(invoice.subtotal || invoice.total_amount || 0);
-    const taxAmount = parseFloat(invoice.tax_amount || 0);
-    const discountAmount = parseFloat(invoice.discount_amount || 0);
-    const totalAmount = parseFloat(invoice.total_amount || 0);
+    // Handle both enhanced and legacy structures for totals
+    const isEnhanced = invoice.line_items && typeof invoice.line_items === 'object' && 
+                      invoice.line_items.totals;
+    
+    let subtotal, taxAmount, discountAmount, totalAmount;
+    
+    if (isEnhanced) {
+        const totals = invoice.line_items.totals;
+        subtotal = parseFloat(totals.subtotal || 0);
+        taxAmount = parseFloat(invoice.tax_amount || 0);
+        discountAmount = parseFloat(totals.total_discounts || 0);
+        totalAmount = parseFloat(totals.final_total || invoice.total_amount || 0);
+    } else {
+        subtotal = parseFloat(invoice.subtotal || invoice.total_amount || 0);
+        taxAmount = parseFloat(invoice.tax_amount || 0);
+        discountAmount = parseFloat(invoice.discount_amount || 0);
+        totalAmount = parseFloat(invoice.total_amount || 0);
+    }
+    
     const paidAmount = parseFloat(invoice.paid_amount || 0);
     const balanceDue = totalAmount - paidAmount;
 

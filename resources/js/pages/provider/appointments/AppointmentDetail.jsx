@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import ProviderLayout from "../../../components/layouts/ProviderLayout";
 import LoadingSpinner from "../../../components/LoadingSpinner";
 import CreateInvoiceModal from "../../../components/provider/payments/CreateInvoiceModal";
+import RescheduleRequestCard from "../../../components/provider/appointments/RescheduleRequestCard";
 import providerAppointmentService from "../../../services/providerAppointmentService";
 import invoiceService from "../../../services/invoiceService";
 import ReviewButton from "../../../components/reviews/ReviewButton";
@@ -395,11 +396,14 @@ const AppointmentDetail = () => {
         }
     };
 
-    // Handle decline reschedule
-    const handleDeclineReschedule = async () => {
-        const reason = prompt("Please provide a reason for declining the reschedule request:");
-        if (!reason || !reason.trim()) {
-            return; // User cancelled or didn't provide a reason
+    // Handle decline reschedule - Updated to accept reason parameter from RescheduleRequestCard
+    const handleDeclineReschedule = async (reason) => {
+        // If no reason provided, fall back to the old prompt behavior (backward compatibility)
+        if (!reason) {
+            reason = prompt("Please provide a reason for declining the reschedule request:");
+            if (!reason || !reason.trim()) {
+                return; // User cancelled or didn't provide a reason
+            }
         }
 
         setActionLoading(true);
@@ -869,41 +873,6 @@ const AppointmentDetail = () => {
 
                     {/* Action Buttons */}
                     <div className="action-buttons">
-                        {/* Show reschedule approve/decline buttons if there's a pending reschedule request */}
-                        {appointment?.has_pending_reschedule && (
-                            <div className="d-flex gap-2 mb-3">
-                                <div className="alert alert-warning d-flex align-items-center justify-content-between w-100 mb-2">
-                                    <div>
-                                        <i className="fas fa-calendar-alt me-2"></i>
-                                        <strong>Reschedule Request Pending</strong>
-                                        {appointment.reschedule_request && (
-                                            <div className="small mt-1">
-                                                New time: {appointment.reschedule_request.requested_date} at {appointment.reschedule_request.requested_time}
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                                <div className="d-flex gap-2 w-100">
-                                    <button
-                                        className="btn btn-success"
-                                        onClick={() => handleApproveReschedule()}
-                                        disabled={actionLoading}
-                                    >
-                                        <i className="fas fa-check me-2"></i>
-                                        {actionLoading ? "Approving..." : "Approve Reschedule"}
-                                    </button>
-                                    <button
-                                        className="btn btn-outline-warning"
-                                        onClick={() => handleDeclineReschedule()}
-                                        disabled={actionLoading}
-                                    >
-                                        <i className="fas fa-times me-2"></i>
-                                        {actionLoading ? "Declining..." : "Decline Reschedule"}
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-
                         {/* Show regular status-based buttons only when no reschedule request */}
                         {!appointment?.has_pending_reschedule && (
                             <>
@@ -1041,6 +1010,16 @@ const AppointmentDetail = () => {
                 <div className="row">
                     {/* Main Content */}
                     <div className="col-lg-8">
+                        {/* Reschedule Request Card - Show at top when there's a pending reschedule request */}
+                        {appointment?.has_pending_reschedule && (
+                            <RescheduleRequestCard
+                                appointment={appointment}
+                                onApprove={handleApproveReschedule}
+                                onDecline={handleDeclineReschedule}
+                                loading={actionLoading}
+                            />
+                        )}
+
                         {/* Client Information */}
                         <div className="card border-0 shadow-sm mb-4">
                             <div className="card-header bg-white border-bottom">
@@ -1208,16 +1187,13 @@ const AppointmentDetail = () => {
                                                     <div className="text-success small">
                                                         <i className="fas fa-money-bill me-1"></i>
                                                         Earned: Rs.{" "}
-                                                        {(
-                                                            appointment.earnings ||
-                                                            appointment.total_price
-                                                        )?.toLocaleString(
-                                                            "en-US",
-                                                            {
-                                                                minimumFractionDigits: 0,
-                                                                maximumFractionDigits: 0,
-                                                            }
-                                                        )}
+                                                        {((appointment.status === 'invoice_sent' || appointment.status === 'payment_pending' || appointment.status === 'paid' ? 
+                                                            parseFloat(appointment.invoice?.total_amount || appointment.earnings || appointment.total_price) : 
+                                                            parseFloat(appointment.earnings || appointment.total_price)) || 0
+                                                        ).toLocaleString("en-LK", {
+                                                            minimumFractionDigits: 2,
+                                                            maximumFractionDigits: 2,
+                                                        })}
                                                     </div>
                                                 </div>
                                             </div>
@@ -1366,13 +1342,13 @@ const AppointmentDetail = () => {
                                                         </span>
                                                         <span className="fw-bold text-success">
                                                             Rs.{" "}
-                                                            {appointment.total_price?.toLocaleString(
-                                                                "en-US",
-                                                                {
-                                                                    minimumFractionDigits: 0,
-                                                                    maximumFractionDigits: 0,
-                                                                }
-                                                            )}
+                                                            {((appointment.status === 'invoice_sent' || appointment.status === 'payment_pending' || appointment.status === 'paid' ? 
+                                                                parseFloat(appointment.invoice?.total_amount || appointment.total_price) : 
+                                                                parseFloat(appointment.total_price)) || 0
+                                                            ).toLocaleString("en-LK", {
+                                                                minimumFractionDigits: 2,
+                                                                maximumFractionDigits: 2,
+                                                            })}
                                                         </span>
                                                     </div>
                                                     <div className="d-flex justify-content-between align-items-center mb-2 small">
@@ -1403,18 +1379,15 @@ const AppointmentDetail = () => {
                                                         </span>
                                                         <span className="fw-bold">
                                                             Rs.{" "}
-                                                            {Math.round(
-                                                                (appointment.total_price ||
-                                                                    0) /
-                                                                    (appointment.duration_hours ||
-                                                                        1)
-                                                            ).toLocaleString(
-                                                                "en-US",
-                                                                {
-                                                                    minimumFractionDigits: 0,
-                                                                    maximumFractionDigits: 0,
-                                                                }
-                                                            )}
+                                                            {(Math.round(
+                                                                ((appointment.status === 'invoice_sent' || appointment.status === 'payment_pending' || appointment.status === 'paid' ? 
+                                                                    parseFloat(appointment.invoice?.total_amount || appointment.total_price) : 
+                                                                    parseFloat(appointment.total_price)) || 0) /
+                                                                    (appointment.duration_hours || 1)
+                                                            )).toLocaleString("en-LK", {
+                                                                minimumFractionDigits: 2,
+                                                                maximumFractionDigits: 2,
+                                                            })}
                                                         </span>
                                                     </div>
                                                     <div className="d-flex justify-content-between align-items-center mb-2 small">
@@ -1437,13 +1410,13 @@ const AppointmentDetail = () => {
                                                 </span>
                                                 <span className="fw-bold text-orange h6 mb-0">
                                                     Rs.{" "}
-                                                    {appointment.total_price?.toLocaleString(
-                                                        "en-US",
-                                                        {
-                                                            minimumFractionDigits: 0,
-                                                            maximumFractionDigits: 0,
-                                                        }
-                                                    )}
+                                                    {((appointment.status === 'invoice_sent' || appointment.status === 'payment_pending' || appointment.status === 'paid' ? 
+                                                        parseFloat(appointment.invoice?.total_amount || appointment.total_price) : 
+                                                        parseFloat(appointment.total_price)) || 0
+                                                    ).toLocaleString("en-LK", {
+                                                        minimumFractionDigits: 2,
+                                                        maximumFractionDigits: 2,
+                                                    })}
                                                 </span>
                                             </div>
 
@@ -1457,11 +1430,13 @@ const AppointmentDetail = () => {
                                                     Rs.{" "}
                                                     {(
                                                         appointment.earnings ||
-                                                        appointment.total_price ||
+                                                        (appointment.status === 'invoice_sent' || appointment.status === 'payment_pending' || appointment.status === 'paid' ? 
+                                                            parseFloat(appointment.invoice?.total_amount || appointment.total_price) : 
+                                                            parseFloat(appointment.total_price)) ||
                                                         0
-                                                    ).toLocaleString("en-US", {
-                                                        minimumFractionDigits: 0,
-                                                        maximumFractionDigits: 0,
+                                                    ).toLocaleString("en-LK", {
+                                                        minimumFractionDigits: 2,
+                                                        maximumFractionDigits: 2,
                                                     })}
                                                 </span>
                                             </div>

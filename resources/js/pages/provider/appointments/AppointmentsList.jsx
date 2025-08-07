@@ -7,6 +7,7 @@ import QuickFilterTabs from "../../../components/provider/appointments/QuickFilt
 import AppointmentsTable from "../../../components/provider/appointments/AppointmentsTable";
 import AppointmentCard from "../../../components/provider/appointments/AppointmentCard";
 import CreateInvoiceModal from "../../../components/provider/payments/CreateInvoiceModal";
+import RescheduleRequestCard from "../../../components/provider/appointments/RescheduleRequestCard";
 import providerAppointmentService from "../../../services/providerAppointmentService";
 import invoiceService from "../../../services/invoiceService";
 
@@ -136,6 +137,11 @@ const AppointmentsList = () => {
     const [appointmentToCancel, setAppointmentToCancel] = useState(null);
     const [cancelLoading, setCancelLoading] = useState(false);
 
+    // Reschedule approve modal state  
+    const [showRescheduleModal, setShowRescheduleModal] = useState(false);
+    const [appointmentToReschedule, setAppointmentToReschedule] = useState(null);
+    const [rescheduleLoading, setRescheduleLoading] = useState(false);
+    
     // Reschedule decline modal state
     const [showDeclineModal, setShowDeclineModal] = useState(false);
     const [declineReason, setDeclineReason] = useState("");
@@ -279,10 +285,18 @@ const AppointmentsList = () => {
                     return priorityDiff;
 
                 case "price_desc":
-                    return (b.total_price || 0) - (a.total_price || 0);
+                    const bPrice = b.status === 'invoice_sent' || b.status === 'payment_pending' || b.status === 'paid' ? 
+                        parseFloat(b.invoice?.total_amount || b.total_price) : parseFloat(b.total_price);
+                    const aPrice = a.status === 'invoice_sent' || a.status === 'payment_pending' || a.status === 'paid' ? 
+                        parseFloat(a.invoice?.total_amount || a.total_price) : parseFloat(a.total_price);
+                    return (bPrice || 0) - (aPrice || 0);
 
                 case "price_asc":
-                    return (a.total_price || 0) - (b.total_price || 0);
+                    const aPriceAsc = a.status === 'invoice_sent' || a.status === 'payment_pending' || a.status === 'paid' ? 
+                        parseFloat(a.invoice?.total_amount || a.total_price) : parseFloat(a.total_price);
+                    const bPriceAsc = b.status === 'invoice_sent' || b.status === 'payment_pending' || b.status === 'paid' ? 
+                        parseFloat(b.invoice?.total_amount || b.total_price) : parseFloat(b.total_price);
+                    return (aPriceAsc || 0) - (bPriceAsc || 0);
 
                 default:
                     return 0;
@@ -600,6 +614,61 @@ const AppointmentsList = () => {
         }
     };
 
+    // Handle reschedule approve
+    const handleRescheduleApprove = async () => {
+        if (!appointmentToReschedule) return;
+        
+        setRescheduleLoading(true);
+        try {
+            const result = await providerAppointmentService.acceptRescheduleRequest(
+                appointmentToReschedule.id
+            );
+
+            if (result.success) {
+                handleStatusUpdate(result.data);
+                setShowRescheduleModal(false);
+                setAppointmentToReschedule(null);
+                setTodaysScheduleRefresh((prev) => prev + 1);
+            }
+        } catch (error) {
+            console.error("Failed to approve reschedule:", error);
+        } finally {
+            setRescheduleLoading(false);
+        }
+    };
+
+    // Handle reschedule decline from modal
+    const handleRescheduleDecline = async (reason) => {
+        if (!appointmentToReschedule || !reason) return;
+        
+        setRescheduleLoading(true);
+        try {
+            const result = await providerAppointmentService.declineRescheduleRequest(
+                appointmentToReschedule.id,
+                reason
+            );
+
+            if (result.success) {
+                handleStatusUpdate(result.data);
+                setShowRescheduleModal(false);
+                setAppointmentToReschedule(null);
+                setTodaysScheduleRefresh((prev) => prev + 1);
+            }
+        } catch (error) {
+            console.error("Failed to decline reschedule:", error);
+        } finally {
+            setRescheduleLoading(false);
+        }
+    };
+
+    // Handle reschedule modal close
+    const handleRescheduleModalClose = () => {
+        if (!rescheduleLoading) {
+            setShowRescheduleModal(false);
+            setAppointmentToReschedule(null);
+        }
+    };
+
     // Handle decline modal close
     const handleDeclineModalClose = () => {
         if (!declineLoading) {
@@ -711,14 +780,8 @@ const AppointmentsList = () => {
                     setShowCancelModal(true);
                     break;
                 case "approve_reschedule":
-                    result =
-                        await providerAppointmentService.acceptRescheduleRequest(
-                            appointment.id
-                        );
-                    if (result.success) {
-                        handleStatusUpdate(result.data);
-                        setTodaysScheduleRefresh((prev) => prev + 1);
-                    }
+                    setAppointmentToReschedule(appointment);
+                    setShowRescheduleModal(true);
                     break;
                 case "decline_reschedule":
                     setAppointmentToDecline(appointment);
@@ -1434,6 +1497,40 @@ const AppointmentsList = () => {
                                                 </>
                                             )}
                                         </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </>
+                )}
+
+                {/* Reschedule Approve Modal */}
+                {showRescheduleModal && appointmentToReschedule && (
+                    <>
+                        <div className="modal-backdrop fade show"></div>
+                        <div className="modal fade show d-block modal-responsive" tabIndex="-1" style={{zIndex: 1050}}>
+                            <div className="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+                                <div className="modal-content">
+                                    <div className="modal-header border-bottom">
+                                        <h5 className="modal-title d-flex align-items-center">
+                                            <i className="fas fa-calendar-alt text-warning me-2"></i>
+                                            Reschedule Request Details
+                                        </h5>
+                                        <button
+                                            type="button"
+                                            className="btn-close"
+                                            onClick={handleRescheduleModalClose}
+                                            disabled={rescheduleLoading}
+                                            aria-label="Close"
+                                        ></button>
+                                    </div>
+                                    <div className="modal-body p-4" style={{maxHeight: "70vh", overflowY: "auto"}}>
+                                        <RescheduleRequestCard
+                                            appointment={appointmentToReschedule}
+                                            onApprove={handleRescheduleApprove}
+                                            onDecline={handleRescheduleDecline}
+                                            loading={rescheduleLoading}
+                                        />
                                     </div>
                                 </div>
                             </div>

@@ -313,9 +313,12 @@ const AppointmentsTable = ({
                                     <div className="price-info">
                                         <span className="price">
                                             Rs.{" "}
-                                            {appointment.total_price ||
+                                            {((appointment.status === 'invoice_sent' || appointment.status === 'payment_pending' || appointment.status === 'paid' ? 
+                                                parseFloat(appointment.invoice?.total_amount || appointment.total_price) : 
+                                                parseFloat(appointment.total_price)) || 
                                                 appointment.service?.price ||
-                                                0}
+                                                0
+                                            ).toLocaleString('en-LK', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                                         </span>
                                         {appointment.booking_source ===
                                             "quote_acceptance" ||
@@ -334,7 +337,9 @@ const AppointmentsTable = ({
                                                         : "hr"}{" "}
                                                     × Rs.{" "}
                                                     {Math.round(
-                                                        (appointment.total_price ||
+                                                        ((appointment.status === 'invoice_sent' || appointment.status === 'payment_pending' || appointment.status === 'paid' ? 
+                                                            parseFloat(appointment.invoice?.total_amount || appointment.total_price) : 
+                                                            parseFloat(appointment.total_price)) ||
                                                             0) /
                                                             (appointment.duration_hours ||
                                                                 1)

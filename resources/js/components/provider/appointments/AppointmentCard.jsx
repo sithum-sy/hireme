@@ -587,7 +587,10 @@ const AppointmentCard = ({ appointment, onStatusUpdate }) => {
 
                         <div className="price-section mb-3">
                             <div className="fw-bold text-primary">
-                                Rs. {appointment.total_price?.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0}) || "0"}
+                                Rs. {(appointment.status === 'invoice_sent' || appointment.status === 'payment_pending' || appointment.status === 'paid' ? 
+                                    parseFloat(appointment.invoice?.total_amount || appointment.total_price) : 
+                                    parseFloat(appointment.total_price) || 0
+                                ).toLocaleString('en-LK', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                             </div>
                             {appointment.booking_source === "quote_acceptance" || appointment.quote_id ? (
                                 <small className="text-muted d-block">
@@ -597,7 +600,10 @@ const AppointmentCard = ({ appointment, onStatusUpdate }) => {
                             ) : (
                                 appointment.duration_hours && (
                                     <small className="text-muted d-block">
-                                        {appointment.duration_hours} {appointment.duration_hours > 1 ? "hrs" : "hr"} × Rs. {Math.round((appointment.total_price || 0) / (appointment.duration_hours || 1))} per hour
+                                        {appointment.duration_hours} {appointment.duration_hours > 1 ? "hrs" : "hr"} × Rs. {Math.round(((appointment.status === 'invoice_sent' || appointment.status === 'payment_pending' || appointment.status === 'paid' ? 
+                                            parseFloat(appointment.invoice?.total_amount || appointment.total_price) : 
+                                            parseFloat(appointment.total_price)
+                                        ) || 0) / (appointment.duration_hours || 1)).toFixed(2)} per hour
                                     </small>
                                 )
                             )}

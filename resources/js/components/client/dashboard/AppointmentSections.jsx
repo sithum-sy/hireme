@@ -241,7 +241,10 @@ const AppointmentSections = () => {
                 </div>
                 <div className="text-end">
                     <div className="fw-bold text-primary">
-                        Rs. {appointment.total_price?.toLocaleString()}
+                        Rs. {((appointment.status === 'invoice_sent' || appointment.status === 'payment_pending' || appointment.status === 'paid' ? 
+                            parseFloat(appointment.invoice?.total_amount || appointment.total_price) : 
+                            parseFloat(appointment.total_price)) || 0
+                        ).toLocaleString('en-LK', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                     </div>
                     <Link
                         to={`/client/appointments/${appointment.id}`}

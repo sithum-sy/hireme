@@ -35,10 +35,11 @@ class InvoiceService
                 throw new \Exception('Invoice already exists for this appointment');
             }
 
-            $subtotal = $appointment->total_price;
-            $discountRate = 0.15; // 15% discount rate
-            $discount = $subtotal * $discountRate;
-            $providerEarnings = $subtotal - $discount;
+            // Calculate totals with enhanced structure
+            $totals = $this->calculateEnhancedTotals($appointment, $options);
+            $subtotal = $totals['subtotal'];
+            $discount = $totals['total_discounts'];
+            $providerEarnings = $totals['final_total'];
 
             // SET PROVIDER EARNINGS = TOTAL PRICE (no platform fee)
             // $platformFee = 0;
@@ -55,17 +56,17 @@ class InvoiceService
                 'appointment_id' => $appointment->id,
                 'provider_id' => $appointment->provider_id,
                 'client_id' => $appointment->client_id,
-                'subtotal' => $subtotal,
+                'subtotal' => $totals['subtotal'],
                 'tax_amount' => $options['tax_amount'] ?? 0,
-                'platform_fee' => $discount,
-                'total_amount' => $subtotal,
-                'provider_earnings' => $providerEarnings,
+                'platform_fee' => $totals['total_discounts'],
+                'total_amount' => $totals['final_total'],
+                'provider_earnings' => $totals['final_total'],
                 'payment_method' => $options['payment_method'] ?? 'cash',
                 'payment_status' => 'pending',
                 'status' => $invoiceStatus,
                 'due_date' => now()->addDays($options['due_days'] ?? 7),
                 'notes' => $options['notes'] ?? 'Thank you for choosing our service. Payment is due within 7 days.',
-                'line_items' => $this->generateLineItems($appointment, $options['line_items'] ?? []),
+                'line_items' => $this->generateEnhancedLineItems($appointment, $options),
                 'issued_at' => now(),
                 'sent_at' => $sendInvoice ? now() : null,
             ]);
@@ -526,7 +527,155 @@ class InvoiceService
     }
 
     /**
-     * Generate line items from appointment
+     * Calculate enhanced totals with additional charges and discounts
+     */
+    private function calculateEnhancedTotals(Appointment $appointment, array $options = [])
+    {
+        // Calculate subtotal from line items if provided, otherwise use appointment total_price
+        $subtotal = $this->calculateSubtotalFromLineItems($options['line_items'] ?? [], $appointment->total_price);
+        $totalAdditionalCharges = 0;
+        $totalDiscounts = 0;
+
+        // Calculate additional charges
+        if (isset($options['additional_charges']) && is_array($options['additional_charges'])) {
+            foreach ($options['additional_charges'] as $charge) {
+                $totalAdditionalCharges += floatval($charge['amount'] ?? 0);
+            }
+        }
+
+        // Calculate discounts
+        if (isset($options['discounts']) && is_array($options['discounts'])) {
+            foreach ($options['discounts'] as $discount) {
+                $totalDiscounts += floatval($discount['amount'] ?? 0);
+            }
+        } else {
+            // Legacy: Default 15% discount if no custom discounts provided
+            $totalDiscounts = $subtotal * 0.15;
+        }
+
+        $finalTotal = ($subtotal + $totalAdditionalCharges) - $totalDiscounts;
+
+        return [
+            'subtotal' => $subtotal,
+            'total_additional_charges' => $totalAdditionalCharges,
+            'total_discounts' => $totalDiscounts,
+            'final_total' => max(0, $finalTotal) // Ensure non-negative total
+        ];
+    }
+
+    /**
+     * Calculate subtotal from line items array
+     */
+    private function calculateSubtotalFromLineItems(array $lineItems, $fallbackAmount = 0)
+    {
+        if (empty($lineItems)) {
+            return floatval($fallbackAmount);
+        }
+
+        $subtotal = 0;
+        foreach ($lineItems as $item) {
+            if (isset($item['amount'])) {
+                $subtotal += floatval($item['amount']);
+            } elseif (isset($item['quantity']) && isset($item['rate'])) {
+                // Fallback calculation if amount is not provided
+                $subtotal += floatval($item['quantity']) * floatval($item['rate']);
+            }
+        }
+
+        return $subtotal > 0 ? $subtotal : floatval($fallbackAmount);
+    }
+
+    /**
+     * Generate enhanced line items with additional charges and discounts
+     */
+    private function generateEnhancedLineItems(Appointment $appointment, array $options = [])
+    {
+        $structure = [
+            'line_items' => [],
+            'additional_charges' => [],
+            'discounts' => [],
+            'totals' => [] // Will be calculated after line items are set
+        ];
+
+        // Generate main service line items
+        if (isset($options['line_items']) && !empty($options['line_items'])) {
+            // Use custom line items if provided - always preserve all line items
+            foreach ($options['line_items'] as $item) {
+                if (isset($item['description']) && isset($item['quantity']) && isset($item['rate']) && isset($item['amount'])) {
+                    $structure['line_items'][] = [
+                        'type' => $item['type'] ?? 'service',
+                        'description' => $item['description'],
+                        'quantity' => floatval($item['quantity']),
+                        'rate' => floatval($item['rate']),
+                        'amount' => floatval($item['amount'])
+                    ];
+                }
+            }
+        } else {
+            // Generate default service item
+            $structure['line_items'][] = [
+                'type' => 'service',
+                'description' => $appointment->service->title ?? 'Service',
+                'quantity' => floatval($appointment->duration_hours ?? 1),
+                'rate' => floatval($appointment->total_price / ($appointment->duration_hours ?? 1)),
+                'amount' => floatval($appointment->total_price)
+            ];
+        }
+
+        // Add additional charges
+        if (isset($options['additional_charges']) && is_array($options['additional_charges'])) {
+            foreach ($options['additional_charges'] as $charge) {
+                $structure['additional_charges'][] = [
+                    'type' => $charge['type'] ?? 'additional',
+                    'description' => $charge['description'] ?? 'Additional Charge',
+                    'quantity' => floatval($charge['quantity'] ?? 1),
+                    'rate' => floatval($charge['rate'] ?? $charge['amount'] ?? 0),
+                    'amount' => floatval($charge['amount'] ?? 0),
+                    'reason' => $charge['reason'] ?? null,
+                    'client_approved' => $charge['client_approved'] ?? false
+                ];
+            }
+        }
+
+        // Add discounts
+        if (isset($options['discounts']) && is_array($options['discounts'])) {
+            foreach ($options['discounts'] as $discount) {
+                $structure['discounts'][] = [
+                    'type' => $discount['type'] ?? 'fixed',
+                    'description' => $discount['description'] ?? 'Discount',
+                    'rate' => floatval($discount['rate'] ?? 0),
+                    'amount' => floatval($discount['amount'] ?? 0),
+                    'reason' => $discount['reason'] ?? null
+                ];
+            }
+        } else {
+            // Legacy: Default 15% discount - calculate from line items subtotal
+            $lineItemsSubtotal = 0;
+            foreach ($structure['line_items'] as $item) {
+                $lineItemsSubtotal += floatval($item['amount']);
+            }
+            $discountAmount = $lineItemsSubtotal * 0.15;
+            $structure['discounts'][] = [
+                'type' => 'percentage',
+                'description' => 'Service Discount',
+                'rate' => 15,
+                'amount' => $discountAmount,
+                'reason' => 'Standard service discount'
+            ];
+        }
+
+        // Now calculate totals with the final line items
+        $structure['totals'] = $this->calculateEnhancedTotals($appointment, [
+            'line_items' => $structure['line_items'],
+            'additional_charges' => $structure['additional_charges'],
+            'discounts' => $structure['discounts']
+        ]);
+
+        return $structure;
+    }
+
+    /**
+     * Generate line items from appointment (Legacy method for backward compatibility)
      */
     private function generateLineItems(Appointment $appointment, array $customItems = [])
     {

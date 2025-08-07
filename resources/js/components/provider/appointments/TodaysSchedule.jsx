@@ -272,7 +272,10 @@ const TodaysSchedule = ({ onAppointmentAction, refreshTrigger }) => {
                                 <div className="appointment-meta">
                                     {getStatusBadge(appointment.status)}
                                     <span className="price">
-                                        Rs. {appointment.total_price || "0"}
+                                        Rs. {((appointment.status === 'invoice_sent' || appointment.status === 'payment_pending' || appointment.status === 'paid' ? 
+                                            parseFloat(appointment.invoice?.total_amount || appointment.total_price) : 
+                                            parseFloat(appointment.total_price)) || 0
+                                        ).toLocaleString('en-LK', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                                     </span>
                                 </div>
                             </div>
